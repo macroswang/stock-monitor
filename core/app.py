@@ -44,10 +44,10 @@ class App:
                 self.store.remember(code,name)
                 p=ROOT/'fixtures'/f'{code}-2026-10-16-tencent.json'
                 if p.exists():
-                    d=json.loads(p.read_text()); self.store.cache(code,'minute',d['trading_date'],d)
+                    d=json.loads(p.read_text(encoding='utf-8')); self.store.cache(code,'minute',d['trading_date'],d)
                 p=ROOT/'fixtures'/f'{code}-daily.json'
                 if p.exists():
-                    raw=json.loads(p.read_text())['data'][code]
+                    raw=json.loads(p.read_text(encoding='utf-8'))['data'][code]
                     for r in raw.get('day',[]): self.store.cache(code,'daily',r[0],dict(date=r[0],open=r[1],close=r[2],high=r[3],low=r[4],volume=r[5],source='tencent',adjustment='none'))
             self.store.setconfig('initialized',True)
             self.store.setconfig('monitor',True); self.store.setconfig('phone_enabled',False)
@@ -421,6 +421,9 @@ class App:
         raise ValueError('不支持的操作')
 
 def main():
+    # Native host IPC is UTF-8 on every platform, including Windows pipes.
+    for stream in (sys.stdin,sys.stdout):
+        if hasattr(stream,'reconfigure'):stream.reconfigure(encoding='utf-8')
     data_dir=os.environ.get('STOCK_MONITOR_DATA',str(Path.home()/'.stock-monitor'))
     app=App(data_dir)
     try:
