@@ -193,3 +193,36 @@ test('index cards replace old summary and chart keyboard focus has no enclosing 
  await expect(chart).toBeFocused();
  expect(await chart.evaluate(e=>getComputedStyle(e).outlineStyle)).toBe('none');
 });
+
+test('selected trigger compares hovered price, switches anchor, clears and resets by date',async({page})=>{
+ const bars=['100','99','98','110','108','105'].map((close,i)=>({time:`09:${31+i}`,close,volume:100,complete:true}));
+ await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'tencent',bars}});
+ for(const [candidate_time,confirmation_label] of [['09:31','09:33'],['09:34','09:36']])await rpc('__audit_event',{key:`2026-10-19|603002|${candidate_time}`,symbol:'603002',trading_date:'2026-10-19',candidate_time,confirmation_label,event_label:confirmation_label,volumes:[300,100,100],kind:'TWO_MINUTE_CONFIRMATION'});
+ await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19',{timeout:10000});
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ await expect(page.getByRole('region',{name:'做T价差参考'})).toHaveCount(0);
+ const point=async(time:string,price:number)=>chart.evaluate(async(el,args)=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];
+  const echarts=await import(url);const instance=echarts.getInstanceByDom(el);
+  return instance.convertToPixel({seriesIndex:0},[args.time,args.price]) as number[];
+ },{time,price});
+ const clickMark=async(time:string,price:number)=>{
+  const xy=await point(time,price);const box=(await chart.boundingBox())!;
+  await page.mouse.click(box.x+xy[0],box.y+xy[1]-18);
+ };
+ const hover=async(time:string,price:number)=>{
+  const xy=await point(time,price);const box=(await chart.boundingBox())!;
+  await page.mouse.move(box.x+xy[0],box.y+80);
+ };
+ await expect(async()=>{await clickMark('09:31',100);await expect(page.locator('.trigger-comparison')).toContainText('已选触发：09:31 · 100.00 元');}).toPass();
+ await hover('09:33',98);await expect(chart.locator('.quote-tooltip')).toContainText('相对触发涨跌幅：-2.00%');
+ await hover('09:34',110);await expect(chart.locator('.quote-tooltip')).toContainText('相对触发涨跌幅：+10.00%');
+ await clickMark('09:34',110);await expect(page.locator('.trigger-comparison')).toContainText('已选触发：09:34 · 110.00 元');
+ await hover('09:36',105);await expect(chart.locator('.quote-tooltip')).toContainText('相对触发涨跌幅：-4.55%');
+ await page.screenshot({path:'docs/trigger-hover-local.png',fullPage:true});
+ await page.getByRole('button',{name:'清除选择'}).click();await hover('09:33',98);
+ await expect(chart.locator('.quote-tooltip')).not.toContainText('相对触发涨跌幅');
+ await clickMark('09:31',100);await page.getByLabel('交易日期').selectOption('2026-10-16');
+ await expect(page.locator('.trigger-comparison')).not.toContainText('已选触发');
+ await page.getByLabel('交易日期').selectOption('2026-10-19');await expect(page.locator('.trigger-comparison')).not.toContainText('已选触发');
+});
