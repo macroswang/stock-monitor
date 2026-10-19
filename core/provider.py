@@ -71,7 +71,7 @@ class Tencent:
                     if cash.is_finite() and cash>=0 and shares>0:average=str(cash/shares)
                 except Exception:pass
                 bars.append(dict(time=label,close=price,volume=vol,complete=complete,average=average))
-            result.append(dict(date=date,bars=bars,source='tencent',volume_unit='shares',
+            result.append(dict(date=date,bars=bars,previous_close=day.get('prec'),source='tencent',volume_unit='shares',
                 multiplier=factors[0],label_semantics='end_pending_live_verification'))
         return result
 

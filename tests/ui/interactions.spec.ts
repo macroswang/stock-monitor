@@ -180,3 +180,16 @@ test('twenty-day coverage shows whole-day Sina history without claiming certifie
  await expect(page.locator('.day-signals')).toContainText('规则回放暂未认证');
  expect((await rpc('messages')).total).toBe(0);
 });
+
+test('index cards replace old summary and chart keyboard focus has no enclosing outline',async({page})=>{
+ await expect(page.getByText('上证指数',{exact:true})).toBeVisible();
+ await expect(page.getByText('深证成指',{exact:true})).toBeVisible();
+ await expect(page.getByText('创业板指',{exact:true})).toBeVisible();
+ expect(await page.locator('.summary > div > span').allTextContents()).toEqual(['监控股票','上证指数','深证成指','创业板指','当前状态']);
+ await expect(page.getByText('实时触发',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('通知通道',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const chart=page.getByLabel('日K线及成交量');await chart.click();await chart.press('ArrowLeft');
+ await expect(chart).toBeFocused();
+ expect(await chart.evaluate(e=>getComputedStyle(e).outlineStyle)).toBe('none');
+});

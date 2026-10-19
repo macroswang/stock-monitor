@@ -12,6 +12,7 @@ from .history import view as history_view,bounds
 from .daily_cache import DailyCache
 from .minute_cache import MinuteCache
 from .archive import Archive
+from .market import Market
 
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parent.parent))
 SEEDS=[('sh603002','宏昌电子'),('sh688680','海优新材'),('sh600392','盛和资源'),('sh603366','日出东方'),
@@ -53,10 +54,12 @@ class App:
         self.daily_cache=DailyCache(self)
         self.minute_cache=MinuteCache(self)
         self.archive=Archive(self)
+        self.market=Market(self)
         if start_worker:
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
+            threading.Thread(target=self.market_loop,daemon=True).start()
 
     def cache_minutes(self,code,group):
         old=self.store.getcache(code,'minute',group['date'])
@@ -68,7 +71,7 @@ class App:
         quote=self.quotes.get(code)
         if quote and quote.get('date')==group['date']:
             data.update(symbol=code[2:],trading_date=group['date'],limit_up=quote['limit_up'],
-                limit_basis='腾讯当日涨停价字段',limit_reference_time=quote['timestamp'],
+                limit_basis='腾讯当日涨停价字段',limit_reference_time=quote['timestamp'],previous_close=quote.get('previous_close') or data.get('previous_close'),
                 time_label_semantics='unverified',session_closed=group['date']<now_cn().date().isoformat() or now_cn().strftime('%H:%M')>='15:00')
             if quote.get('high'):data['day_high']=quote['high']
         self.store.cache(code,'minute',group['date'],data)
@@ -161,6 +164,12 @@ class App:
                 self.last_poll=now_cn().isoformat(); initial=False
             self.stop.wait(8)
 
+    def market_loop(self):
+        initial=True
+        while not self.stop.is_set():
+            if initial or trading(now_cn()):self.market.poll();initial=False
+            self.stop.wait(30)
+
     def daily_loop(self):
         # Keep slow historical IO off the live quote/minute polling path.
         while not self.stop.is_set():
@@ -215,6 +224,7 @@ class App:
             daily_url='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param='+code+',day,开始日期,结束日期,2000,')
 
     def call(self,method,args):
+        if method=='market':return self.market.view(args.get('day'))
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
@@ -225,7 +235,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.4.3',rule='running_max_inclusive_v1')
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.4.5',rule='running_max_inclusive_v1')
         if method=='add_job': return self.start_job(lambda:self.call('add',args))
         if method=='refresh':
             code=symbol(args['code'])

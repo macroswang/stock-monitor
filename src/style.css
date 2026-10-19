@@ -5,3 +5,9 @@
 
 .average-caption{padding:4px 20px 12px;color:#91a2bd;font-size:12px}
 .archive-panel{margin:24px 0;padding:18px;border:1px solid #2a374c;border-radius:10px}.coverage-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:14px 0}.coverage-day{text-align:left;display:grid;gap:6px;padding:12px}.coverage-day span,.coverage-day small{font-size:12px}.coverage-day.complete{border-color:#36b898}.coverage-day.partial{border-color:#dba853}.coverage-day.missing{opacity:.75}.coverage-request{display:block;margin:5px 0}
+
+/* Keep chart keyboard navigation without the browser's enclosing focus ring. */
+.chart:focus,.chart:focus-visible{outline:none;box-shadow:none}
+.summary .index-value{font-size:23px}.summary .index-change{font-size:13px;margin-top:7px}.summary .index-time{font-size:10px;margin-top:5px;color:#8396b3}.index-unavailable{font-size:13px;color:#899bb5}.index-caption{color:#8c98ad}
+
+.summary{grid-template-columns:.8fr repeat(3,minmax(0,1fr)) 1.15fr}.summary>div{min-width:0;padding:17px 16px}.summary .index-change{white-space:nowrap}.summary .index-time{line-height:1.5}

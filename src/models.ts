@@ -5,3 +5,7 @@ export type SourceInfo={selected:string;providers:{id:string;name:string;availab
 export type HistoryDay={date:string;status:string;message:string;signal_count:number;recorded_count:number;has_minutes:boolean;limit_up?:string;limit_basis?:string;matches:Event[]};
 export type HistoryView={code:string;daily:Daily[];days:HistoryDay[];events:Event[];minute_days:string[];source:SourceInfo};
 export type Message={id:string;category:string;title:string;body:string;event_key?:string;created_at:string;read_at?:string;payload:Partial<Event>&{status?:string;detail?:string};local_delivery?:string;local_detail?:string;delivery?:string};
+
+export type IndexQuote={code:string;name:string;price:string;previous_close:string;change:string;percent:string;timestamp:string;source:string};
+export type IndexMinute={date:string;previous_close:string;bars:{time:string;close:string}[]};
+export type MarketData={quotes:IndexQuote[];minute:IndexMinute|null;error?:string};
