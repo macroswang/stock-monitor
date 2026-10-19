@@ -22,3 +22,16 @@ class WindowsEncodingTest(unittest.TestCase):
   with patch('core.app.App',return_value=app),patch('sys.stdin',stdin),patch('sys.stdout',stdout):main()
   stdout.flush();self.assertEqual(json.loads(raw_out.getvalue().decode('utf-8'))['data']['name'],'美利云')
   app.stop.set.assert_called_once()
+
+class InitializationTransactionTest(unittest.TestCase):
+ def test_failed_seed_import_rolls_back_flag_and_rows(self):
+  from core.store import Store
+  with tempfile.TemporaryDirectory() as directory:
+   store=Store(Path(directory)/'test.sqlite3')
+   try:
+    with self.assertRaises(TypeError):store.initialize([('sh603002','宏昌电子')],[('sh603002','minute','2026-10-19',{'bad':object()})])
+    self.assertFalse(store.config().get('initialized'))
+    self.assertEqual(store.query('SELECT * FROM watch'),[])
+    self.assertEqual(store.query('SELECT * FROM instruments'),[])
+    self.assertEqual(store.query('SELECT * FROM cache'),[])
+   finally:store.db.close()

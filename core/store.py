@@ -30,6 +30,20 @@ class Store:
             stamp=event.get('observed_at') or datetime.fromisoformat(row['created']).replace(tzinfo=timezone.utc).astimezone(now_cn().tzinfo).isoformat()
             self.message('signal' if row['mode']=='live' else 'test',event['notification_title'],event['notification_body'],
                 event_key=event['key'],payload=event,created=stamp,dedupe='event|'+event['key'])
+    def initialize(self,seeds,rows):
+        # One durable transaction: avoid thousands of startup fsyncs on Windows.
+        # The initialized flag commits with the data, never ahead of it.
+        with self.lock,self.db:
+            for code,name in seeds:
+                self.db.execute('INSERT OR IGNORE INTO watch(code,name) VALUES(?,?)',(code,name))
+                self.db.execute('INSERT OR REPLACE INTO instruments VALUES(?,?)',(code,name))
+                self.db.execute('UPDATE watch SET name=? WHERE code=?',(name,code))
+            for code,kind,day,payload in rows:
+                payload=dict(payload);payload.setdefault('cached_at',now_cn().isoformat())
+                self.db.execute('INSERT OR REPLACE INTO cache VALUES(?,?,?,?)',(code,kind,day,json.dumps(payload,ensure_ascii=False)))
+            for key,value in [('initialized',True),('monitor',True),('phone_enabled',False)]:
+                self.db.execute('INSERT OR REPLACE INTO config VALUES(?,?)',(key,json.dumps(value)))
+
     def query(self,sql,args=()):
         with self.lock: return [dict(r) for r in self.db.execute(sql,args).fetchall()]
     def execute(self,sql,args=()):

@@ -39,18 +39,16 @@ class App:
         self.health={}; self.sessions={}; self.quotes={}; self.last_poll=None; self.jobs={}
         self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None
         if not self.store.config().get('initialized'):
+            rows=[]
             for code,name in SEEDS:
-                self.store.execute('INSERT OR IGNORE INTO watch(code,name) VALUES(?,?)',(code,name))
-                self.store.remember(code,name)
                 p=ROOT/'fixtures'/f'{code}-2026-10-16-tencent.json'
                 if p.exists():
-                    d=json.loads(p.read_text(encoding='utf-8')); self.store.cache(code,'minute',d['trading_date'],d)
+                    d=json.loads(p.read_text(encoding='utf-8'));rows.append((code,'minute',d['trading_date'],d))
                 p=ROOT/'fixtures'/f'{code}-daily.json'
                 if p.exists():
                     raw=json.loads(p.read_text(encoding='utf-8'))['data'][code]
-                    for r in raw.get('day',[]): self.store.cache(code,'daily',r[0],dict(date=r[0],open=r[1],close=r[2],high=r[3],low=r[4],volume=r[5],source='tencent',adjustment='none'))
-            self.store.setconfig('initialized',True)
-            self.store.setconfig('monitor',True); self.store.setconfig('phone_enabled',False)
+                    for r in raw.get('day',[]):rows.append((code,'daily',r[0],dict(date=r[0],open=r[1],close=r[2],high=r[3],low=r[4],volume=r[5],source='tencent',adjustment='none')))
+            self.store.initialize(SEEDS,rows)
         self.daily_cache=DailyCache(self)
         self.minute_cache=MinuteCache(self)
         self.archive=Archive(self)
