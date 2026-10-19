@@ -7,7 +7,10 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
  const scope=view+'|'+(selectedDay||events[0]?.trading_date||'');
  const [choice,setChoice]=useState<{scope:string;time:string;price:number}|null>(null);
  useEffect(()=>setChoice(null),[scope]);
- const chosen=choice?.scope===scope?choice:null;
+ const visibleMarks=view==='daily'?[]:topVolumeMarks(minute,events);
+ const latestEvent=events.filter(e=>visibleMarks.some(m=>m.coord[0]===e.candidate_time)).sort((a,b)=>a.event_label.localeCompare(b.event_label)||a.candidate_time.localeCompare(b.candidate_time)).at(-1);
+ const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
+ const chosen=choice?.scope===scope?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const scopeRef=useRef(scope);scopeRef.current=scope;
  const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,previousClose,buySignals,chosen]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view});plot.current={daily,view};
@@ -58,5 +61,5 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
   },{notMerge:true});
   if(isDay&&selectedDay){const index=labels.indexOf(selectedDay);if(index>=0)chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});}
  },[contentKey]);
- return <>{view!=='daily'&&<div className="trigger-comparison">{chosen?<><strong>已选触发：{chosen.time} · {price(chosen.price)} 元</strong><span>移动鼠标查看相对涨跌幅</span><button onClick={()=>setChoice(null)}>清除选择</button></>:<span>点击一个“触发”标记，再移动鼠标查看相对涨跌幅</span>}</div>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view!=='daily'&&<div className="average-caption">触发：连续两分钟缩量确认后标在顶部量分钟；仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
+ return <>{view!=='daily'&&<div className="trigger-comparison">{chosen?<><strong>已选触发：{chosen.time} · {price(chosen.price)} 元</strong><span>移动鼠标查看相对涨跌幅</span>{choice?.scope===scope?<button onClick={()=>setChoice(null)}>恢复最近触发</button>:<span>默认最近触发</span>}</>:<span>点击一个“触发”标记，再移动鼠标查看相对涨跌幅</span>}</div>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view!=='daily'&&<div className="average-caption">触发：连续两分钟缩量确认后标在顶部量分钟；仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
 }
