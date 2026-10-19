@@ -224,6 +224,13 @@ class App:
             daily_url='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param='+code+',day,开始日期,结束日期,2000,')
 
     def call(self,method,args):
+        if method=='buy_research':
+            from .buy_research import run,export
+            def research():
+                report=run(self,args)
+                if args.get('export'):report['export_path']=export(self,report)
+                return report
+            return self.start_job(research)
         if method=='market':return self.market.view(args.get('day'))
         if method=='snapshot':
             with self.lock:
@@ -235,7 +242,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.4.5',rule='running_max_inclusive_v1')
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.5.0',rule='running_max_inclusive_v1')
         if method=='add_job': return self.start_job(lambda:self.call('add',args))
         if method=='refresh':
             code=symbol(args['code'])
