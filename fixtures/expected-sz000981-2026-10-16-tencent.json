@@ -1,0 +1,229 @@
+{
+  "version": "running_max_inclusive_v1",
+  "mode": "offline_validation_only",
+  "symbol": "000981",
+  "trading_date": "2026-10-16",
+  "source": {
+    "provider": "tencent",
+    "raw_file": "local-validation/ui_expanded/raw/sz000981-tencent.json",
+    "auction": "09:30 cumulative point excluded; 09:31 uses difference from 09:30",
+    "price_limit": "inferred regular 10%/20% from unadjusted previous close; historical status/ex-right reference unverified",
+    "unit_multiplier": 100
+  },
+  "volume_unit": "shares",
+  "time_label_semantics": "unverified",
+  "notifications_sent": 0,
+  "real_orders": 0,
+  "candidates": [
+    {
+      "key": "2026-10-16|000981|09:31",
+      "candidate_time": "09:31",
+      "prior_max": 0,
+      "equals_prior_max": false,
+      "volumes": [
+        5306200,
+        3804800,
+        1041700
+      ],
+      "confirmation_label": "09:33",
+      "branch": "NON_LIMIT",
+      "state": "MATCHED_ONCE",
+      "event_label": "09:33"
+    },
+    {
+      "key": "2026-10-16|000981|11:11",
+      "candidate_time": "11:11",
+      "prior_max": 5306200,
+      "equals_prior_max": false,
+      "volumes": [
+        15926000,
+        1825900,
+        669800
+      ],
+      "confirmation_label": "11:13",
+      "branch": "NON_LIMIT",
+      "state": "MATCHED_ONCE",
+      "event_label": "11:13"
+    }
+  ],
+  "matches": [
+    {
+      "key": "2026-10-16|000981|09:31",
+      "candidate_time": "09:31",
+      "volumes": [
+        5306200,
+        3804800,
+        1041700
+      ],
+      "confirmation_label": "09:33",
+      "branch": "NON_LIMIT",
+      "kind": "TWO_MINUTE_CONFIRMATION",
+      "event_label": "09:33",
+      "historical_close": "2.45",
+      "reference_sell_price": null,
+      "exact_reopen_time": null,
+      "manual_sell_only": true,
+      "ratios_to_candidate": [
+        "0.7170479816064226753608985715",
+        "0.1963175153593909012099053937"
+      ]
+    },
+    {
+      "key": "2026-10-16|000981|11:11",
+      "candidate_time": "11:11",
+      "volumes": [
+        15926000,
+        1825900,
+        669800
+      ],
+      "confirmation_label": "11:13",
+      "branch": "NON_LIMIT",
+      "kind": "TWO_MINUTE_CONFIRMATION",
+      "event_label": "11:13",
+      "historical_close": "2.47",
+      "reference_sell_price": null,
+      "exact_reopen_time": null,
+      "manual_sell_only": true,
+      "ratios_to_candidate": [
+        "0.1146490016325505462765289464",
+        "0.04205701368830842647243501193"
+      ]
+    }
+  ],
+  "coverage_gaps": [],
+  "excluded": [
+    {
+      "time": "09:30",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "13:00",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:57",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:58",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:59",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:00",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:06",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:07",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:08",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:09",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:10",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:11",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:12",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:13",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:14",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:15",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:16",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:17",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:18",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:19",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:20",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:21",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:22",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:23",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:24",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:25",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:26",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:27",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:28",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:29",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:30",
+      "reason": "outside comparable continuous-minute labels"
+    }
+  ],
+  "limitations": [
+    "No real-time feed, holdings or execution validation.",
+    "Minute reopen evidence identifies an interval, not the first trade's second or executable price.",
+    "Historical chart top is not proof of intraday chart scaling.",
+    "Provider label semantics unverified; times are labels, not validated execution times.",
+    "Full-day high is retrospective evidence for excluding limit-touch, not an online input."
+  ],
+  "running_max": 15926000,
+  "complete_prefix_coverage": true
+}

@@ -1,0 +1,1620 @@
+{
+  "symbol": "605358",
+  "trading_date": "2026-10-16",
+  "limit_up": "38.81",
+  "day_high": "36.450",
+  "volume_unit": "shares",
+  "time_label_semantics": "unverified",
+  "session_closed": true,
+  "source": {
+    "provider": "tencent",
+    "raw_file": "local-validation/ui_expanded/raw/sh605358-tencent.json",
+    "auction": "09:30 cumulative point excluded; 09:31 uses difference from 09:30",
+    "price_limit": "inferred regular 10%/20% from unadjusted previous close; historical status/ex-right reference unverified",
+    "unit_multiplier": 100
+  },
+  "bars": [
+    {
+      "time": "09:30",
+      "volume": 177900,
+      "close": "36.32",
+      "complete": true
+    },
+    {
+      "time": "09:31",
+      "volume": 1073300,
+      "close": "36.05",
+      "complete": true
+    },
+    {
+      "time": "09:32",
+      "volume": 498400,
+      "close": "35.90",
+      "complete": true
+    },
+    {
+      "time": "09:33",
+      "volume": 409000,
+      "close": "36.05",
+      "complete": true
+    },
+    {
+      "time": "09:34",
+      "volume": 347300,
+      "close": "35.86",
+      "complete": true
+    },
+    {
+      "time": "09:35",
+      "volume": 139700,
+      "close": "35.75",
+      "complete": true
+    },
+    {
+      "time": "09:36",
+      "volume": 170300,
+      "close": "35.66",
+      "complete": true
+    },
+    {
+      "time": "09:37",
+      "volume": 304200,
+      "close": "35.78",
+      "complete": true
+    },
+    {
+      "time": "09:38",
+      "volume": 183800,
+      "close": "35.74",
+      "complete": true
+    },
+    {
+      "time": "09:39",
+      "volume": 117100,
+      "close": "35.66",
+      "complete": true
+    },
+    {
+      "time": "09:40",
+      "volume": 167100,
+      "close": "35.66",
+      "complete": true
+    },
+    {
+      "time": "09:41",
+      "volume": 214800,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "09:42",
+      "volume": 145100,
+      "close": "35.86",
+      "complete": true
+    },
+    {
+      "time": "09:43",
+      "volume": 179000,
+      "close": "35.69",
+      "complete": true
+    },
+    {
+      "time": "09:44",
+      "volume": 112200,
+      "close": "35.70",
+      "complete": true
+    },
+    {
+      "time": "09:45",
+      "volume": 151200,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "09:46",
+      "volume": 147300,
+      "close": "35.59",
+      "complete": true
+    },
+    {
+      "time": "09:47",
+      "volume": 249200,
+      "close": "35.48",
+      "complete": true
+    },
+    {
+      "time": "09:48",
+      "volume": 235000,
+      "close": "35.47",
+      "complete": true
+    },
+    {
+      "time": "09:49",
+      "volume": 125800,
+      "close": "35.45",
+      "complete": true
+    },
+    {
+      "time": "09:50",
+      "volume": 182500,
+      "close": "35.46",
+      "complete": true
+    },
+    {
+      "time": "09:51",
+      "volume": 153700,
+      "close": "35.45",
+      "complete": true
+    },
+    {
+      "time": "09:52",
+      "volume": 137100,
+      "close": "35.68",
+      "complete": true
+    },
+    {
+      "time": "09:53",
+      "volume": 143000,
+      "close": "35.61",
+      "complete": true
+    },
+    {
+      "time": "09:54",
+      "volume": 140600,
+      "close": "35.46",
+      "complete": true
+    },
+    {
+      "time": "09:55",
+      "volume": 182700,
+      "close": "35.54",
+      "complete": true
+    },
+    {
+      "time": "09:56",
+      "volume": 215400,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "09:57",
+      "volume": 275000,
+      "close": "35.42",
+      "complete": true
+    },
+    {
+      "time": "09:58",
+      "volume": 219700,
+      "close": "35.38",
+      "complete": true
+    },
+    {
+      "time": "09:59",
+      "volume": 110800,
+      "close": "35.33",
+      "complete": true
+    },
+    {
+      "time": "10:00",
+      "volume": 196800,
+      "close": "35.42",
+      "complete": true
+    },
+    {
+      "time": "10:01",
+      "volume": 77700,
+      "close": "35.44",
+      "complete": true
+    },
+    {
+      "time": "10:02",
+      "volume": 100000,
+      "close": "35.39",
+      "complete": true
+    },
+    {
+      "time": "10:03",
+      "volume": 111700,
+      "close": "35.36",
+      "complete": true
+    },
+    {
+      "time": "10:04",
+      "volume": 87300,
+      "close": "35.33",
+      "complete": true
+    },
+    {
+      "time": "10:05",
+      "volume": 86600,
+      "close": "35.29",
+      "complete": true
+    },
+    {
+      "time": "10:06",
+      "volume": 92000,
+      "close": "35.29",
+      "complete": true
+    },
+    {
+      "time": "10:07",
+      "volume": 100400,
+      "close": "35.23",
+      "complete": true
+    },
+    {
+      "time": "10:08",
+      "volume": 109600,
+      "close": "35.31",
+      "complete": true
+    },
+    {
+      "time": "10:09",
+      "volume": 78900,
+      "close": "35.26",
+      "complete": true
+    },
+    {
+      "time": "10:10",
+      "volume": 186200,
+      "close": "35.15",
+      "complete": true
+    },
+    {
+      "time": "10:11",
+      "volume": 114400,
+      "close": "35.15",
+      "complete": true
+    },
+    {
+      "time": "10:12",
+      "volume": 61500,
+      "close": "35.13",
+      "complete": true
+    },
+    {
+      "time": "10:13",
+      "volume": 83700,
+      "close": "35.11",
+      "complete": true
+    },
+    {
+      "time": "10:14",
+      "volume": 56500,
+      "close": "35.10",
+      "complete": true
+    },
+    {
+      "time": "10:15",
+      "volume": 135400,
+      "close": "35.14",
+      "complete": true
+    },
+    {
+      "time": "10:16",
+      "volume": 74300,
+      "close": "35.13",
+      "complete": true
+    },
+    {
+      "time": "10:17",
+      "volume": 180600,
+      "close": "35.23",
+      "complete": true
+    },
+    {
+      "time": "10:18",
+      "volume": 116600,
+      "close": "35.26",
+      "complete": true
+    },
+    {
+      "time": "10:19",
+      "volume": 49400,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "10:20",
+      "volume": 57700,
+      "close": "35.37",
+      "complete": true
+    },
+    {
+      "time": "10:21",
+      "volume": 167900,
+      "close": "35.51",
+      "complete": true
+    },
+    {
+      "time": "10:22",
+      "volume": 224900,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "10:23",
+      "volume": 42500,
+      "close": "35.48",
+      "complete": true
+    },
+    {
+      "time": "10:24",
+      "volume": 61800,
+      "close": "35.36",
+      "complete": true
+    },
+    {
+      "time": "10:25",
+      "volume": 93200,
+      "close": "35.45",
+      "complete": true
+    },
+    {
+      "time": "10:26",
+      "volume": 76200,
+      "close": "35.49",
+      "complete": true
+    },
+    {
+      "time": "10:27",
+      "volume": 36500,
+      "close": "35.49",
+      "complete": true
+    },
+    {
+      "time": "10:28",
+      "volume": 69400,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "10:29",
+      "volume": 120400,
+      "close": "35.69",
+      "complete": true
+    },
+    {
+      "time": "10:30",
+      "volume": 105400,
+      "close": "35.71",
+      "complete": true
+    },
+    {
+      "time": "10:31",
+      "volume": 84300,
+      "close": "35.64",
+      "complete": true
+    },
+    {
+      "time": "10:32",
+      "volume": 38900,
+      "close": "35.64",
+      "complete": true
+    },
+    {
+      "time": "10:33",
+      "volume": 62400,
+      "close": "35.56",
+      "complete": true
+    },
+    {
+      "time": "10:34",
+      "volume": 40800,
+      "close": "35.57",
+      "complete": true
+    },
+    {
+      "time": "10:35",
+      "volume": 52100,
+      "close": "35.47",
+      "complete": true
+    },
+    {
+      "time": "10:36",
+      "volume": 31500,
+      "close": "35.46",
+      "complete": true
+    },
+    {
+      "time": "10:37",
+      "volume": 34800,
+      "close": "35.47",
+      "complete": true
+    },
+    {
+      "time": "10:38",
+      "volume": 44900,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "10:39",
+      "volume": 50700,
+      "close": "35.50",
+      "complete": true
+    },
+    {
+      "time": "10:40",
+      "volume": 34200,
+      "close": "35.50",
+      "complete": true
+    },
+    {
+      "time": "10:41",
+      "volume": 36800,
+      "close": "35.56",
+      "complete": true
+    },
+    {
+      "time": "10:42",
+      "volume": 57300,
+      "close": "35.50",
+      "complete": true
+    },
+    {
+      "time": "10:43",
+      "volume": 53100,
+      "close": "35.48",
+      "complete": true
+    },
+    {
+      "time": "10:44",
+      "volume": 54100,
+      "close": "35.49",
+      "complete": true
+    },
+    {
+      "time": "10:45",
+      "volume": 50400,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "10:46",
+      "volume": 35300,
+      "close": "35.33",
+      "complete": true
+    },
+    {
+      "time": "10:47",
+      "volume": 57000,
+      "close": "35.33",
+      "complete": true
+    },
+    {
+      "time": "10:48",
+      "volume": 150600,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "10:49",
+      "volume": 29900,
+      "close": "35.22",
+      "complete": true
+    },
+    {
+      "time": "10:50",
+      "volume": 78900,
+      "close": "35.16",
+      "complete": true
+    },
+    {
+      "time": "10:51",
+      "volume": 59900,
+      "close": "35.14",
+      "complete": true
+    },
+    {
+      "time": "10:52",
+      "volume": 49300,
+      "close": "35.18",
+      "complete": true
+    },
+    {
+      "time": "10:53",
+      "volume": 120500,
+      "close": "35.12",
+      "complete": true
+    },
+    {
+      "time": "10:54",
+      "volume": 44800,
+      "close": "35.18",
+      "complete": true
+    },
+    {
+      "time": "10:55",
+      "volume": 62800,
+      "close": "35.25",
+      "complete": true
+    },
+    {
+      "time": "10:56",
+      "volume": 44800,
+      "close": "35.23",
+      "complete": true
+    },
+    {
+      "time": "10:57",
+      "volume": 43200,
+      "close": "35.21",
+      "complete": true
+    },
+    {
+      "time": "10:58",
+      "volume": 19900,
+      "close": "35.21",
+      "complete": true
+    },
+    {
+      "time": "10:59",
+      "volume": 64500,
+      "close": "35.15",
+      "complete": true
+    },
+    {
+      "time": "11:00",
+      "volume": 60100,
+      "close": "35.19",
+      "complete": true
+    },
+    {
+      "time": "11:01",
+      "volume": 44800,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "11:02",
+      "volume": 124000,
+      "close": "35.38",
+      "complete": true
+    },
+    {
+      "time": "11:03",
+      "volume": 103500,
+      "close": "35.41",
+      "complete": true
+    },
+    {
+      "time": "11:04",
+      "volume": 92000,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "11:05",
+      "volume": 169400,
+      "close": "35.32",
+      "complete": true
+    },
+    {
+      "time": "11:06",
+      "volume": 88200,
+      "close": "35.30",
+      "complete": true
+    },
+    {
+      "time": "11:07",
+      "volume": 72300,
+      "close": "35.38",
+      "complete": true
+    },
+    {
+      "time": "11:08",
+      "volume": 50000,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "11:09",
+      "volume": 59700,
+      "close": "35.51",
+      "complete": true
+    },
+    {
+      "time": "11:10",
+      "volume": 55900,
+      "close": "35.55",
+      "complete": true
+    },
+    {
+      "time": "11:11",
+      "volume": 106200,
+      "close": "35.63",
+      "complete": true
+    },
+    {
+      "time": "11:12",
+      "volume": 67700,
+      "close": "35.61",
+      "complete": true
+    },
+    {
+      "time": "11:13",
+      "volume": 124300,
+      "close": "35.73",
+      "complete": true
+    },
+    {
+      "time": "11:14",
+      "volume": 68100,
+      "close": "35.58",
+      "complete": true
+    },
+    {
+      "time": "11:15",
+      "volume": 97600,
+      "close": "35.72",
+      "complete": true
+    },
+    {
+      "time": "11:16",
+      "volume": 106700,
+      "close": "35.70",
+      "complete": true
+    },
+    {
+      "time": "11:17",
+      "volume": 65600,
+      "close": "35.65",
+      "complete": true
+    },
+    {
+      "time": "11:18",
+      "volume": 55400,
+      "close": "35.68",
+      "complete": true
+    },
+    {
+      "time": "11:19",
+      "volume": 50700,
+      "close": "35.69",
+      "complete": true
+    },
+    {
+      "time": "11:20",
+      "volume": 57700,
+      "close": "35.60",
+      "complete": true
+    },
+    {
+      "time": "11:21",
+      "volume": 52500,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "11:22",
+      "volume": 54400,
+      "close": "35.72",
+      "complete": true
+    },
+    {
+      "time": "11:23",
+      "volume": 60500,
+      "close": "35.68",
+      "complete": true
+    },
+    {
+      "time": "11:24",
+      "volume": 35100,
+      "close": "35.71",
+      "complete": true
+    },
+    {
+      "time": "11:25",
+      "volume": 236100,
+      "close": "35.83",
+      "complete": true
+    },
+    {
+      "time": "11:26",
+      "volume": 209300,
+      "close": "35.74",
+      "complete": true
+    },
+    {
+      "time": "11:27",
+      "volume": 37400,
+      "close": "35.63",
+      "complete": true
+    },
+    {
+      "time": "11:28",
+      "volume": 99600,
+      "close": "35.56",
+      "complete": true
+    },
+    {
+      "time": "11:29",
+      "volume": 31200,
+      "close": "35.62",
+      "complete": true
+    },
+    {
+      "time": "11:30",
+      "volume": 28300,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "13:00",
+      "volume": 0,
+      "close": "35.67",
+      "complete": true
+    },
+    {
+      "time": "13:01",
+      "volume": 671500,
+      "close": "35.65",
+      "complete": true
+    },
+    {
+      "time": "13:02",
+      "volume": 193800,
+      "close": "35.58",
+      "complete": true
+    },
+    {
+      "time": "13:03",
+      "volume": 150600,
+      "close": "35.59",
+      "complete": true
+    },
+    {
+      "time": "13:04",
+      "volume": 97900,
+      "close": "35.55",
+      "complete": true
+    },
+    {
+      "time": "13:05",
+      "volume": 87500,
+      "close": "35.47",
+      "complete": true
+    },
+    {
+      "time": "13:06",
+      "volume": 87300,
+      "close": "35.46",
+      "complete": true
+    },
+    {
+      "time": "13:07",
+      "volume": 52500,
+      "close": "35.48",
+      "complete": true
+    },
+    {
+      "time": "13:08",
+      "volume": 66000,
+      "close": "35.50",
+      "complete": true
+    },
+    {
+      "time": "13:09",
+      "volume": 113700,
+      "close": "35.40",
+      "complete": true
+    },
+    {
+      "time": "13:10",
+      "volume": 36000,
+      "close": "35.42",
+      "complete": true
+    },
+    {
+      "time": "13:11",
+      "volume": 48400,
+      "close": "35.41",
+      "complete": true
+    },
+    {
+      "time": "13:12",
+      "volume": 27700,
+      "close": "35.41",
+      "complete": true
+    },
+    {
+      "time": "13:13",
+      "volume": 33800,
+      "close": "35.49",
+      "complete": true
+    },
+    {
+      "time": "13:14",
+      "volume": 47000,
+      "close": "35.47",
+      "complete": true
+    },
+    {
+      "time": "13:15",
+      "volume": 35600,
+      "close": "35.45",
+      "complete": true
+    },
+    {
+      "time": "13:16",
+      "volume": 42900,
+      "close": "35.44",
+      "complete": true
+    },
+    {
+      "time": "13:17",
+      "volume": 16100,
+      "close": "35.46",
+      "complete": true
+    },
+    {
+      "time": "13:18",
+      "volume": 35500,
+      "close": "35.43",
+      "complete": true
+    },
+    {
+      "time": "13:19",
+      "volume": 46100,
+      "close": "35.40",
+      "complete": true
+    },
+    {
+      "time": "13:20",
+      "volume": 28300,
+      "close": "35.38",
+      "complete": true
+    },
+    {
+      "time": "13:21",
+      "volume": 50000,
+      "close": "35.35",
+      "complete": true
+    },
+    {
+      "time": "13:22",
+      "volume": 32000,
+      "close": "35.35",
+      "complete": true
+    },
+    {
+      "time": "13:23",
+      "volume": 44000,
+      "close": "35.35",
+      "complete": true
+    },
+    {
+      "time": "13:24",
+      "volume": 26700,
+      "close": "35.36",
+      "complete": true
+    },
+    {
+      "time": "13:25",
+      "volume": 50700,
+      "close": "35.33",
+      "complete": true
+    },
+    {
+      "time": "13:26",
+      "volume": 13800,
+      "close": "35.32",
+      "complete": true
+    },
+    {
+      "time": "13:27",
+      "volume": 63400,
+      "close": "35.30",
+      "complete": true
+    },
+    {
+      "time": "13:28",
+      "volume": 77200,
+      "close": "35.25",
+      "complete": true
+    },
+    {
+      "time": "13:29",
+      "volume": 46400,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "13:30",
+      "volume": 51100,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "13:31",
+      "volume": 55000,
+      "close": "35.22",
+      "complete": true
+    },
+    {
+      "time": "13:32",
+      "volume": 40200,
+      "close": "35.25",
+      "complete": true
+    },
+    {
+      "time": "13:33",
+      "volume": 29500,
+      "close": "35.30",
+      "complete": true
+    },
+    {
+      "time": "13:34",
+      "volume": 130800,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "13:35",
+      "volume": 22200,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "13:36",
+      "volume": 85300,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "13:37",
+      "volume": 30600,
+      "close": "35.26",
+      "complete": true
+    },
+    {
+      "time": "13:38",
+      "volume": 32200,
+      "close": "35.29",
+      "complete": true
+    },
+    {
+      "time": "13:39",
+      "volume": 36100,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "13:40",
+      "volume": 102500,
+      "close": "35.20",
+      "complete": true
+    },
+    {
+      "time": "13:41",
+      "volume": 40500,
+      "close": "35.21",
+      "complete": true
+    },
+    {
+      "time": "13:42",
+      "volume": 49300,
+      "close": "35.22",
+      "complete": true
+    },
+    {
+      "time": "13:43",
+      "volume": 25500,
+      "close": "35.19",
+      "complete": true
+    },
+    {
+      "time": "13:44",
+      "volume": 62200,
+      "close": "35.19",
+      "complete": true
+    },
+    {
+      "time": "13:45",
+      "volume": 55300,
+      "close": "35.22",
+      "complete": true
+    },
+    {
+      "time": "13:46",
+      "volume": 63400,
+      "close": "35.30",
+      "complete": true
+    },
+    {
+      "time": "13:47",
+      "volume": 72200,
+      "close": "35.32",
+      "complete": true
+    },
+    {
+      "time": "13:48",
+      "volume": 37200,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "13:49",
+      "volume": 21300,
+      "close": "35.27",
+      "complete": true
+    },
+    {
+      "time": "13:50",
+      "volume": 36000,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "13:51",
+      "volume": 48000,
+      "close": "35.20",
+      "complete": true
+    },
+    {
+      "time": "13:52",
+      "volume": 66300,
+      "close": "35.15",
+      "complete": true
+    },
+    {
+      "time": "13:53",
+      "volume": 41300,
+      "close": "35.22",
+      "complete": true
+    },
+    {
+      "time": "13:54",
+      "volume": 45600,
+      "close": "35.23",
+      "complete": true
+    },
+    {
+      "time": "13:55",
+      "volume": 19000,
+      "close": "35.24",
+      "complete": true
+    },
+    {
+      "time": "13:56",
+      "volume": 43900,
+      "close": "35.18",
+      "complete": true
+    },
+    {
+      "time": "13:57",
+      "volume": 48500,
+      "close": "35.17",
+      "complete": true
+    },
+    {
+      "time": "13:58",
+      "volume": 42600,
+      "close": "35.16",
+      "complete": true
+    },
+    {
+      "time": "13:59",
+      "volume": 79800,
+      "close": "35.10",
+      "complete": true
+    },
+    {
+      "time": "14:00",
+      "volume": 67600,
+      "close": "35.06",
+      "complete": true
+    },
+    {
+      "time": "14:01",
+      "volume": 108800,
+      "close": "35.06",
+      "complete": true
+    },
+    {
+      "time": "14:02",
+      "volume": 47000,
+      "close": "35.10",
+      "complete": true
+    },
+    {
+      "time": "14:03",
+      "volume": 30100,
+      "close": "35.11",
+      "complete": true
+    },
+    {
+      "time": "14:04",
+      "volume": 58600,
+      "close": "35.09",
+      "complete": true
+    },
+    {
+      "time": "14:05",
+      "volume": 46900,
+      "close": "35.07",
+      "complete": true
+    },
+    {
+      "time": "14:06",
+      "volume": 86100,
+      "close": "35.02",
+      "complete": true
+    },
+    {
+      "time": "14:07",
+      "volume": 37700,
+      "close": "35.02",
+      "complete": true
+    },
+    {
+      "time": "14:08",
+      "volume": 26200,
+      "close": "35.02",
+      "complete": true
+    },
+    {
+      "time": "14:09",
+      "volume": 34600,
+      "close": "35.01",
+      "complete": true
+    },
+    {
+      "time": "14:10",
+      "volume": 58300,
+      "close": "35.01",
+      "complete": true
+    },
+    {
+      "time": "14:11",
+      "volume": 224500,
+      "close": "34.98",
+      "complete": true
+    },
+    {
+      "time": "14:12",
+      "volume": 83900,
+      "close": "34.89",
+      "complete": true
+    },
+    {
+      "time": "14:13",
+      "volume": 62700,
+      "close": "34.93",
+      "complete": true
+    },
+    {
+      "time": "14:14",
+      "volume": 31100,
+      "close": "34.94",
+      "complete": true
+    },
+    {
+      "time": "14:15",
+      "volume": 37800,
+      "close": "34.91",
+      "complete": true
+    },
+    {
+      "time": "14:16",
+      "volume": 33300,
+      "close": "34.91",
+      "complete": true
+    },
+    {
+      "time": "14:17",
+      "volume": 34000,
+      "close": "34.94",
+      "complete": true
+    },
+    {
+      "time": "14:18",
+      "volume": 63100,
+      "close": "34.92",
+      "complete": true
+    },
+    {
+      "time": "14:19",
+      "volume": 46600,
+      "close": "34.88",
+      "complete": true
+    },
+    {
+      "time": "14:20",
+      "volume": 121900,
+      "close": "34.83",
+      "complete": true
+    },
+    {
+      "time": "14:21",
+      "volume": 78300,
+      "close": "34.80",
+      "complete": true
+    },
+    {
+      "time": "14:22",
+      "volume": 101100,
+      "close": "34.86",
+      "complete": true
+    },
+    {
+      "time": "14:23",
+      "volume": 47900,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "14:24",
+      "volume": 99600,
+      "close": "34.86",
+      "complete": true
+    },
+    {
+      "time": "14:25",
+      "volume": 36100,
+      "close": "34.89",
+      "complete": true
+    },
+    {
+      "time": "14:26",
+      "volume": 51700,
+      "close": "34.81",
+      "complete": true
+    },
+    {
+      "time": "14:27",
+      "volume": 53400,
+      "close": "34.90",
+      "complete": true
+    },
+    {
+      "time": "14:28",
+      "volume": 55500,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "14:29",
+      "volume": 23500,
+      "close": "34.83",
+      "complete": true
+    },
+    {
+      "time": "14:30",
+      "volume": 56600,
+      "close": "34.83",
+      "complete": true
+    },
+    {
+      "time": "14:31",
+      "volume": 119100,
+      "close": "34.82",
+      "complete": true
+    },
+    {
+      "time": "14:32",
+      "volume": 101800,
+      "close": "34.86",
+      "complete": true
+    },
+    {
+      "time": "14:33",
+      "volume": 30800,
+      "close": "34.91",
+      "complete": true
+    },
+    {
+      "time": "14:34",
+      "volume": 71200,
+      "close": "34.80",
+      "complete": true
+    },
+    {
+      "time": "14:35",
+      "volume": 100400,
+      "close": "34.77",
+      "complete": true
+    },
+    {
+      "time": "14:36",
+      "volume": 91800,
+      "close": "34.71",
+      "complete": true
+    },
+    {
+      "time": "14:37",
+      "volume": 121600,
+      "close": "34.64",
+      "complete": true
+    },
+    {
+      "time": "14:38",
+      "volume": 102400,
+      "close": "34.61",
+      "complete": true
+    },
+    {
+      "time": "14:39",
+      "volume": 96800,
+      "close": "34.58",
+      "complete": true
+    },
+    {
+      "time": "14:40",
+      "volume": 53300,
+      "close": "34.53",
+      "complete": true
+    },
+    {
+      "time": "14:41",
+      "volume": 168000,
+      "close": "34.55",
+      "complete": true
+    },
+    {
+      "time": "14:42",
+      "volume": 162300,
+      "close": "34.50",
+      "complete": true
+    },
+    {
+      "time": "14:43",
+      "volume": 109300,
+      "close": "34.49",
+      "complete": true
+    },
+    {
+      "time": "14:44",
+      "volume": 183200,
+      "close": "34.64",
+      "complete": true
+    },
+    {
+      "time": "14:45",
+      "volume": 134900,
+      "close": "34.61",
+      "complete": true
+    },
+    {
+      "time": "14:46",
+      "volume": 66500,
+      "close": "34.51",
+      "complete": true
+    },
+    {
+      "time": "14:47",
+      "volume": 81900,
+      "close": "34.61",
+      "complete": true
+    },
+    {
+      "time": "14:48",
+      "volume": 90900,
+      "close": "34.67",
+      "complete": true
+    },
+    {
+      "time": "14:49",
+      "volume": 120300,
+      "close": "34.64",
+      "complete": true
+    },
+    {
+      "time": "14:50",
+      "volume": 114600,
+      "close": "34.66",
+      "complete": true
+    },
+    {
+      "time": "14:51",
+      "volume": 84100,
+      "close": "34.60",
+      "complete": true
+    },
+    {
+      "time": "14:52",
+      "volume": 94300,
+      "close": "34.64",
+      "complete": true
+    },
+    {
+      "time": "14:53",
+      "volume": 114200,
+      "close": "34.65",
+      "complete": true
+    },
+    {
+      "time": "14:54",
+      "volume": 108600,
+      "close": "34.67",
+      "complete": true
+    },
+    {
+      "time": "14:55",
+      "volume": 98700,
+      "close": "34.74",
+      "complete": true
+    },
+    {
+      "time": "14:56",
+      "volume": 131800,
+      "close": "34.88",
+      "complete": true
+    },
+    {
+      "time": "14:57",
+      "volume": 137700,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "14:58",
+      "volume": 800,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "14:59",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:00",
+      "volume": 295900,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:06",
+      "volume": 5000,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:07",
+      "volume": 1000,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:08",
+      "volume": 400,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:09",
+      "volume": 2900,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:10",
+      "volume": 500,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:11",
+      "volume": 700,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:12",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:13",
+      "volume": 400,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:14",
+      "volume": 1600,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:15",
+      "volume": 200,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:16",
+      "volume": 1100,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:17",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:18",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:19",
+      "volume": 800,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:20",
+      "volume": 100,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:21",
+      "volume": 100,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:22",
+      "volume": 100,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:23",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:24",
+      "volume": 200,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:25",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:26",
+      "volume": 300,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:27",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:28",
+      "volume": 2800,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:29",
+      "volume": 0,
+      "close": "34.85",
+      "complete": true
+    },
+    {
+      "time": "15:30",
+      "volume": 2100,
+      "close": "34.85",
+      "complete": true
+    }
+  ]
+}

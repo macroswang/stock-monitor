@@ -1,0 +1,74 @@
+{
+  "sz300672": {
+    "symbol_seen": true,
+    "limit_up": "167.40",
+    "day_high": "145.00",
+    "source_image": "local-validation/ui_expanded/latest_ui/sz300672/context.png"
+  },
+  "sh600560": {
+    "symbol_seen": true,
+    "limit_up": "13.64",
+    "day_high": "13.55",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh600560/context.png"
+  },
+  "sh603002": {
+    "symbol_seen": true,
+    "limit_up": "17.89",
+    "day_high": "16.61",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh603002/context.png"
+  },
+  "sz000981": {
+    "symbol_seen": true,
+    "limit_up": "2.65",
+    "day_high": "2.47",
+    "source_image": "local-validation/ui_expanded/latest_ui/sz000981/context.png"
+  },
+  "sh600580": {
+    "symbol_seen": true,
+    "limit_up": "25.26",
+    "day_high": "24.00",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh600580/context.png"
+  },
+  "sh603366": {
+    "symbol_seen": true,
+    "limit_up": "8.38",
+    "day_high": "7.60",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh603366/context.png"
+  },
+  "sz000815": {
+    "symbol_seen": true,
+    "limit_up": "15.62",
+    "day_high": "14.83",
+    "source_image": "local-validation/ui_expanded/latest_ui/sz000815/context.png"
+  },
+  "sh688680": {
+    "symbol_seen": true,
+    "limit_up": "40.78",
+    "day_high": "35.00",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh688680/context.png"
+  },
+  "sh600392": {
+    "symbol_seen": true,
+    "limit_up": "19.75",
+    "day_high": "18.35",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh600392/context.png"
+  },
+  "sh605358": {
+    "symbol_seen": true,
+    "limit_up": "38.81",
+    "day_high": "36.45",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh605358/context.png"
+  },
+  "sh601929": {
+    "symbol_seen": true,
+    "limit_up": "2.78",
+    "day_high": "2.67",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh601929/context.png"
+  },
+  "sh603938": {
+    "symbol_seen": true,
+    "limit_up": "39.37",
+    "day_high": "36.68",
+    "source_image": "local-validation/ui_expanded/latest_ui/sh603938/context.png"
+  }
+}

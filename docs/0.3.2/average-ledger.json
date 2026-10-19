@@ -1,0 +1,134 @@
+[
+  {
+    "code": "sh603002",
+    "name": "宏昌电子",
+    "date": "2026-10-16",
+    "time": "10:00",
+    "client_raw": 15.724484854427756,
+    "client_display": 15.72,
+    "ths_display": 15.72,
+    "consistent": true,
+    "screenshot": "ths-sh603002-1000.png"
+  },
+  {
+    "code": "sh603002",
+    "name": "宏昌电子",
+    "date": "2026-10-16",
+    "time": "11:30",
+    "client_raw": 15.52323818863954,
+    "client_display": 15.52,
+    "ths_display": 15.52,
+    "consistent": true,
+    "screenshot": "ths-sh603002-1130.png"
+  },
+  {
+    "code": "sh603002",
+    "name": "宏昌电子",
+    "date": "2026-10-16",
+    "time": "14:00",
+    "client_raw": 15.486167416316903,
+    "client_display": 15.49,
+    "ths_display": 15.49,
+    "consistent": true,
+    "screenshot": "ths-sh603002-afternoon.png"
+  },
+  {
+    "code": "sh688680",
+    "name": "海优新材",
+    "date": "2026-10-16",
+    "time": "10:00",
+    "client_raw": 34.226972484110675,
+    "client_display": 34.23,
+    "ths_display": 34.23,
+    "consistent": true,
+    "screenshot": "ths-sh688680-1000.png"
+  },
+  {
+    "code": "sh688680",
+    "name": "海优新材",
+    "date": "2026-10-16",
+    "time": "11:30",
+    "client_raw": 34.13952723144388,
+    "client_display": 34.14,
+    "ths_display": 34.14,
+    "consistent": true,
+    "screenshot": "ths-sh688680-1130.png"
+  },
+  {
+    "code": "sh688680",
+    "name": "海优新材",
+    "date": "2026-10-16",
+    "time": "14:00",
+    "client_raw": 34.20387797240855,
+    "client_display": 34.2,
+    "ths_display": 34.2,
+    "consistent": true,
+    "screenshot": "ths-sh688680-afternoon.png"
+  },
+  {
+    "code": "sh600392",
+    "name": "盛和资源",
+    "date": "2026-10-16",
+    "time": "10:00",
+    "client_raw": 17.743046680475068,
+    "client_display": 17.74,
+    "ths_display": 17.74,
+    "consistent": true,
+    "screenshot": "ths-sh600392-1000.png"
+  },
+  {
+    "code": "sh600392",
+    "name": "盛和资源",
+    "date": "2026-10-16",
+    "time": "11:30",
+    "client_raw": 17.621600505221476,
+    "client_display": 17.62,
+    "ths_display": 17.62,
+    "consistent": true,
+    "screenshot": "ths-sh600392-1130.png"
+  },
+  {
+    "code": "sh600392",
+    "name": "盛和资源",
+    "date": "2026-10-16",
+    "time": "14:00",
+    "client_raw": 17.62302418529033,
+    "client_display": 17.62,
+    "ths_display": 17.62,
+    "consistent": true,
+    "screenshot": "ths-sh600392-afternoon.png"
+  },
+  {
+    "code": "sz000981",
+    "name": "山子高科",
+    "date": "2026-10-16",
+    "time": "10:00",
+    "client_raw": 2.437887386968387,
+    "client_display": 2.44,
+    "ths_display": 2.44,
+    "consistent": true,
+    "screenshot": "ths-sz000981-1000.png"
+  },
+  {
+    "code": "sz000981",
+    "name": "山子高科",
+    "date": "2026-10-16",
+    "time": "11:30",
+    "client_raw": 2.4403484201585717,
+    "client_display": 2.44,
+    "ths_display": 2.44,
+    "consistent": true,
+    "screenshot": "ths-sz000981-1130.png"
+  },
+  {
+    "code": "sz000981",
+    "name": "山子高科",
+    "date": "2026-10-16",
+    "time": "14:00",
+    "client_raw": 2.443615249905544,
+    "client_display": 2.44,
+    "ths_display": 2.44,
+    "consistent": true,
+    "screenshot": "ths-sz000981-afternoon.png"
+  }
+]

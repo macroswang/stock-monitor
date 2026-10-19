@@ -1,0 +1,165 @@
+{
+  "version": "running_max_inclusive_v1",
+  "mode": "offline_validation_only",
+  "symbol": "688680",
+  "trading_date": "2026-10-16",
+  "source": {
+    "provider": "tencent",
+    "raw_file": "local-validation/ui_expanded/raw/sh688680-tencent.json",
+    "auction": "09:30 cumulative point excluded; 09:31 uses difference from 09:30",
+    "price_limit": "inferred regular 10%/20% from unadjusted previous close; historical status/ex-right reference unverified",
+    "unit_multiplier": 1
+  },
+  "volume_unit": "shares",
+  "time_label_semantics": "unverified",
+  "notifications_sent": 0,
+  "real_orders": 0,
+  "candidates": [
+    {
+      "key": "2026-10-16|688680|09:31",
+      "candidate_time": "09:31",
+      "prior_max": 0,
+      "equals_prior_max": false,
+      "volumes": [
+        29515,
+        27583,
+        12851
+      ],
+      "confirmation_label": "09:33",
+      "branch": "NON_LIMIT",
+      "state": "MATCHED_ONCE",
+      "event_label": "09:33"
+    },
+    {
+      "key": "2026-10-16|688680|09:35",
+      "candidate_time": "09:35",
+      "prior_max": 29515,
+      "equals_prior_max": false,
+      "volumes": [
+        38275,
+        17964,
+        16302
+      ],
+      "confirmation_label": "09:37",
+      "branch": "NON_LIMIT",
+      "state": "MATCHED_ONCE",
+      "event_label": "09:37"
+    },
+    {
+      "key": "2026-10-16|688680|13:01",
+      "candidate_time": "13:01",
+      "prior_max": 38275,
+      "equals_prior_max": false,
+      "volumes": [
+        64594,
+        8058,
+        3183
+      ],
+      "confirmation_label": "13:03",
+      "branch": "NON_LIMIT",
+      "state": "MATCHED_ONCE",
+      "event_label": "13:03"
+    }
+  ],
+  "matches": [
+    {
+      "key": "2026-10-16|688680|09:31",
+      "candidate_time": "09:31",
+      "volumes": [
+        29515,
+        27583,
+        12851
+      ],
+      "confirmation_label": "09:33",
+      "branch": "NON_LIMIT",
+      "kind": "TWO_MINUTE_CONFIRMATION",
+      "event_label": "09:33",
+      "historical_close": "34.03",
+      "reference_sell_price": null,
+      "exact_reopen_time": null,
+      "manual_sell_only": true,
+      "ratios_to_candidate": [
+        "0.9345417584279180077926478062",
+        "0.4354057259020836862612231069"
+      ]
+    },
+    {
+      "key": "2026-10-16|688680|09:35",
+      "candidate_time": "09:35",
+      "volumes": [
+        38275,
+        17964,
+        16302
+      ],
+      "confirmation_label": "09:37",
+      "branch": "NON_LIMIT",
+      "kind": "TWO_MINUTE_CONFIRMATION",
+      "event_label": "09:37",
+      "historical_close": "34.15",
+      "reference_sell_price": null,
+      "exact_reopen_time": null,
+      "manual_sell_only": true,
+      "ratios_to_candidate": [
+        "0.4693403004572175048987589811",
+        "0.4259177008491182233834095363"
+      ]
+    },
+    {
+      "key": "2026-10-16|688680|13:01",
+      "candidate_time": "13:01",
+      "volumes": [
+        64594,
+        8058,
+        3183
+      ],
+      "confirmation_label": "13:03",
+      "branch": "NON_LIMIT",
+      "kind": "TWO_MINUTE_CONFIRMATION",
+      "event_label": "13:03",
+      "historical_close": "34.30",
+      "reference_sell_price": null,
+      "exact_reopen_time": null,
+      "manual_sell_only": true,
+      "ratios_to_candidate": [
+        "0.1247484286466235254048363625",
+        "0.04927702263368114685574511565"
+      ]
+    }
+  ],
+  "coverage_gaps": [],
+  "excluded": [
+    {
+      "time": "09:30",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "13:00",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:57",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:58",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "14:59",
+      "reason": "outside comparable continuous-minute labels"
+    },
+    {
+      "time": "15:00",
+      "reason": "outside comparable continuous-minute labels"
+    }
+  ],
+  "limitations": [
+    "No real-time feed, holdings or execution validation.",
+    "Minute reopen evidence identifies an interval, not the first trade's second or executable price.",
+    "Historical chart top is not proof of intraday chart scaling.",
+    "Provider label semantics unverified; times are labels, not validated execution times.",
+    "Full-day high is retrospective evidence for excluding limit-touch, not an online input."
+  ],
+  "running_max": 64594,
+  "complete_prefix_coverage": true
+}
