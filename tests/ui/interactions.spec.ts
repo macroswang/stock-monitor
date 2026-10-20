@@ -251,3 +251,16 @@ test('tooltip body does not block mouse tracking',async({page})=>{
   await expect(tooltip.locator(':scope>div').first()).toHaveText(target.time,{timeout:500});
  }
 });
+
+test('intraday grid is sparse dark red and price/volume use identical time coordinates',async({page})=>{
+ await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const result=await chart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const c=e.getInstanceByDom(el),o=c.getOption();
+  return {gaps:o.xAxis.map((a:any)=>a.boundaryGap),colors:o.yAxis.map((a:any)=>a.splitLine.lineStyle.color),ticks:o.xAxis.map((a:any)=>a.data.filter((t:string,i:number)=>a.splitLine.interval(i,t))),x:[0,60,119,120,180,239].map(i=>[c.convertToPixel({xAxisIndex:0},i),c.convertToPixel({xAxisIndex:1},i)])};
+ });
+ expect(result.gaps).toEqual([false,false]);expect(result.colors).toEqual(['#69343f','#69343f']);
+ expect(result.ticks[0]).toEqual(result.ticks[1]);expect(result.ticks[0].length).toBeLessThanOrEqual(10);
+ for(const [price,volume] of result.x)expect(price).toBeCloseTo(volume,5);
+ await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-red-grid-local.png'});
+});
