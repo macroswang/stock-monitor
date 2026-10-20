@@ -6,9 +6,12 @@ import {topVolumeMarks} from './volumeMarks';
 import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
 import TCostSettings from './TCostSettings';
+import {appendTradeTooltip} from './tradeTooltip';
 export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,compact=false,benchmark,previousClose,buySignals=[]}:{buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;compact?:boolean}){
- const [costs,setCosts]=useState<TCosts>(()=>{try{const saved=JSON.parse(localStorage.getItem('stock-monitor-t-costs-v3')||'null');return saved&&tProfit(10,10,saved)?saved:defaultTCosts;}catch{return defaultTCosts;}});
- const updateCosts=(next:TCosts)=>{setCosts(next);if(tProfit(10,10,next)){try{localStorage.setItem('stock-monitor-t-costs-v3',JSON.stringify(next));}catch{}}};
+ const [costs,setCosts]=useState<TCosts>(()=>{try{const saved=JSON.parse(localStorage.getItem('stock-monitor-t-costs-v4')||'null');return saved&&tProfit(10,10,saved)?saved:defaultTCosts;}catch{return defaultTCosts;}});
+ const costsRef=useRef(costs);costsRef.current=costs;
+ const refreshTrade=useRef<(()=>void)|null>(null);
+ const updateCosts=(next:TCosts)=>{costsRef.current=next;setCosts(next);refreshTrade.current?.();if(tProfit(10,10,next)){try{localStorage.setItem('stock-monitor-t-costs-v4',JSON.stringify(next));}catch{}}};
  const scope=view+'|'+(selectedDay||events[0]?.trading_date||'');
  const [choice,setChoice]=useState<{scope:string;time:string;price:number}|null>(null);
  useEffect(()=>setChoice(null),[scope]);
@@ -17,7 +20,7 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
  const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
  const chosen=choice?.scope===scope?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const scopeRef=useRef(scope);scopeRef.current=scope;
- const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,previousClose,buySignals,chosen,costs]);
+ const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,previousClose,buySignals,chosen]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view});plot.current={daily,view};
  const windowDates=useRef<string[]>([]);const lastDailyDate=useRef('');
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
@@ -49,18 +52,20 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
   if(isDay&&labels.length){let lo=windowDates.current.length?Math.max(0,labels.indexOf(windowDates.current[0])):Math.max(0,labels.length-60);let hi=windowDates.current.length?labels.indexOf(windowDates.current[1]):labels.length-1;if(hi<lo)hi=Math.min(labels.length-1,lo+59);if(lastDailyDate.current&&windowDates.current[1]===lastDailyDate.current&&labels.at(-1)!==lastDailyDate.current){const width=hi-lo;hi=labels.length-1;lo=Math.max(0,hi-width);}lastDailyDate.current=labels.at(-1)||'';const idx=labels.indexOf(selectedDay||'');const width=hi-lo;if(idx>=0&&idx<lo){lo=idx;hi=Math.min(labels.length-1,lo+width);}else if(idx>hi){hi=idx;lo=Math.max(0,hi-width);}zoom={start:lo/Math.max(1,labels.length-1)*100,end:hi/Math.max(1,labels.length-1)*100};windowDates.current=[labels[lo],labels[hi]];}
   chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
    legend:{show:!isDay,data:['价格','均价',...(canOverlay?['上证走势']:[])],top:0,textStyle:{color:'#9dacc5'}},
-   tooltip:{trigger:'axis',confine:true,axisPointer:{type:'cross'},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
-    formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;const root=document.createElement('div');root.className='quote-tooltip';
+   tooltip:{trigger:'axis',confine:true,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross'},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
+    formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;const root=document.createElement('div');root.className=isDay?'quote-tooltip':'quote-tooltip minute-tooltip';
      const rows:string[]=[];if(isDay){const b=daily[idx];if(b){rows.push(b.provisional?b.date+' · 盘中日K（未收盘）':b.date,`开盘：${price(b.open)} 元`,`收盘：${price(b.close)} 元`,`最高：${price(b.high)} 元`,`最低：${price(b.low)} 元`,`成交量：${wanShares(b.volume)} 万股`);const n=events.filter(e=>e.trading_date===b.date).length;if(n)rows.push(`触发：${n} 次`);rows.push('双击查看当天分时 · 左右键逐日浏览');}}
      else{const b=minute[idx];if(b)rows.push(b.time,`价格：${price(b.close)} 元`,`均价：${b.average&&Number.isFinite(+b.average)?price(b.average)+' 元':'暂无成交额数据'}`,`分钟量：${wan(b.volume/100)} 手`,...(!b.complete?['当前分钟（未结束）']:[]));if(b&&chosen){const change=(+b.close/chosen.price-1)*100;rows.push(`基准触发：${chosen.time} · ${price(chosen.price)} 元`,`相对触发涨跌幅：${change>0?'+':''}${(Math.abs(change)<.005?0:change).toFixed(2)}%`);
-      if(b.time<chosen.time){rows.push('做T试算：早于基准时间，仅比较价格');}
-      else{const pnl=tProfit(chosen.price,+b.close,costs);if(!pnl)rows.push('做T试算：请填写有效股数和费用参数');else{
-       const money=(n:number)=>(n>0?'+':'')+n.toFixed(2)+' 元';
-       rows.push(`扣费后预计${pnl.net>=0?'盈利':'亏损'}（${costs.shares}股）：${money(pnl.net)}`);
-       if(pnl.gross>0&&pnl.net<=0)rows.push('价差不足以覆盖费用');
-       if(b.time===chosen.time)rows.push('同分钟仅价差示意，不代表可执行顺序');
-      }}}if(b&&canOverlay&&indexByTime.has(b.time)){const v=indexByTime.get(b.time)!;rows.push(`上证：${v.toFixed(2)} 点（${(v/+benchmark!.previous_close*100-100).toFixed(2)}%）`);}}
-     for(const text of rows){const row=document.createElement('div');row.textContent=text;if(text.startsWith('扣费后预计')){row.className='trigger-change';row.style.color=text.includes('亏损')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';}if(text.startsWith('相对触发涨跌幅')){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';}root.appendChild(row);}return root;}
+     }if(b&&canOverlay&&indexByTime.has(b.time)){const v=indexByTime.get(b.time)!;rows.push(`上证：${v.toFixed(2)} 点（${(v/+benchmark!.previous_close*100-100).toFixed(2)}%）`);}}
+     const comparison=document.createElement('div');comparison.className='tooltip-comparison';
+     for(const text of rows){
+      const row=document.createElement('div');
+      const split=text.indexOf('：');
+      if(!isDay&&split>=0){const label=document.createElement('span');label.textContent=text.slice(0,split+1);const value=document.createElement('span');value.textContent=text.slice(split+1).trim();row.append(label,value);row.className='quote-detail';}else row.textContent=text;
+      if(text.startsWith('相对触发涨跌幅')){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
+     }
+     if(comparison.childElementCount)root.append(comparison);
+     refreshTrade.current=null;if(!isDay&&chosen&&minute[idx])refreshTrade.current=appendTradeTooltip(root,chosen.price,+minute[idx].close,()=>costsRef.current,minute[idx].time<chosen.time,minute[idx].time===chosen.time);return root;}
    },axisPointer:{link:[{xAxisIndex:'all'}]},grid:[{left:65,right:35,top:30,height:'55%'},{left:65,right:35,top:'72%',height:'17%'}],
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,axisLine:{lineStyle:{color:'#2a374c'}},axisLabel:{hideOverlap:true}},{type:'category',gridIndex:1,data:labels,axisLabel:{show:false},axisLine:{lineStyle:{color:'#2a374c'}}}],
    yAxis:[{scale:true,splitLine:{lineStyle:{color:'#202c40'}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,splitNumber:2,name:isDay?'成交量（万股）':'成交量（手）',splitLine:{lineStyle:{color:'#202c40'}},axisLabel:{formatter:(n:number)=>isDay?wan(n):n>=10000?(n/10000).toFixed(1)+'万':n.toFixed(0)}}],
@@ -73,5 +78,5 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
   },{notMerge:true});
   if(isDay&&selectedDay){const index=labels.indexOf(selectedDay);if(index>=0)chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});}
  },[contentKey]);
- return <>{view!=='daily'&&<div className="trigger-comparison">{chosen?<><strong>已选触发：{chosen.time} · {price(chosen.price)} 元</strong><span>移动鼠标查看相对涨跌幅</span>{choice?.scope===scope?<button onClick={()=>setChoice(null)}>恢复最近触发</button>:<span>默认最近触发</span>}</>:<span>点击一个“触发”标记，再移动鼠标查看相对涨跌幅</span>}</div>}{view!=='daily'&&<TCostSettings value={costs} onChange={updateCosts}/>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view!=='daily'&&<div className="average-caption">触发：连续两分钟缩量确认后标在顶部量分钟；仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
+ return <>{view!=='daily'&&<TCostSettings value={costs} onChange={updateCosts}/>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view!=='daily'&&<div className="average-caption">触发：连续两分钟缩量确认后标在顶部量分钟；仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
 }

@@ -24,5 +24,5 @@ test('Shanzi 2000-share trade is profitable; separate 100-share trade is not pro
  const hundred=tProfit(2.46,2.41,{...defaultTCosts,shares:100})!;
  expect(actual.gross).toBe(100);expect(actual.commission).toBe(10);expect(actual.stamp).toBe(2.46);expect(actual.transfer).toBe(.10);expect(actual.net).toBe(87.44);
  expect(hundred.gross).toBe(5);expect(hundred.net).toBe(-5.12);
- expect(defaultTCosts.shares).toBe(2000);expect(defaultTCosts.commissionWan).toBe(2);
+ expect(defaultTCosts.shares).toBe(1000);expect(defaultTCosts.commissionWan).toBe(2);
 });
