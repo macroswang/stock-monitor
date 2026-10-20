@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {tProfit,defaultTCosts} from '../../src/tCosts';
+import {tProfit,tTrade,defaultTCosts} from '../../src/tCosts';
 test('100 shares, commission minimum on both legs, sell-only stamp tax',()=>{
  const r=tProfit(10.21,10.10,{...defaultTCosts,shares:100})!;
  expect(r.gross).toBe(11);expect(r.commission).toBe(10);expect(r.stamp).toBe(.51);expect(r.transfer).toBe(.02);expect(r.net).toBe(.47);
@@ -25,4 +25,14 @@ test('Shanzi 2000-share trade is profitable; separate 100-share trade is not pro
  expect(actual.gross).toBe(100);expect(actual.commission).toBe(10);expect(actual.stamp).toBe(2.46);expect(actual.transfer).toBe(.10);expect(actual.net).toBe(87.44);
  expect(hundred.gross).toBe(5);expect(hundred.net).toBe(-5.12);
  expect(defaultTCosts.shares).toBe(1000);expect(defaultTCosts.commissionWan).toBe(2);
+});
+
+test('trade direction swaps prices and charges stamp duty on the actual sell amount',()=>{
+ const p={...defaultTCosts,shares:2000};
+ const sellFirst=tTrade(35.97,36.89,{...p,direction:'sell-buy'})!;
+ const buyFirst=tTrade(35.97,36.89,{...p,direction:'buy-sell'})!;
+ expect(sellFirst).toMatchObject({sell:35.97,buy:36.89,gross:-1840,stamp:35.97,commission:29.15,net:-1906.58});
+ expect(buyFirst).toMatchObject({sell:36.89,buy:35.97,gross:1840,stamp:36.89,commission:29.15,net:1772.50});
+ expect(tTrade(35.97,36.89,{...p,direction:'buy-sell',transferIncluded:true})!.net).toBe(1773.96);
+ expect(tTrade(2.46,2.41,{...p,direction:'buy-sell'})!.net).toBeLessThan(0);
 });

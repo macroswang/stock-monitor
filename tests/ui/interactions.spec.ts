@@ -206,6 +206,16 @@ test('trigger comparison stays available without header or tooltip inputs',async
  const xy=await point('09:36',105);
  await expect(async()=>{await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);await expect(chart.locator('.quote-tooltip')).toContainText('基准触发：09:34',{timeout:500});}).toPass({timeout:10000});
  await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计盈利（1000股）');
+ await expect(chart.locator('.quote-trade-context')).toContainText('先卖后买');
+ await expect(chart.locator('.quote-trade-prices')).toHaveText('卖出 110.00 元 → 买入 105.00 元');
+ await page.getByRole('button',{name:'先买后卖',exact:true}).click();
+ await expect(page.getByRole('button',{name:'先买后卖',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
+ await expect(chart.locator('.quote-trade-prices')).toHaveText('买入 110.00 元 → 卖出 105.00 元');
+ await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计亏损（1000股）：-5097.65 元');
+ await page.getByRole('button',{name:'先卖后买',exact:true}).click();
+ await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
+ await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计盈利（1000股）');
  await chart.locator('.quote-tooltip').screenshot({path:'docs/compact-trade-tooltip.png'});
  await expect(page.locator('.trigger-comparison')).toHaveCount(0);
  await expect(chart.locator('input')).toHaveCount(0);
