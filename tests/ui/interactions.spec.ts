@@ -264,3 +264,43 @@ test('intraday grid is sparse dark red and price/volume use identical time coord
  for(const [price,volume] of result.x)expect(price).toBeCloseTo(volume,5);
  await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-red-grid-local.png'});
 });
+
+test('sidebar collapses, keeps navigation usable and remembers state after reload',async({page})=>{
+ const workspace=page.locator('.workspace');const before=(await workspace.boundingBox())!.x;
+ await page.getByRole('button',{name:'折叠侧栏',exact:true}).click();
+ await expect(page.getByRole('button',{name:'展开侧栏',exact:true})).toHaveAttribute('aria-expanded','false');
+ await expect(async()=>{expect((await workspace.boundingBox())!.x).toBeLessThan(before-80);}).toPass();
+ await expect(page.locator('.nav-label').first()).toBeHidden();
+ await page.getByRole('button',{name:'数据管理',exact:true}).click();await expect(page.getByRole('heading',{name:'下载与本地缓存'})).toBeVisible();
+ await page.reload();await expect(page.getByRole('button',{name:'展开侧栏',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.screenshot({path:'docs/sidebar-collapsed-local.png',fullPage:true});
+ await page.getByRole('button',{name:'展开侧栏',exact:true}).click();
+ await expect(page.getByRole('button',{name:'折叠侧栏',exact:true})).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('.nav-label').first()).toBeVisible();
+ await expect(async()=>{expect((await workspace.boundingBox())!.x).toBeCloseTo(before,0);}).toPass();
+});
+
+test('right percent axis mirrors price ticks using same-day previous close',async({page})=>{
+ await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ const rows=await rpc('chart',{code:'sh603002',kind:'minute'});
+ await rpc('__audit_cache',{code:'sh603002',day:'2026-10-16',data:{...rows[0].data,previous_close:'16'}});
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const inspect=()=>chart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const c=e.getInstanceByDom(el),o=c.getOption(),right=o.yAxis[2];
+  if(!right)return null;
+  return {left:{min:o.yAxis[0].min,max:o.yAxis[0].max,interval:o.yAxis[0].interval},right:{min:right.min,max:right.max,interval:right.interval},labels:[right.axisLabel.formatter(16.16),right.axisLabel.formatter(15.84),right.axisLabel.formatter(16)],pixels:[15,15.5,16].map(v=>[c.convertToPixel({yAxisIndex:0},v),c.convertToPixel({yAxisIndex:2},v)]),gridRight:o.grid.map((g:any)=>g.right)};
+ });
+ await expect(async()=>{expect(await inspect()).not.toBeNull();}).toPass({timeout:10000});
+ const result=(await inspect())!;expect(result.left).toEqual(result.right);expect(result.labels).toEqual(['{rise|+1.00%}','{fall|-1.00%}','{flat|0.00%}']);
+ for(const [price,percent] of result.pixels)expect(price).toBeCloseTo(percent,5);
+ expect(result.gridRight).toEqual([72,72]);
+ for(const bar of [rows[0].data.bars.find((b:any)=>b.time==='09:31'),rows[0].data.bars.find((b:any)=>b.time==='15:00')]){
+  const xy=await chart.evaluate(async(el,b)=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},[b.time,+b.close]) as number[];},bar);
+  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+xy[0],box.y+80);
+  const pct=(Number(bar.close)/16-1)*100;
+  await expect(chart.locator('.quote-tooltip .quote-detail').filter({hasText:'涨跌幅：'})).toHaveText(`涨跌幅：${pct>0?'+':''}${pct.toFixed(2)}%`);
+ }
+ await chart.locator('.quote-tooltip').screenshot({path:'docs/intraday-hover-percent-local.png'});
+ await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-percent-axis-local.png'});
+});
