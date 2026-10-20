@@ -304,3 +304,21 @@ test('right percent axis mirrors price ticks using same-day previous close',asyn
  await chart.locator('.quote-tooltip').screenshot({path:'docs/intraday-hover-percent-local.png'});
  await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-percent-axis-local.png'});
 });
+
+test('daily zoom is locked and latest upward gap remains visible as a shaded range',async({page})=>{
+ for(const [day,low,high] of [['2026-10-19','100','101'],['2026-10-20','105','106']])await rpc('__audit_daily',{code:'sh603002',day,data:{date:day,open:low,close:high,low,high,volume:'10000',volume_unit:'shares',source:'tencent'}});
+ await page.getByRole('button',{name:'日K',exact:true}).click();const chart=page.getByLabel('日K线及成交量');
+ const inspect=()=>chart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const o=e.getInstanceByDom(el).getOption();return {zoom:o.dataZoom.map((z:any)=>({start:z.start,end:z.end,zoomLock:z.zoomLock,zoomOnMouseWheel:z.zoomOnMouseWheel,handleSize:z.handleSize})),areas:o.series[0].markArea.data};
+ });
+ await expect(async()=>{expect((await inspect()).areas.some((a:any)=>a[0].name.includes('101.00—105.00'))).toBeTruthy();}).toPass({timeout:10000});
+ const before=await inspect();expect(before.zoom.every((z:any)=>z.zoomLock)).toBeTruthy();expect(before.zoom[0].zoomOnMouseWheel).toBe(false);expect(before.zoom[1].handleSize).toBe(0);
+ const area=before.areas.find((a:any)=>a[0].name.includes('101.00—105.00'));expect(area[0].xAxis).not.toBe(area[1].xAxis);
+ const box=(await chart.boundingBox())!;await page.mouse.move(box.x+box.width*.5,box.y+100);await page.mouse.wheel(0,-600);
+ await expect(async()=>{expect((await inspect()).zoom.map((z:any)=>[z.start,z.end])).toEqual(before.zoom.map((z:any)=>[z.start,z.end]));}).toPass();
+ await page.mouse.move(10,10);await chart.screenshot({path:'docs/daily-gaps-local.png'});
+ await page.getByRole('button',{name:'分时',exact:true}).click();
+ const minute=await page.getByLabel('分时价格及分钟成交量').evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);return e.getInstanceByDom(el).getOption().dataZoom[0].zoomLock;
+ });expect(minute).not.toBe(true);
+});
