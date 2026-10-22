@@ -342,3 +342,20 @@ test('daily zoom is locked and latest upward gap remains visible as a shaded ran
   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);return e.getInstanceByDom(el).getOption().dataZoom[0].zoomLock;
  });expect(minute).not.toBe(true);
 });
+
+test('intraday axis spans full trading day with future gaps and time-aligned tooltip',async({page})=>{
+ const bars=[{time:'09:31',close:'10',volume:100,complete:true},{time:'09:33',close:'11',volume:200,complete:true}];
+ await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'tencent',bars}});
+ await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19',{timeout:10000});
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const inspect=()=>chart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();
+  return {labels:o.xAxis.map((a:any)=>a.data),prices:o.series[0].data,volume:o.series.at(-1).data.map((d:any)=>d.value),end:o.dataZoom[0].end,point:c.convertToPixel({seriesIndex:0},['09:33',11])};
+ });
+ await expect.poll(async()=> (await inspect()).prices[3]).toBe(11);
+ const o=await inspect();expect(o.labels[0]).toEqual(o.labels[1]);expect(o.labels[0][0]).toBe('09:30');expect(o.labels[0].at(-1)).toBe('15:00');expect(o.labels[0]).not.toContain('12:00');
+ expect(o.prices.slice(0,5)).toEqual([null,10,null,11,null]);expect(o.prices.at(-1)).toBeNull();expect(o.volume.slice(0,5)).toEqual([null,1,null,2,null]);expect(o.end).toBe(100);
+ const box=(await chart.boundingBox())!;await page.mouse.move(box.x+o.point[0],box.y+100);
+ await expect(chart.locator('.quote-tooltip')).toContainText('09:33');await expect(chart.locator('.quote-tooltip')).toContainText('11.00');
+ await page.mouse.move(10,10);await chart.screenshot({path:'docs/full-day-time-axis-local.png'});
+});
