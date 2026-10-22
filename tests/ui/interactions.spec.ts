@@ -359,3 +359,22 @@ test('intraday axis spans full trading day with future gaps and time-aligned too
  await expect(chart.locator('.quote-tooltip')).toContainText('09:33');await expect(chart.locator('.quote-tooltip')).toContainText('11.00');
  await page.mouse.move(10,10);await chart.screenshot({path:'docs/full-day-time-axis-local.png'});
 });
+
+test('watch card aligns with entire detail card without stretching stock rows',async({page})=>{
+ const card=page.locator('.watchlist'),detail=page.locator('.market-grid > .detail');
+ for(const height of [680,1200]){
+  await page.setViewportSize({width:1380,height});
+  await expect(async()=>{
+   const left=(await card.boundingBox())!,right=(await detail.boundingBox())!;
+   expect(Math.abs(left.y-right.y)).toBeLessThan(2);
+   expect(Math.abs(left.y+left.height-right.y-right.height)).toBeLessThan(2);
+  }).toPass();
+ }
+ for(const w of (await rpc('snapshot')).watch.slice(2))await rpc('remove',{code:w.code});
+ await expect(card.locator('.stock')).toHaveCount(2);
+ await expect(async()=>{const left=(await card.boundingBox())!,right=(await detail.boundingBox())!;expect(Math.abs(left.height-right.height)).toBeLessThan(2);}).toPass();
+ expect((await card.locator('.stock').first().boundingBox())!.height).toBeLessThan(200);
+ await card.locator('.stock').last().getByLabel('振幅').locator('span').scrollIntoViewIfNeeded();
+ await expect(card.locator('.stock').last().getByLabel('振幅').locator('span')).toBeInViewport();
+ await page.screenshot({path:'docs/watchlist-equal-height-local.png',fullPage:true});
+});

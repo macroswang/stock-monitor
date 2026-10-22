@@ -31,3 +31,6 @@
 .t-direction{display:flex;align-items:center;gap:6px;margin:6px 20px 8px;color:#91a7c3;font-size:11px}.t-direction>span{margin-right:5px}.t-direction button{padding:5px 12px;font-size:12px;background:#142136;border-color:#2d405d}.t-direction button.chosen{color:#bad8ff;background:#253f61;border-color:#7197c8}.quote-trade-context{margin-top:4px}.quote-trade-prices{font-size:11px;text-align:right;color:#b9cbe2;padding:2px 0}
 
 .opening-volume-toggle{display:flex;align-items:center;gap:7px;margin:0 20px 8px;color:#bac9dd;font-size:12px}.opening-volume-toggle input{width:auto;margin:0;accent-color:#8798b2}.opening-volume-toggle span{color:#7e91ac;font-size:11px}
+
+/* Stretch the card to the detail column, without stretching individual rows. */
+.watchlist{align-self:stretch;display:flex;flex-direction:column;min-height:0}.watchlist>.card-heading,.watchlist>.add{flex-shrink:0}.watchlist>.stocks{height:auto;max-height:none;min-height:0;overflow-y:visible;flex:0 0 auto}.watchlist .stock{flex-shrink:0}
