@@ -221,6 +221,16 @@ test('trigger comparison stays available without header or tooltip inputs',async
  await expect(chart.locator('input')).toHaveCount(0);
  const mark=await point('09:31',100);await page.mouse.click(box.x+mark[0],box.y+mark[1]-18);
  await page.mouse.move(box.x+xy[0],box.y+80);await expect(chart.locator('.quote-tooltip')).toContainText('基准触发：09:31');
+ const opening=page.getByRole('checkbox',{name:'显示开盘量'});
+ await expect(opening).toBeChecked();
+ await opening.uncheck();
+ await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value);})).toEqual(['触发']);
+ await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
+ await expect(chart.locator('.quote-tooltip')).toContainText('基准触发：09:34');
+ expect(await page.evaluate(()=>localStorage.getItem('stock-monitor-show-opening'))).toBe('false');
+ await opening.check();
+ await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value).sort();})).toEqual(['开盘量','触发'].sort());
+ await page.mouse.click(box.x+mark[0],box.y+mark[1]-18);
  await page.locator('.t-cost-settings summary').click();await page.getByLabel('试算股数',{exact:true}).fill('2000');await page.locator('.t-cost-settings summary').click();
  const updated=(await chart.boundingBox())!;await page.mouse.move(updated.x+xy[0],updated.y+80);
  await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计亏损（2000股）');

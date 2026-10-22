@@ -18,7 +18,7 @@ test('confirmed marker stays on original top even after later larger volume',()=
 });
 test('opening first minute needs its own confirmed event',()=>{
  expect(topVolumeMarks(bars.slice(0,1))).toEqual([]);
- expect(topVolumeMarks([bar('09:31',200),bar('09:32',90),bar('09:33',80)],[event('09:31','09:33')])).toEqual([{coord:['09:31',10],value:'触发'}]);
+ expect(topVolumeMarks([bar('09:31',200),bar('09:32',90),bar('09:33',80)],[event('09:31','09:33')])).toEqual([{coord:['09:31',10],value:'开盘量'}]);
 });
 test('limit-up wait keeps marker hidden until reopening event arrives',()=>{
  const reopen=event('09:32','09:34','09:36:05');
@@ -30,4 +30,11 @@ test('lunch counts trading minutes and missing confirmation bars do not mark',()
  expect(topVolumeMarks(lunch,[event('11:30','13:02')])).toEqual([{coord:['11:30',10],value:'触发'}]);
  expect(topVolumeMarks([bars[1],bars[3]],[event()])).toEqual([]);
  expect(topVolumeMarks(bars,[{...event(),mode:'test'}])).toEqual([]);
+});
+
+test('opening visibility filters only opening marker and retains later confirmed marker',()=>{
+ const events=[event('09:31','09:33'),event()];
+ expect(topVolumeMarks(bars,events,false)).toEqual([{coord:['09:32',10],value:'触发'}]);
+ expect(topVolumeMarks(bars,events,true).map(m=>m.value)).toEqual(['开盘量','触发']);
+ expect(topVolumeMarks(bars.slice(0,2),[event('09:31','09:33')])).toEqual([]);
 });
