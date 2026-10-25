@@ -42,6 +42,7 @@ function App(){
  const [market,setMarket]=useState<MarketData>({quotes:[],minute:null});
  const [removeTarget,setRemoveTarget]=useState<Watch|null>(null);
  const [snapshot,setSnapshot]=useState<Snapshot>();const [code,setCode]=useState('sh603002');const [view,setView]=useState('minute');const [panel,setPanel]=useState('market');
+ useEffect(()=>{if(panel==='research')setPanel('market');if(window.location.hash==='#research')window.history.replaceState(null,'',window.location.pathname+window.location.search);},[panel]);
  const [cache,setCache]=useState<Cached[]>([]);const [dayChoice,setDayChoice]=useState('');const [daily,setDaily]=useState<Daily[]>([]);
  const [input,setInput]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [secret,setSecret]=useState('');
  useEffect(()=>{if(!message)return;const timer=window.setTimeout(()=>setMessage(''),5000);return()=>window.clearTimeout(timer);},[message]);
