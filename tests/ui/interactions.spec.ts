@@ -1,14 +1,15 @@
 import {test,expect,Page} from '@playwright/test';
 import {spawn,ChildProcessWithoutNullStreams} from 'node:child_process';
 import {createInterface} from 'node:readline';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {turningShapes} from '../../src/turningShapes';
-let process:ChildProcessWithoutNullStreams;let directory:string;
+let process:ChildProcessWithoutNullStreams;let directory:string;let paperChartRequests=0;
 let waiting:{resolve:(r:any)=>void;reject:(e:Error)=>void}[]=[];
 async function rpc(method:string,args:Record<string,unknown>={}){if(process.stdin.writableEnded)return null;return new Promise<any>((resolve,reject)=>{waiting.push({resolve,reject});process.stdin.write(JSON.stringify({method,args})+'\n');});}
 test.beforeEach(async({page})=>{
+ paperChartRequests=0;
  directory=await mkdtemp(join(tmpdir(),'stock-ui-audit-'));
  process=spawn('.venv/bin/python',['tests/ui/rpc_fixture.py'],{env:{...global.process.env,PYTHONPATH:global.process.cwd(),STOCK_MONITOR_DATA:directory},stdio:'pipe'});
  waiting=[];
@@ -17,6 +18,7 @@ test.beforeEach(async({page})=>{
  await page.exposeFunction('__auditRpc',async(cmd:string,args:any)=>{
   if(cmd==='plugin:autostart|is_enabled')return false;
   if(cmd==='rpc'){
+   if(args.method==='paper_chart')paperChartRequests++;
    if(args.method==='chart'&&args.args.code==='sh603002')await new Promise(r=>setTimeout(r,220));
    return rpc(args.method,args.args);
   }
@@ -109,10 +111,13 @@ test('daily keyboard navigation and double click open selected intraday without 
  await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/intraday.png',fullPage:true});
 });
 
+async function selectDailyDate(page:Page,date?:string){
+ return page.getByLabel('日K线及成交量').evaluate(async(el,date)=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),day=date||c.getOption().xAxis[0].data[0];c.trigger('click',{componentType:'series',name:day});return day as string;},date);
+}
+
 test('daily left boundary expands using local cached history and retains selected date',async({page})=>{
  await page.getByRole('button',{name:'日K',exact:true}).click();
- const before=await page.getByLabel('区间交易日').getByRole('button').first().innerText();
- await page.getByLabel('区间交易日').getByRole('button').first().click();
+ const before=await selectDailyDate(page);
  await page.getByLabel('日K线及成交量').focus();await page.getByLabel('日K线及成交量').press('ArrowLeft');
  await expect(page.locator('.linked-minute h3')).not.toContainText(before.slice(0,10));
  const day=await page.locator('.linked-minute h3').innerText();expect(day<before.slice(0,10)).toBeTruthy();
@@ -120,15 +125,13 @@ test('daily left boundary expands using local cached history and retains selecte
  await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/history.png',fullPage:true});
 });
 
-test('messages retain content, mark read, survive reload and link to matching intraday',async({page})=>{
+test('hidden message navigation keeps existing records and read state intact',async({page})=>{
  const e={key:'2026-10-16|603002|09:31',symbol:'603002',trading_date:'2026-10-16',candidate_time:'09:31',confirmation_label:'09:33',event_label:'09:33',volumes:[4384500,1461000,1957000],kind:'TWO_MINUTE_CONFIRMATION',observed_at:'2026-10-16T09:33:05+08:00'};
  await rpc('__audit_event',e);await rpc('__audit_event',e);
- await page.getByRole('button',{name:/消息中心/}).click();await expect(page.locator('.message-item')).toHaveCount(1);
- await expect(page.locator('.message-item')).toContainText('宏昌电子');await expect(page.locator('.message-item')).toContainText('438.45');await expect(page.locator('.message-item')).toContainText('万股');
- await page.getByRole('button',{name:'全部标为已读'}).click();await expect(page.locator('.message-item.unread')).toHaveCount(0);
- await page.reload();await page.getByRole('button',{name:/消息中心/}).click();await expect(page.locator('.message-item')).toHaveCount(1);await expect(page.locator('.message-item.unread')).toHaveCount(0);
- await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/messages.png',fullPage:true});
- await page.getByRole('button',{name:'查看对应分时'}).click();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');await expect(page.locator('.detail h2')).toContainText('宏昌电子');
+ await expect(page.getByRole('button',{name:'消息中心',exact:true})).toHaveCount(0);
+ const messages=await rpc('messages');expect(messages.items).toHaveLength(1);expect(JSON.stringify(messages.items)).toContain('宏昌电子');
+ await rpc('message_read',{all:true});await page.reload();
+ expect((await rpc('messages')).items[0].read_at).toBeTruthy();
 });
 
 test('source addresses and safe reserved provider switch are visible',async({page})=>{
@@ -141,8 +144,7 @@ test('historical minute cache with unknown limit shows pending reference, manual
  const old=(await rpc('chart',{code:'sh603002',kind:'minute'}))[0].data;const changed={...old,trading_date:'2026-10-15'};delete changed.limit_up;
  await rpc('__audit_cache',{code:'sh603002',day:'2026-10-15',data:changed});
  await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect(page.getByLabel('区间交易日').getByRole('button').filter({hasText:'2026-10-15'})).toBeVisible();
- await page.getByLabel('区间交易日').getByRole('button').filter({hasText:'2026-10-15'}).click();
+ await selectDailyDate(page,'2026-10-15');
  await expect(page.locator('.history-status')).toContainText('缺少当日可靠涨停价');
  await page.getByLabel('历史涨停价').fill('17.89');await page.getByRole('button',{name:'保存参考价并回放'}).click();
  await expect(page.locator('.history-status')).toContainText('完整分钟量回放');await expect(page.locator('.day-signals')).toContainText('438.45');
@@ -230,7 +232,7 @@ test('intraday average is shown from turnover data and removed daily toolbar sta
 
 test('old daily selection explains missing intraday and can return to available history',async({page})=>{
  await page.getByRole('button',{name:'日K',exact:true}).click();
- await page.getByLabel('区间交易日').getByRole('button').first().click();
+ await selectDailyDate(page);
  await page.getByLabel('日K线及成交量').focus();await page.getByLabel('日K线及成交量').press('Enter');
  await expect(page.getByRole('button',{name:'查看最近可用分时'})).toBeVisible();
  await expect(page.locator('.detail')).toContainText('日K历史范围比分钟接口更长');
@@ -422,7 +424,7 @@ test('intraday axis spans full trading day with future gaps and time-aligned too
  const chart=page.getByLabel('分时价格及分钟成交量');
  const inspect=()=>chart.evaluate(async el=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();
-  return {labels:o.xAxis.map((a:any)=>a.data),prices:o.series[0].data,volume:o.series.at(-1).data.map((d:any)=>d.value),end:o.dataZoom[0].end,point:c.convertToPixel({seriesIndex:0},['09:33',11])};
+  return {labels:o.xAxis.map((a:any)=>a.data),prices:o.series[0].data,volume:o.series.find((s:any)=>s.name==='分钟量（手）').data.map((d:any)=>d.value),end:o.dataZoom[0].end,point:c.convertToPixel({seriesIndex:0},['09:33',11])};
  });
  await expect.poll(async()=> (await inspect()).prices[3]).toBe(11);
  const o=await inspect();expect(o.labels[0]).toEqual(o.labels[1]);expect(o.labels[0][0]).toBe('09:30');expect(o.labels[0].at(-1)).toBe('15:00');expect(o.labels[0]).not.toContain('12:00');
@@ -449,4 +451,112 @@ test('watch card aligns with entire detail card without stretching stock rows',a
  await card.locator('.stock').last().getByLabel('振幅').locator('span').scrollIntoViewIfNeeded();
  await expect(card.locator('.stock').last().getByLabel('振幅').locator('span')).toBeInViewport();
  await page.screenshot({path:test.info().outputPath('watchlist-equal-height-local.png'),fullPage:true});
+});
+
+test('any intraday location opens a limit ticket; pending partial fills cancel and persist',async({page})=>{
+ const bars=[{time:'09:31',close:'10',volume:10000,complete:true},{time:'09:32',close:'9.5',volume:10000,complete:true},{time:'09:33',close:'11',volume:10000,complete:true}];
+ await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'paper-test',volume_unit:'shares',bars}});
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByLabel('模拟初始资金').fill('100000');await page.getByRole('button',{name:'创建模拟账户',exact:true}).click();
+ const panel=page.getByLabel('历史回放模拟交易');await expect(panel).toContainText('100,000.00');
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ // Click empty grid space at an arbitrary price, independent of any signal.
+ const xy=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},['09:31',10.05]);});
+ const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1]);
+ await expect(page.locator('.paper-quick-trade')).toContainText('委托 / 比较位置：位置');await page.getByRole('button',{name:'模拟买入',exact:true}).click();
+ await expect(page.getByLabel('模拟委托限价')).toHaveValue('10.05');await page.getByLabel('模拟委托限价').fill('10');await page.getByLabel('模拟交易股数').fill('200');
+ await page.getByRole('button',{name:'提交模拟委托',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.getByRole('button',{name:'委托记录（1）',exact:true}).click();await expect(panel).toContainText('未成交');
+ let snap=await rpc('paper_snapshot');expect(snap.positions).toEqual([]);expect(snap.frozen_cash).toBeGreaterThan(200000);
+ await page.getByLabel('模拟回放分钟').fill('2026-10-19T09:32');await page.getByRole('button',{name:'推进账户时间',exact:true}).click();
+ await expect(panel).toContainText('部分成交');snap=await rpc('paper_snapshot');expect(snap.positions[0].shares).toBe(100);expect(snap.fills[0].price).toBe(950);
+ await page.getByRole('button',{name:'撤单',exact:true}).click();await expect(panel).toContainText('已撤单');snap=await rpc('paper_snapshot');expect(snap.frozen_cash).toBe(0);expect(snap.positions[0].shares).toBe(100);
+ await page.getByRole('button',{name:'成交明细（1）',exact:true}).click();await expect(panel.locator('.paper-record-table tbody tr')).toHaveCount(1);
+ const download=page.waitForEvent('download');await page.getByRole('button',{name:'导出明细',exact:true}).click();await download;
+ await page.reload();await page.getByRole('button',{name:'模拟交易',exact:true}).click();await expect(panel).toContainText('100 / 0');
+ snap=await rpc('paper_snapshot');expect(snap.orders).toHaveLength(1);expect(snap.profit).toBe(snap.account.realized+snap.unrealized);
+ await page.screenshot({path:'docs/paper-limit-orders-local.png',fullPage:true});
+});
+
+test('only executed account trades paint intraday B/S and daily T and survive reload',async({page})=>{
+ const code='sh603002',day='2026-10-19';
+ const bars=[{time:'09:31',close:'10',volume:100000,complete:true},{time:'09:32',close:'9.5',volume:100000,complete:true},{time:'09:33',close:'11',volume:100000,complete:true}];
+ await rpc('__audit_cache',{code,day,data:{date:day,source:'paper-marker-test',volume_unit:'shares',bars}});
+ await rpc('__audit_daily',{code,day,data:{date:day,open:'10',close:'10.5',high:'11',low:'9',volume:'300000',volume_unit:'shares',source:'test'}});
+ const a=await rpc('paper_create',{name:'有成交账户',cash:100000});
+ await rpc('paper_seed',{account:a.id,code,shares:1000,cost:9});
+ const submit=async(time:string,side:string,limit_price:number,id:string)=>{const stamp=day+' '+time,q=await rpc('paper_quote',{code,stamp});await rpc('paper_order',{account:a.id,id,code,stamp,token:q.token,side,shares:100,limit_price});};
+ await submit('09:31','buy',10,'chart-buy-01');await rpc('paper_advance',{account:a.id,code,stamp:day+' 09:32'});
+ await submit('09:32','sell',10,'chart-sell-01');await rpc('paper_advance',{account:a.id,code,stamp:day+' 09:33'});
+ await submit('09:33','buy',1,'chart-unfilled');await rpc('paper_cancel',{account:a.id,id:'chart-unfilled'});
+ await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue(day);
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const marks=(locator:any)=>locator.evaluate(async(el:Element)=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint?.data?.filter((m:any)=>m.paperTrade).map((m:any)=>({value:m.value,coord:m.coord}))||[];});
+ await expect.poll(()=>marks(chart)).toEqual([{value:'B',coord:['09:32',9.5]},{value:'S',coord:['09:33',11]}]);
+ await expect(page.locator('.paper-day-t')).toHaveText('T · 当日有买有卖');
+ const requestCount=paperChartRequests;await page.waitForTimeout(3500);expect(paperChartRequests).toBe(requestCount);
+ await chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf('09:32')});});
+ await expect(chart.locator('.quote-tooltip')).toContainText('模拟成交 B：买入100股 · 均价9.50元');
+ await chart.screenshot({path:'docs/paper-bs-intraday-local.png'});
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const daily=page.getByLabel('日K线及成交量');await expect.poll(()=>marks(daily)).toEqual([{value:'T',coord:[day,10.25]}]);
+ await daily.screenshot({path:'docs/paper-t-daily-local.png'});
+ const b=await rpc('paper_create',{name:'空账户',cash:50000});
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'刷新',exact:true}).click();await page.getByLabel('模拟账户').selectOption(b.id);
+ await expect(page.getByLabel('历史回放模拟交易')).toContainText('50,000.00');
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect.poll(()=>marks(page.getByLabel('日K线及成交量'))).toEqual([]);
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByLabel('模拟账户').selectOption(a.id);
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect.poll(()=>marks(page.getByLabel('日K线及成交量'))).toEqual([{value:'T',coord:[day,10.25]}]);
+});
+
+test('paper compact fields retain day profit and keep audit details expandable',async({page})=>{
+ const code='sh603002',day='2026-10-19',bars=[{time:'09:31',close:'10',volume:100000,complete:true},{time:'09:32',close:'11',volume:100000,complete:true},{time:'09:33',close:'9.5',volume:100000,complete:true}];
+ await rpc('__audit_cache',{code,day,data:{date:day,source:'compact-test',previous_close:'9.8',volume_unit:'shares',bars}});
+ const a=await rpc('paper_create',{name:'精简字段验证',cash:100000});await rpc('paper_seed',{account:a.id,code,shares:1000,cost:9});await rpc('paper_advance',{account:a.id,code,stamp:day+' 09:31'});
+ await page.reload();await page.getByRole('button',{name:'模拟交易',exact:true}).click();const panel=page.getByLabel('历史回放模拟交易');
+ await expect(panel.locator('.paper-totals>div>span')).toHaveText(['总资产','可用资金','持仓市值','当日盈亏','累计盈亏']);
+ await expect(panel.locator('.paper-totals>div').filter({hasText:'当日盈亏'}).locator('strong')).toHaveText('+200.00');
+ await expect(panel.locator('.paper-totals>div').filter({hasText:'累计盈亏'}).locator('strong')).toHaveText('+1,000.00');
+ await expect(panel.locator('.paper-positions th')).toHaveText(['股票','持仓 / 可卖','成本价 / 现价','市值','浮动盈亏','操作']);
+ await expect(panel.locator('.paper-profit-grid')).toBeHidden();await panel.locator('.paper-profit-details summary').click();await expect(panel.locator('.paper-profit-grid')).toBeVisible();await expect(panel.locator('.paper-profit-grid')).toContainText('累计费用');
+ await panel.locator('.paper-profit-details summary').click();
+ const stamp=day+' 09:31',q=await rpc('paper_quote',{code,stamp});await rpc('paper_order',{account:a.id,id:'compact-sell',code,stamp,token:q.token,side:'sell',shares:100,limit_price:10});
+ await page.getByRole('button',{name:'刷新',exact:true}).click();await expect(panel.locator('.paper-positions')).toContainText('冻结 100 股');
+ await page.getByRole('button',{name:'委托记录（1）',exact:true}).click();await expect(panel.locator('.paper-record-table th')).toHaveText(['时间','股票','方向','委托价格','委托 / 已成 / 未成','状态','操作']);
+ await expect(panel.locator('.paper-record-details dl')).toBeHidden();await panel.locator('.paper-record-details summary').click();await expect(panel.locator('.paper-record-details dl')).toContainText('compact-sell');await expect(panel.locator('.paper-record-details dl')).toContainText('单边滑点');await panel.locator('.paper-record-details summary').click();
+ await page.getByLabel('模拟回放分钟').fill('2026-10-19T09:32');await page.getByRole('button',{name:'推进账户时间',exact:true}).click();
+ await page.getByRole('button',{name:'成交明细（1）',exact:true}).click();await expect(panel.locator('.paper-record-table th')).toHaveText(['时间','股票','方向','成交价 / 数量','成交金额 / 费用','已实现盈亏']);
+ const snapshot=await rpc('paper_snapshot',{account:a.id});expect(snapshot.day_pnl.profit).toBe(119444); // 1000*(11-9.8) less 5.56 yuan sell fees
+ await panel.locator('.paper-record-details summary').click();await expect(panel.locator('.paper-record-details dl')).toContainText('印花税');await expect(panel.locator('.paper-record-details dl')).toContainText('过户费');await panel.locator('.paper-record-details summary').click();
+ await page.screenshot({path:'docs/paper-compact-fields-local.png',fullPage:true});
+ // Missing prior close must be visibly unknown, never a fabricated zero.
+ const payload={date:day,source:'compact-test',volume_unit:'shares',bars};await rpc('__audit_cache',{code,day,data:payload});await page.getByRole('button',{name:'刷新',exact:true}).click();
+ await expect(panel.locator('.paper-totals>div').filter({hasText:'当日盈亏'}).locator('strong')).toHaveText('暂无');
+});
+
+test('exported execution CSV matches ledger values and escapes spreadsheet formulas',async({page})=>{
+ const code='sh603002',day='2026-10-19';
+ await rpc('__audit_cache',{code,day,data:{date:day,source:'=HYPERLINK("invalid")',previous_close:'10',volume_unit:'shares',bars:[{time:'09:31',close:'10',volume:10000,complete:true},{time:'09:32',close:'9.5',volume:10000,complete:true}]}});
+ const a=await rpc('paper_create',{cash:12345.67}),q=await rpc('paper_quote',{code,stamp:day+' 09:31'});
+ await rpc('paper_order',{account:a.id,id:'csv-valid-order',code,stamp:q.stamp,token:q.token,side:'buy',shares:100,limit_price:10,origin:'@SUM(1,2)'});
+ await rpc('paper_advance',{account:a.id,code,stamp:day+' 09:32'});
+ await page.reload();await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'成交明细（1）',exact:true}).click();
+ const event=page.waitForEvent('download');await page.getByRole('button',{name:'导出明细',exact:true}).click();const download=await event;
+ const csv=await readFile((await download.path())!,'utf8');
+ expect(csv.startsWith('\ufeff')).toBe(true);expect(csv).toContain('"9.50","950.00","5.01"');expect(csv).toContain('"\'@SUM(1,2)"');expect(csv).toContain('"\'=HYPERLINK(""invalid"")"');
+ expect(csv.split('\r\n')).toHaveLength(2);expect(csv).toContain('"已成交"');
+});
+
+test('minimum desktop viewport keeps account fields accessible and failed orders recover',async({page})=>{
+ await page.setViewportSize({width:1000,height:680});
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();
+ await page.getByLabel('模拟初始资金').fill('3210.98');await page.getByRole('button',{name:'创建模拟账户',exact:true}).click();
+ const panel=page.getByLabel('历史回放模拟交易');await expect(panel.locator('.paper-totals')).toContainText('3,210.98');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.getByLabel('模拟回放分钟').fill('2026-10-16T09:31');await page.getByRole('button',{name:'模拟买入当前股票',exact:true}).click();
+ const ticket=page.getByRole('dialog');await expect(ticket).toBeVisible();await page.getByLabel('模拟交易股数').fill('100000000');await page.getByRole('button',{name:'提交模拟委托',exact:true}).click();
+ await expect(ticket.getByRole('alert')).toContainText('可用资金不足');
+ await page.getByLabel('模拟交易股数').fill('100');await page.getByRole('button',{name:'提交模拟委托',exact:true}).click();await expect(ticket).toHaveCount(0);
+ const s=await rpc('paper_snapshot');expect(s.order_count).toBe(2);expect(s.fill_count).toBe(0);expect(s.available_cash).toBeGreaterThanOrEqual(0);
+ await page.screenshot({path:'docs/paper-acceptance-small-viewport.png',fullPage:true});
 });

@@ -222,6 +222,11 @@ class App:
             daily_url='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param='+code+',day,开始日期,结束日期,2000,')
 
     def call(self,method,args):
+        if method.startswith("paper_"):
+            from .paper import Paper
+            with self.lock:
+                if not hasattr(self,"paper"):self.paper=Paper(self.dir/"paper.sqlite3",self.store)
+            return self.paper.call(method,args)
         if method=='buy_research':
             from .buy_research import run,export
             def research():
