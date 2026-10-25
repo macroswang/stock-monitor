@@ -34,3 +34,14 @@
 
 /* Stretch the card to the detail column, without stretching individual rows. */
 .watchlist{align-self:stretch;display:flex;flex-direction:column;min-height:0}.watchlist>.card-heading,.watchlist>.add{flex-shrink:0}.watchlist>.stocks{height:auto;max-height:none;min-height:0;overflow-y:visible;flex:0 0 auto}.watchlist .stock{flex-shrink:0}
+
+/* Tighter workspace spacing while preserving card content padding. */
+.workspace{padding-left:16px;padding-right:16px}.summary{margin-bottom:12px}.market-grid{gap:10px}@media(max-width:1150px){.workspace{padding-left:12px;padding-right:12px}.market-grid{gap:8px}}
+
+/* Keep display switches together at the right edge of each minute chart. */
+.chart-display-options{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:4px 14px;min-width:0;padding:4px 23px 6px}.chart-display-options .opening-volume-toggle{gap:5px;margin:0;min-height:24px;white-space:nowrap;cursor:pointer}.chart-display-options .opening-volume-toggle input{width:13px;height:13px;flex-shrink:0}
+
+/* Share one toolbar row; wrap naturally when the detail column gets narrow. */
+.minute-chart-controls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding:4px 20px 2px}.minute-chart-controls>.t-direction{flex:0 0 auto;margin:0;min-height:26px}.minute-chart-controls>.chart-display-options{flex:1 1 280px;padding:0}.minute-chart-controls>.t-cost-settings{flex:0 0 100%;min-width:0;margin:0 0 2px}.minute-chart-controls>.t-cost-settings summary{padding:4px 0}.minute-chart-controls .t-direction button{padding:4px 10px}.chart-caption{padding-top:10px}
+/* Compact each watch row while keeping all quote fields and the full list. */
+.watchlist>.card-heading{padding:12px 14px}.watchlist>.add{padding:0 10px 9px}.watchlist>.add input{padding:7px 9px}.watchlist>.add button{padding:6px 9px}.watchlist .stock{padding:8px 12px;gap:0 6px}.watchlist .stock.selected{padding-left:9px}.watchlist .stock>div:first-child>strong{line-height:17px}.watchlist .stock small{margin-top:2px;font-size:10px;line-height:11px;letter-spacing:.2px}.watchlist .stock-right>strong{font-size:14px;font-weight:600;line-height:17px}.watchlist .watch-quote-details{gap:4px;margin-top:6px;padding-top:5px}.watchlist .watch-metric{gap:2px}.watchlist .stock .watch-metric strong{font-size:12px;line-height:15px}.watchlist .watch-metric>span{font-size:10px;line-height:11px}

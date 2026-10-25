@@ -162,6 +162,8 @@ test('confirmed shapes and frozen Q1 quality have independent displays without c
  const expected=example.expected.map((m:any)=>({coord:[m.time,m.price],key:m.key}));
  const shapeExpected=turningShapes(example.bars).map(m=>({coord:[m.time,m.price],key:m.key}));
  await expect(shapeToggle).toBeChecked();await expect(qualityToggle).toBeChecked();await expect.poll(()=>marks('qualityKey')).toEqual(expected);await expect.poll(()=>marks('observationKey')).toEqual(shapeExpected);
+ for(const label of ['显示开盘量','显示形态底/顶','显示Q1质量'])await expect(page.getByRole('checkbox',{name:label,exact:true})).toHaveCount(1);
+ for(const description of ['09:31单独标记','小点彩签 · 已确认反转','白边小点 · 冻结筛选'])await expect(page.locator('.opening-volume-toggle')).not.toContainText([description]);
  await expect(page.getByRole('checkbox',{name:/缩量顶补漏/})).toHaveCount(0);await expect(page.getByLabel('底顶观察版本')).toHaveCount(0);
  await expect(page.locator('.average-caption')).toContainText('Q1筛选未改');
  const show=async(time:string)=>chart.evaluate(async(el,time)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf(time)});},time);
@@ -195,6 +197,10 @@ test('actual missing-side caches show confirmed bottom and top with concise inde
   expect(all.filter((m:any)=>m.label).length).toBe(c.expectedShapes.length);
   for(const m of all.filter((m:any)=>m.q1&&!m.shape)){expect(m.symbol).toBe('circle');expect(m.label).toBe(false);}
   expect(new Set(all.map((m:any)=>m.coord[0])).size).toBe(all.length);
+  const qualityToggle=page.getByRole('checkbox',{name:'显示Q1质量',exact:true});await qualityToggle.uncheck();
+  await expect.poll(async()=>(await marks()).filter((m:any)=>m.shape).map((m:any)=>m.coord)).toEqual(c.expectedShapes.map((m:any)=>[m.time,m.price]));
+  const shapeOnly=await marks();expect(shapeOnly.some((m:any)=>m.q1)).toBe(false);expect(shapeOnly.filter((m:any)=>m.shape&&m.coord[0]===c.expectedShapes.find((m:any)=>m.kind==='bottom').time)).toHaveLength(1);
+  await qualityToggle.check();
  }
  expect((await rpc('snapshot')).events).toEqual(before.events);expect(await rpc('messages')).toEqual(messages);
 });
@@ -272,7 +278,7 @@ test('trigger comparison stays available without header or tooltip inputs',async
  await page.getByRole('button',{name:'先卖后买',exact:true}).click();
  await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
  await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计盈利（1000股）');
- await chart.locator('.quote-tooltip').screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/compact-trade-tooltip.png'});
+ await chart.locator('.quote-tooltip').screenshot({path:test.info().outputPath('compact-trade-tooltip.png')});
  await expect(page.locator('.trigger-comparison')).toHaveCount(0);
  await expect(chart.locator('input')).toHaveCount(0);
  const mark=await point('09:31',100);await page.mouse.click(box.x+mark[0],box.y+mark[1]-18);
@@ -298,7 +304,7 @@ test('watch list shows quote change percent and amplitude, with missing fields e
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('+0.50',{timeout:10000});
  await expect(stock.getByLabel('涨跌幅').locator('strong')).toHaveText('+5.00%');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('10.00%');
  await expect(page.getByRole('button',{name:/买点研究/})).toHaveCount(0);
- await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/watch-quotes-local.png',fullPage:true});
+ await page.screenshot({path:test.info().outputPath('watch-quotes-local.png'),fullPage:true});
  await rpc('__audit_quote',{code:'sh603002',quote:{price:'9',timestamp:'2026-10-19T14:31:00+08:00'}});
  await expect(stock.getByLabel('涨跌幅').locator('strong')).toHaveText('—',{timeout:10000});
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('—');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('—');
@@ -432,5 +438,5 @@ test('watch card aligns with entire detail card without stretching stock rows',a
  expect((await card.locator('.stock').first().boundingBox())!.height).toBeLessThan(200);
  await card.locator('.stock').last().getByLabel('振幅').locator('span').scrollIntoViewIfNeeded();
  await expect(card.locator('.stock').last().getByLabel('振幅').locator('span')).toBeInViewport();
- await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/watchlist-equal-height-local.png',fullPage:true});
+ await page.screenshot({path:test.info().outputPath('watchlist-equal-height-local.png'),fullPage:true});
 });
