@@ -172,7 +172,17 @@ test('confirmed shapes and frozen Q1 quality have independent displays without c
  await expect(tooltip).toContainText('基准触发：09:50');
  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底形态');c.trigger('click',{componentType:'markPoint',data:m});});
- await show(example.expected[0].time);await expect(tooltip).toContainText('基准触发：09:50');
+ await show(example.expected[0].time);await expect(tooltip).toContainText(`基准底：${example.expected[0].time}`);await expect(tooltip).toContainText('相对底涨跌幅：');
+ for(const kind of ['底','顶']){
+  const selected=await chart.evaluate(async(el,kind)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.turningKind===kind);if(!m)return null;c.trigger('click',{componentType:'markPoint',data:m});return m.coord;},kind);
+  expect(selected).not.toBeNull();
+  await show('15:00');await expect(tooltip).toContainText(`基准${kind}：${selected[0]}`);
+  await expect(tooltip).toContainText(`相对${kind}涨跌幅：`);
+  await expect(tooltip.locator('.quote-trade-prices')).toContainText(`卖出 ${Number(selected[1]).toFixed(2)} 元`);
+  await page.getByRole('button',{name:'先买后卖',exact:true}).click();await show('15:00');
+  await expect(tooltip.locator('.quote-trade-prices')).toContainText(`买入 ${Number(selected[1]).toFixed(2)} 元`);
+  await page.getByRole('button',{name:'先卖后买',exact:true}).click();
+ }
  await qualityToggle.uncheck();await expect.poll(()=>marks('qualityKey')).toEqual([]);await expect.poll(()=>marks('observationKey')).toEqual(shapeExpected);
  await page.reload();await expect(qualityToggle).not.toBeChecked();await expect(shapeToggle).toBeChecked();await qualityToggle.check();
  await shapeToggle.uncheck();await expect.poll(()=>marks('observationKey')).toEqual([]);await expect.poll(()=>marks('qualityKey')).toEqual(expected);
