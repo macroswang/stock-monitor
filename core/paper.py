@@ -7,6 +7,7 @@ import threading
 import uuid
 from datetime import date, time, timedelta
 from .provider import now_cn
+from .paper_session import trading_error
 from decimal import Decimal, ROUND_HALF_UP, ROUND_CEILING, ROUND_FLOOR
 
 
@@ -86,6 +87,10 @@ class Paper:
         self.db.execute('INSERT INTO accounts VALUES(?,?,?)', (key,state['name'],json.dumps(state)))
         return state
 
+    def require_open(self):
+        reason=trading_error(now_cn())
+        if reason:raise ValueError(reason)
+
     def clock(self, state, stamp):
         if not isinstance(stamp,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', stamp):
             raise ValueError('回放日期或分钟无效')
@@ -138,6 +143,7 @@ class Paper:
         self.save(s)
 
     def fill(self, s, args, execution=None):
+        self.require_open()
         request = json.dumps(args,sort_keys=True,ensure_ascii=False)
         key = str(args.get('id',''))
         if not re.fullmatch(r'[\w-]{8,80}',key):
@@ -242,6 +248,7 @@ class Paper:
         return cash,stocks
 
     def place(self,s,args):
+        self.require_open()
         key=str(args.get('id',''));request=json.dumps(args,sort_keys=True,ensure_ascii=False)
         if not re.fullmatch(r'[\w-]{8,80}',key):raise ValueError('缺少有效委托编号')
         old=self.db.execute('SELECT * FROM pending WHERE account=? AND id=?',(s['id'],key)).fetchone()
@@ -286,6 +293,7 @@ class Paper:
         return o
 
     def advance(self,s,target):
+        self.require_open()
         self.clock(s,target)
         active=self.pending(s['id'],active_only=True)
         reserves={o['id']:self.cash_reserve(s,o) for o in active}

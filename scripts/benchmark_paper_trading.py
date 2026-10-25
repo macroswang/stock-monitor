@@ -3,7 +3,10 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from core.store import Store
 from core.paper import Paper
-with tempfile.TemporaryDirectory() as tmp:
+from unittest.mock import patch
+from datetime import datetime
+from core.provider import CN
+with patch('core.paper.now_cn',return_value=datetime(2026,10,23,10,0,tzinfo=CN)),tempfile.TemporaryDirectory() as tmp:
  st=Store(Path(tmp)/'monitor.sqlite3');p=Paper(Path(tmp)/'paper.sqlite3',st)
  account=p.call('paper_create',{'cash':1000000})['id']
  bars=[dict(time=f'{m//60:02}:{m%60:02}',close='10',volume=10000000,complete=True) for m in [*range(571,691),*range(781,901)]]

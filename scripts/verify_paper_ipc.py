@@ -10,6 +10,8 @@ import threading
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from core.store import Store
+from core.provider import now_cn
+from core.paper_session import trading_error
 
 class Peer:
     def __init__(self,binary,directory):
@@ -35,6 +37,23 @@ def main(binary):
         for day in ['2026-10-19','2026-10-20']:
             st.cache('sh600000','minute',day,dict(source='native-acceptance',volume_unit='shares',previous_close='10',bars=[dict(time=t,close=p,volume=10000,complete=True) for t,p in [('09:31','10'),('09:32','11'),('09:33','9.5'),('09:34','9.5')]]))
         st.db.close();peer=Peer(binary,path)
+        if trading_error(now_cn()):
+            try:
+                a=peer.call('paper_create',name='休市管道验收',cash='12345.67');aid=a['id']
+                q=peer.call('paper_quote',code='sh600000',stamp='2026-10-19 09:31')
+                before=peer.call('paper_snapshot',account=aid)
+                requests=[('paper_order',dict(account=aid,id='closed-order-001',code=q['code'],stamp=q['stamp'],token=q['token'],side='buy',shares=100,limit_price=10)),('paper_advance',dict(account=aid,code=q['code'],stamp='2026-10-19 09:32'))]
+                for method,args in requests:
+                    try:peer.call(method,**args)
+                    except ValueError as error:assert '禁止模拟委托和成交' in str(error)
+                    else:raise AssertionError('Closed-session request was accepted')
+                    assert peer.call('paper_snapshot',account=aid)==before
+            finally:peer.close()
+            peer=Peer(binary,path)
+            try:assert peer.call('paper_snapshot',account=aid)==before
+            finally:peer.close()
+            print(json.dumps(dict(result='PASS',mode='actual closed wall-clock',checks=['UTF-8 IPC','historical order blocked','advance blocked','ledger unchanged','restart persistence'],temporary_data=True),ensure_ascii=False))
+            return
         try:
             a=peer.call('paper_create',name='原生管道验收',cash='12345.67');aid=a['id']
             peer.call('paper_seed',account=aid,code='sh600000',shares=1000,cost='9')

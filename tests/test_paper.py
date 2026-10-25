@@ -2,12 +2,17 @@ import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from datetime import datetime
+from unittest.mock import patch
+from core.provider import CN
 from core.store import Store
 from core.paper import Paper
 
 
 class PaperTests(unittest.TestCase):
     def setUp(self):
+        clock_patch=patch('core.paper.now_cn',return_value=datetime(2026,10,23,10,0,tzinfo=CN))
+        self.market_now=clock_patch.start();self.addCleanup(clock_patch.stop)
         self.tmp=tempfile.TemporaryDirectory();self.path=Path(self.tmp.name)
         self.store=Store(self.path/'monitor.sqlite3');self.paper=Paper(self.path/'paper.sqlite3',self.store)
         self.store.remember('sh600000','测试股票')

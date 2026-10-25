@@ -11,7 +11,8 @@ class Provider:
   return [dict(date='2026-10-16',bars=[dict(time='09:31',close='9.99',volume=100,complete=True)],volume_unit='shares',source='test')]
  def daily(self,*args):return [dict(date='2026-10-16',open='10',close='9.99',high='10',low='9',volume='100',volume_unit='shares',source='test')]
 app.provider=Provider()
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
+paper_clock=patch("core.paper.now_cn",return_value=datetime(2026,10,23,10,0,tzinfo=CN)).start()
 app.archive.provider=Mock();app.archive.provider.minutes.return_value=[]
 for line in sys.stdin:
  try:
@@ -22,6 +23,8 @@ for line in sys.stdin:
    arg=req['args'];app.store.cache(arg['code'],'daily',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_quote':
    arg=req['args'];app.quotes[arg['code']]=arg['quote'];data=True
+  elif req['method']=='__audit_clock':
+   paper_clock.return_value=datetime.fromisoformat(req['args']['now']);data=True
   elif req['method']=='__audit_event':
    app.store.event(req['args'],'live');data=True
   else:data=app.call(req['method'],req.get('args',{}))
