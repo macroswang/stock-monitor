@@ -1,0 +1,40 @@
+{
+  "version": "Q1",
+  "frozenAt": "2026-10-25T00:31:36.219Z",
+  "sourceStudy": "guanliang-quality-first-20261025/Q",
+  "status": "User-authorized chart application; stable profitability has not passed",
+  "rule": {
+    "version": "Q1",
+    "bottomDeviation": 0.008,
+    "topDeviation": 0.015,
+    "minVolumeRatio": 1,
+    "minSeparation": 30,
+    "bottomTicks": 1,
+    "firstTopTicks": 1,
+    "laterTopTicks": 2,
+    "minNewTopTicks": 2,
+    "minNewTopPct": 0.008,
+    "shares": 1000,
+    "volumeWindow": 5,
+    "maxParticipation": 0.01,
+    "minNetSpacePct": 0.2
+  },
+  "sourceStudyHashes": {
+    "protocol.json": "06301c43e33021779bd562e90ef468e1add7b918768466b3566b3f26b19ca4ab",
+    "models.mjs": "99d718fbb99956d4501d2a284c859a85235d80e4edd6508fe93daae6ccb554f9",
+    "emit.mjs": "c1bda54d764fb569e8579bfac88dd2f3bdcc44506f999e86f3a72edd5bd451a8",
+    "loader.mjs": "19c5527d7f0e60f59d35c7b85c92be9b57936bdc3c287332c2fc80dda49c344f",
+    "turningObservationsV2.snapshot.ts": "3dc35fa9a906e2e02b2abf1774eca2c97ce6c9e377230d053123bd613d497bd6",
+    "turningObservationsV3.snapshot.ts": "159737df2311b22414cf20f47d985daa6b0dfaa6715c593bc4679a8c57b4d509",
+    "bottomQuality.snapshot.ts": "151562645125004cfc39597f67db9b85b4e9e061f75f84a93bb7d92d8cda3d37",
+    "execution.py": "c22d8e2d77e3ca33e3774a2f748ed4c798dc734334ad0d8c96b420b2d91923f2"
+  },
+  "sourceHashes": {
+    "src/turningQualityQ1.ts": "4e0cd38c7d5769c013e28d09a4322ac07586af7ae79cc41993bf2d1964600fca",
+    "src/turningQualityQ1Costs.ts": "0309f1876bb06ba8aeb680f348d5e7cbe8144878f4a9acb3868ad1fb02548fec",
+    "src/turningObservationsV2.ts": "3dc35fa9a906e2e02b2abf1774eca2c97ce6c9e377230d053123bd613d497bd6"
+  },
+  "execution": "1000 pre-existing sellable shares; original bottom_to_top strategy, next complete minute close proxy; no new QR fixed-target or stop rules",
+  "limits": "All historical data reused; no forward date. No daily quantity quota. Existing 30-trading-minute same-kind separation retained. This is not the proprietary App formula.",
+  "unchanged": "Formal triggers, notifications, accounts, double-bottom frozen rules, original new-date validations and automations"
+}

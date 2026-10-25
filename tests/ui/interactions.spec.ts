@@ -21,7 +21,7 @@ test.beforeEach(async({page})=>{
   }
   return true;
  });
- await page.addInitScript(()=>{(window as any).isTauri=true;(window as any).__TAURI_INTERNALS__={invoke:(cmd:string,args:any)=>(window as any).__auditRpc(cmd,args)};});
+ await page.addInitScript(()=>{if(!sessionStorage.getItem('__audit-turning-version-initialized')){localStorage.setItem('stock-monitor-turning-version','v1');sessionStorage.setItem('__audit-turning-version-initialized','true');}(window as any).isTauri=true;(window as any).__TAURI_INTERNALS__={invoke:(cmd:string,args:any)=>(window as any).__auditRpc(cmd,args)};});
  await page.goto('/');await expect(page.locator('.stock')).toHaveCount(12);
 });
 test.afterEach(async({page})=>{await page.close();process.stdin.end();await new Promise(resolve=>process.once('exit',resolve));await rm(directory,{recursive:true,force:true});});
@@ -38,7 +38,10 @@ test('same-stock click preserves graph; rapid selection never shows the previous
  // Inspect only the chart instance created by this page to verify actual displayed data identity.
  const expected=await rpc('chart',{code:'sh688680',kind:'minute'});
  expect(expected[0].data.bars.find((b:any)=>b.time==='09:31').close).not.toBe('16.20');
- const chart=page.locator('.chart');const box=(await chart.boundingBox())!;await page.mouse.move(box.x+65.2,box.y+80);
+ const chart=page.locator('.chart');
+ await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const option=e.getInstanceByDom(el).getOption();return option.series[0].data[option.xAxis[0].data.indexOf('09:31')];})).toBe(+expected[0].data.bars.find((b:any)=>b.time==='09:31').close);
+ const point=await chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),i=o.xAxis[0].data.indexOf('09:31');return c.convertToPixel({xAxisIndex:0,yAxisIndex:0},['09:31',o.series[0].data[i]]);});
+ const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point[0],box.y+point[1]);
  await expect(chart).toContainText(Number(expected[0].data.bars.find((b:any)=>b.time==='09:31').close).toLocaleString('zh-CN',{maximumFractionDigits:2}));
  await expect(page.locator('.chart-caption')).toContainText('2026-10-16');
 });
@@ -78,11 +81,11 @@ test('latest-day chart follows new cache while manually selected history stays p
 
 test('trigger records show Chinese stock name and ten-thousand shares',async({page})=>{
  await rpc('replay',{code:'sh603002',day:'2026-10-16'});
- await page.getByRole('button',{name:/触发记录/}).click();
+ // Trigger records are now inline below the chart; the removed navigation is not required.
  await expect(page.getByRole('columnheader',{name:'三分钟量（万股）'})).toBeVisible();
  const row=page.locator('tbody tr').filter({hasText:'宏昌电子'});await expect(row).toContainText('603002');
  await expect(row).toContainText('438.45 / 146.10 / 195.70');await expect(row).toContainText('腾讯行情');
- await page.screenshot({path:'docs/0.4.0/records.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/records.png',fullPage:true});
 });
 
 test('daily keyboard navigation and double click open selected intraday without date query fields',async({page})=>{
@@ -102,7 +105,7 @@ test('daily keyboard navigation and double click open selected intraday without 
  await chart.focus();await chart.press('ArrowLeft');await chart.press('Enter');
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-15');
  expect((await rpc('messages')).total).toBe(0);
- await page.screenshot({path:'docs/0.4.0/intraday.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/intraday.png',fullPage:true});
 });
 
 test('daily left boundary expands using local cached history and retains selected date',async({page})=>{
@@ -113,7 +116,7 @@ test('daily left boundary expands using local cached history and retains selecte
  await expect(page.locator('.linked-minute h3')).not.toContainText(before.slice(0,10));
  const day=await page.locator('.linked-minute h3').innerText();expect(day<before.slice(0,10)).toBeTruthy();
  await expect(page.locator('.chart-caption')).toContainText('本地缓存优先');
- await page.screenshot({path:'docs/0.4.0/history.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/history.png',fullPage:true});
 });
 
 test('messages retain content, mark read, survive reload and link to matching intraday',async({page})=>{
@@ -123,7 +126,7 @@ test('messages retain content, mark read, survive reload and link to matching in
  await expect(page.locator('.message-item')).toContainText('宏昌电子');await expect(page.locator('.message-item')).toContainText('438.45');await expect(page.locator('.message-item')).toContainText('万股');
  await page.getByRole('button',{name:'全部标为已读'}).click();await expect(page.locator('.message-item.unread')).toHaveCount(0);
  await page.reload();await page.getByRole('button',{name:/消息中心/}).click();await expect(page.locator('.message-item')).toHaveCount(1);await expect(page.locator('.message-item.unread')).toHaveCount(0);
- await page.screenshot({path:'docs/0.4.0/messages.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/messages.png',fullPage:true});
  await page.getByRole('button',{name:'查看对应分时'}).click();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');await expect(page.locator('.detail h2')).toContainText('宏昌电子');
 });
 
@@ -145,13 +148,43 @@ test('historical minute cache with unknown limit shows pending reference, manual
  expect((await rpc('messages')).total).toBe(0);
 });
 
+test('Q1 frozen signals replace old layers, persist display choice and keep formal triggers separate',async({page})=>{
+ const {readFileSync}=await import('node:fs');
+ const example=JSON.parse(readFileSync('tests/ui/fixtures/turning-q1.json','utf8'))[1];
+ await page.evaluate(()=>{localStorage.setItem('stock-monitor-show-turning-v1','false');localStorage.setItem('stock-monitor-bottom-quality-v1','true');localStorage.setItem('stock-monitor-top-supplement-v2','true');localStorage.setItem('stock-monitor-turning-version','v4');});
+ await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'frozen-q1-ui-test-only',bars:example.bars}});
+ await rpc('__audit_event',{key:'2026-10-19|603002|09:50',symbol:'603002',trading_date:'2026-10-19',candidate_time:'09:50',confirmation_label:'09:52',event_label:'09:52',volumes:[300000,100000,100000],kind:'TWO_MINUTE_CONFIRMATION'});
+ const before=await rpc('snapshot'),messages=await rpc('messages');
+ await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
+ const chart=page.getByLabel('分时价格及分钟成交量'),toggle=page.getByRole('checkbox',{name:/显示底\/顶信号/});
+ const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey).map((m:any)=>({coord:m.coord,value:m.value,label:m.label.formatter,color:m.itemStyle.color}));});
+ const expected=example.expected.map((m:any)=>({coord:[m.time,m.price],value:m.kind==='bottom'?'底信号':'顶信号',label:m.kind==='bottom'?'底':'顶',color:m.kind==='bottom'?'#ef8585':'#69d9ac'}));
+ await expect(toggle).toBeChecked();await expect.poll(marks).toEqual(expected);
+ await expect(page.getByRole('checkbox',{name:/缩量顶补漏/})).toHaveCount(0);await expect(page.getByLabel('底顶观察版本')).toHaveCount(0);
+ await expect(page.locator('.average-caption')).toContainText('Q1冻结版');
+ const show=async(time:string)=>chart.evaluate(async(el,time)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf(time)});},time);
+ await show(example.expected[0].time);const tooltip=chart.locator('.quote-tooltip');
+ await expect(tooltip).toContainText('底信号：Q1冻结版');await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
+ await expect(tooltip).toContainText('不设每日数量配额');await expect(tooltip).toContainText('不保证到达');await expect(tooltip).toContainText('尚未通过独立新日期盈利验证');await expect(tooltip).toContainText('基准触发：09:50');
+ expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底信号');c.trigger('click',{componentType:'markPoint',data:m});});
+ await show(example.expected[0].time);await expect(tooltip).toContainText('基准触发：09:50');
+ await page.mouse.move(10,10);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/q1-display-ui.png',fullPage:true});
+ await toggle.uncheck();await expect.poll(marks).toEqual([]);await page.reload();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(marks).toEqual(expected);
+ await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute').getByRole('checkbox',{name:/显示底\/顶信号/});await expect(linked).toBeChecked();await linked.uncheck();
+ await page.getByRole('button',{name:'分时',exact:true}).click();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(marks).toEqual(expected);
+ expect((await rpc('snapshot')).events).toEqual(before.events);expect(await rpc('messages')).toEqual(messages);
+});
+
 test('intraday average is shown from turnover data and removed daily toolbar stays absent',async({page})=>{
  const old=await rpc('chart',{code:'sh603002',kind:'minute'});const data=old[0].data;
  data.bars=data.bars.map((b:any)=>({...b,average:'15.4321'}));
  await rpc('__audit_cache',{code:'sh603002',day:'2026-10-16',data});
  await page.reload();await expect(page.locator('.average-caption')).toContainText('累计成交额');
- const chart=page.getByLabel('分时价格及分钟成交量');const box=(await chart.boundingBox())!;
- await expect(async()=>{await page.mouse.move(box.x+65.2,box.y+80);await expect(chart.locator('.quote-tooltip')).toContainText('均价：15.43 元');}).toPass();
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const point=await chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),i=o.xAxis[0].data.indexOf('09:31');return c.convertToPixel({xAxisIndex:0,yAxisIndex:0},['09:31',o.series[0].data[i]]);});
+ const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point[0],box.y+point[1]);
+ await expect(chart.locator('.quote-tooltip')).toContainText('均价：15.43 元');
  await page.getByRole('button',{name:'日K',exact:true}).click();
  await expect(page.locator('.daily-navigation')).toHaveCount(0);await expect(page.getByRole('button',{name:'← 上一交易日',exact:true})).toHaveCount(0);
 });
@@ -175,7 +208,7 @@ test('twenty-day coverage shows whole-day Sina history without claiming certifie
  await expect(page.locator('.coverage-day')).toHaveCount(20);
  const day=page.locator('.coverage-day').filter({hasText:'2026-10-09'});
  await expect(day).toContainText('新浪行情');await expect(day).toContainText('新浪口径待核对');
- await page.screenshot({path:'docs/0.4.0/coverage.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/coverage.png',fullPage:true});
  await day.click();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-09');
  await expect(page.locator('.day-signals')).toContainText('规则回放暂未认证');
  expect((await rpc('messages')).total).toBe(0);
@@ -216,7 +249,7 @@ test('trigger comparison stays available without header or tooltip inputs',async
  await page.getByRole('button',{name:'先卖后买',exact:true}).click();
  await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
  await expect(chart.locator('.quote-tooltip')).toContainText('扣费后预计盈利（1000股）');
- await chart.locator('.quote-tooltip').screenshot({path:'docs/compact-trade-tooltip.png'});
+ await chart.locator('.quote-tooltip').screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/compact-trade-tooltip.png'});
  await expect(page.locator('.trigger-comparison')).toHaveCount(0);
  await expect(chart.locator('input')).toHaveCount(0);
  const mark=await point('09:31',100);await page.mouse.click(box.x+mark[0],box.y+mark[1]-18);
@@ -242,7 +275,7 @@ test('watch list shows quote change percent and amplitude, with missing fields e
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('+0.50',{timeout:10000});
  await expect(stock.getByLabel('涨跌幅').locator('strong')).toHaveText('+5.00%');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('10.00%');
  await expect(page.getByRole('button',{name:/买点研究/})).toHaveCount(0);
- await page.screenshot({path:'docs/watch-quotes-local.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/watch-quotes-local.png',fullPage:true});
  await rpc('__audit_quote',{code:'sh603002',quote:{price:'9',timestamp:'2026-10-19T14:31:00+08:00'}});
  await expect(stock.getByLabel('涨跌幅').locator('strong')).toHaveText('—',{timeout:10000});
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('—');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('—');
@@ -282,7 +315,7 @@ test('intraday grid is sparse dark red and price/volume use identical time coord
  expect(result.gaps).toEqual([false,false]);expect(result.colors).toEqual(['#69343f','#69343f']);
  expect(result.ticks[0]).toEqual(result.ticks[1]);expect(result.ticks[0].length).toBeLessThanOrEqual(10);
  for(const [price,volume] of result.x)expect(price).toBeCloseTo(volume,5);
- await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-red-grid-local.png'});
+ await page.mouse.move(10,10);await chart.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/intraday-red-grid-local.png'});
 });
 
 test('sidebar collapses, keeps navigation usable and remembers state after reload',async({page})=>{
@@ -294,7 +327,7 @@ test('sidebar collapses, keeps navigation usable and remembers state after reloa
  await page.getByRole('button',{name:'数据管理',exact:true}).click();await expect(page.getByRole('heading',{name:'下载与本地缓存'})).toBeVisible();
  await page.reload();await expect(page.getByRole('button',{name:'展开侧栏',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'自选监控',exact:true}).click();
- await page.screenshot({path:'docs/sidebar-collapsed-local.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/sidebar-collapsed-local.png',fullPage:true});
  await page.getByRole('button',{name:'展开侧栏',exact:true}).click();
  await expect(page.getByRole('button',{name:'折叠侧栏',exact:true})).toHaveAttribute('aria-expanded','true');
  await expect(page.locator('.nav-label').first()).toBeVisible();
@@ -321,8 +354,8 @@ test('right percent axis mirrors price ticks using same-day previous close',asyn
   const pct=(Number(bar.close)/16-1)*100;
   await expect(chart.locator('.quote-tooltip .quote-detail').filter({hasText:'涨跌幅：'})).toHaveText(`涨跌幅：${pct>0?'+':''}${pct.toFixed(2)}%`);
  }
- await chart.locator('.quote-tooltip').screenshot({path:'docs/intraday-hover-percent-local.png'});
- await page.mouse.move(10,10);await chart.screenshot({path:'docs/intraday-percent-axis-local.png'});
+ await chart.locator('.quote-tooltip').screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/intraday-hover-percent-local.png'});
+ await page.mouse.move(10,10);await chart.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/intraday-percent-axis-local.png'});
 });
 
 test('daily zoom is locked and latest upward gap remains visible as a shaded range',async({page})=>{
@@ -336,7 +369,7 @@ test('daily zoom is locked and latest upward gap remains visible as a shaded ran
  const area=before.areas.find((a:any)=>a[0].name.includes('101.00—105.00'));expect(area[0].xAxis).not.toBe(area[1].xAxis);
  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+box.width*.5,box.y+100);await page.mouse.wheel(0,-600);
  await expect(async()=>{expect((await inspect()).zoom.map((z:any)=>[z.start,z.end])).toEqual(before.zoom.map((z:any)=>[z.start,z.end]));}).toPass();
- await page.mouse.move(10,10);await chart.screenshot({path:'docs/daily-gaps-local.png'});
+ await page.mouse.move(10,10);await chart.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/daily-gaps-local.png'});
  await page.getByRole('button',{name:'分时',exact:true}).click();
  const minute=await page.getByLabel('分时价格及分钟成交量').evaluate(async el=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);return e.getInstanceByDom(el).getOption().dataZoom[0].zoomLock;
@@ -357,7 +390,7 @@ test('intraday axis spans full trading day with future gaps and time-aligned too
  expect(o.prices.slice(0,5)).toEqual([null,10,null,11,null]);expect(o.prices.at(-1)).toBeNull();expect(o.volume.slice(0,5)).toEqual([null,1,null,2,null]);expect(o.end).toBe(100);
  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+o.point[0],box.y+100);
  await expect(chart.locator('.quote-tooltip')).toContainText('09:33');await expect(chart.locator('.quote-tooltip')).toContainText('11.00');
- await page.mouse.move(10,10);await chart.screenshot({path:'docs/full-day-time-axis-local.png'});
+ await page.mouse.move(10,10);await chart.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/full-day-time-axis-local.png'});
 });
 
 test('watch card aligns with entire detail card without stretching stock rows',async({page})=>{
@@ -376,5 +409,5 @@ test('watch card aligns with entire detail card without stretching stock rows',a
  expect((await card.locator('.stock').first().boundingBox())!.height).toBeLessThan(200);
  await card.locator('.stock').last().getByLabel('振幅').locator('span').scrollIntoViewIfNeeded();
  await expect(card.locator('.stock').last().getByLabel('振幅').locator('span')).toBeInViewport();
- await page.screenshot({path:'docs/watchlist-equal-height-local.png',fullPage:true});
+ await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/watchlist-equal-height-local.png',fullPage:true});
 });

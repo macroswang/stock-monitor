@@ -26,6 +26,9 @@ test-results/
 releases/
 docs/*
 !docs/architecture.md
+!docs/TURNING_OBSERVATIONS.md
+!docs/turning-quality-q1/
+!docs/turning-quality-q1/**
 !docs/0.3.2/
 docs/0.3.2/*
 !docs/0.3.2/average-ledger.json
