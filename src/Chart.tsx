@@ -4,16 +4,24 @@ import type {Bar,Daily,Event,IndexMinute} from './models';
 import {price,wan,wanShares} from './format';
 import {topVolumeMarks} from './volumeMarks';
 import {turningQualityQ1} from './turningQualityQ1';
+import {turningShapes} from './turningShapes';
+import {turningDisplayPoints} from './turningDisplay';
 import {dailyGaps} from './dailyGaps';
 import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
 import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
+const renderTurningConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
+ const [x,y]=api.coord!([api.value(0),api.value(1)]),direction=Number(api.value(2));
+ return {type:'line',shape:{x1:x,y1:y+direction*3,x2:x,y2:y+direction*10.5},
+  style:{stroke:direction>0?'#ff5b78':'#00bf83',lineWidth:1,lineDash:[2,2]},silent:true};
+};
 export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,compact=false,benchmark,previousClose,buySignals=[]}:{buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;compact?:boolean}){
  const [costs,setCosts]=useState<TCosts>(()=>{try{const saved=JSON.parse(localStorage.getItem('stock-monitor-t-costs-v4')||'null');return saved&&tProfit(10,10,saved)?saved:defaultTCosts;}catch{return defaultTCosts;}});
  const [showOpening,setShowOpening]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-opening')!=='false';}catch{return true;}});
- const [showTurning,setShowTurning]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-v2')!=='false';}catch{return true;}});
- useEffect(()=>{const sync=()=>{try{setShowTurning(localStorage.getItem('stock-monitor-show-turning-v2')!=='false');}catch{}};window.addEventListener('storage',sync);window.addEventListener('turning-display-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('turning-display-change',sync);};},[]);
+ const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
+ const [showQuality,setShowQuality]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-v2')!=='false';}catch{return true;}});
+ useEffect(()=>{const sync=()=>{try{setShowShapes(localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false');setShowQuality(localStorage.getItem('stock-monitor-show-turning-v2')!=='false');}catch{}};window.addEventListener('storage',sync);window.addEventListener('turning-display-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('turning-display-change',sync);};},[]);
  const costsRef=useRef(costs);costsRef.current=costs;
  const refreshTrade=useRef<(()=>void)|null>(null);
  const updateCosts=(next:TCosts)=>{costsRef.current=next;setCosts(next);refreshTrade.current?.();if(tProfit(10,10,next)){try{localStorage.setItem('stock-monitor-t-costs-v4',JSON.stringify(next));}catch{}}};
@@ -25,7 +33,7 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
  const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
  const chosen=choice?.scope===scope&&visibleMarks.some(m=>m.coord[0]===choice.time)?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const scopeRef=useRef(scope);scopeRef.current=scope;
- const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,previousClose,buySignals,chosen,showOpening,showTurning]);
+ const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,previousClose,buySignals,chosen,showOpening,showShapes,showQuality]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view});plot.current={daily,view};
  const windowDates=useRef<string[]>([]);const lastDailyDate=useRef('');
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
@@ -46,7 +54,9 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
   const chart=instance.current;if(!chart)return;const isDay=view==='daily';const labels=isDay?daily.map(b=>b.date):[...Array.from({length:121},(_,i)=>570+i),...Array.from({length:120},(_,i)=>781+i)].map(m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
   const byTime=new Map(minute.map(b=>[b.time,b]));const aligned=labels.map(t=>byTime.get(t));
   const gaps=isDay?dailyGaps(daily):[];
-  const observations=isDay||!showTurning?[]:turningQualityQ1(minute);
+  const shapes=isDay||!showShapes?[]:turningShapes(minute);
+  const quality=isDay||!showQuality?[]:turningQualityQ1(minute);
+  const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
   const volume=isDay?daily.map(b=>+b.volume/10000):aligned.map(b=>b?b.volume/100:null);
   const colors=isDay?daily.map(b=>+b.close>=+b.open?'#ef6568':'#36b898'):aligned.map((b,i)=>!b||!aligned[i-1]||+b.close>=+aligned[i-1]!.close?'#ef6568':'#36b898');
   const indexByTime=new Map(benchmark?.bars.map(b=>[b.time,+b.close])||[]);
@@ -73,31 +83,31 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
   const gridStep=visibleMinutes>100?30:visibleMinutes>40?15:5;
   const timeTick=(_index:number,label:string)=>{const [h,m]=label.split(':').map(Number);return label===labels[0]||label===labels.at(-1)||(h*60+m)%gridStep===0;};
   const timeGrid=isDay?{}:{axisTick:{interval:timeTick},splitLine:{show:true,interval:timeTick,lineStyle:{color:'#69343f',opacity:.65,width:1}}};
+  const observationMarks=observations.map(m=>{
+   const color=m.kind==='bottom'?'#ff5b78':'#00bf83';
+   return {coord:[m.time,m.price],value:m.shape?(m.kind==='bottom'?'底形态':'顶形态'):(m.kind==='bottom'?'Q1底信号':'Q1顶信号'),
+    observationKey:m.shape?.key,qualityKey:m.q1?.key,symbol:'circle',symbolSize:5,
+    itemStyle:{color,borderColor:'#fff',borderWidth:m.q1?1:0},
+    label:{show:!!m.shape||!showShapes,position:m.kind==='bottom'?'bottom':'top',distance:8,formatter:m.kind==='bottom'?'底':'顶',
+     color:'#fff',backgroundColor:color,borderRadius:8,width:16,height:16,padding:0,align:'center',
+     fontFamily:'"PingFang SC","Microsoft YaHei",sans-serif',fontSize:11,fontWeight:400,lineHeight:16}};
+  });
   chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
    legend:{show:!isDay,data:['价格','均价',...(canOverlay?['上证走势']:[])],top:0,textStyle:{color:'#9dacc5'}},
    tooltip:{trigger:'axis',confine:true,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;const root=document.createElement('div');root.className=isDay?'quote-tooltip':'quote-tooltip minute-tooltip';
-     if(observations.some(m=>m.quality&&m.time===aligned[idx]?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
+     if(observations.some(m=>m.time===aligned[idx]?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
      const rows:string[]=[];if(isDay){const b=daily[idx];if(b){rows.push(b.provisional?b.date+' · 盘中日K（未收盘）':b.date,`开盘：${price(b.open)} 元`,`收盘：${price(b.close)} 元`,`最高：${price(b.high)} 元`,`最低：${price(b.low)} 元`,`成交量：${wanShares(b.volume)} 万股`);for(const gap of gaps.filter(g=>g.date===b.date))rows.push(`${gap.provisional?'盘中':''}${gap.direction==='up'?'向上':'向下'}跳空：${price(gap.originalLow)}—${price(gap.originalHigh)} 元`,gap.filledOn?`已回补：${gap.filledOn}`:`未回补：${price(gap.low)}—${price(gap.high)} 元`);const n=events.filter(e=>e.trading_date===b.date).length;if(n)rows.push(`触发：${n} 次`);rows.push('双击查看当天分时 · 左右键逐日浏览');}}
      else{const b=aligned[idx];const hoverPct=b&&Number.isFinite(previousClose)&&Number(previousClose)>0?(+b.close/Number(previousClose)-1)*100:null;const roundedPct=hoverPct!==null&&Math.abs(hoverPct)<.005?0:hoverPct;if(!b)rows.push(labels[idx]||'', '暂无该分钟成交数据');if(b)rows.push(b.time,`价格：${price(b.close)} 元`,`涨跌幅：${roundedPct===null?'暂无昨收':(roundedPct>0?'+':'')+roundedPct.toFixed(2)+'%'}`,`均价：${b.average&&Number.isFinite(+b.average)?price(b.average)+' 元':'暂无成交额数据'}`,`分钟量：${wan(b.volume/100)} 手`,...(!b.complete?['当前分钟（未结束）']:[]));if(b&&chosen){const change=(+b.close/chosen.price-1)*100;rows.push(`基准触发：${chosen.time} · ${price(chosen.price)} 元`,`相对触发涨跌幅：${change>0?'+':''}${(Math.abs(change)<.005?0:change).toFixed(2)}%`);
      }if(b&&canOverlay&&indexByTime.has(b.time)){const v=indexByTime.get(b.time)!;rows.push(`上证：${v.toFixed(2)} 点（${(v/+benchmark!.previous_close*100-100).toFixed(2)}%）`);}}
-     for(const observation of observations.filter(m=>m.time===aligned[idx]?.time))rows.push(
-      `${observation.kind==='bottom'?'底信号':'顶信号'}：Q1冻结版（分时观察，未证明稳定盈利）`,
-      `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
-      `确认时间：${observation.time} · ${price(observation.price)} 元`,
-      `候选时均价：${price(observation.vwap)} 元`,
-      `偏离当时均价：${observation.deviationPct>0?'+':''}${observation.deviationPct.toFixed(2)}%`,
-      `20分钟支撑/阻力：${price(observation.support)} / ${price(observation.resistance)} 元`,
-      `确认${observation.kind==='bottom'?'反弹':'回落'}：${observation.movePct.toFixed(2)}%`,
-       '确认依据：价格反转与量能通过，已知流动性与成本空间达标',
-       `已知近5分钟均量：${wanShares(observation.quality.meanShares)} 万股（1000股占${(1000/observation.quality.meanShares*100).toFixed(2)}%）`,
-       `当前分钟成交量：${wanShares(observation.quality.currentShares)} 万股（1000股占${(1000/observation.quality.currentShares*100).toFixed(2)}%）`,
-       `到当时均价的假设净空间：${observation.quality.knownSpaceNetPct.toFixed(2)}%（均价${price(observation.quality.knownVwap)}元，不保证到达）`,
-       '固定研究成本：1000股，佣金每侧万2最低5元；卖出印花税万5，过户费每侧十万1',
-       '研究滑点：每侧取1分与0.05%的较大者，按不利方向取整分',
-      '信号间隔：同方向至少30个交易分钟，由条件筛选，不设每日数量配额',
-      '验证状态：仅历史探索回测，尚未通过独立新日期盈利验证；非涨乐通原公式',
-      `确认均量/候选前5分钟均量：${observation.volumeRatio===null?'暂无':observation.volumeRatio.toFixed(2)+' 倍'}`);
+     for(const point of observations.filter(m=>m.time===aligned[idx]?.time)){
+      const observation=(point.shape||point.q1)!;
+      rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'形态':''}：${price(point.price)} 元`,
+       `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
+       `确认时间：${point.time} · ${price(point.price)} 元`);
+      if(showQuality)rows.push(`Q1质量：${point.q1?'入选':'该确认时点未入选'}`);
+      if(point.q1)rows.push(`Q1假设净空间（1000股）：${point.q1.quality.knownSpaceNetPct.toFixed(2)}%（至当时均价，不保证到达）`);
+     }
      const comparison=document.createElement('div');comparison.className='tooltip-comparison';
      for(const text of rows){
       const row=document.createElement('div');
@@ -112,12 +122,18 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
    yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,splitNumber:2,name:isDay?'成交量（万股）':'成交量（手）',splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>isDay?wan(n):n>=10000?(n/10000).toFixed(1)+'万':n.toFixed(0)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:{rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}}}}]:[])],
    dataZoom:[{type:'inside',xAxisIndex:[0,1],...zoom,...(isDay?{zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:[0,1],...zoom,bottom:1,height:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{zoomLock:true,handleSize:0,brushSelect:false}: {})}],
    series:[isDay?{name:'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#b6c6da',position:'insideTopRight',align:'right',padding:[2,4]},data:gaps.filter(g=>!g.filledOn).map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:g.direction==='up'?'rgba(239,101,104,.10)':'rgba(54,184,152,.10)',borderColor:g.direction==='up'?'#b66770':'#4c9988',borderWidth:1,borderType:'dashed'}},{xAxis:daily.at(-1)!.date,yAxis:g.high}])},markLine:{symbol:'none',silent:true,label:{show:false},lineStyle:{color:'#8baeed',type:'dashed'},data:selectedDay&&labels.includes(selectedDay)?[{xAxis:selectedDay}]:[]}}:
-    {name:'价格',type:'line',data:aligned.map(b=>b?+b.close:null),connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:2.4},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...observations.map(m=>({coord:[m.time,m.price],value:m.kind==='bottom'?'底信号':'顶信号',observationKey:m.key,symbol:'circle',symbolSize:14,itemStyle:{color:m.kind==='bottom'?'#ef8585':'#69d9ac'},label:{show:true,position:m.kind==='bottom'?'bottom':'top',distance:7,formatter:m.kind==='bottom'?'底':'顶',color:m.kind==='bottom'?'#ef8585':'#69d9ac',fontSize:12,fontWeight:'bold'}})),...marks.map(m=>({...m,...(m.value==='开盘量'?{symbolSize:44,itemStyle:{color:'#8798b2'}}:{}),...(chosen&&m.coord[0]===chosen.time?{itemStyle:{color:'#62cdbb',borderColor:'#e7fff8',borderWidth:2}}:{})})),...buySignals.filter(e=>labels.includes(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
+    {name:'价格',type:'line',data:aligned.map(b=>b?+b.close:null),connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:2.4},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...observationMarks,...marks.map(m=>({...m,...(m.value==='开盘量'?{symbolSize:44,itemStyle:{color:'#8798b2'}}:{}),...(chosen&&m.coord[0]===chosen.time?{itemStyle:{color:'#62cdbb',borderColor:'#e7fff8',borderWidth:2}}:{})})),...buySignals.filter(e=>labels.includes(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
     ...(canOverlay?[{name:'上证走势',type:'line',data:indexLine,showSymbol:false,connectNulls:false,z:2,lineStyle:{color:'#929aa9',width:1.2,type:'dashed',opacity:0.8},itemStyle:{color:'#929aa9'}}]:[]),
     ...(!isDay?[{name:'均价',type:'line',data:averages,showSymbol:false,connectNulls:false,lineStyle:{color:'#e9b949',width:1.5},itemStyle:{color:'#e9b949'}}]:[]),
-    {name:isDay?'成交量（万股）':'分钟量（手）',type:'bar',xAxisIndex:1,yAxisIndex:1,data:volume.map((v,i)=>({value:v,itemStyle:{color:colors[i]}}))}]
+    {name:isDay?'成交量（万股）':'分钟量（手）',type:'bar',xAxisIndex:1,yAxisIndex:1,data:volume.map((v,i)=>({value:v,itemStyle:{color:colors[i]}}))},
+    ...(!isDay?[{name:'底顶标签连线',type:'custom',silent:true,z:6,clip:false,tooltip:{show:false},renderItem:renderTurningConnector,
+     dimensions:['time','price','direction'],encode:{x:0,y:1},data:observations.filter(m=>m.shape||!showShapes).map(m=>[m.time,m.price,m.kind==='bottom'?1:-1])}]:[])]
   },{notMerge:true});
   if(isDay&&selectedDay){const index=labels.indexOf(selectedDay);if(index>=0)chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});}
  },[contentKey]);
- return <>{view!=='daily'&&<><label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>显示开盘量<span>09:31单独标记</span></label><label className="opening-volume-toggle"><input aria-label="显示底/顶信号" type="checkbox" checked={showTurning} onChange={e=>{setShowTurning(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-v2',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>显示底/顶信号<span>红底 / 绿顶 · Q1冻结版</span></label></>}{view!=='daily'&&<TCostSettings value={costs} onChange={updateCosts}/>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view==='daily'&&<div className="average-caption">缺口阴影：截至最新日K尚未回补的区间 · 红色向上，绿色向下 · 盘中缺口待收盘确认 · 拖动浏览，缩放已关闭</div>}{view!=='daily'&&<div className="average-caption">{showTurning&&<>红色底 / 绿色顶：Q1冻结版 · 流动性与成本空间筛选；标在确认时刻，未证明稳定盈利 · </>}开盘量：09:31；触发：盘中顶部量。均在连续两分钟缩量确认后标在原分钟，仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
+ return <>{view!=='daily'&&<>
+  <label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>显示开盘量<span>09:31单独标记</span></label>
+  <label className="opening-volume-toggle"><input aria-label="显示形态底/顶" type="checkbox" checked={showShapes} onChange={e=>{setShowShapes(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-shapes-v1',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>显示形态底/顶<span>小点彩签 · 已确认反转</span></label>
+  <label className="opening-volume-toggle"><input aria-label="显示Q1质量" type="checkbox" checked={showQuality} onChange={e=>{setShowQuality(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-v2',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>显示Q1质量<span>白边小点 · 冻结筛选</span></label>
+ </>}{view!=='daily'&&<TCostSettings value={costs} onChange={updateCosts}/>}<div className={'chart'+(compact?' compact-chart':'')} ref={ref} tabIndex={view==='daily'?0:undefined} onClick={()=>{if(view==='daily')ref.current?.focus();}} onKeyDown={e=>{if(view==='daily'&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(view==='daily'&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedDay);}} aria-label={view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>{view==='daily'&&<div className="average-caption">缺口阴影：截至最新日K尚未回补的区间 · 红色向上，绿色向下 · 盘中缺口待收盘确认 · 拖动浏览，缩放已关闭</div>}{view!=='daily'&&<div className="average-caption">{(showShapes||showQuality)&&<>红点底 / 绿点顶：白字彩底为已确认形态，白边小点为Q1入选；独立Q1只画小点，重合只画一次。均标在确认时刻，不强制成对；Q1筛选未改，未证明稳定盈利 · </>}开盘量：09:31；触发：盘中顶部量。均在连续两分钟缩量确认后标在原分钟，仍封涨停时等待开板 · 亮蓝实线：个股 · 黄线：均价（累计成交额 ÷ 累计成交股数，含集合竞价）{benchmark&&previousClose&&previousClose>0?' · 灰色虚线：上证（以双方昨收涨跌幅对齐）':' · 上证叠加暂无对应日期分时或昨收数据'}{minute.some(b=>b.average&&Number.isFinite(+b.average)&&+b.average>0)?'':' · 当前缓存缺少成交额，暂无法显示均价线'}</div>}</>;
 }

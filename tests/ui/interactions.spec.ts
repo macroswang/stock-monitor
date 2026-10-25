@@ -4,6 +4,7 @@ import {createInterface} from 'node:readline';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {turningShapes} from '../../src/turningShapes';
 let process:ChildProcessWithoutNullStreams;let directory:string;
 let waiting:{resolve:(r:any)=>void;reject:(e:Error)=>void}[]=[];
 async function rpc(method:string,args:Record<string,unknown>={}){if(process.stdin.writableEnded)return null;return new Promise<any>((resolve,reject)=>{waiting.push({resolve,reject});process.stdin.write(JSON.stringify({method,args})+'\n');});}
@@ -148,31 +149,53 @@ test('historical minute cache with unknown limit shows pending reference, manual
  expect((await rpc('messages')).total).toBe(0);
 });
 
-test('Q1 frozen signals replace old layers, persist display choice and keep formal triggers separate',async({page})=>{
+test('confirmed shapes and frozen Q1 quality have independent displays without changing formal triggers',async({page})=>{
  const {readFileSync}=await import('node:fs');
  const example=JSON.parse(readFileSync('tests/ui/fixtures/turning-q1.json','utf8'))[1];
- await page.evaluate(()=>{localStorage.setItem('stock-monitor-show-turning-v1','false');localStorage.setItem('stock-monitor-bottom-quality-v1','true');localStorage.setItem('stock-monitor-top-supplement-v2','true');localStorage.setItem('stock-monitor-turning-version','v4');});
+ await page.evaluate(()=>{localStorage.setItem('stock-monitor-show-turning-v1','false');localStorage.setItem('stock-monitor-bottom-quality-v1','true');localStorage.setItem('stock-monitor-top-supplement-v2','true');localStorage.setItem('stock-monitor-turning-version','v4');localStorage.setItem('stock-monitor-show-turning-shapes-v1','true');localStorage.setItem('stock-monitor-show-turning-v2','true');});
  await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'frozen-q1-ui-test-only',bars:example.bars}});
  await rpc('__audit_event',{key:'2026-10-19|603002|09:50',symbol:'603002',trading_date:'2026-10-19',candidate_time:'09:50',confirmation_label:'09:52',event_label:'09:52',volumes:[300000,100000,100000],kind:'TWO_MINUTE_CONFIRMATION'});
  const before=await rpc('snapshot'),messages=await rpc('messages');
  await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
- const chart=page.getByLabel('分时价格及分钟成交量'),toggle=page.getByRole('checkbox',{name:/显示底\/顶信号/});
- const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey).map((m:any)=>({coord:m.coord,value:m.value,label:m.label.formatter,color:m.itemStyle.color}));});
- const expected=example.expected.map((m:any)=>({coord:[m.time,m.price],value:m.kind==='bottom'?'底信号':'顶信号',label:m.kind==='bottom'?'底':'顶',color:m.kind==='bottom'?'#ef8585':'#69d9ac'}));
- await expect(toggle).toBeChecked();await expect.poll(marks).toEqual(expected);
+ const chart=page.getByLabel('分时价格及分钟成交量'),shapeToggle=page.getByRole('checkbox',{name:'显示形态底/顶',exact:true}),qualityToggle=page.getByRole('checkbox',{name:'显示Q1质量',exact:true});
+ const marks=(field:'observationKey'|'qualityKey')=>chart.evaluate(async(el,field)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m[field]).map((m:any)=>({coord:m.coord,key:m[field]}));},field);
+ const expected=example.expected.map((m:any)=>({coord:[m.time,m.price],key:m.key}));
+ const shapeExpected=turningShapes(example.bars).map(m=>({coord:[m.time,m.price],key:m.key}));
+ await expect(shapeToggle).toBeChecked();await expect(qualityToggle).toBeChecked();await expect.poll(()=>marks('qualityKey')).toEqual(expected);await expect.poll(()=>marks('observationKey')).toEqual(shapeExpected);
  await expect(page.getByRole('checkbox',{name:/缩量顶补漏/})).toHaveCount(0);await expect(page.getByLabel('底顶观察版本')).toHaveCount(0);
- await expect(page.locator('.average-caption')).toContainText('Q1冻结版');
+ await expect(page.locator('.average-caption')).toContainText('Q1筛选未改');
  const show=async(time:string)=>chart.evaluate(async(el,time)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf(time)});},time);
  await show(example.expected[0].time);const tooltip=chart.locator('.quote-tooltip');
- await expect(tooltip).toContainText('底信号：Q1冻结版');await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
- await expect(tooltip).toContainText('不设每日数量配额');await expect(tooltip).toContainText('不保证到达');await expect(tooltip).toContainText('尚未通过独立新日期盈利验证');await expect(tooltip).toContainText('基准触发：09:50');
+ await expect(tooltip).toContainText('底形态：');await expect(tooltip).toContainText('Q1质量：入选');for(const hidden of ['Q1冻结版','确认依据：','研究滑点：','信号间隔：','验证状态：'])await expect(tooltip).not.toContainText(hidden);await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
+ await expect(tooltip).toContainText('不保证到达');await expect(tooltip).toContainText('基准触发：09:50');
  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
- await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底信号');c.trigger('click',{componentType:'markPoint',data:m});});
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底形态');c.trigger('click',{componentType:'markPoint',data:m});});
  await show(example.expected[0].time);await expect(tooltip).toContainText('基准触发：09:50');
- await page.mouse.move(10,10);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/q1-display-ui.png',fullPage:true});
- await toggle.uncheck();await expect.poll(marks).toEqual([]);await page.reload();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(marks).toEqual(expected);
- await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute').getByRole('checkbox',{name:/显示底\/顶信号/});await expect(linked).toBeChecked();await linked.uncheck();
- await page.getByRole('button',{name:'分时',exact:true}).click();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(marks).toEqual(expected);
+ await qualityToggle.uncheck();await expect.poll(()=>marks('qualityKey')).toEqual([]);await expect.poll(()=>marks('observationKey')).toEqual(shapeExpected);
+ await page.reload();await expect(qualityToggle).not.toBeChecked();await expect(shapeToggle).toBeChecked();await qualityToggle.check();
+ await shapeToggle.uncheck();await expect.poll(()=>marks('observationKey')).toEqual([]);await expect.poll(()=>marks('qualityKey')).toEqual(expected);
+ await qualityToggle.uncheck();await expect.poll(()=>marks('qualityKey')).toEqual([]);await page.reload();await expect(shapeToggle).not.toBeChecked();await expect(qualityToggle).not.toBeChecked();await shapeToggle.check();await qualityToggle.check();
+ await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute');await expect(linked.getByRole('checkbox',{name:'显示形态底/顶',exact:true})).toBeChecked();await linked.getByRole('checkbox',{name:'显示Q1质量',exact:true}).uncheck();
+ await page.getByRole('button',{name:'分时',exact:true}).click();await expect(qualityToggle).not.toBeChecked();await expect(shapeToggle).toBeChecked();await qualityToggle.check();await expect.poll(()=>marks('qualityKey')).toEqual(expected);
+ await page.mouse.move(10,10);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await page.screenshot({path:test.info().outputPath('shape-q1-display.png'),fullPage:true});
+ expect((await rpc('snapshot')).events).toEqual(before.events);expect(await rpc('messages')).toEqual(messages);
+});
+
+test('actual missing-side caches show confirmed bottom and top with concise independent Q1 markers',async({page})=>{
+ const {readFileSync}=await import('node:fs');
+ const cases=JSON.parse(readFileSync('tests/ui/fixtures/turning-shapes.json','utf8'));
+ const before=await rpc('snapshot'),messages=await rpc('messages');
+ for(const c of cases){
+  await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'shape-ui-test-only',bars:c.bars}});
+  await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
+  const chart=page.getByLabel('分时价格及分钟成交量');
+  const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey||m.qualityKey).map((m:any)=>({coord:m.coord,shape:m.observationKey||null,q1:m.qualityKey||null,label:m.label.show,symbol:m.symbol}));});
+  await expect.poll(async()=>{const all=await marks();return all.filter((m:any)=>m.shape).map((m:any)=>m.coord);}).toEqual(c.expectedShapes.map((m:any)=>[m.time,m.price]));
+  const all=await marks();expect(all.filter((m:any)=>m.q1).map((m:any)=>m.coord)).toEqual(c.expectedQ1.map((m:any)=>[m.time,m.price]));
+  expect(all.filter((m:any)=>m.label).length).toBe(c.expectedShapes.length);
+  for(const m of all.filter((m:any)=>m.q1&&!m.shape)){expect(m.symbol).toBe('circle');expect(m.label).toBe(false);}
+  expect(new Set(all.map((m:any)=>m.coord[0])).size).toBe(all.length);
+ }
  expect((await rpc('snapshot')).events).toEqual(before.events);expect(await rpc('messages')).toEqual(messages);
 });
 
