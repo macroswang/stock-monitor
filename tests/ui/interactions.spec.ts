@@ -168,8 +168,8 @@ test('confirmed shapes and frozen Q1 quality have independent displays without c
  await expect(page.locator('.average-caption')).toContainText('Q1筛选未改');
  const show=async(time:string)=>chart.evaluate(async(el,time)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf(time)});},time);
  await show(example.expected[0].time);const tooltip=chart.locator('.quote-tooltip');
- await expect(tooltip).toContainText('底形态：');await expect(tooltip).toContainText('Q1质量：入选');for(const hidden of ['Q1冻结版','确认依据：','研究滑点：','信号间隔：','验证状态：'])await expect(tooltip).not.toContainText(hidden);await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
- await expect(tooltip).toContainText('不保证到达');await expect(tooltip).toContainText('基准触发：09:50');
+ await expect(tooltip).toContainText('底形态：');for(const hidden of ['Q1质量：','Q1假设净空间','Q1冻结版','确认依据：','研究滑点：','信号间隔：','验证状态：'])await expect(tooltip).not.toContainText(hidden);await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
+ await expect(tooltip).toContainText('基准触发：09:50');
  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底形态');c.trigger('click',{componentType:'markPoint',data:m});});
  await show(example.expected[0].time);await expect(tooltip).toContainText('基准触发：09:50');

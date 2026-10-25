@@ -105,8 +105,6 @@ export default function Chart({minute=[],daily=[],view,events=[],selectedDay,onS
       rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'形态':''}：${price(point.price)} 元`,
        `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
        `确认时间：${point.time} · ${price(point.price)} 元`);
-      if(showQuality)rows.push(`Q1质量：${point.q1?'入选':'该确认时点未入选'}`);
-      if(point.q1)rows.push(`Q1假设净空间（1000股）：${point.q1.quality.knownSpaceNetPct.toFixed(2)}%（至当时均价，不保证到达）`);
      }
      const comparison=document.createElement('div');comparison.className='tooltip-comparison';
      for(const text of rows){
