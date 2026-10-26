@@ -256,6 +256,24 @@ test('twenty-day coverage shows whole-day Sina history without claiming certifie
 });
 
 test('index cards replace old summary and chart keyboard focus has no enclosing outline',async({page})=>{
+ await rpc('__audit_market',{quotes:[{code:'sh000001',price:'3697.52',change:'7.04',percent:'0.19',timestamp:'2026-10-26T16:14:00+08:00'},{code:'sz399001',price:'11534.38',change:'-139.45',percent:'-1.19',timestamp:'2026-10-26T16:14:57+08:00'},{code:'sz399006',price:'2638.23',change:'-45.87',percent:'-1.71',timestamp:'2026-10-26T16:14:12+08:00'}]});
+ await page.reload();await expect(page.locator('.summary .index-value')).toHaveCount(3);await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ const layout=[];
+ for(const width of [1984,1380,1000]){
+  await page.setViewportSize({width,height:980});
+  for(const collapsed of [true,false]){
+   const button=page.getByRole('button',{name:collapsed?'折叠侧栏':'展开侧栏',exact:true});if(await button.count())await button.click();
+   await expect(async()=>{const left=(await page.locator('.workspace').boundingBox())!.x;expect(left).toBeCloseTo(collapsed?68:width<=1150?170:202,0);}).toPass();
+   await expect(async()=>{const top=(await page.locator('.market-grid').boundingBox())!.y;expect(top).toBeLessThan(130);}).toPass();
+   const geometry=await page.locator('.market-header').evaluate(el=>{const rect=el.getBoundingClientRect();return {top:rect.y,bottom:rect.bottom,height:rect.height,overflow:el.scrollWidth>el.clientWidth,cards:[...el.querySelectorAll('.summary>div')].map(e=>{const r=e.getBoundingClientRect();return {left:r.x,right:r.right,top:r.y,bottom:r.bottom,overflow:e.scrollWidth>e.clientWidth};})};});
+   expect(geometry.overflow).toBe(false);expect(geometry.cards).toHaveLength(5);for(const card of geometry.cards)expect(card.overflow).toBe(false);for(let i=1;i<geometry.cards.length;i++)expect(geometry.cards[i].left).toBeGreaterThanOrEqual(geometry.cards[i-1].right);
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+   const marketTop=(await page.locator('.market-grid').boundingBox())!.y;layout.push({width,collapsed,marketTop,...geometry});
+   if(collapsed)await page.screenshot({path:`docs/compact-market-overview-${width}.png`});
+  }
+ }
+ const {writeFileSync}=await import('node:fs');writeFileSync('docs/compact-market-overview-after.json',JSON.stringify(layout,null,2));
+ await page.setViewportSize({width:1380,height:980});
  await expect(page.getByText('上证指数',{exact:true})).toBeVisible();
  await expect(page.getByText('深证成指',{exact:true})).toBeVisible();
  await expect(page.getByText('创业板指',{exact:true})).toBeVisible();
