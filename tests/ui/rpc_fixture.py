@@ -25,6 +25,7 @@ for line in sys.stdin:
    arg=req['args'];app.store.cache(arg['code'],'daily',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_quote':
    arg=req['args'];app.quotes[arg['code']]=arg['quote'];data=True
+   if arg['quote'].get('name'):app.store.remember(arg['code'],arg['quote']['name'])
   elif req['method']=='__audit_clock':
    paper_clock.return_value=datetime.fromisoformat(req['args']['now']);data=True
   elif req['method']=='__audit_event':

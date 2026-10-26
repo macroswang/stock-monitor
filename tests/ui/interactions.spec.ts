@@ -640,14 +640,14 @@ test('intraday buy and sell share one stacked volume bar; unknown stays gray and
  const expectedBars=await inspect(chart);await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>inspect(page.locator('.linked-minute').getByLabel('分时价格及分钟成交量'))).toEqual(expectedBars);
  // Main daily volume keeps the original candle-rise/fall color scheme and one series.
  const bars=await page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.filter((s:any)=>s.type==='bar').map((s:any)=>s.name);});expect(bars).toEqual(['成交量（万股）']);
- await page.locator('.stock').filter({hasText:'海优新材'}).click();await expect(page.locator('.volume-flow-caption')).not.toContainText('可拆分1根');
+ await page.locator('.stock').filter({hasText:'海优新材'}).click();await expect(page.locator('.volume-flow-caption')).toHaveCount(0);
 });
 
 test('public Shanghai sample shows reconciled red green stacks while retaining all original volumes',async({page})=>{
  const {readFileSync}=await import('node:fs');const sample=JSON.parse(readFileSync('tests/ui/fixtures/volume-flow-real.json','utf8'));
  await rpc('__audit_cache',{code:sample.code,day:sample.day,data:sample.minute});await rpc('__audit_flow',{code:sample.code,day:sample.day,data:sample.flow});
  await page.locator('.stock').filter({hasText:'三孚股份'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(sample.day);
- const chart=page.getByLabel('分时价格及分钟成交量');await expect(page.locator('.volume-flow-caption')).toContainText('可拆分237根');
+ const chart=page.getByLabel('分时价格及分钟成交量');await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((r:any)=>r.name==='买盘量')?.data.some((n:any)=>n>0);})).toBe(true);await expect(page.locator('.volume-flow-caption')).toHaveCount(0);
  const points=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const o=e.getInstanceByDom(el).getOption(),bars=o.series.filter((s:any)=>s.type==='bar');return o.xAxis[0].data.map((t:string,i:number)=>({time:t,total:bars.reduce((v:number,s:any)=>v+(s.data[i]||0),0)}));});
  for(const p of points){const b=sample.minute.bars.find((b:any)=>b.time===p.time&&((b.time>='09:31'&&b.time<='11:30')||(b.time>='13:01'&&b.time<='15:00')));expect(p.total).toBeCloseTo(b?b.volume/100:0,8);}
  await chart.screenshot({path:'docs/volume-flow-real-chart.png'});
@@ -657,7 +657,7 @@ test('Shanzi 10:36 and 13:01 show approximate buy sell amounts; 11:30 includes t
  const {readFileSync}=await import('node:fs');const sample=JSON.parse(readFileSync('tests/ui/fixtures/volume-flow-shanzi.json','utf8'));
  await rpc('__audit_cache',{code:sample.code,day:sample.day,data:sample.minute});await rpc('__audit_flow',{code:sample.code,day:sample.day,data:sample.flow});
  await page.locator('.stock').filter({hasText:'山子高科'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(sample.day);
- await expect(page.locator('.volume-flow-caption')).toContainText('可拆分3根（含2根约值）');const chart=page.getByLabel('分时价格及分钟成交量');
+ const chart=page.getByLabel('分时价格及分钟成交量');await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((r:any)=>r.name==='买盘量')?.data.some((n:any)=>n>0);})).toBe(true);await expect(page.locator('.volume-flow-caption')).toHaveCount(0);
  const results=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),bars=o.series.filter((s:any)=>s.type==='bar');return ['10:36','11:30','13:01'].map(t=>{const i=o.xAxis[0].data.indexOf(t);return {time:t,total:bars.reduce((v:number,s:any)=>v+(s.data[i]||0),0),sell:bars[1].data[i],fallback:bars[3].data[i],point:c.convertToPixel({xAxisIndex:0,yAxisIndex:0},[t,o.series[0].data[i]])};});});
  for(const result of results){expect(result.fallback).toBe(0);expect(result.total).toBeCloseTo(sample.minute.bars.find((b:any)=>b.time===result.time).volume/100,8);}
  expect(results[1].sell).toBe(2863);const box=(await chart.boundingBox())!;
@@ -670,4 +670,15 @@ test('missing buy sell source keeps total volume in original rise fall colors, i
  await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue(day);const chart=page.getByLabel('分时价格及分钟成交量');
  const bars=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const o=e.getInstanceByDom(el).getOption(),bs=o.series.filter((s:any)=>s.type==='bar');return ['09:31','09:32','09:33'].map(t=>{const i=o.xAxis[0].data.indexOf(t),s=bs[3];return {values:bs.map((s:any)=>s.data[i]),color:s.itemStyle.color({dataIndex:i}),opacity:s.itemStyle.opacity};});});
  expect(bars).toEqual([{values:[0,0,0,10],color:'#ef6568',opacity:1},{values:[0,0,0,7],color:'#36b898',opacity:1},{values:[0,0,0,3],color:'#ef6568',opacity:1}]);
+});
+
+test('Wanxiang limits appear in minute tooltip without a header strip or status row; exact ceiling remains',async({page})=>{
+ const {readFileSync}=await import('node:fs');const sample=JSON.parse(readFileSync('tests/ui/fixtures/wanxiang-limit-up.json','utf8'));const code=sample.code,day=sample.minute.date;
+ await rpc('add',{code});await rpc('__audit_quote',{code,quote:sample.quote});await rpc('__audit_cache',{code,day,data:{...sample.minute,limit_up:sample.quote.limit_up,limit_down:sample.quote.limit_down}});
+ await page.reload();await page.locator('.stock').filter({hasText:'SZ000559'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(day);await expect(page.getByLabel('当日涨跌停价格')).toHaveCount(0);
+ const chart=page.getByLabel('分时价格及分钟成交量');const check=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();return {max:o.yAxis[0].max,rightMax:o.yAxis[2].max,rightLabel:o.yAxis[2].axisLabel.formatter(o.yAxis[2].max),line:o.series[0].markLine.data.find((r:any)=>r.name==='涨停'),red:o.series.find((r:any)=>r.name==='涨停走势').lineStyle.color,hasPlateau:o.series.find((r:any)=>r.name==='涨停走势').data.some((n:any)=>n===12.71)};});
+ expect(check.max).toBe(12.71);expect(check.rightMax).toBe(12.71);expect(check.rightLabel).toBe('{rise|+10.04%}');expect(check.line.yAxis).toBe(12.71);expect(check.red).toBe('#ef6568');expect(check.hasPlateau).toBe(true);
+ await chart.scrollIntoViewIfNeeded();const hit=sample.minute.bars.find((b:any)=>b.time==='10:47');const xy=await chart.evaluate(async(el,b)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({xAxisIndex:0,yAxisIndex:0},[b.time,+b.close]);},hit);const box=(await chart.boundingBox())!;await page.mouse.move(box.x+xy[0],box.y+xy[1]+2);await expect(chart.locator('.quote-tooltip')).toContainText('涨停：12.71 元（+10.04%）');await expect(chart.locator('.quote-tooltip')).toContainText('跌停：10.40 元（-9.96%）');await expect(chart.locator('.quote-tooltip')).not.toContainText('状态：');await page.mouse.move(10,10);
+ await page.locator('.detail').screenshot({path:'docs/wanxiang-limit-up-display.png'});
+ await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute');await expect(linked.getByLabel('当日涨跌停价格')).toHaveCount(0);const linkedMax=await linked.getByLabel('分时价格及分钟成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().yAxis[0].max;});expect(linkedMax).toBe(12.71);
 });

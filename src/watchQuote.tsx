@@ -1,4 +1,4 @@
-export type WatchQuote={price:string;change?:string;timestamp:string;previous_close?:string;high?:string;low?:string};
+export type WatchQuote={price:string;change?:string;timestamp:string;previous_close?:string;limit_up?:string;limit_down?:string;high?:string;low?:string};
 export function quoteStats(q?:WatchQuote){
  const read=(v?:string)=>v!==undefined&&v.trim()!==''&&Number.isFinite(+v)?+v:null;
  const current=read(q?.price),previous=read(q?.previous_close),high=read(q?.high),low=read(q?.low);

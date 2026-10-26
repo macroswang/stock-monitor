@@ -66,13 +66,14 @@ class App:
         data=dict(group)
         if old:
             prior=old[0]['data']
-            for k in ('symbol','limit_up','day_high','trading_date','time_label_semantics','session_closed'):
+            for k in ('symbol','limit_up','limit_down','day_high','trading_date','time_label_semantics','session_closed'):
                 if k in prior: data[k]=prior[k]
         quote=self.quotes.get(code)
         if quote and quote.get('date')==group['date']:
             data.update(symbol=code[2:],trading_date=group['date'],limit_up=quote['limit_up'],
                 limit_basis='腾讯当日涨停价字段',limit_reference_time=quote['timestamp'],previous_close=quote.get('previous_close') or data.get('previous_close'),
                 time_label_semantics='unverified',session_closed=group['date']<now_cn().date().isoformat() or now_cn().strftime('%H:%M')>='15:00')
+            if quote.get('limit_down'):data['limit_down']=quote['limit_down']
             if quote.get('high'):data['day_high']=quote['high']
         self.store.cache(code,'minute',group['date'],data)
 

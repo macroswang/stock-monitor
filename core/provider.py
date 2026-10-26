@@ -33,7 +33,7 @@ class Tencent:
         if not p.is_finite() or not limit.is_finite() or not p>0 or not limit>=p: raise ValueError('缺少可验证的实时价格或涨停价')
         return dict(code=code,name=fields[1],price=str(p),previous_close=fields[4],
             open=fields[5],volume=str(Decimal(fields[6])*(1 if code.startswith('sh688') else 100)),volume_unit='shares',
-            high=fields[33],low=fields[34],limit_up=str(limit),timestamp=stamp.isoformat(),
+            high=fields[33],low=fields[34],limit_up=str(limit),limit_down=fields[48],timestamp=stamp.isoformat(),
             date=stamp.date().isoformat(),change=fields[32],source='tencent')
 
     def minutes(self,code,now=None):
