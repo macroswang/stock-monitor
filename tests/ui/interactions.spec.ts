@@ -5,11 +5,11 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {turningShapes} from '../../src/turningShapes';
-let process:ChildProcessWithoutNullStreams;let directory:string;let paperChartRequests=0;
+let process:ChildProcessWithoutNullStreams;let directory:string;let paperChartRequests=0;let dailyLoadRequests:any[]=[];
 let waiting:{resolve:(r:any)=>void;reject:(e:Error)=>void}[]=[];
 async function rpc(method:string,args:Record<string,unknown>={}){if(process.stdin.writableEnded)return null;return new Promise<any>((resolve,reject)=>{waiting.push({resolve,reject});process.stdin.write(JSON.stringify({method,args})+'\n');});}
 test.beforeEach(async({page})=>{
- paperChartRequests=0;
+ paperChartRequests=0;dailyLoadRequests=[];
  directory=await mkdtemp(join(tmpdir(),'stock-ui-audit-'));
  process=spawn('.venv/bin/python',['tests/ui/rpc_fixture.py'],{env:{...global.process.env,PYTHONPATH:global.process.cwd(),STOCK_MONITOR_DATA:directory},stdio:'pipe'});
  waiting=[];
@@ -19,6 +19,7 @@ test.beforeEach(async({page})=>{
   if(cmd==='plugin:autostart|is_enabled')return false;
   if(cmd==='rpc'){
    if(args.method==='paper_chart')paperChartRequests++;
+   if(args.method==='daily_load')dailyLoadRequests.push(args.args);
    if(args.method==='chart'&&args.args.code==='sh603002')await new Promise(r=>setTimeout(r,220));
    return rpc(args.method,args.args);
   }
@@ -116,6 +117,7 @@ async function selectDailyDate(page:Page,date?:string){
 }
 
 test('daily left boundary expands using local cached history and retains selected date',async({page})=>{
+ await rpc('__audit_daily',{code:'sh603002',day:'2025-01-15',data:{date:'2025-01-15',open:'10',close:'10.1',high:'10.2',low:'9.9',volume:'10000',volume_unit:'shares',source:'tencent'}});
  await page.getByRole('button',{name:'日K',exact:true}).click();
  const before=await selectDailyDate(page);
  await page.getByLabel('日K线及成交量').focus();await page.getByLabel('日K线及成交量').press('ArrowLeft');
@@ -699,4 +701,40 @@ test('Wanxiang limits appear in minute tooltip without a header strip or status 
  await chart.scrollIntoViewIfNeeded();const hit=sample.minute.bars.find((b:any)=>b.time==='10:47');const xy=await chart.evaluate(async(el,b)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({xAxisIndex:0,yAxisIndex:0},[b.time,+b.close]);},hit);const box=(await chart.boundingBox())!;await page.mouse.move(box.x+xy[0],box.y+xy[1]+2);await expect(chart.locator('.quote-tooltip')).toContainText('涨停：12.71 元（+10.04%）');await expect(chart.locator('.quote-tooltip')).toContainText('跌停：10.40 元（-9.96%）');await expect(chart.locator('.quote-tooltip')).not.toContainText('状态：');await page.mouse.move(10,10);
  await page.locator('.detail').screenshot({path:'docs/wanxiang-limit-up-display.png'});
  await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute');await expect(linked.getByLabel('当日涨跌停价格')).toHaveCount(0);const linkedMax=await linked.getByLabel('分时价格及分钟成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().yAxis[0].max;});expect(linkedMax).toBe(12.71);
+});
+
+function dailyHistoryFeed(){
+ const rows=[];for(let stamp=Date.UTC(2024,0,1);stamp<=Date.UTC(2026,9,26);stamp+=86400000){const d=new Date(stamp);if(d.getUTCDay()===0||d.getUTCDay()===6)continue;const price=10+rows.length/100;rows.push({date:d.toISOString().slice(0,10),open:price.toFixed(2),close:(price+.1).toFixed(2),high:(price+.3).toFixed(2),low:(price-.2).toFixed(2),volume:'100000',volume_unit:'shares',source:'tencent',adjustment:'none'});}return rows;
+}
+async function dailyWindowState(page:Page){
+ return page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c?.getOption();if(!o?.xAxis?.[0]?.data?.length)return null;const labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {count:labels.length,visible:hi-lo+1,rendered:c.getModel().getSeriesByIndex(0).getData().count(),first:labels[0],last:labels.at(-1),visibleFirst:labels[lo],visibleLast:labels[hi],selected:o.series[0].markLine.data[0]?.xAxis,zoomLock:z.zoomLock};});
+}
+test('daily entry backfills a short cache to 90 candles; left boundary loads history once and preserves focus',async({page})=>{
+ const code='sh600519',feed=dailyHistoryFeed();await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:'2026-10-26',selected:'2026-10-26',zoomLock:true});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(1);
+ const initial=(await dailyWindowState(page))!;expect(initial.count).toBeGreaterThan(90);const earlier=feed.filter(r=>r.date<initial.first).at(-1)!.date;
+ await selectDailyDate(page,initial.first);const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowLeft');for(let i=0;i<6;i++)await chart.press('ArrowLeft');
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:earlier});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);expect((await dailyWindowState(page))!.count).toBeGreaterThan(initial.count);await expect(chart).toBeFocused();
+ await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,selected:initial.first});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);
+ await page.screenshot({path:'docs/daily-90-keyboard-backfill.png'});
+ const edge=(await dailyWindowState(page))!.first;await selectDailyDate(page,edge);await chart.focus();await chart.press('ArrowLeft');await expect(page.locator('.daily-load-state')).toBeVisible();await selectDailyDate(page,initial.first);
+ await expect(page.locator('.daily-load-state')).toHaveCount(0);await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:initial.first});
+});
+test('right boundary fills the next batch for an old daily view without jumping to today',async({page})=>{
+ const code='sh600519',feed=dailyHistoryFeed(),old='2024-10-25';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await rpc('__audit_cache',{code,day:old,data:{date:old,source:'tencent',bars:[{time:'09:31',close:'10',volume:10000,complete:true}]}});
+ await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByLabel('交易日期').selectOption(old);await page.getByRole('button',{name:'日K',exact:true}).click();
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:old,selected:old});const before=dailyLoadRequests.filter(r=>r.code===code).length;
+ const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:'2024-10-28'});
+ expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(before+1);expect((await dailyWindowState(page))!.last<'2026-10-26').toBe(true);await expect(chart).toBeFocused();
+ await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({selected:'2024-10-29'});
+});
+
+test('short actual daily history stays short without fabricating candles or retry loops',async({page})=>{
+ const code='sh600519',feed=dailyHistoryFeed().filter(r=>r.date>='2026-10-16');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();
+ await expect(page.locator('.toast')).toContainText(`仅取得${feed.length}根日K`);await expect.poll(()=>dailyWindowState(page)).toMatchObject({count:feed.length,visible:feed.length,rendered:feed.length});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
+});
+test('switching stocks while daily backfill is running cannot replace the newly selected chart',async({page})=>{
+ const code='sh600519';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:dailyHistoryFeed(),delay:.4});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.locator('.daily-load-state')).toBeVisible();
+ await page.locator('.stock').filter({hasText:'宏昌电子'}).click();await expect(page.locator('.detail h2')).toContainText('宏昌电子');await expect.poll(async()=>(await rpc('chart',{code,kind:'daily'})).length).toBeGreaterThan(90);
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
 });

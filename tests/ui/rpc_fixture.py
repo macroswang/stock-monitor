@@ -1,15 +1,20 @@
 """Test-only IPC peer. Uses the real App/SQLite with fake public data, no OS/phone sends."""
-import json,sys,os
+import json,sys,os,time
 from datetime import datetime
 from core.app import App,CN
 app=App(os.environ['STOCK_MONITOR_DATA'],False)
+daily_feeds={};daily_delays={}
 class Provider:
  def quote(self,code):
   if code=='sh699999':raise ValueError('股票不存在或暂时没有行情')
   return dict(code=code,name='贵州茅台' if code=='sh600519' else code,date='2026-10-16',timestamp='2026-10-16T15:00:00+08:00',price='9.99',limit_up='10',change='-0.1')
  def minutes(self,code):
   return [dict(date='2026-10-16',bars=[dict(time='09:31',close='9.99',volume=100,complete=True)],volume_unit='shares',source='test')]
- def daily(self,*args):return [dict(date='2026-10-16',open='10',close='9.99',high='10',low='9',volume='100',volume_unit='shares',source='test')]
+ def daily(self,code,start,end):
+  if code in daily_feeds:
+   time.sleep(daily_delays.get(code,0));return [r for r in daily_feeds[code] if start<=r['date']<=end]
+  rows=[r['data'] for r in app.store.getcache(code,'daily') if start<=r['day']<=end]
+  return rows or ([dict(date='2026-10-16',open='10',close='9.99',high='10',low='9',volume='100',volume_unit='shares',source='test')] if start<='2026-10-16'<=end else [])
 app.provider=Provider()
 from unittest.mock import Mock,patch
 paper_clock=patch("core.paper.now_cn",return_value=datetime(2026,10,23,10,0,tzinfo=CN)).start()
@@ -23,6 +28,8 @@ for line in sys.stdin:
    arg=req['args'];app.store.cache(arg['code'],'volume_flow',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_daily':
    arg=req['args'];app.store.cache(arg['code'],'daily',arg['day'],arg['data']);data=True
+  elif req['method']=='__audit_daily_feed':
+   daily_feeds[req['args']['code']]=req['args']['rows'];daily_delays[req['args']['code']]=req['args'].get('delay',0);app.store.execute('DELETE FROM daily_requests WHERE code=?',(req['args']['code'],));data=True
   elif req['method']=='__audit_quote':
    arg=req['args'];app.quotes[arg['code']]=arg['quote'];data=True
    if arg['quote'].get('name'):app.store.remember(arg['code'],arg['quote']['name'])
