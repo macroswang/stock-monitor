@@ -13,6 +13,7 @@ from .daily_cache import DailyCache
 from .minute_cache import MinuteCache
 from .archive import Archive
 from .market import Market
+from .volume_flow import VolumeFlow
 
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parent.parent))
 SEEDS=[('sh603002','宏昌电子'),('sh688680','海优新材'),('sh600392','盛和资源'),('sh603366','日出东方'),
@@ -53,6 +54,7 @@ class App:
         self.minute_cache=MinuteCache(self)
         self.archive=Archive(self)
         self.market=Market(self)
+        self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
         if start_worker:
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
@@ -305,6 +307,7 @@ class App:
                 self.store.execute('UPDATE messages SET payload=? WHERE id=?',(json.dumps({'status':'failed','detail':'推送未成功，请检查密钥、网络和服务状态'}),ident))
                 raise
 
+        if method=='volume_flow':return self.volume_flow.request(args['code'],args['day'])
         if method=='chart':
             code=symbol(args['code']); kind=args.get('kind','minute')
             if kind not in ('minute','daily'): raise ValueError('无效数据类型')

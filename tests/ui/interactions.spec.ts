@@ -329,7 +329,8 @@ test('tooltip body does not block mouse tracking',async({page})=>{
  const tooltip=chart.locator('.quote-tooltip');await expect(tooltip).toBeVisible();
  const rect=(await tooltip.boundingBox())!;
  // Move into the text body of the displayed tooltip; the chart beneath must still track.
- const x=rect.x+Math.min(25,rect.width/3),y=rect.y+15;
+ const x=rect.x+Math.min(25,rect.width/3),y=Math.max(box.y+50,Math.min(rect.y+15,box.y+200));
+ expect(y).toBeGreaterThanOrEqual(rect.y);expect(y).toBeLessThan(rect.y+rect.height);
  const expected=await chart.evaluate(async(el,args)=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const c=e.getInstanceByDom(el);
   const converted=c.convertFromPixel({gridIndex:0},[args.x,args.y]);const index=Math.round(Array.isArray(converted)?converted[0]:converted);return c.getOption().xAxis[0].data[index];
@@ -424,7 +425,7 @@ test('intraday axis spans full trading day with future gaps and time-aligned too
  const chart=page.getByLabel('分时价格及分钟成交量');
  const inspect=()=>chart.evaluate(async el=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();
-  return {labels:o.xAxis.map((a:any)=>a.data),prices:o.series[0].data,volume:o.series.find((s:any)=>s.name==='分钟量（手）').data.map((d:any)=>d.value),end:o.dataZoom[0].end,point:c.convertToPixel({seriesIndex:0},['09:33',11])};
+  return {labels:o.xAxis.map((a:any)=>a.data),prices:o.series[0].data,volume:o.xAxis[0].data.map((_:string,i:number)=>{const bars=o.series.filter((s:any)=>s.type==='bar');return bars.every((s:any)=>s.data[i]===null)?null:bars.reduce((n:number,s:any)=>n+(s.data[i]||0),0);}),end:o.dataZoom[0].end,point:c.convertToPixel({seriesIndex:0},['09:33',11])};
  });
  await expect.poll(async()=> (await inspect()).prices[3]).toBe(11);
  const o=await inspect();expect(o.labels[0]).toEqual(o.labels[1]);expect(o.labels[0][0]).toBe('09:30');expect(o.labels[0].at(-1)).toBe('15:00');expect(o.labels[0]).not.toContain('12:00');
@@ -623,4 +624,50 @@ test('current Beijing closed session blocks historical chart orders with visible
  }
  await page.screenshot({path:'docs/paper-closed-session-error.png'});
  await rpc('__audit_clock',{now:'2026-10-23T13:00:00+08:00'});await page.getByRole('button',{name:'确认买入',exact:true}).click();await expect(ticket).toHaveCount(0);expect((await rpc('paper_snapshot',{account:a.id})).order_count).toBe(1);
+});
+
+test('intraday buy and sell share one stacked volume bar; unknown stays gray and linked chart matches',async({page})=>{
+ const code='sh603002',day='2026-10-23';
+ await rpc('__audit_cache',{code,day,data:{date:day,source:'tencent',previous_close:'10',volume_unit:'shares',bars:[{time:'09:31',close:'10',volume:1000,complete:true},{time:'09:32',close:'10.2',volume:1000,complete:true},{time:'09:33',close:'10.1',volume:500,complete:true}]}});
+ await rpc('__audit_daily',{code,day,data:{date:day,open:'10',close:'10.1',high:'10.2',low:'9.8',volume:'100000',source:'tencent',volume_unit:'shares'}});
+ await rpc('__audit_flow',{code,day,data:{version:1,code,day,fetched_at:'2026-10-23T16:00:00+08:00',buckets:{'09:31':{buy:600,sell:300,neutral:100,unknown:0,total:1000},'09:32':{buy:700,sell:400,neutral:0,unknown:0,total:1100}}}});
+ await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue(day);
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const inspect=async(locator:any)=>locator.evaluate(async(el:HTMLElement)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const o=e.getInstanceByDom(el).getOption(),i=o.xAxis[0].data.indexOf('09:31'),j=o.xAxis[0].data.indexOf('09:32');return o.series.filter((s:any)=>s.type==='bar').map((s:any)=>({name:s.name,stack:s.stack,color:typeof s.itemStyle.color==='function'?s.itemStyle.color({dataIndex:j}):s.itemStyle.color,first:s.data[i],second:s.data[j]}));});
+ await expect.poll(()=>inspect(chart)).toEqual([{name:'买盘量',stack:'minute-volume',color:'#ef6568',first:6,second:0},{name:'卖盘量',stack:'minute-volume',color:'#36b898',first:3,second:0},{name:'中性 / 未分类量',stack:'minute-volume',color:'#718096',first:1,second:0},{name:'总成交量（回退）',stack:'minute-volume',color:'#ef6568',first:0,second:10}]);
+ const point=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({xAxisIndex:0,yAxisIndex:0},['09:31',10]);});const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point[0],box.y+point[1]);await expect(chart.locator('.quote-tooltip')).toContainText('买盘量：6.00 手（60.0%）');await expect(chart.locator('.quote-tooltip')).toContainText('卖盘量：3.00 手（30.0%）');for(const hidden of ['上证：','中性量：','未分类量：','买卖方向：'])await expect(chart.locator('.quote-tooltip')).not.toContainText(hidden);
+ await page.screenshot({path:'docs/volume-flow-stacked.png',fullPage:true});
+ const expectedBars=await inspect(chart);await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>inspect(page.locator('.linked-minute').getByLabel('分时价格及分钟成交量'))).toEqual(expectedBars);
+ // Main daily volume keeps the original candle-rise/fall color scheme and one series.
+ const bars=await page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.filter((s:any)=>s.type==='bar').map((s:any)=>s.name);});expect(bars).toEqual(['成交量（万股）']);
+ await page.locator('.stock').filter({hasText:'海优新材'}).click();await expect(page.locator('.volume-flow-caption')).not.toContainText('可拆分1根');
+});
+
+test('public Shanghai sample shows reconciled red green stacks while retaining all original volumes',async({page})=>{
+ const {readFileSync}=await import('node:fs');const sample=JSON.parse(readFileSync('tests/ui/fixtures/volume-flow-real.json','utf8'));
+ await rpc('__audit_cache',{code:sample.code,day:sample.day,data:sample.minute});await rpc('__audit_flow',{code:sample.code,day:sample.day,data:sample.flow});
+ await page.locator('.stock').filter({hasText:'三孚股份'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(sample.day);
+ const chart=page.getByLabel('分时价格及分钟成交量');await expect(page.locator('.volume-flow-caption')).toContainText('可拆分237根');
+ const points=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const o=e.getInstanceByDom(el).getOption(),bars=o.series.filter((s:any)=>s.type==='bar');return o.xAxis[0].data.map((t:string,i:number)=>({time:t,total:bars.reduce((v:number,s:any)=>v+(s.data[i]||0),0)}));});
+ for(const p of points){const b=sample.minute.bars.find((b:any)=>b.time===p.time&&((b.time>='09:31'&&b.time<='11:30')||(b.time>='13:01'&&b.time<='15:00')));expect(p.total).toBeCloseTo(b?b.volume/100:0,8);}
+ await chart.screenshot({path:'docs/volume-flow-real-chart.png'});
+});
+
+test('Shanzi 10:36 and 13:01 show approximate buy sell amounts; 11:30 includes the endpoint trade',async({page})=>{
+ const {readFileSync}=await import('node:fs');const sample=JSON.parse(readFileSync('tests/ui/fixtures/volume-flow-shanzi.json','utf8'));
+ await rpc('__audit_cache',{code:sample.code,day:sample.day,data:sample.minute});await rpc('__audit_flow',{code:sample.code,day:sample.day,data:sample.flow});
+ await page.locator('.stock').filter({hasText:'山子高科'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(sample.day);
+ await expect(page.locator('.volume-flow-caption')).toContainText('可拆分3根（含2根约值）');const chart=page.getByLabel('分时价格及分钟成交量');
+ const results=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),bars=o.series.filter((s:any)=>s.type==='bar');return ['10:36','11:30','13:01'].map(t=>{const i=o.xAxis[0].data.indexOf(t);return {time:t,total:bars.reduce((v:number,s:any)=>v+(s.data[i]||0),0),sell:bars[1].data[i],fallback:bars[3].data[i],point:c.convertToPixel({xAxisIndex:0,yAxisIndex:0},[t,o.series[0].data[i]])};});});
+ for(const result of results){expect(result.fallback).toBe(0);expect(result.total).toBeCloseTo(sample.minute.bars.find((b:any)=>b.time===result.time).volume/100,8);}
+ expect(results[1].sell).toBe(2863);const box=(await chart.boundingBox())!;
+ for(const [index,buy,sell,note] of [[0,'61,346.00','780.00','多1.00手'],[2,'40,439.00','8,762.00','少1.00手']] as const){const point=results[index].point;await page.mouse.move(box.x+point[0],box.y+point[1]);const tip=chart.locator('.quote-tooltip');await expect(tip).toContainText(`买盘量（约）：${buy} 手`);await expect(tip).toContainText(`卖盘量（约）：${sell} 手`);await expect(tip).toContainText(note);}
+ await chart.screenshot({path:'docs/volume-flow-shanzi-corrected.png'});
+});
+
+test('missing buy sell source keeps total volume in original rise fall colors, including incomplete minutes',async({page})=>{
+ const code='sh603002',day='2026-10-23';await rpc('__audit_cache',{code,day,data:{date:day,source:'tencent',previous_close:'10',volume_unit:'shares',bars:[{time:'09:31',close:'10.2',volume:1000,complete:true},{time:'09:32',close:'10.1',volume:700,complete:true},{time:'09:33',close:'10.3',volume:300,complete:false}]}});
+ await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue(day);const chart=page.getByLabel('分时价格及分钟成交量');
+ const bars=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const o=e.getInstanceByDom(el).getOption(),bs=o.series.filter((s:any)=>s.type==='bar');return ['09:31','09:32','09:33'].map(t=>{const i=o.xAxis[0].data.indexOf(t),s=bs[3];return {values:bs.map((s:any)=>s.data[i]),color:s.itemStyle.color({dataIndex:i}),opacity:s.itemStyle.opacity};});});
+ expect(bars).toEqual([{values:[0,0,0,10],color:'#ef6568',opacity:1},{values:[0,0,0,7],color:'#36b898',opacity:1},{values:[0,0,0,3],color:'#ef6568',opacity:1}]);
 });

@@ -19,6 +19,8 @@ for line in sys.stdin:
   req=json.loads(line)
   if req['method']=='__audit_cache':
    arg=req['args'];app.store.cache(arg['code'],'minute',arg['day'],arg['data']);data=True
+  elif req['method']=='__audit_flow':
+   arg=req['args'];app.store.cache(arg['code'],'volume_flow',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_daily':
    arg=req['args'];app.store.cache(arg['code'],'daily',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_quote':

@@ -14,7 +14,11 @@ codesign --force --sign - "$stage/观量.app/Contents/MacOS/monitor-core"
 codesign --force --sign - "$stage/观量.app"
 codesign --verify --deep --strict --verbose=2 "$stage/观量.app"
 ln -s /Applications "$stage/Applications"
-sed "s/0.4.0/$version/g" docs/production-0.4.0/安装说明.txt > "$stage/安装说明.txt"
+if test -f "docs/production-$version/安装说明.txt"; then
+ cp "docs/production-$version/安装说明.txt" "$stage/安装说明.txt"
+else
+ sed "s/0.4.0/$version/g" docs/production-0.4.0/安装说明.txt > "$stage/安装说明.txt"
+fi
 cp "$stage/安装说明.txt" "$output/安装说明.txt"
 cp scripts/install-upgrade-mac.command "$stage/安装或升级观量.command"
 chmod +x "$stage/安装或升级观量.command"

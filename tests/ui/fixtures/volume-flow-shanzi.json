@@ -1,0 +1,79 @@
+{
+  "code": "sz000981",
+  "day": "2026-10-23",
+  "minute": {
+    "date": "2026-10-23",
+    "bars": [
+      {
+        "time": "10:36",
+        "close": "2.24",
+        "volume": 6212500,
+        "complete": true,
+        "average": "2.243406594528903600505014080"
+      },
+      {
+        "time": "11:30",
+        "close": "2.25",
+        "volume": 310500,
+        "complete": true,
+        "average": "2.244184718250487051826871589"
+      },
+      {
+        "time": "13:01",
+        "close": "2.27",
+        "volume": 4920200,
+        "complete": true,
+        "average": "2.244683847079947990120874812"
+      }
+    ],
+    "previous_close": "2.33",
+    "source": "tencent",
+    "volume_unit": "shares",
+    "multiplier": 100,
+    "label_semantics": "end_pending_live_verification",
+    "symbol": "000981",
+    "limit_up": "2.56",
+    "day_high": "2.38",
+    "trading_date": "2026-10-23",
+    "time_label_semantics": "unverified",
+    "session_closed": true,
+    "limit_basis": "腾讯当日涨停价字段",
+    "limit_reference_time": "2026-10-23T16:14:45+08:00",
+    "cached_at": "2026-10-25T22:31:49.424471+08:00"
+  },
+  "flow": {
+    "version": 1,
+    "code": "sz000981",
+    "day": "2026-10-23",
+    "source": "tencent_tick",
+    "fetched_at": "2026-10-25T22:27:01.256396+08:00",
+    "volume_multiplier": 100,
+    "record_count": 4444,
+    "last_tick": "14:56:57",
+    "cached_at": "2026-10-25T22:27:01.257012+08:00",
+    "aggregation_version": 2,
+    "buckets": {
+      "10:36": {
+        "buy": 6134600,
+        "sell": 78000,
+        "neutral": 0,
+        "unknown": 0,
+        "total": 6212600
+      },
+      "11:30": {
+        "buy": 24200,
+        "sell": 286300,
+        "neutral": 0,
+        "unknown": 0,
+        "total": 310500
+      },
+      "13:01": {
+        "buy": 4043900,
+        "sell": 876200,
+        "neutral": 0,
+        "unknown": 0,
+        "total": 4920100
+      }
+    }
+  }
+}
