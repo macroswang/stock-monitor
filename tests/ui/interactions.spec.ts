@@ -380,6 +380,33 @@ test('intraday header uses full width and tooltip overlays controls without movi
  }
 });
 
+test('daily tooltip stays compact at the header right and leaves controls clickable',async({page})=>{
+ await page.addStyleTag({content:'.rail,.workspace{transition:none!important}'});
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const chart=page.getByLabel('日K线及成交量'),tooltip=chart.locator('.daily-tooltip');
+ for(const width of [1380,1000]){
+  await page.setViewportSize({width,height:980});await page.evaluate(()=>new Promise<void>(resolve=>{window.scrollTo(0,0);requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));}));
+  const box=(await chart.boundingBox())!,card=(await page.locator('.detail').boundingBox())!;
+  const hover=async(fraction:number)=>{
+   const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data.filter((d:string)=>{const x=c.convertToPixel({xAxisIndex:0},d);return x>=65&&x<=c.getWidth()-35;}),i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({xAxisIndex:0},labels[i]),date:labels[i]};},fraction);
+   await page.mouse.move(box.x+target.xy,box.y+150);await expect(tooltip.locator('..')).toBeVisible();await expect(tooltip.locator(':scope>div').first()).toHaveText(target.date);
+  };
+  await hover(.35);const first=(await tooltip.locator('..').boundingBox())!;
+  expect(first.y).toBeGreaterThanOrEqual(card.y);expect(first.y+first.height).toBeLessThanOrEqual(box.y+30);
+  expect(Math.abs(first.x+first.width-(card.x+card.width-13))).toBeLessThan(3);
+  expect(first.width).toBeLessThanOrEqual(325);expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(10);
+  await expect(tooltip).toContainText('开盘：');await expect(tooltip).toContainText('成交量：');
+  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
+  await hover(.75);const second=(await tooltip.locator('..').boundingBox())!;
+  expect(Math.abs(second.x-first.x)).toBeLessThan(1);expect(Math.abs(second.y-first.y)).toBeLessThan(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:test.info().outputPath(`daily-overlay-${width}.png`)});
+  await page.mouse.move(0,0);await expect(tooltip.locator('..')).toBeHidden();
+  await page.getByRole('button',{name:'暂停',exact:true}).click();await expect(page.getByRole('button',{name:'恢复',exact:true})).toBeVisible();await page.getByRole('button',{name:'恢复',exact:true}).click();
+ }
+});
+
 test('intraday grid is sparse dark red and price/volume use identical time coordinates',async({page})=>{
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  const chart=page.getByLabel('分时价格及分钟成交量');
