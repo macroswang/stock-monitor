@@ -1,5 +1,7 @@
-export type PaperFillPoint={stamp:string;side:'buy'|'sell';shares:number;amount:number;fills:number};
-export type PaperChartMark={time:string;price:number;value:'B'|'S'|'T';buyShares:number;sellShares:number;buyAmount:number;sellAmount:number;fills:number};
+export type PaperFillPoint={stamp:string;side:'buy'|'sell';shares:number;amount:number;fills:number;order_id?:string;last_stamp?:string};
+export type PaperOrderPoint=PaperFillPoint&{order_id:string;last_stamp:string};
+export type PaperChartMark={time:string;price:number;value:'B'|'S'|'T';buyShares:number;sellShares:number;buyAmount:number;sellAmount:number;fills:number;orderCount?:number;lastTime?:string};
+export const paperTradeColors={B:'#ed6d79',S:'#4c9fff',T:'#b48bff'};
 export function paperChartMarks(points:PaperFillPoint[],daily=false):PaperChartMark[]{
  const groups=new Map<string,PaperChartMark>();
  for(const p of points){
@@ -8,6 +10,7 @@ export function paperChartMarks(points:PaperFillPoint[],daily=false):PaperChartM
   const m=groups.get(key)||{time,price:0,value:p.side==='buy'?'B':'S',buyShares:0,sellShares:0,buyAmount:0,sellAmount:0,fills:0};
   if(p.side==='buy'){m.buyShares+=p.shares;m.buyAmount+=p.amount;}else{m.sellShares+=p.shares;m.sellAmount+=p.amount;}
   m.fills+=p.fills;m.value=m.buyShares&&m.sellShares?'T':m.buyShares?'B':'S';
+  if(p.order_id){m.orderCount=(m.orderCount||0)+1;m.lastTime=[m.lastTime||time,(p.last_stamp||p.stamp).slice(11,16)].sort().at(-1);}
   m.price=(m.buyAmount+m.sellAmount)/(m.buyShares+m.sellShares)/100;
   groups.set(key,m);
  }

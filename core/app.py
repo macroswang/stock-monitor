@@ -60,6 +60,22 @@ class App:
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
             threading.Thread(target=self.market_loop,daemon=True).start()
+            threading.Thread(target=self.paper_loop,daemon=True).start()
+
+    def paper_service(self):
+        from .paper import Paper
+        with self.lock:
+            if not hasattr(self,'paper'):self.paper=Paper(self.dir/'paper.sqlite3',self.store)
+            return self.paper
+
+    def paper_loop(self):
+        while not self.stop.is_set():
+            try:
+                if (self.dir/'paper.sqlite3').exists():self.paper_service().sync_live_accounts()
+            except Exception as e:
+                # A session boundary or invalid cache must not terminate market monitoring.
+                print('paper sync: '+str(e),file=sys.stderr,flush=True)
+            self.stop.wait(3)
 
     def cache_minutes(self,code,group):
         old=self.store.getcache(code,'minute',group['date'])
@@ -226,10 +242,7 @@ class App:
 
     def call(self,method,args):
         if method.startswith("paper_"):
-            from .paper import Paper
-            with self.lock:
-                if not hasattr(self,"paper"):self.paper=Paper(self.dir/"paper.sqlite3",self.store)
-            return self.paper.call(method,args)
+            return self.paper_service().call(method,args)
         if method=='buy_research':
             from .buy_research import run,export
             def research():

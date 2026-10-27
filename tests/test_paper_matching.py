@@ -101,6 +101,7 @@ class LimitMatchingTests(unittest.TestCase):
         self.assertEqual(self.paper.call('paper_chart',dict(args,start='2026-10-20',end='2026-10-20'))['points'],[])
         account=self.paper.call('paper_create',dict(cash=10000))['id']
         self.assertEqual(self.paper.call('paper_chart',dict(args,account=account))['points'],[])
+        self.assertEqual(self.paper.call('paper_chart',dict(args,account=account))['order_points'],[])
 
     def test_history_is_paged_but_totals_export_and_chart_are_complete(self):
         import json
@@ -132,3 +133,48 @@ class LimitMatchingTests(unittest.TestCase):
         self.assertEqual(len(chart['points']),1);self.assertEqual(chart['points'][0]['stamp'],'2026-10-19 00:00')
         self.assertEqual(chart['points'][0]['shares'],200);self.assertEqual(len(chart['minute_points']),2)
         self.assertEqual(chart['minute_points'][0]['stamp'],'2026-10-19 09:32')
+        self.assertEqual(len(chart['minute_order_points']),1)
+        self.assertEqual(chart['minute_order_points'][0]['stamp'],'2026-10-19 09:32')
+        self.assertEqual(chart['minute_order_points'][0]['last_stamp'],'2026-10-19 09:33')
+
+    def test_one_order_marker_stays_at_first_fill_and_updates_total_and_weighted_price(self):
+        self.bars();self.place(n=200)
+        args=dict(account=self.a,code='sh600000',start='2026-10-19',end='2026-10-19')
+        self.assertEqual(self.paper.call('paper_chart',args)['order_points'],[])
+        self.advance();partial=self.paper.call('paper_chart',args)['order_points'][0]
+        self.assertEqual((partial['stamp'],partial['shares'],partial['amount']),('2026-10-19 09:32',100,95000))
+        self.advance('09:33');before=self.snapshot();chart=self.paper.call('paper_chart',args)
+        self.assertEqual(len(chart['points']),2);self.assertEqual(len(chart['order_points']),1)
+        marker=chart['order_points'][0]
+        self.assertEqual(marker,dict(order_id='limit-001',stamp='2026-10-19 09:32',last_stamp='2026-10-19 09:33',side='buy',shares=200,amount=189000,fills=2))
+        self.assertEqual(len(self.paper.call('paper_export',dict(account=self.a,kind='fills'))),2)
+        self.assertEqual(before,self.snapshot())
+
+    def test_independent_same_price_orders_are_not_merged_by_order_endpoint(self):
+        self.bars();self.place(n=100);self.advance()
+        self.place(n=100,stamp='2026-10-19 09:32',key='limit-002');self.advance('09:33')
+        points=self.paper.call('paper_chart',dict(account=self.a,code='sh600000',start='2026-10-19',end='2026-10-19'))['order_points']
+        self.assertEqual([p['order_id'] for p in points],['limit-001','limit-002'])
+        self.assertEqual([p['stamp'][-5:] for p in points],['09:32','09:33'])
+
+    def test_cancelled_partial_order_keeps_one_marker_for_executed_part_only(self):
+        self.bars();self.place(n=300);self.advance();self.paper.call('paper_cancel',dict(account=self.a,id='limit-001'))
+        self.advance('09:33')
+        points=self.paper.call('paper_chart',dict(account=self.a,code='sh600000',start='2026-10-19',end='2026-10-19'))['order_points']
+        self.assertEqual(len(points),1);self.assertEqual(points[0]['shares'],100);self.assertEqual(points[0]['fills'],1)
+
+    def test_partial_sell_order_also_has_one_marker_and_legacy_fills_stay_separate(self):
+        self.bars();self.paper.call('paper_seed',dict(account=self.a,code='sh600000',shares=300,cost=9))
+        self.place(n=200,price=9,side='sell');self.advance('09:33')
+        args=dict(account=self.a,code='sh600000',start='2026-10-19',end='2026-10-19')
+        points=self.paper.call('paper_chart',args)['order_points']
+        self.assertEqual(len(points),1);self.assertEqual(points[0]['side'],'sell');self.assertEqual(points[0]['fills'],2)
+        self.assertEqual(self.paper.call('paper_chart',dict(args,code='sz000001'))['order_points'],[])
+        self.assertEqual(self.paper.call('paper_chart',dict(args,start='2026-10-20',end='2026-10-20'))['order_points'],[])
+        import json
+        with self.paper.db:
+            for i in range(2):
+                o=dict(account=self.a,id=f'legacy-{i}',code='sh600000',stamp=f'2026-10-19 09:3{4+i}',side='buy',shares=100,amount=100000,price=1000,fees=500,status='filled')
+                self.paper.db.execute('INSERT INTO orders VALUES(?,?,?,?)',(self.a,o['id'],json.dumps(o),'{}'));self.paper.index_fill(o)
+        points=self.paper.call('paper_chart',args)['order_points']
+        self.assertEqual([p['order_id'] for p in points],['limit-001','legacy-0','legacy-1'])

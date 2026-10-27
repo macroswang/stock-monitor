@@ -70,3 +70,26 @@
 .daily-load-state{align-self:center;color:#91a7c3;font-size:11px;white-space:nowrap}
 
 .daily-pattern-mode{font-size:11px;color:#91a2bb}
+
+/* Hover details overlay the header; keep its full width available to controls. */
+.minute-detail,.linked-minute{--quote-dock-width:320px}
+.minute-detail>.detail-top{padding:16px 20px 6px;align-items:flex-start;flex-wrap:wrap;gap:8px 12px}
+.minute-detail>.detail-top>div:first-child{min-width:0;flex:1}
+.minute-detail .detail-top p{margin:6px 0 0;line-height:1.5}
+.minute-detail .detail-actions{flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+.minute-detail>.chart-toolbar{align-items:center;flex-wrap:wrap;padding:6px 20px 10px}
+.minute-detail>.chart-caption{padding-top:8px;line-height:1.4}
+.minute-tooltip{min-width:0;width:calc(var(--quote-dock-width,320px) - 20px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:2px 9px;font-size:10px;line-height:1.35;white-space:normal}
+.minute-tooltip>div:first-child{grid-column:1/-1;font-size:11px;line-height:1.4;margin:0 0 3px}
+.minute-tooltip .quote-detail{gap:4px;padding:0;min-width:0}
+.minute-tooltip .quote-detail>span:last-child{text-align:right;overflow-wrap:anywhere}
+.minute-tooltip>.quote-wide,.minute-tooltip>.tooltip-comparison,.minute-tooltip>.quote-trade-context{grid-column:1/-1}
+.minute-tooltip .quote-trade-context{display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin-top:3px;font-size:10px}
+.minute-tooltip .quote-trade-context>.quote-detail{gap:4px;white-space:nowrap}
+.minute-tooltip .quote-trade-prices{font-size:9px;text-align:right;color:#aebed4}
+.minute-tooltip .tooltip-comparison{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px;margin-top:4px;padding-top:5px}
+.minute-tooltip .tooltip-comparison .trigger-change{font-size:12px;line-height:1.3;gap:2px}
+.minute-tooltip .tooltip-comparison .trigger-change>span:first-child{font-size:9px}
+.minute-tooltip .tooltip-comparison .tooltip-trade-result{font-size:9px;line-height:1.3}
+.minute-tooltip .tooltip-comparison .tooltip-trade-result>div+div{margin-top:2px}
+@media(max-width:1150px){.minute-detail,.linked-minute{--quote-dock-width:270px}.minute-tooltip{gap:2px 6px;font-size:9px}.minute-tooltip .quote-trade-context{flex-wrap:wrap;font-size:9px}.minute-tooltip .quote-trade-prices{margin-left:auto}}

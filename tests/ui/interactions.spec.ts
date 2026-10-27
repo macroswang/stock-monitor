@@ -174,6 +174,8 @@ test('confirmed shapes and frozen Q1 quality have independent displays without c
  await show(example.expected[0].time);const tooltip=chart.locator('.quote-tooltip');
  await expect(tooltip).toContainText('底形态：');for(const hidden of ['Q1质量：','Q1假设净空间','Q1冻结版','确认依据：','研究滑点：','信号间隔：','验证状态：'])await expect(tooltip).not.toContainText(hidden);await expect(tooltip).toContainText('候选点：09:57');await expect(tooltip).toContainText('确认时间：09:59');
  await expect(tooltip).toContainText('基准触发：09:50');
+ const dock=(await tooltip.locator('..').boundingBox())!,plotBox=(await chart.boundingBox())!;
+ expect(dock.y+dock.height).toBeLessThanOrEqual(plotBox.y+30);
  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const c=e.getInstanceByDom(el),m=c.getOption().series[0].markPoint.data.find((m:any)=>m.value==='底形态');c.trigger('click',{componentType:'markPoint',data:m});});
  await show(example.expected[0].time);await expect(tooltip).toContainText(`基准底：${example.expected[0].time}`);await expect(tooltip).toContainText('相对底涨跌幅：');
@@ -342,28 +344,39 @@ test('watch list shows quote change percent and amplitude, with missing fields e
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('—');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('—');
 });
 
-test('tooltip body does not block mouse tracking',async({page})=>{
+test('intraday header uses full width and tooltip overlays controls without moving the plot',async({page})=>{
+ await page.addStyleTag({content:'.rail,.workspace{transition:none!important}'});
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
- const chart=page.getByLabel('分时价格及分钟成交量');const box=(await chart.boundingBox())!;
- await page.mouse.move(box.x+box.width*.35,box.y+150);
- const tooltip=chart.locator('.quote-tooltip');await expect(tooltip).toBeVisible();
- const rect=(await tooltip.boundingBox())!;
- // Move into the text body of the displayed tooltip; the chart beneath must still track.
- const x=rect.x+Math.min(25,rect.width/3),y=Math.max(box.y+50,Math.min(rect.y+15,box.y+200));
- expect(y).toBeGreaterThanOrEqual(rect.y);expect(y).toBeLessThan(rect.y+rect.height);
- const expected=await chart.evaluate(async(el,args)=>{
-  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const c=e.getInstanceByDom(el);
-  const converted=c.convertFromPixel({gridIndex:0},[args.x,args.y]);const index=Math.round(Array.isArray(converted)?converted[0]:converted);return c.getOption().xAxis[0].data[index];
- },{x:x-box.x,y:y-box.y});
- const before=await tooltip.locator(':scope>div').first().textContent();expect(expected).not.toBe(before);
- await page.mouse.move(x,y);await expect(tooltip.locator(':scope>div').first()).toHaveText(expected,{timeout:1000});
- await expect(chart.locator('input')).toHaveCount(0);
- for(const fraction of [.2,.55,.85,.4,.75,.25]){
-  const target=await chart.evaluate(async(el,f)=>{
-   const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);const c=e.getInstanceByDom(el);const labels=c.getOption().xAxis[0].data;const index=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({seriesIndex:0},[labels[index],10]),time:labels[index]};
-  },fraction);
-  await page.mouse.move(box.x+target.xy[0],box.y+150);
-  await expect(tooltip.locator(':scope>div').first()).toHaveText(target.time,{timeout:500});
+ const chart=page.getByLabel('分时价格及分钟成交量'),tooltip=chart.locator('.quote-tooltip');
+ for(const width of [1380,1000]){
+  await page.setViewportSize({width,height:980});await page.evaluate(()=>new Promise<void>(resolve=>{window.scrollTo(0,0);requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));}));
+  await page.mouse.move(0,0);await expect(tooltip.locator('..')).toBeHidden();
+  const box=(await chart.boundingBox())!,card=(await page.locator('.detail').boundingBox())!;
+  expect(box.y-card.y).toBeLessThan(245);
+  for(const selector of ['.detail-actions','.chart-toolbar>div:last-child']){const r=(await page.locator(selector).boundingBox())!;expect(Math.abs(r.x+r.width-(card.x+card.width-21))).toBeLessThan(4);}
+  await page.screenshot({path:`docs/header-overlay-idle-${width}.png`});
+  const hover=async(fraction:number)=>{
+   const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data,i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({seriesIndex:0},[labels[i],10]),time:labels[i]};},fraction);
+   await page.mouse.move(box.x+target.xy[0],box.y+150);await expect(tooltip.locator(':scope>div').first()).toHaveText(target.time,{timeout:1000});
+  };
+  await hover(.35);const first=(await tooltip.locator('..').boundingBox())!,detail=(await page.locator('.detail').boundingBox())!;
+  expect(first.y).toBeGreaterThanOrEqual(detail.y);expect(first.y+first.height).toBeLessThanOrEqual(box.y+30);
+  expect(Math.abs(first.x+first.width-(detail.x+detail.width-13))).toBeLessThan(3);
+  expect(first.width).toBeLessThanOrEqual(325);expect(first.height).toBeLessThan(240);
+  expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(10);
+  expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
+  let covered=0;
+  for(const control of await page.locator('.detail-actions button,.chart-toolbar button,.chart-toolbar select,.minute-chart-controls summary,.chart-display-options label').all()){
+   if(!await control.isVisible())continue;const r=(await control.boundingBox())!;
+   covered+=Math.max(0,Math.min(r.x+r.width,first.x+first.width)-Math.max(r.x,first.x))*Math.max(0,Math.min(r.y+r.height,first.y+first.height)-Math.max(r.y,first.y));
+  }
+  expect(covered).toBeGreaterThan(0);
+  for(const fraction of [.2,.55,.85,.4,.75,.25]){await hover(fraction);const rect=(await tooltip.locator('..').boundingBox())!;expect(Math.abs(rect.x-first.x)).toBeLessThan(1);expect(Math.abs(rect.y-first.y)).toBeLessThan(1);}
+  await expect(chart.locator('input')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`docs/header-overlay-hover-${width}.png`});
+  await page.getByRole('button',{name:'暂停',exact:true}).click();await expect(page.getByRole('button',{name:'恢复',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'恢复',exact:true}).click();
  }
 });
 
@@ -499,6 +512,72 @@ test('any intraday location opens a limit ticket; pending partial fills cancel a
  await page.screenshot({path:'docs/paper-limit-orders-local.png',fullPage:true});
 });
 
+test('today Shanzi limit buy automatically matches later cached prices and updates B without manual advance',async({page})=>{
+ const code='sz000981',day='2026-10-27';
+ await rpc('__audit_clock',{now:day+'T10:53:01+08:00'});
+ const bars=[{time:'10:52',close:'2.36',volume:100000,complete:true}];
+ const cache=()=>rpc('__audit_cache',{code,day,data:{date:day,source:'paper-auto-test',volume_unit:'shares',bars}});
+ await rpc('__audit_daily',{code,day,data:{date:day,open:'2.36',close:'2.34',high:'2.36',low:'2.34',volume:'410000',volume_unit:'shares',source:'paper-auto-test'}});
+ await cache();await page.getByRole('button',{name:'模拟交易',exact:true}).click();
+ await page.getByLabel('模拟初始资金').fill('100000');await page.getByRole('button',{name:'创建模拟账户',exact:true}).click();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await page.locator('.stock').filter({hasText:'山子高科'}).click();
+ await expect(page.getByLabel('交易日期')).toHaveValue(day);
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const xy=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},['10:52',2.36]);});
+ const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1],{button:'right'});
+ await page.getByLabel('模拟委托限价').fill('2.35');await page.getByLabel('模拟交易股数').fill('2000');
+ await page.getByRole('button',{name:'确认买入',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
+ expect((await rpc('paper_snapshot')).fill_count).toBe(0);
+ bars.push({time:'10:53',close:'2.34',volume:10000,complete:true});await cache();await rpc('__audit_clock',{now:day+'T10:54:01+08:00'});
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'刷新',exact:true}).click();expect((await rpc('paper_snapshot')).fill_count).toBe(0);
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ bars.push({time:'10:55',close:'2.34',volume:10000,complete:true});await cache();await rpc('__audit_clock',{now:day+'T10:56:01+08:00'});
+ await expect.poll(async()=>(await rpc('paper_snapshot')).orders[0].status,{timeout:10000}).toBe('partial');
+ // Matching/marker updates continue while the paper-trading panel is hidden.
+ const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.paperTrade).map((m:any)=>m.value);});
+ await expect.poll(marks).toEqual(['B']);
+ bars.push({time:'10:56',close:'2.34',volume:300000,complete:true});await cache();await rpc('__audit_clock',{now:day+'T10:57:01+08:00'});
+ await expect.poll(async()=>(await rpc('paper_snapshot')).orders[0].status,{timeout:10000}).toBe('filled');
+ const showOrderTip=(target:any)=>target.evaluate(async(el:Element)=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]),c=e.getInstanceByDom(el);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:c.getOption().xAxis[0].data.indexOf('10:55')});});
+ await expect.poll(async()=>{await showOrderTip(chart);return chart.locator('.quote-tooltip').textContent();}).toContain('委托累计 B：买入2000股');
+ await expect(chart.locator('.quote-tooltip')).toContainText('2次成交，10:55—10:56');
+ expect(await marks()).toEqual(['B']);
+ const orderChart=await rpc('paper_chart',{account:(await rpc('paper_snapshot')).account.id,code,start:day,end:day});
+ expect(orderChart.points).toHaveLength(2);expect(orderChart.order_points).toHaveLength(1);expect(orderChart.order_points[0].stamp).toBe(day+' 10:55');
+ await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute').getByLabel('分时价格及分钟成交量');
+ await expect.poll(async()=>{await showOrderTip(linked);return linked.locator('.quote-tooltip').textContent();}).toContain('委托累计 B：买入2000股');
+ const dock=(await linked.locator('.quote-tooltip').locator('..').boundingBox())!,linkedBox=(await linked.boundingBox())!;
+ expect(dock.y+dock.height).toBeLessThanOrEqual(linkedBox.y+30);
+ expect(await linked.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.paperTrade).map((m:any)=>({value:m.value,coord:m.coord}));})).toEqual([{value:'B',coord:['10:55',2.34]}]);
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'委托记录（1）',exact:true}).click();
+ await expect(page.getByLabel('历史回放模拟交易').locator('.paper-record-table')).toContainText('2000 / 2000 / 0');
+ const s=await rpc('paper_snapshot');expect(s.frozen_cash).toBe(0);expect(s.positions[0].shares).toBe(2000);expect(s.fills.every((f:any)=>f.price===234)).toBe(true);
+ await page.reload();await page.getByRole('button',{name:'模拟交易',exact:true}).click();await expect(page.getByLabel('历史回放模拟交易')).toContainText('2000 / 0');
+ expect((await rpc('paper_snapshot')).fill_count).toBe(2);
+});
+
+test('today chart reference does not backdate order acceptance or buy at a later 2.33 price above 2.32 limit',async({page})=>{
+ const code='sz000981',day='2026-10-27';await rpc('__audit_clock',{now:day+'T13:29:10+08:00'});
+ const bars=[{time:'13:28',close:'2.32',volume:2999700,complete:true},{time:'13:29',close:'2.32',volume:127000,complete:true},{time:'13:30',close:'2.33',volume:120100,complete:true}];
+ const cache=()=>rpc('__audit_cache',{code,day,data:{date:day,source:'acceptance-time-test',volume_unit:'shares',bars}});await cache();
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByLabel('模拟初始资金').fill('100000');await page.getByRole('button',{name:'创建模拟账户',exact:true}).click();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await page.locator('.stock').filter({hasText:'山子高科'}).click();await expect(page.getByLabel('交易日期')).toHaveValue(day);
+ const chart=page.getByLabel('分时价格及分钟成交量');const xy=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},['13:28',2.32]);});
+ const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1],{button:'right'});
+ await expect(page.getByRole('dialog')).toContainText('参考位置 2026-10-27 13:28');await expect(page.getByRole('dialog')).toContainText('当日模拟');
+ await page.getByLabel('模拟委托限价').fill('2.32');await page.getByLabel('模拟交易股数').fill('1600');
+ await rpc('__audit_clock',{now:day+'T13:30:21+08:00'});await page.getByRole('button',{name:'确认买入',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByRole('status')).toContainText('生效时间13:30:21');
+ let s=await rpc('paper_snapshot');expect(s.fill_count).toBe(0);expect(s.orders[0].stamp).toBe(day+' 13:30');expect(s.orders[0].reference_stamp).toBe(day+' 13:28');
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'委托记录（1）',exact:true}).click();await page.locator('.paper-record-details summary').click();
+ await expect(page.locator('.paper-record-details dl')).toContainText('2026-10-27 13:30:21');await expect(page.locator('.paper-record-details dl')).toContainText('2026-10-27 13:32');
+ bars.push({time:'13:32',close:'2.33',volume:144600,complete:true});await cache();await rpc('__audit_clock',{now:day+'T13:33:01+08:00'});await page.getByRole('button',{name:'刷新',exact:true}).click();
+ expect((await rpc('paper_snapshot')).fill_count).toBe(0);await expect(page.locator('.paper-record-table')).toContainText('未成交');
+ bars.push({time:'13:33',close:'2.32',volume:100000,complete:true});await cache();await rpc('__audit_clock',{now:day+'T13:34:01+08:00'});
+ await expect.poll(async()=>(await rpc('paper_snapshot')).fill_count,{timeout:10000}).toBe(1);
+ s=await rpc('paper_snapshot');expect(s.fills[0].stamp).toBe(day+' 13:33');expect(s.fills[0].price).toBe(232);expect(s.orders[0].filled).toBe(1000);
+});
+
 test('only executed account trades paint intraday B/S and daily T and survive reload',async({page})=>{
  const code='sh603002',day='2026-10-19';
  const bars=[{time:'09:31',close:'10',volume:100000,complete:true},{time:'09:32',close:'9.5',volume:100000,complete:true},{time:'09:33',close:'11',volume:100000,complete:true}];
@@ -520,14 +599,75 @@ test('only executed account trades paint intraday B/S and daily T and survive re
  await expect(chart.locator('.quote-tooltip')).toContainText('模拟成交 B：买入100股 · 均价9.50元');
  await chart.screenshot({path:'docs/paper-bs-intraday-local.png'});
  await page.getByRole('button',{name:'日K',exact:true}).click();
- const daily=page.getByLabel('日K线及成交量');await expect.poll(()=>marks(daily)).toEqual([{value:'T',coord:[day,10.25]}]);
+ const daily=page.getByLabel('日K线及成交量');await expect.poll(()=>marks(daily)).toEqual([{value:'T',coord:[day,11]}]);
  await daily.screenshot({path:'docs/paper-t-daily-local.png'});
  const b=await rpc('paper_create',{name:'空账户',cash:50000});
  await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'刷新',exact:true}).click();await page.getByLabel('模拟账户').selectOption(b.id);
  await expect(page.getByLabel('历史回放模拟交易')).toContainText('50,000.00');
  await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect.poll(()=>marks(page.getByLabel('日K线及成交量'))).toEqual([]);
  await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByLabel('模拟账户').selectOption(a.id);
- await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect.poll(()=>marks(page.getByLabel('日K线及成交量'))).toEqual([{value:'T',coord:[day,10.25]}]);
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect.poll(()=>marks(page.getByLabel('日K线及成交量'))).toEqual([{value:'T',coord:[day,11]}]);
+});
+
+test('daily and intraday executed B S markers are half-size with red blue dashed connectors',async({page})=>{
+ const code='sz000981',days=['2026-10-19','2026-10-20','2026-10-21'];
+ const account=(await rpc('paper_create',{cash:100000})).id;
+ await rpc('paper_seed',{account,code,shares:300,cost:2.4});
+ for(const day of days){
+  await rpc('__audit_cache',{code,day,data:{date:day,source:'marker-style-test',volume_unit:'shares',bars:[
+   {time:'09:31',close:'2.4',volume:100000,complete:true},{time:'09:32',close:'2.35',volume:100000,complete:true},{time:'09:33',close:'2.46',volume:100000,complete:true}]}});
+  await rpc('__audit_daily',{code,day,data:{date:day,open:'2.4',close:'2.45',low:'2.3',high:'2.5',volume:'300000',volume_unit:'shares',source:'marker-style-test'}});
+ }
+ const order=async(day:string,time:string,side:string,key:string)=>{const q=await rpc('paper_quote',{code,stamp:day+' '+time});await rpc('paper_order',{account,id:key,code,stamp:q.stamp,token:q.token,side,shares:100,limit_price:side==='buy'?'2.4':'2.45'});};
+ await order(days[0],'09:31','buy','small-marker-buy');await rpc('paper_advance',{account,code,stamp:days[0]+' 09:32'});
+ await order(days[1],'09:32','sell','small-marker-sell');await rpc('paper_advance',{account,code,stamp:days[1]+' 09:33'});
+ await order(days[2],'09:31','buy','small-marker-t-buy');await rpc('paper_advance',{account,code,stamp:days[2]+' 09:32'});
+ await order(days[2],'09:32','sell','small-marker-t-sell');await rpc('paper_advance',{account,code,stamp:days[2]+' 09:33'});
+ await page.reload();await page.locator('.stock').filter({hasText:'山子高科'}).click();await page.getByLabel('交易日期').selectOption(days[2]);
+ const read=(chart:any)=>chart.evaluate(async(el:Element)=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]),c=e.getInstanceByDom(el),o=c.getOption(),colors=['#ed6d79','#4c9fff','#b48bff'];
+  const marks=o.series[0].markPoint.data.filter((m:any)=>m.paperTrade).map((m:any)=>({value:m.value,coord:m.coord,price:m.executionPrice,size:m.symbolSize,color:m.itemStyle.color}));
+  const lines=c.getZr().storage.getDisplayList().filter((d:any)=>d.type==='line'&&colors.includes(d.style.stroke)&&d.style.lineDash?.join(',')==='3,3').map((d:any)=>({color:d.style.stroke,shape:d.shape}));
+  const list=c.getZr().storage.getDisplayList(),rect=(d:any)=>{const r=d.getBoundingRect().clone();r.applyTransform(d.getComputedTransform());return {x:r.x+r.width/2,y:r.y+r.height/2,width:r.width,height:r.height};};
+  const symbols=list.filter((d:any)=>colors.includes(d.style.fill)&&rect(d).width>9&&rect(d).width<12).map((d:any)=>({color:d.style.fill,...rect(d)}));
+  const ctx=document.createElement('canvas').getContext('2d')!;
+  const text=list.filter((d:any)=>d.type==='tspan'&&['B','S','T'].includes(String(d.style.text))).map((d:any)=>{
+   ctx.font=d.style.font;ctx.textBaseline=d.style.textBaseline;ctx.textAlign=d.style.textAlign;
+   const m=ctx.measureText(d.style.text),x=(d.style.x||0)+(m.actualBoundingBoxRight-m.actualBoundingBoxLeft)/2,y=(d.style.y||0)+(m.actualBoundingBoxDescent-m.actualBoundingBoxAscent)/2,t=d.getComputedTransform()||[1,0,0,1,0,0];
+   return {text:d.style.text,font:d.style.font,baseline:d.style.textBaseline,ink:{x:t[0]*x+t[2]*y+t[4],y:t[1]*x+t[3]*y+t[5]},rect:rect(d)};
+  });
+  return {marks,lines,symbols,text};
+ });
+ const centered=(r:any)=>{
+  expect(r.text).toHaveLength(r.marks.length);
+  for(const label of r.text){
+   const color=r.marks.find((m:any)=>m.value===label.text).color,symbol=r.symbols.find((s:any)=>s.color===color);
+   expect(symbol).toBeDefined();expect(Math.abs(label.ink.x-symbol.x)).toBeLessThan(.2);expect(Math.abs(label.ink.y-symbol.y)).toBeLessThan(.2);
+  }
+ };
+ const minute=page.getByLabel('分时价格及分钟成交量');
+ await expect.poll(async()=>(await read(minute)).marks.map((m:any)=>m.value)).toEqual(['B','S']);
+ let r=await read(minute);expect(r.marks.map((m:any)=>[m.size,m.color])).toEqual([[10,'#ed6d79'],[10,'#4c9fff']]);
+ centered(r);
+ expect(r.lines.map((l:any)=>l.color).sort()).toEqual(['#4c9fff','#ed6d79']);
+ expect(r.lines.find((l:any)=>l.color==='#ed6d79').shape.y2).toBeGreaterThan(r.lines.find((l:any)=>l.color==='#ed6d79').shape.y1);
+ expect(r.lines.find((l:any)=>l.color==='#4c9fff').shape.y2).toBeLessThan(r.lines.find((l:any)=>l.color==='#4c9fff').shape.y1);
+ await page.mouse.move(0,0);await minute.screenshot({path:'docs/paper-small-bs-intraday.png'});
+ await page.getByRole('button',{name:'日K',exact:true}).click();const daily=page.getByLabel('日K线及成交量');
+ await expect.poll(async()=>(await read(daily)).marks.map((m:any)=>m.value)).toEqual(['B','S','T']);
+ r=await read(daily);expect(r.marks.map((m:any)=>m.size)).toEqual([10,10,10]);expect(r.marks.map((m:any)=>m.coord[1])).toEqual([2.3,2.5,2.5]);
+ centered(r);
+ expect(r.lines).toHaveLength(3);expect(r.lines.map((l:any)=>l.color).sort()).toEqual(['#4c9fff','#b48bff','#ed6d79']);
+ expect(r.marks[0].price).toBe(2.35);expect(r.marks[1].price).toBe(2.46); // Drawing anchors never replace execution prices.
+ const snapshot=await rpc('paper_snapshot',{account});expect(snapshot.fill_count).toBe(4);
+ await page.mouse.move(0,0);await page.addStyleTag({content:'.interactive-price-tooltip{visibility:hidden!important}'});await daily.screenshot({path:'docs/paper-small-bst-daily.png'});
+ const area=(await daily.boundingBox())!,scroll=await page.evaluate(()=>({x:scrollX,y:scrollY})),left=Math.min(...r.symbols.map((s:any)=>s.x))-14,top=Math.min(...r.symbols.map((s:any)=>s.y))-14;
+ await page.screenshot({path:'docs/paper-marker-centered-detail.png',clip:{x:area.x+scroll.x+left,y:area.y+scroll.y+top,width:Math.max(...r.symbols.map((s:any)=>s.x))-left+14,height:Math.max(...r.symbols.map((s:any)=>s.y))-top+14}});
+ await page.setViewportSize({width:1000,height:760});await expect.poll(async()=>(await read(daily)).lines.length).toBe(3);
+ await expect(async()=>centered(await read(daily))).toPass({timeout:3000});
+ // Connectors are recomputed from the date/price coordinates after resize and daily navigation.
+ await daily.focus();await page.keyboard.press('ArrowLeft');await expect(page.locator('.linked-minute h3')).toContainText(days[1]);
+ expect((await read(daily)).marks.map((m:any)=>m.value)).toEqual(['B','S','T']);
 });
 
 test('paper compact fields retain day profit and keep audit details expandable',async({page})=>{

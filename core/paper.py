@@ -5,8 +5,8 @@ import re
 import sqlite3
 import threading
 import uuid
-from datetime import date, time, timedelta
-from .provider import now_cn
+from datetime import date, time, timedelta, datetime
+from .provider import now_cn, CN
 from .paper_session import trading_error
 from decimal import Decimal, ROUND_HALF_UP, ROUND_CEILING, ROUND_FLOOR
 
@@ -43,6 +43,7 @@ class Paper:
         CREATE INDEX IF NOT EXISTS fills_chart ON fill_index(account,code,stamp,side);
         CREATE INDEX IF NOT EXISTS fills_time ON fill_index(account,stamp);
         CREATE INDEX IF NOT EXISTS pending_status ON pending(account,json_extract(payload,'$.status'));
+        CREATE INDEX IF NOT EXISTS pending_live ON pending(json_extract(payload,'$.status'),json_extract(payload,'$.stamp'));
         CREATE INDEX IF NOT EXISTS orders_parent ON orders(account,json_extract(payload,'$.parent_id'));
         CREATE TABLE IF NOT EXISTS paper_meta(key TEXT PRIMARY KEY,value TEXT);''')
         # One-time, transactional backfill preserves old execution records.
@@ -126,6 +127,8 @@ class Paper:
         result = dict(code=code, name=names[0]['name'] if names else code, stamp=stamp,
                       price=p, volume=int(v), source=str(payload.get('source','unknown')))
         result['token'] = hashlib.sha256(json.dumps(result,sort_keys=True).encode()).hexdigest()
+        # Mode is display metadata, not part of the price/volume revision token.
+        result['order_mode']='live' if stamp[:10]==now_cn().astimezone(CN).date().isoformat() else 'historical'
         return result
 
     def seed(self, s, args):
@@ -255,16 +258,21 @@ class Paper:
         if old:
             if old['request']!=request:raise ValueError('委托编号已用于不同请求')
             return json.loads(old['payload'])
-        q=self.quote(args);self.clock(s,q['stamp'])
-        if q['stamp'][11:]>'14:56':raise ValueError('当前撮合仅支持连续竞价阶段，尾盘集合竞价不模拟新委托')
+        q=self.quote(args)
+        accepted=now_cn().astimezone(CN)
+        live=q['stamp'][:10]==accepted.date().isoformat()
+        effective=accepted.strftime('%Y-%m-%d %H:%M') if live else q['stamp']
+        if q['stamp']>accepted.strftime('%Y-%m-%d %H:%M'):raise ValueError('不能使用未来分钟提交模拟委托')
+        self.clock(s,effective)
+        if effective[11:]>'14:56':raise ValueError('当前撮合仅支持连续竞价阶段，尾盘集合竞价不模拟新委托')
         if q['token']!=args.get('token'):raise ValueError('参考行情已修订，请重新核对')
         # Process earlier outstanding orders before reserving resources at this time.
-        self.advance(s,q['stamp'])
+        self.advance(s,effective)
         n,p,side=quantity(args['shares']),cents(args['limit_price']),args.get('side')
         if Decimal(str(args['limit_price']))*100!=p:raise ValueError('委托价最多保留两位小数')
         if side not in ('buy','sell') or p<=0:raise ValueError('委托方向或限价无效')
         frozen,stocks=self.frozen(s)
-        available=sum(l['shares'] for l in s['lots'] if l['code']==q['code'] and (not l['day'] or l['day']<q['stamp'][:10]))-stocks.get(q['code'],0)
+        available=sum(l['shares'] for l in s['lots'] if l['code']==q['code'] and (not l['day'] or l['day']<effective[:10]))-stocks.get(q['code'],0)
         reserve=n*p+sum(self.fee_total(s,n*p,'buy').values())
         reason=''
         payload=self.store.getcache(q['code'],'minute',q['stamp'][:10])[0]['data']
@@ -275,10 +283,15 @@ class Paper:
         elif side=='sell' and n>available:reason='可卖数量不足（已扣除委托冻结及当日买入）'
         elif side=='sell' and n%100 and n!=available:reason='零股仅支持全部可卖数量一次委托'
         elif side=='sell' and max(0,sum(self.fee_total(s,min(n,100)*p,'sell').values())-min(n,100)*p)>s['cash']-frozen:reason='卖出所得及可用现金不足以支付费用（已扣除其他委托冻结）'
-        o=dict(id=key,account=s['id'],code=q['code'],name=q['name'],stamp=q['stamp'],last_checked=q['stamp'],
+        # Minute labels have not been independently certified as start/end labels.
+        # Skip both the submission minute and its next label: either interpretation
+        # must represent an entire minute after acceptance before volume is usable.
+        eligible=(accepted.replace(second=0,microsecond=0)+timedelta(minutes=2)).strftime('%Y-%m-%d %H:%M') if live else None
+        o=dict(id=key,account=s['id'],code=q['code'],name=q['name'],stamp=effective,last_checked=effective,
+               reference_stamp=q['stamp'],accepted_at=accepted.isoformat(),execution_mode='live' if live else 'historical',eligible_from=eligible,
                side=side,shares=n,filled=0,price=p,reference_price=q['price'],amount=0,fees=0,commission=0,
                transfer=0,stamp_tax=0,realized=0,status='rejected' if reason else 'open',reason=reason,
-               origin=str(args.get('origin','分时委托'))[:40],source=q['source'],recorded_at=now_cn().isoformat(),
+               origin=str(args.get('origin','分时委托'))[:40],source=q['source'],recorded_at=accepted.isoformat(),
                fee_settings=s['fees'],participation_percent=1,model='next_minute_limit_proxy')
         self.db.execute('INSERT INTO pending VALUES(?,?,?,?)',(s['id'],key,json.dumps(o,ensure_ascii=False),request))
         return o
@@ -295,7 +308,13 @@ class Paper:
     def advance(self,s,target):
         self.require_open()
         self.clock(s,target)
+        now=now_cn().astimezone(CN)
+        if target>now.strftime('%Y-%m-%d %H:%M'):raise ValueError('账户时间不能推进到电脑当前北京时间之后')
         active=self.pending(s['id'],active_only=True)
+        # Apply the same cutoff to worker, manual advance and new-order paths.
+        # Legacy current-day orders derive it from their original acceptance time.
+        starts={o['id']:self.live_match_start(o) for o in active}
+        closed_before=now.strftime('%Y-%m-%d %H:%M')
         reserves={o['id']:self.cash_reserve(s,o) for o in active}
         reserved_cash=sum(reserves.values())
         candidates={}
@@ -307,7 +326,8 @@ class Paper:
                     if s['clock']<stamp<=target and b.get('complete') and stamp[11:]<='14:56':
                         candidates[stamp,code]=payload
         for (stamp,code),payload in sorted(candidates.items()):
-            orders=[o for o in active if o['code']==code and o['status'] in ('open','partial') and o['last_checked']<stamp and o['stamp'][:10]==stamp[:10]]
+            orders=[o for o in active if o['code']==code and o['status'] in ('open','partial') and o['last_checked']<stamp and o['stamp'][:10]==stamp[:10]
+                    and (starts[o['id']] is None or starts[o['id']]<=stamp<closed_before)]
             if not orders:continue
             try:q=self.quote(dict(code=code,stamp=stamp),payload)
             except (ValueError,ArithmeticError,TypeError):continue
@@ -349,6 +369,63 @@ class Paper:
             if o['status'] in ('open','partial') and (o['stamp'][:10]<target[:10] or (o['stamp'][:10]==target[:10] and target[11:]=='15:00')):
                 o['status']='expired';o['reason']='当日有效委托已到期';self.update_pending(o)
         s['clock']=target;self.save(s)
+
+    def live_match_start(self,o):
+        if o.get('execution_mode')=='historical':return None
+        try:
+            accepted=datetime.fromisoformat(o.get('accepted_at') or o['recorded_at'])
+            if accepted.tzinfo is None:raise ValueError('acceptance timezone missing')
+            accepted=accepted.astimezone(CN)
+        except (ValueError,KeyError,TypeError):
+            # Unknown acceptance time is insufficient evidence for a live fill.
+            return '9999-12-31 23:59' if o.get('execution_mode')=='live' or o['stamp'][:10]==now_cn().astimezone(CN).date().isoformat() else None
+        if accepted.date().isoformat()!=o['stamp'][:10]:
+            return '9999-12-31 23:59' if o.get('execution_mode')=='live' else None
+        return (accepted.replace(second=0,microsecond=0)+timedelta(minutes=2)).strftime('%Y-%m-%d %H:%M')
+
+    def sync_live(self,s):
+        """Advance today's orders from closed cached minutes, never from a quote or future bar."""
+        now=now_cn().astimezone(CN)
+        reason=trading_error(now)
+        if reason:return dict(status='closed',message=reason)
+        day=now.date().isoformat()
+        # Historical replay remains explicit; a background poll must not consume its future.
+        if s['clock'][:10]!=day:return dict(status='historical',message='历史回放账户不随电脑时间自动推进')
+        active=self.pending(s['id'],active_only=True)
+        if not active:return dict(status='idle',message='暂无待撮合委托')
+        cutoff=(now-timedelta(minutes=1)).strftime('%H:%M')
+        ends=[]
+        for code in {o['code'] for o in active}:
+            rows=self.store.getcache(code,'minute',day)
+            latest=None
+            if rows:
+                payload=rows[0]['data']
+                for b in sorted(payload.get('bars',[]),key=lambda b:str(b.get('time','')),reverse=True):
+                    t=str(b.get('time',''))
+                    if t>cutoff or not ('09:31'<=t<='11:30' or '13:01'<=t<='14:56'):continue
+                    try:self.quote(dict(code=code,stamp=day+' '+t),payload)
+                    except (ValueError,ArithmeticError,TypeError,KeyError):continue
+                    latest=t;break
+            if latest is None:return dict(status='waiting',message='等待待撮合股票的已结束分钟行情')
+            ends.append(latest)
+        # Use the common data horizon: a slow stock must not lose its unchecked minutes
+        # when another stock advances the account clock.
+        target=day+' '+min(ends)
+        if target<=s['clock']:return dict(status='waiting',message='等待新的已结束分钟行情',target=s['clock'])
+        self.advance(s,target)
+        return dict(status='synced',message='已按当日已结束分钟自动撮合',target=target)
+
+    def sync_live_accounts(self):
+        """Background maintenance uses the same transaction and session gates as UI requests."""
+        now=now_cn().astimezone(CN)
+        if trading_error(now):return
+        day=now.date().isoformat()
+        with self.lock:
+            accounts=[r[0] for r in self.db.execute("SELECT DISTINCT account FROM pending WHERE json_extract(payload,'$.status') IN ('open','partial') AND json_extract(payload,'$.stamp')>=? AND json_extract(payload,'$.stamp')<?",(day,day+'Z'))]
+        for account in accounts:
+            with self.lock,self.db:
+                self.db.execute('BEGIN IMMEDIATE')
+                self.sync_live(self.load(account))
 
     def day_profit(self,s,positions,equity):
         day=s['clock'][:10]
@@ -430,11 +507,24 @@ class Paper:
             rows=self.db.execute('SELECT '+stamp+' stamp,side,SUM(shares) shares,SUM(amount) amount,COUNT(*) fills FROM fill_index WHERE account=? AND code=? AND stamp>=? AND stamp<=? GROUP BY '+stamp+',side ORDER BY stamp,side',
                 (s['id'],str(args['code']).lower(),first+' 00:00',last+' 23:59'))
             return [dict(r) for r in rows]
+        def order_points(first,last):
+            # Keep the fill-minute series intact for tooltips/auditing. The visible
+            # intraday marker represents an order at its first execution minute.
+            rows=self.db.execute('''SELECT COALESCE(json_extract(o.payload,'$.parent_id'),f.id) order_id,
+                MIN(f.stamp) stamp,MAX(f.stamp) last_stamp,f.side,
+                SUM(f.shares) shares,SUM(f.amount) amount,COUNT(*) fills
+                FROM fill_index f JOIN orders o ON o.account=f.account AND o.id=f.id
+                WHERE f.account=? AND f.code=? AND f.stamp>=? AND f.stamp<=?
+                GROUP BY order_id,f.side ORDER BY stamp,side,order_id''',
+                (s['id'],str(args['code']).lower(),first+' 00:00',last+' 23:59'))
+            return [dict(r) for r in rows]
         daily=args.get('daily') is True
         result=dict(account=s['id'],revision=s.get('revision',0),points=query(start,end,daily))
+        if not daily:result['order_points']=order_points(start,end)
         if daily and args.get('day'):
             day=str(args['day']);date.fromisoformat(day)
             result['minute_points']=query(day,day)
+            result['minute_order_points']=order_points(day,day)
         return result
 
     def call(self, method, args):
@@ -442,6 +532,14 @@ class Paper:
             self.db.execute('BEGIN IMMEDIATE')
             if method=='paper_create':return self.account(args)
             if method=='paper_snapshot':return self.snapshot(args.get('account'),args.get('history_limit',200))
+            if method=='paper_sync':
+                account=args.get('account')
+                if not account:
+                    row=self.db.execute('SELECT id FROM accounts ORDER BY rowid DESC LIMIT 1').fetchone()
+                    if not row:return self.snapshot()
+                    account=row[0]
+                sync=self.sync_live(self.load(account))
+                return dict(self.snapshot(account,args.get('history_limit',200)),sync=sync)
             if method=='paper_chart':return self.chart(args)
             if method=='paper_export':
                 self.load(args['account'])

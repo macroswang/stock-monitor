@@ -5,9 +5,9 @@ export type PaperPoint={code:string;name:string;stamp:string;origin:string;price
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 type Account={id:string;name:string;initial:number;cash:number;clock:string;realized:number;revision?:number;fees:{commission_wan:string;minimum:number;slippage_bps:string}};
 type Position={code:string;name:string;shares:number;available:number;frozen?:number;cost:number;market_value:number;price:number|null;price_time:string;unrealized:number;valuation:string};
-type Order={id:string;code:string;name:string;stamp:string;side:'buy'|'sell';shares:number;price:number;amount:number;fees:number;commission:number;stamp_tax:number;transfer:number;realized:number;status:string;filled?:number;reason:string;origin:string;source:string;parent_id?:string;reference_price?:number;fee_settings?:Account['fees']};
+type Order={id:string;code:string;name:string;stamp:string;side:'buy'|'sell';shares:number;price:number;amount:number;fees:number;commission:number;stamp_tax:number;transfer:number;realized:number;status:string;filled?:number;reason:string;origin:string;source:string;parent_id?:string;reference_price?:number;fee_settings?:Account['fees'];accepted_at?:string;reference_stamp?:string;eligible_from?:string;execution_mode?:'live'|'historical'};
 type Snapshot={accounts:{id:string;name:string}[];account:Account|null;positions:Position[];orders:Order[];fills?:Order[];order_count?:number;fill_count?:number;history_limit?:number;day_pnl?:{date:string|null;profit:number|null;opening_equity:number|null;reason:string;basis?:string};available_cash?:number;frozen_cash?:number;equity?:number;profit?:number;market_value?:number;unrealized?:number;total_fees?:number};
-type Quote={code:string;name:string;stamp:string;price:number;volume:number;source:string;token:string};
+type Quote={code:string;name:string;stamp:string;price:number;volume:number;source:string;token:string;order_mode?:'live'|'historical'};
 const money=(n:number|undefined)=>n===undefined?'—':(n/100).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const statusLabel=(s:string)=>({open:'未成交',partial:'部分成交',filled:'已成交',cancelled:'已撤单',expired:'已到期',rejected:'已拒绝'} as Record<string,string>)[s]||s;
 const signed=(n=0)=>(n>0?'+':'')+money(n);
@@ -17,6 +17,9 @@ function PaperRecordDetails({order:o,kind}:{order:Order;kind:'orders'|'fills'}){
  const [expanded,setExpanded]=useState(false);
  return <details className="paper-record-details" onToggle={e=>setExpanded(e.currentTarget.open)}><summary>详情</summary>{expanded&&<dl>
  <dt>委托编号</dt><dd>{o.parent_id||o.id}</dd>{kind==='fills'&&<><dt>成交编号</dt><dd>{o.id}</dd></>}
+ {o.accepted_at&&<><dt>实际确认时间</dt><dd>{o.accepted_at.slice(0,19).replace('T',' ')}</dd></>}
+ {o.reference_stamp&&<><dt>图表参考位置</dt><dd>{o.reference_stamp}</dd></>}
+ {o.eligible_from&&<><dt>最早撮合分钟</dt><dd>{o.eligible_from}</dd></>}
  <dt>数据来源</dt><dd>{o.source||'未记录'}</dd><dt>操作入口</dt><dd>{o.origin||'手动'}</dd>
  {o.reference_price!==undefined&&<><dt>参考价格</dt><dd>{money(o.reference_price)} 元</dd></>}
  {kind==='orders'&&executed(o)>0&&<><dt>成交均价</dt><dd>{money(o.amount/executed(o))} 元</dd></>}
@@ -34,14 +37,14 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  const [seed,setSeed]=useState(false),[seedCode,setSeedCode]=useState(''),[seedShares,setSeedShares]=useState('1000'),[seedCost,setSeedCost]=useState('');
  const [ticket,setTicket]=useState<PaperPoint|null>(null),[quote,setQuote]=useState<Quote|null>(null),[limitPrice,setLimitPrice]=useState(''),[shares,setShares]=useState('1000'),[tab,setTab]=useState('positions'),[filter,setFilter]=useState('');
  const id=useRef(''),sequence=useRef(0),ticketSeq=useRef(0);
- const refresh=async(selected=account)=>{const seq=++sequence.current;const d=await request<Snapshot>('paper_snapshot',selected?{account:selected,history_limit:historyLimit}:{});if(seq!==sequence.current)return;setData(d);onAccountState?.(d.account?{id:d.account.id,revision:d.account.revision||0}:null);if(d.account&&d.account.id!==selected)setAccount(d.account.id);};
- useEffect(()=>{refresh().catch(e=>setError(String(e)));},[account,historyLimit]);
+ const refresh=async(selected=account)=>{const seq=++sequence.current;const d=await request<Snapshot>('paper_sync',selected?{account:selected,history_limit:historyLimit}:{});if(seq!==sequence.current)return;setData(d);onAccountState?.(d.account?{id:d.account.id,revision:d.account.revision||0}:null);if(d.account&&d.account.id!==selected)setAccount(d.account.id);};
+ useEffect(()=>{let active=true,running=false;const update=async()=>{if(running)return;running=true;try{await refresh();}catch(e){if(active)setError(String(e));}finally{running=false;}};void update();const timer=setInterval(()=>{void update();},3000);return()=>{active=false;sequence.current++;clearInterval(timer);};},[account,historyLimit]);
  const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current;setTicket(p);setQuote(null);setLimitPrice('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));}}catch(e){if(seq===ticketSeq.current)setError(String(e));}};
  useEffect(()=>{if(point)void open(point);},[point]);
  const close=()=>{ticketSeq.current++;setTicket(null);setQuote(null);onClosePoint();};
  useEffect(()=>{if(!ticket)return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!busy){event.preventDefault();close();}};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[ticket,busy]);
  const run=async(work:()=>Promise<void>)=>{if(busy)return;setBusy(true);setError('');setNotice('');try{await work();}catch(e){setError(String(e));}finally{setBusy(false);}};
- const submit=()=>run(async()=>{if(!ticket||!quote||!data.account)throw Error('请先创建账户，并等待分钟报价');const result=await request<Order>('paper_order',{account:data.account.id,id:id.current,code:quote.code,stamp:quote.stamp,token:quote.token,side:ticket.side,shares:Number(shares),limit_price:limitPrice,origin:ticket.origin});await refresh(data.account.id);if(result.status==='rejected'){id.current=crypto.randomUUID();throw Error(result.reason);}const message=`委托已受理：${result.side==='buy'?'买入':'卖出'} ${result.name} ${result.shares}股，限价${money(result.price)}元，等待后续分钟撮合`;setNotice(message);onOrderResult?.(message);close();});
+ const submit=()=>run(async()=>{if(!ticket||!quote||!data.account)throw Error('请先创建账户，并等待分钟报价');const result=await request<Order>('paper_order',{account:data.account.id,id:id.current,code:quote.code,stamp:quote.stamp,token:quote.token,side:ticket.side,shares:Number(shares),limit_price:limitPrice,origin:ticket.origin});await refresh(data.account.id);if(result.status==='rejected'){id.current=crypto.randomUUID();throw Error(result.reason);}const message=`委托已受理：${result.side==='buy'?'买入':'卖出'} ${result.name} ${result.shares}股，限价${money(result.price)}元，${result.execution_mode==='live'?`生效时间${result.accepted_at?.slice(11,19)||result.stamp.slice(11)}，等待提交后的完整分钟撮合`:'等待后续分钟撮合'}`;setNotice(message);onOrderResult?.(message);close();});
 
  const a=data.account,position=ticket?data.positions.find(p=>p.code===ticket.code):undefined;
  const n=Number(shares);
@@ -94,17 +97,17 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  </tr>)}</tbody></table>{!orders.length&&<p className="paper-empty">暂无记录</p>}</div></>}
  </>}
  {a&&tab!=='positions'&&Math.max(data.order_count||0,data.fill_count||0)>historyLimit&&<div className="paper-history-more"><span>当前最多显示最近{historyLimit}条。</span><button disabled={busy||historyLimit>=5000} onClick={()=>setHistoryLimit(n=>Math.min(5000,n+200))}>加载更多</button></div>}
- <details className="paper-rules-details"><summary>交易口径</summary><p className="paper-footnote">独立模拟账户，不接实盘。任意已结束分钟可挂限价单；提交后下一分钟起按收盘价加滑点判断，单分钟最多参与该成交量1%，优先价格更优的委托。支持部分成交、撤单及当日到期；尾盘集合竞价不撮合，14:57—15:00不接受撤单。缺逐笔盘口，模拟成交不保证真实可成交。回放时间不可倒退，持仓仅用该时点之前的缓存估值；估值时间较早或缺失时请核对。所有记录保存在本机。</p></details>
+ <details className="paper-rules-details"><summary>交易口径</summary><p className="paper-footnote">独立模拟账户，不接实盘。任意已结束分钟可挂限价单；提交后下一分钟起按收盘价加滑点判断，单分钟最多参与该成交量1%，优先价格更优的委托。当日委托按实际确认时间生效，图表位置仅供参考；只使用提交后的完整分钟，在北京时间交易时段内自动撮合，窗口隐藏后仍在后台检查；没有新行情时等待，不额外请求行情。历史回放不随电脑时间自动推进。支持部分成交、撤单及当日到期；尾盘集合竞价不撮合，14:57—15:00不接受撤单。缺逐笔盘口，模拟成交不保证真实可成交。回放时间不可倒退，持仓仅用该时点之前的缓存估值；估值时间较早或缺失时请核对。所有记录保存在本机。</p></details>
  {ticket&&createPortal(<div className="modal-overlay paper-ticket-overlay" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)close();}}>
  <section className={'card paper-ticket '+(ticket.side==='buy'?'ticket-buy':'ticket-sell')} role="dialog" aria-modal="true" aria-label="模拟买卖确认" onKeyDown={event=>{
   if(event.key!=='Tab')return;
   const items=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),summary')).filter(el=>el.offsetParent!==null),first=items[0],last=items.at(-1);
   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
  }}>
- <div className="ticket-heading"><h2>模拟委托 <span>限价 · 历史回放</span></h2><button className="ticket-close" aria-label="关闭模拟委托" title="关闭（Esc）" disabled={busy} onClick={close}>×</button></div>
+ <div className="ticket-heading"><h2>模拟委托 <span>限价 · {quote?.order_mode==='live'?'当日模拟':'历史回放'}</span></h2><button className="ticket-close" aria-label="关闭模拟委托" title="关闭（Esc）" disabled={busy} onClick={close}>×</button></div>
  <div className="ticket-row"><span className="ticket-label">方向</span><div className="ticket-direction"><button aria-pressed={ticket.side==='buy'} disabled={busy} onClick={()=>{setTicket({...ticket,side:'buy'});id.current=crypto.randomUUID();}}>买入</button><button aria-pressed={ticket.side==='sell'} disabled={busy} onClick={()=>{setTicket({...ticket,side:'sell'});id.current=crypto.randomUUID();}}>卖出</button></div></div>
  <div className="ticket-row"><span className="ticket-label">股票</span><div className="ticket-stock"><strong>{ticket.code.slice(2)}</strong><span>{ticket.name}</span></div></div>
- <div className="ticket-time">{ticket.stamp}<span title={ticket.origin}>参考 {quote?money(quote.price):'读取中…'}</span></div>
+ <div className="ticket-time">参考位置 {ticket.stamp}<span title={ticket.origin}>参考 {quote?money(quote.price):'读取中…'}</span></div>
  <div className="ticket-row"><label className="ticket-label" htmlFor="paper-limit">价格</label><div className="ticket-stepper"><button aria-label="降低委托价格" disabled={busy||!quote||limitCents<=1} onClick={()=>changePrice(-1)}>−</button><input id="paper-limit" autoFocus aria-label="模拟委托限价" type="number" min="0.01" step="0.01" value={limitPrice} disabled={busy} onChange={e=>{setLimitPrice(e.target.value);id.current=crypto.randomUUID();}}/><button aria-label="提高委托价格" disabled={busy||!quote} onClick={()=>changePrice(1)}>＋</button></div></div>
  <div className="ticket-available">{ticket.side==='buy'?<>可用 {money(data.available_cash??a?.cash)} 元<span>可买 {availableShares} 股</span></>:<>当前可卖 <strong>{availableShares} 股</strong></>}</div>
  <div className="ticket-row"><label className="ticket-label" htmlFor="paper-shares">数量</label><div className="ticket-stepper"><button aria-label="减少委托数量" disabled={busy||n<=100} onClick={()=>changeShares(-1)}>−</button><input id="paper-shares" aria-label="模拟交易股数" type="number" min="1" step="100" placeholder="输入股数" value={shares} disabled={busy} onChange={e=>{setShares(e.target.value);id.current=crypto.randomUUID();}}/><button aria-label="增加委托数量" disabled={busy} onClick={()=>changeShares(1)}>＋</button></div></div>
@@ -114,7 +117,7 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  {!a&&<div className="ticket-warning">请先填写初始资金创建账户。<button onClick={()=>{close();setCreate(true);onManageAccount?.();}}>设置模拟账户</button></div>}
  {error&&<div role="alert" className="paper-error ticket-warning">{error}</div>}
  <div className="ticket-submit-row"><button className="ticket-reset" disabled={busy} onClick={()=>{setShares('');setLimitPrice(quote?String(ticket.price||quote.price/100):'');setError('');id.current=crypto.randomUUID();}}>重填</button><button className="ticket-submit" disabled={busy||!a||!quote||!validLimit||!Number.isSafeInteger(n)||n<=0} onClick={submit}>{busy?'提交中…':ticket.side==='buy'?'确认买入':'确认卖出'}</button></div>
- <details className="ticket-details"><summary>委托说明与费用</summary><div>账户：{a?.name||'未创建'} · {ticket.origin}<br/>仅当前北京时间处于交易时段时允许委托和成交。<br/>模拟{ticket.side==='buy'?'买入':'卖出'}，当日有效；提交后从下一完整分钟按限价撮合，不会立即成交。<br/>买入100股整数倍；零股只支持全部可卖数量一次卖出。<br/>佣金万{a?.fees.commission_wan||'—'}，最低{money(a?.fees.minimum)}元；上述费用按本次限价及股数估算，实际按成交记账。</div></details>
+ <details className="ticket-details"><summary>委托说明与费用</summary><div>账户：{a?.name||'未创建'} · {ticket.origin}<br/>仅当前北京时间处于交易时段时允许委托和成交。<br/>模拟{ticket.side==='buy'?'买入':'卖出'}，当日有效；{quote?.order_mode==='live'?'以点击确认时的北京时间生效；图上分钟仅供参考，等待提交后的完整分钟，不回填之前行情。':'历史回放从所选位置的下一完整分钟按限价撮合，不会立即成交。'}<br/>买入100股整数倍；零股只支持全部可卖数量一次卖出。<br/>佣金万{a?.fees.commission_wan||'—'}，最低{money(a?.fees.minimum)}元；上述费用按本次限价及股数估算，实际按成交记账。</div></details>
  </section></div>,document.body)}
  </section>;
 }
