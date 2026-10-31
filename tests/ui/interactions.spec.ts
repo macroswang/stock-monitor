@@ -975,3 +975,24 @@ test('switching stocks while daily backfill is running cannot replace the newly 
  await page.locator('.stock').filter({hasText:'宏昌电子'}).click();await expect(page.locator('.detail h2')).toContainText('宏昌电子');await expect.poll(async()=>(await rpc('chart',{code,kind:'daily'})).length).toBeGreaterThan(90);
  await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
 });
+
+test('模拟委托可保存计划并在复盘中记录实际过程',async({page})=>{
+ const day='2026-10-19';
+ await rpc('__audit_cache',{code:'sh603002',day,data:{date:day,source:'paper-test',volume_unit:'shares',bars:[{time:'09:31',close:'10',volume:10000,complete:true},{time:'09:32',close:'9.5',volume:10000,complete:true},{time:'09:33',close:'11',volume:10000,complete:true}]}});
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();
+ await page.getByLabel('模拟初始资金').fill('100000');await page.getByRole('button',{name:'创建模拟账户',exact:true}).click();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await expect(page.getByLabel('交易日期')).toHaveValue(day);
+ const chart=page.getByLabel('分时价格及分钟成交量');
+ const xy=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},['09:31',10.05]);});
+ const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1],{button:'right'});
+ const ticket=page.getByRole('dialog');await ticket.getByText('交易计划（选填）').click();
+ await page.getByLabel('模拟委托限价').fill('10');await page.getByLabel('交易计划理由').fill('分批观察');await page.getByLabel('交易计划失效价').fill('9.5');
+ await page.getByLabel('交易计划风险上限').fill('100');await expect(ticket).toContainText('按计划价格及费用估算可买 100 股');await ticket.getByRole('button',{name:'采用数量'}).click();await expect(ticket).toContainText('计划价差约 50.00 元');
+ await ticket.getByRole('button',{name:'确认买入'}).click();await expect(ticket).toHaveCount(0);
+ await page.getByRole('button',{name:'模拟交易',exact:true}).click();await page.getByRole('button',{name:'委托记录（1）'}).click();
+ const row=page.locator('.paper-record-table tbody tr').first();await row.getByText('详情').click();await expect(row).toContainText('分批观察');await expect(row).toContainText('9.50 元');
+ await row.getByText('复盘',{exact:true}).click();await row.locator('textarea').fill('价格未到，继续等待');await row.getByRole('button',{name:'保存复盘'}).click();
+ await expect(page.getByLabel('历史回放模拟交易').getByRole('status')).toContainText('已保存模拟交易复盘');
+ const snapshot=await rpc('paper_snapshot');expect(snapshot.orders[0].review).toBe('价格未到，继续等待');expect(snapshot.positions).toEqual([]);
+});

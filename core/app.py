@@ -21,6 +21,10 @@ from .index_option_pcr import IndexOptionPCR
 from .equity_bond import EquityBond
 from .index_technical import IndexTechnical, trading_day
 from .volume_flow import VolumeFlow
+from .sector_flow import SectorFlow
+from .external_market import ExternalMarket
+from .sector_members import SectorMembers
+from .sector_constituents import SectorConstituents
 
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parent.parent))
 SEEDS=[('sh603002','宏昌电子'),('sh688680','海优新材'),('sh600392','盛和资源'),('sh603366','日出东方'),
@@ -88,6 +92,10 @@ class App:
         self.index_option_pcr=IndexOptionPCR(self.store)
         self.equity_bond=EquityBond(self.store)
         self.index_technical=IndexTechnical(self.store)
+        self.sector_flow=SectorFlow(self.store,enabled=start_worker)
+        self.concept_flow=SectorFlow(self.store,enabled=start_worker,kind='concept')
+        self.external_market=ExternalMarket(self.store,enabled=start_worker)
+        self.sector_members=SectorMembers();self.sector_members_enabled=start_worker;self.sector_constituents=SectorConstituents()
         self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
         if start_worker:
             threading.Thread(target=self.loop,daemon=True).start()
@@ -389,8 +397,34 @@ class App:
                 return report
             return self.start_job(research)
         if method=='market':return self.market.view(args.get('day'))
+        if method=='index_minute':
+            code=args.get('code')
+            if code not in ('sh000001','sz399006'):raise ValueError('不支持的指数')
+            quotes=self.market.view(None)['quotes']
+            quote=next((q for q in quotes if q.get('code')==code),None)
+            rows=self.store.getcache(code,'market_minute',quote['timestamp'][:10]) if quote else []
+            return dict(quotes=[quote] if quote else [],minute=rows[0]['data'] if rows else None,error='')
+        if method=='market_overview':
+            head=self.market.view(None)
+            index=next((q for q in head.get('quotes',[]) if q.get('code')=='sh000001'),None)
+            return self.market.view(index['timestamp'][:10]) if index and isinstance(index.get('timestamp'),str) else head
+        if method=='external_market':return self.external_market.view()
         if method=='breadth':return self.breadth.view()
         if method=='csi300':return self.csi300.view(args.get('day'))
+        if method=='sector_members':return self.sector_members.view(args.get('code'),self.sector_members_enabled)
+        if method=='sector_constituents':
+            code=args.get('code');members=self.sector_members.view(code,self.sector_members_enabled)
+            return self.sector_constituents.view(code,(members.get('data') or {}).get('members'),self.sector_members_enabled)
+        if method=='sector_intraday':
+            kind=args.get('kind','industry')
+            if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
+            return (self.sector_flow if kind=='industry' else self.concept_flow).intraday()
+        if method in ('sector_flow','sector_flow_refresh'):
+            kind=args.get('kind','industry')
+            if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
+            flow=self.sector_flow if kind=='industry' else self.concept_flow
+            if method=='sector_flow':return flow.view()
+            return self.start_job(lambda:(flow.refresh(force=True),flow.view())[1])
         # A deliberate manual refresh must not silently hit the automatic
         # five-minute cooldown; the collector still prevents concurrent runs.
         if method=='breadth_refresh':return self.start_job(lambda:(self.breadth.refresh(force=True),self.breadth.view())[1])

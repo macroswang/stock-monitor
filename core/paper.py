@@ -126,6 +126,11 @@ class Paper:
         names = self.store.query('SELECT name FROM instruments WHERE code=?',(code,))
         result = dict(code=code, name=names[0]['name'] if names else code, stamp=stamp,
                       price=p, volume=int(v), source=str(payload.get('source','unknown')))
+        for field in ('limit_up','limit_down'):
+            try:
+                bound=cents(payload[field]) if payload.get(field) is not None else None
+                result[field]=bound if bound and bound>0 else None
+            except (ValueError,TypeError,ArithmeticError):result[field]=None
         result['token'] = hashlib.sha256(json.dumps(result,sort_keys=True).encode()).hexdigest()
         # Mode is display metadata, not part of the price/volume revision token.
         result['order_mode']='live' if stamp[:10]==now_cn().astimezone(CN).date().isoformat() else 'historical'
@@ -266,18 +271,36 @@ class Paper:
         self.clock(s,effective)
         if effective[11:]>'14:56':raise ValueError('当前撮合仅支持连续竞价阶段，尾盘集合竞价不模拟新委托')
         if q['token']!=args.get('token'):raise ValueError('参考行情已修订，请重新核对')
+        plan=args.get('plan') or {}
+        if not isinstance(plan,dict):raise ValueError('交易计划格式无效')
+        note=plan.get('reason','')
+        if not isinstance(note,str) or len(note)>200:raise ValueError('交易理由最多200字')
+        invalidation=plan.get('invalidation_price')
+        if invalidation not in (None,''):
+            if Decimal(str(invalidation))*100 != cents(invalidation):raise ValueError('计划失效价最多保留两位小数')
+            invalidation=cents(invalidation)
+            if invalidation<=0:raise ValueError('计划失效价必须大于零')
+        else:invalidation=None
+        budget=plan.get('risk_budget')
+        if budget not in (None,''):
+            if Decimal(str(budget))*100 != cents(budget):raise ValueError('计划风险上限最多保留两位小数')
+            budget=cents(budget)
+            if budget<=0:raise ValueError('计划风险上限必须大于零')
+        else:budget=None
         # Process earlier outstanding orders before reserving resources at this time.
         self.advance(s,effective)
         n,p,side=quantity(args['shares']),cents(args['limit_price']),args.get('side')
         if Decimal(str(args['limit_price']))*100!=p:raise ValueError('委托价最多保留两位小数')
         if side not in ('buy','sell') or p<=0:raise ValueError('委托方向或限价无效')
+        if budget is not None and (side!='buy' or invalidation is None or invalidation>=p):
+            raise ValueError('买入风险上限需配合低于委托价的计划失效价')
         frozen,stocks=self.frozen(s)
         available=sum(l['shares'] for l in s['lots'] if l['code']==q['code'] and (not l['day'] or l['day']<effective[:10]))-stocks.get(q['code'],0)
         reserve=n*p+sum(self.fee_total(s,n*p,'buy').values())
         reason=''
-        payload=self.store.getcache(q['code'],'minute',q['stamp'][:10])[0]['data']
-        upper,lower=payload.get('limit_up'),payload.get('limit_down')
-        if (upper and p>cents(upper)) or (lower and p<cents(lower)):reason='委托价超过已知涨跌停范围'
+        upper,lower=q['limit_up'],q['limit_down']
+        if (upper and p>upper) or (lower and p<lower):reason='委托价超过已知涨跌停范围'
+        elif budget is not None and (p-invalidation)*n+sum(self.fee_total(s,n*p,'buy').values())+sum(self.fee_total(s,n*invalidation,'sell').values())>budget:reason='按计划价和费用估算的亏损超过风险上限'
         elif side=='buy' and n%100:reason='买入委托需为100股整数倍'
         elif side=='buy' and reserve>s['cash']-frozen:reason='可用资金不足（已扣除其他委托冻结资金及费用）'
         elif side=='sell' and n>available:reason='可卖数量不足（已扣除委托冻结及当日买入）'
@@ -292,9 +315,24 @@ class Paper:
                side=side,shares=n,filled=0,price=p,reference_price=q['price'],amount=0,fees=0,commission=0,
                transfer=0,stamp_tax=0,realized=0,status='rejected' if reason else 'open',reason=reason,
                origin=str(args.get('origin','分时委托'))[:40],source=q['source'],recorded_at=accepted.isoformat(),
-               fee_settings=s['fees'],participation_percent=1,model='next_minute_limit_proxy')
+               fee_settings=s['fees'],participation_percent=1,model='next_minute_limit_proxy',
+               plan=dict(reason=note.strip(),invalidation_price=invalidation,risk_budget=budget))
         self.db.execute('INSERT INTO pending VALUES(?,?,?,?)',(s['id'],key,json.dumps(o,ensure_ascii=False),request))
         return o
+
+    def review(self,s,args):
+        # 复盘仅修改模拟委托备注，不改变委托、成交或资金。
+        key=str(args.get('id',''))
+        row=self.db.execute('SELECT payload FROM pending WHERE account=? AND id=?',(s['id'],key)).fetchone()
+        if not row:raise ValueError('模拟委托不存在，无法记录复盘')
+        note=args.get('review','')
+        if not isinstance(note,str) or len(note)>500:raise ValueError('复盘最多500字')
+        order=json.loads(row['payload'])
+        order['review']=note.strip()
+        order['reviewed_at']=now_cn().isoformat(timespec='seconds')
+        self.update_pending(order)
+        self.save(s)
+        return order
 
     def cancel(self,s,args):
         rows=[o for o in self.pending(s['id']) if o['id']==args.get('id')]
@@ -551,6 +589,7 @@ class Paper:
             s=self.load(args.get('account'))
             if method=='paper_seed':self.seed(s,args);return self.snapshot(s['id'])
             if method=='paper_order':return self.place(s,args)
+            if method=='paper_review':return self.review(s,args)
             if method=='paper_cancel':return self.cancel(s,args)
             if method=='paper_advance':
                 q=self.quote(args);self.clock(s,q['stamp']);self.advance(s,q['stamp']);return self.snapshot(s['id'])

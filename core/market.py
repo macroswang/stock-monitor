@@ -18,8 +18,9 @@ def quotes():
   result.append(dict(code=code,name=f[1],price=f[3],previous_close=f[4],change=f[31],percent=f[32],timestamp=stamp.isoformat(),source='tencent'))
  return result
 
-def minutes():
- raw=json.loads(get('https://web.ifzq.gtimg.cn/appstock/app/day/query?code=sh000001'))['data']['sh000001'];result=[]
+def minutes(code='sh000001'):
+ if code not in CODES:raise ValueError('不支持的指数')
+ raw=json.loads(get('https://web.ifzq.gtimg.cn/appstock/app/day/query?code='+code))['data'][code];result=[]
  for item in raw['data']:
   date=datetime.strptime(item['date'],'%Y%m%d').date().isoformat();base=Decimal(str(item.get('prec',0)))
   if not base.is_finite() or base<=0:continue
@@ -43,6 +44,9 @@ class Market:
    try:
     for group in minutes():self.app.store.cache('sh000001','market_minute',group['date'],group)
    except Exception:errors.append('上证分时暂时不可用')
+   try:
+    for group in minutes('sz399006'):self.app.store.cache('sz399006','market_minute',group['date'],group)
+   except Exception:pass  # 创业板分时失败不影响上证与个股监控。
    self.error='；'.join(errors)
  def view(self,day):
   items=[]

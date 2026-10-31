@@ -1,0 +1,94 @@
+{
+  "snapshot": {
+    "date": "2026-10-30",
+    "source": "新浪概念资金流",
+    "source_url": "https://finance.sina.com.cn/temp/guest4377.shtml",
+    "quote_time": null,
+    "anchor_time": "2026-10-30T16:14:56+08:00",
+    "collected_at": "2026-10-31T14:54:57.220316+08:00",
+    "total": 181,
+    "measure": "买卖方向净额",
+    "date_inferred": true,
+    "anchor_details": [
+      {
+        "code": "sh600113",
+        "sector_price": "24.6200",
+        "reference_price": "24.62",
+        "reference_time": "2026-10-30T16:14:44+08:00"
+      },
+      {
+        "code": "sz000568",
+        "sector_price": "77.0700",
+        "reference_price": "77.07",
+        "reference_time": "2026-10-30T16:14:15+08:00"
+      },
+      {
+        "code": "sz000995",
+        "sector_price": "14.1800",
+        "reference_price": "14.18",
+        "reference_time": "2026-10-30T16:14:48+08:00"
+      },
+      {
+        "code": "sh603338",
+        "sector_price": "54.6000",
+        "reference_price": "54.60",
+        "reference_time": "2026-10-30T16:14:56+08:00"
+      },
+      {
+        "code": "sh603131",
+        "sector_price": "17.5500",
+        "reference_price": "17.55",
+        "reference_time": "2026-10-30T16:14:56+08:00"
+      },
+      {
+        "code": "sz002724",
+        "sector_price": "14.7200",
+        "reference_price": "14.72",
+        "reference_time": "2026-10-30T16:14:27+08:00"
+      }
+    ],
+    "inflow": [
+      {
+        "code": "gn_rzrq",
+        "name": "融资融券",
+        "net_yuan": 7885818066.99,
+        "change_percent": 0.00832638
+      },
+      {
+        "code": "gn_jjzc",
+        "name": "基金重仓",
+        "net_yuan": 5576100954.82,
+        "change_percent": 0.485342
+      },
+      {
+        "code": "gn_bjgn",
+        "name": "白酒概念",
+        "net_yuan": 5211699710.51,
+        "change_percent": 3.50877
+      }
+    ],
+    "outflow": [
+      {
+        "code": "gn_jght",
+        "name": "军工航天",
+        "net_yuan": -3898400117.28,
+        "change_percent": -2.8676
+      },
+      {
+        "code": "gn_gfjg",
+        "name": "国防军工",
+        "net_yuan": -3586710681.77,
+        "change_percent": -3.1191
+      },
+      {
+        "code": "gn_jmrh",
+        "name": "军民融合",
+        "net_yuan": -2303811778.03,
+        "change_percent": -2.82483
+      }
+    ]
+  },
+  "running": false,
+  "error": "",
+  "source_url": "https://finance.sina.com.cn/temp/guest4377.shtml"
+}

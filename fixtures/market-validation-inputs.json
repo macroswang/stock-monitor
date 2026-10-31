@@ -1,0 +1,2246 @@
+{
+  "version": 1,
+  "symbol": "510300",
+  "provenance": "腾讯及新浪日线开收盘对照；上游独立性未知；行情事后采集",
+  "input_sha256": {
+    "tencent-index-2025-2026.json": "a2dfbc5979d6df5d7f5e6d5c5b4533957a8fdeb4388c158fe2666065317ff281",
+    "sina-index-2025-2026.json": "d500ff4abd1514dcd9bfaeda1b910a9ab1d1cd0db76444b64098b5db6841cbe0",
+    "tencent-etf-raw.json": "7b8908f8e4d51316a36bee1093f58784533c7b44f068b0761cca798047192ae4",
+    "tencent-etf-qfq.json": "ddbc4385b93834c3cb4273583acebdc66ebc54ba1776ac3df7661b67c401caad",
+    "sina-etf.json": "82d2dd4a8ad1cf164306e1592c6ff942f9c65b22aada2059ff8ef54f558e071c"
+  },
+  "days": [
+    {
+      "date": "2025-09-01",
+      "index_close": "3875.53",
+      "etf_open": "4.607",
+      "etf_close": "4.616",
+      "etf_high": "4.624",
+      "etf_low": "4.580"
+    },
+    {
+      "date": "2025-09-02",
+      "index_close": "3858.13",
+      "etf_open": "4.613",
+      "etf_close": "4.590",
+      "etf_high": "4.643",
+      "etf_low": "4.550"
+    },
+    {
+      "date": "2025-09-03",
+      "index_close": "3813.56",
+      "etf_open": "4.592",
+      "etf_close": "4.549",
+      "etf_high": "4.609",
+      "etf_low": "4.520"
+    },
+    {
+      "date": "2025-09-04",
+      "index_close": "3765.88",
+      "etf_open": "4.546",
+      "etf_close": "4.456",
+      "etf_high": "4.555",
+      "etf_low": "4.416"
+    },
+    {
+      "date": "2025-09-05",
+      "index_close": "3812.51",
+      "etf_open": "4.450",
+      "etf_close": "4.554",
+      "etf_high": "4.563",
+      "etf_low": "4.442"
+    },
+    {
+      "date": "2025-09-08",
+      "index_close": "3826.84",
+      "etf_open": "4.554",
+      "etf_close": "4.555",
+      "etf_high": "4.573",
+      "etf_low": "4.524"
+    },
+    {
+      "date": "2025-09-09",
+      "index_close": "3807.29",
+      "etf_open": "4.545",
+      "etf_close": "4.528",
+      "etf_high": "4.564",
+      "etf_low": "4.502"
+    },
+    {
+      "date": "2025-09-10",
+      "index_close": "3812.22",
+      "etf_open": "4.526",
+      "etf_close": "4.538",
+      "etf_high": "4.562",
+      "etf_low": "4.507"
+    },
+    {
+      "date": "2025-09-11",
+      "index_close": "3875.31",
+      "etf_open": "4.527",
+      "etf_close": "4.660",
+      "etf_high": "4.662",
+      "etf_low": "4.517"
+    },
+    {
+      "date": "2025-09-12",
+      "index_close": "3870.6",
+      "etf_open": "4.662",
+      "etf_close": "4.621",
+      "etf_high": "4.664",
+      "etf_low": "4.615"
+    },
+    {
+      "date": "2025-09-15",
+      "index_close": "3860.5",
+      "etf_open": "4.622",
+      "etf_close": "4.629",
+      "etf_high": "4.662",
+      "etf_low": "4.614"
+    },
+    {
+      "date": "2025-09-16",
+      "index_close": "3861.87",
+      "etf_open": "4.632",
+      "etf_close": "4.620",
+      "etf_high": "4.652",
+      "etf_low": "4.591"
+    },
+    {
+      "date": "2025-09-17",
+      "index_close": "3876.34",
+      "etf_open": "4.615",
+      "etf_close": "4.653",
+      "etf_high": "4.659",
+      "etf_low": "4.599"
+    },
+    {
+      "date": "2025-09-18",
+      "index_close": "3831.66",
+      "etf_open": "4.655",
+      "etf_close": "4.594",
+      "etf_high": "4.676",
+      "etf_low": "4.554"
+    },
+    {
+      "date": "2025-09-19",
+      "index_close": "3820.09",
+      "etf_open": "4.590",
+      "etf_close": "4.604",
+      "etf_high": "4.633",
+      "etf_low": "4.587"
+    },
+    {
+      "date": "2025-09-22",
+      "index_close": "3828.58",
+      "etf_open": "4.604",
+      "etf_close": "4.619",
+      "etf_high": "4.621",
+      "etf_low": "4.582"
+    },
+    {
+      "date": "2025-09-23",
+      "index_close": "3821.83",
+      "etf_open": "4.627",
+      "etf_close": "4.622",
+      "etf_high": "4.656",
+      "etf_low": "4.558"
+    },
+    {
+      "date": "2025-09-24",
+      "index_close": "3853.64",
+      "etf_open": "4.597",
+      "etf_close": "4.663",
+      "etf_high": "4.664",
+      "etf_low": "4.596"
+    },
+    {
+      "date": "2025-09-25",
+      "index_close": "3853.3",
+      "etf_open": "4.663",
+      "etf_close": "4.695",
+      "etf_high": "4.718",
+      "etf_low": "4.657"
+    },
+    {
+      "date": "2025-09-26",
+      "index_close": "3828.11",
+      "etf_open": "4.677",
+      "etf_close": "4.651",
+      "etf_high": "4.699",
+      "etf_low": "4.650"
+    },
+    {
+      "date": "2025-09-29",
+      "index_close": "3862.53",
+      "etf_open": "4.648",
+      "etf_close": "4.728",
+      "etf_high": "4.755",
+      "etf_low": "4.640"
+    },
+    {
+      "date": "2025-09-30",
+      "index_close": "3882.78",
+      "etf_open": "4.734",
+      "etf_close": "4.741",
+      "etf_high": "4.750",
+      "etf_low": "4.720"
+    },
+    {
+      "date": "2025-10-09",
+      "index_close": "3933.97",
+      "etf_open": "4.754",
+      "etf_close": "4.816",
+      "etf_high": "4.836",
+      "etf_low": "4.750"
+    },
+    {
+      "date": "2025-10-10",
+      "index_close": "3897.03",
+      "etf_open": "4.787",
+      "etf_close": "4.719",
+      "etf_high": "4.794",
+      "etf_low": "4.704"
+    },
+    {
+      "date": "2025-10-13",
+      "index_close": "3889.5",
+      "etf_open": "4.598",
+      "etf_close": "4.692",
+      "etf_high": "4.704",
+      "etf_low": "4.596"
+    },
+    {
+      "date": "2025-10-14",
+      "index_close": "3865.23",
+      "etf_open": "4.725",
+      "etf_close": "4.645",
+      "etf_high": "4.740",
+      "etf_low": "4.620"
+    },
+    {
+      "date": "2025-10-15",
+      "index_close": "3912.21",
+      "etf_open": "4.648",
+      "etf_close": "4.706",
+      "etf_high": "4.715",
+      "etf_low": "4.627"
+    },
+    {
+      "date": "2025-10-16",
+      "index_close": "3916.23",
+      "etf_open": "4.689",
+      "etf_close": "4.721",
+      "etf_high": "4.747",
+      "etf_low": "4.689"
+    },
+    {
+      "date": "2025-10-17",
+      "index_close": "3839.76",
+      "etf_open": "4.715",
+      "etf_close": "4.624",
+      "etf_high": "4.724",
+      "etf_low": "4.612"
+    },
+    {
+      "date": "2025-10-20",
+      "index_close": "3863.89",
+      "etf_open": "4.651",
+      "etf_close": "4.640",
+      "etf_high": "4.678",
+      "etf_low": "4.624"
+    },
+    {
+      "date": "2025-10-21",
+      "index_close": "3916.33",
+      "etf_open": "4.656",
+      "etf_close": "4.710",
+      "etf_high": "4.723",
+      "etf_low": "4.652"
+    },
+    {
+      "date": "2025-10-22",
+      "index_close": "3913.76",
+      "etf_open": "4.690",
+      "etf_close": "4.695",
+      "etf_high": "4.708",
+      "etf_low": "4.668"
+    },
+    {
+      "date": "2025-10-23",
+      "index_close": "3922.41",
+      "etf_open": "4.687",
+      "etf_close": "4.713",
+      "etf_high": "4.719",
+      "etf_low": "4.642"
+    },
+    {
+      "date": "2025-10-24",
+      "index_close": "3950.31",
+      "etf_open": "4.728",
+      "etf_close": "4.770",
+      "etf_high": "4.772",
+      "etf_low": "4.727"
+    },
+    {
+      "date": "2025-10-27",
+      "index_close": "3996.94",
+      "etf_open": "4.808",
+      "etf_close": "4.826",
+      "etf_high": "4.831",
+      "etf_low": "4.796"
+    },
+    {
+      "date": "2025-10-28",
+      "index_close": "3988.22",
+      "etf_open": "4.815",
+      "etf_close": "4.802",
+      "etf_high": "4.850",
+      "etf_low": "4.792"
+    },
+    {
+      "date": "2025-10-29",
+      "index_close": "4016.33",
+      "etf_open": "4.810",
+      "etf_close": "4.862",
+      "etf_high": "4.864",
+      "etf_low": "4.810"
+    },
+    {
+      "date": "2025-10-30",
+      "index_close": "3986.9",
+      "etf_open": "4.858",
+      "etf_close": "4.823",
+      "etf_high": "4.874",
+      "etf_low": "4.816"
+    },
+    {
+      "date": "2025-10-31",
+      "index_close": "3954.79",
+      "etf_open": "4.819",
+      "etf_close": "4.756",
+      "etf_high": "4.826",
+      "etf_low": "4.755"
+    },
+    {
+      "date": "2025-11-03",
+      "index_close": "3976.52",
+      "etf_open": "4.752",
+      "etf_close": "4.763",
+      "etf_high": "4.767",
+      "etf_low": "4.705"
+    },
+    {
+      "date": "2025-11-04",
+      "index_close": "3960.19",
+      "etf_open": "4.760",
+      "etf_close": "4.729",
+      "etf_high": "4.773",
+      "etf_low": "4.706"
+    },
+    {
+      "date": "2025-11-05",
+      "index_close": "3969.25",
+      "etf_open": "4.692",
+      "etf_close": "4.735",
+      "etf_high": "4.751",
+      "etf_low": "4.668"
+    },
+    {
+      "date": "2025-11-06",
+      "index_close": "4007.76",
+      "etf_open": "4.742",
+      "etf_close": "4.805",
+      "etf_high": "4.813",
+      "etf_low": "4.742"
+    },
+    {
+      "date": "2025-11-07",
+      "index_close": "3997.56",
+      "etf_open": "4.790",
+      "etf_close": "4.795",
+      "etf_high": "4.812",
+      "etf_low": "4.774"
+    },
+    {
+      "date": "2025-11-10",
+      "index_close": "4018.6",
+      "etf_open": "4.797",
+      "etf_close": "4.807",
+      "etf_high": "4.811",
+      "etf_low": "4.763"
+    },
+    {
+      "date": "2025-11-11",
+      "index_close": "4002.76",
+      "etf_open": "4.814",
+      "etf_close": "4.763",
+      "etf_high": "4.824",
+      "etf_low": "4.757"
+    },
+    {
+      "date": "2025-11-12",
+      "index_close": "4000.14",
+      "etf_open": "4.754",
+      "etf_close": "4.765",
+      "etf_high": "4.783",
+      "etf_low": "4.731"
+    },
+    {
+      "date": "2025-11-13",
+      "index_close": "4029.5",
+      "etf_open": "4.757",
+      "etf_close": "4.812",
+      "etf_high": "4.815",
+      "etf_low": "4.752"
+    },
+    {
+      "date": "2025-11-14",
+      "index_close": "3990.49",
+      "etf_open": "4.785",
+      "etf_close": "4.741",
+      "etf_high": "4.796",
+      "etf_low": "4.739"
+    },
+    {
+      "date": "2025-11-17",
+      "index_close": "3972.03",
+      "etf_open": "4.730",
+      "etf_close": "4.710",
+      "etf_high": "4.740",
+      "etf_low": "4.691"
+    },
+    {
+      "date": "2025-11-18",
+      "index_close": "3939.81",
+      "etf_open": "4.700",
+      "etf_close": "4.683",
+      "etf_high": "4.717",
+      "etf_low": "4.664"
+    },
+    {
+      "date": "2025-11-19",
+      "index_close": "3946.74",
+      "etf_open": "4.678",
+      "etf_close": "4.697",
+      "etf_high": "4.717",
+      "etf_low": "4.678"
+    },
+    {
+      "date": "2025-11-20",
+      "index_close": "3931.05",
+      "etf_open": "4.724",
+      "etf_close": "4.676",
+      "etf_high": "4.729",
+      "etf_low": "4.673"
+    },
+    {
+      "date": "2025-11-21",
+      "index_close": "3834.89",
+      "etf_open": "4.645",
+      "etf_close": "4.564",
+      "etf_high": "4.654",
+      "etf_low": "4.562"
+    },
+    {
+      "date": "2025-11-24",
+      "index_close": "3836.77",
+      "etf_open": "4.579",
+      "etf_close": "4.557",
+      "etf_high": "4.585",
+      "etf_low": "4.533"
+    },
+    {
+      "date": "2025-11-25",
+      "index_close": "3870.02",
+      "etf_open": "4.580",
+      "etf_close": "4.597",
+      "etf_high": "4.623",
+      "etf_low": "4.579"
+    },
+    {
+      "date": "2025-11-26",
+      "index_close": "3864.18",
+      "etf_open": "4.600",
+      "etf_close": "4.626",
+      "etf_high": "4.646",
+      "etf_low": "4.594"
+    },
+    {
+      "date": "2025-11-27",
+      "index_close": "3875.26",
+      "etf_open": "4.629",
+      "etf_close": "4.622",
+      "etf_high": "4.674",
+      "etf_low": "4.618"
+    },
+    {
+      "date": "2025-11-28",
+      "index_close": "3888.6",
+      "etf_open": "4.621",
+      "etf_close": "4.635",
+      "etf_high": "4.642",
+      "etf_low": "4.603"
+    },
+    {
+      "date": "2025-12-01",
+      "index_close": "3914.01",
+      "etf_open": "4.646",
+      "etf_close": "4.687",
+      "etf_high": "4.688",
+      "etf_low": "4.639"
+    },
+    {
+      "date": "2025-12-02",
+      "index_close": "3897.71",
+      "etf_open": "4.686",
+      "etf_close": "4.666",
+      "etf_high": "4.686",
+      "etf_low": "4.651"
+    },
+    {
+      "date": "2025-12-03",
+      "index_close": "3878.0",
+      "etf_open": "4.665",
+      "etf_close": "4.645",
+      "etf_high": "4.684",
+      "etf_low": "4.635"
+    },
+    {
+      "date": "2025-12-04",
+      "index_close": "3875.79",
+      "etf_open": "4.648",
+      "etf_close": "4.657",
+      "etf_high": "4.671",
+      "etf_low": "4.628"
+    },
+    {
+      "date": "2025-12-05",
+      "index_close": "3902.81",
+      "etf_open": "4.656",
+      "etf_close": "4.698",
+      "etf_high": "4.710",
+      "etf_low": "4.643"
+    },
+    {
+      "date": "2025-12-08",
+      "index_close": "3924.08",
+      "etf_open": "4.711",
+      "etf_close": "4.732",
+      "etf_high": "4.754",
+      "etf_low": "4.709"
+    },
+    {
+      "date": "2025-12-09",
+      "index_close": "3909.52",
+      "etf_open": "4.727",
+      "etf_close": "4.708",
+      "etf_high": "4.739",
+      "etf_low": "4.694"
+    },
+    {
+      "date": "2025-12-10",
+      "index_close": "3900.5",
+      "etf_open": "4.700",
+      "etf_close": "4.702",
+      "etf_high": "4.709",
+      "etf_low": "4.658"
+    },
+    {
+      "date": "2025-12-11",
+      "index_close": "3873.32",
+      "etf_open": "4.708",
+      "etf_close": "4.668",
+      "etf_high": "4.722",
+      "etf_low": "4.662"
+    },
+    {
+      "date": "2025-12-12",
+      "index_close": "3889.35",
+      "etf_open": "4.678",
+      "etf_close": "4.694",
+      "etf_high": "4.702",
+      "etf_low": "4.648"
+    },
+    {
+      "date": "2025-12-15",
+      "index_close": "3867.92",
+      "etf_open": "4.674",
+      "etf_close": "4.667",
+      "etf_high": "4.712",
+      "etf_low": "4.550"
+    },
+    {
+      "date": "2025-12-16",
+      "index_close": "3824.81",
+      "etf_open": "4.660",
+      "etf_close": "4.620",
+      "etf_high": "4.667",
+      "etf_low": "4.601"
+    },
+    {
+      "date": "2025-12-17",
+      "index_close": "3870.28",
+      "etf_open": "4.619",
+      "etf_close": "4.699",
+      "etf_high": "4.715",
+      "etf_low": "4.616"
+    },
+    {
+      "date": "2025-12-18",
+      "index_close": "3876.37",
+      "etf_open": "4.683",
+      "etf_close": "4.668",
+      "etf_high": "4.692",
+      "etf_low": "4.661"
+    },
+    {
+      "date": "2025-12-19",
+      "index_close": "3890.45",
+      "etf_open": "4.680",
+      "etf_close": "4.688",
+      "etf_high": "4.714",
+      "etf_low": "4.666"
+    },
+    {
+      "date": "2025-12-22",
+      "index_close": "3917.36",
+      "etf_open": "4.702",
+      "etf_close": "4.730",
+      "etf_high": "4.735",
+      "etf_low": "4.702"
+    },
+    {
+      "date": "2025-12-23",
+      "index_close": "3919.98",
+      "etf_open": "4.735",
+      "etf_close": "4.740",
+      "etf_high": "4.763",
+      "etf_low": "4.726"
+    },
+    {
+      "date": "2025-12-24",
+      "index_close": "3940.95",
+      "etf_open": "4.740",
+      "etf_close": "4.757",
+      "etf_high": "4.765",
+      "etf_low": "4.726"
+    },
+    {
+      "date": "2025-12-25",
+      "index_close": "3959.62",
+      "etf_open": "4.750",
+      "etf_close": "4.766",
+      "etf_high": "4.777",
+      "etf_low": "4.744"
+    },
+    {
+      "date": "2025-12-26",
+      "index_close": "3963.68",
+      "etf_open": "4.766",
+      "etf_close": "4.784",
+      "etf_high": "4.801",
+      "etf_low": "4.755"
+    },
+    {
+      "date": "2025-12-29",
+      "index_close": "3965.28",
+      "etf_open": "4.780",
+      "etf_close": "4.763",
+      "etf_high": "4.794",
+      "etf_low": "4.749"
+    },
+    {
+      "date": "2025-12-30",
+      "index_close": "3965.12",
+      "etf_open": "4.746",
+      "etf_close": "4.773",
+      "etf_high": "4.790",
+      "etf_low": "4.742"
+    },
+    {
+      "date": "2025-12-31",
+      "index_close": "3968.84",
+      "etf_open": "4.777",
+      "etf_close": "4.753",
+      "etf_high": "4.789",
+      "etf_low": "4.742"
+    },
+    {
+      "date": "2026-01-05",
+      "index_close": "4023.42",
+      "etf_open": "4.783",
+      "etf_close": "4.844",
+      "etf_high": "4.848",
+      "etf_low": "4.780"
+    },
+    {
+      "date": "2026-01-06",
+      "index_close": "4083.67",
+      "etf_open": "4.850",
+      "etf_close": "4.919",
+      "etf_high": "4.920",
+      "etf_low": "4.848"
+    },
+    {
+      "date": "2026-01-07",
+      "index_close": "4085.77",
+      "etf_open": "4.920",
+      "etf_close": "4.901",
+      "etf_high": "4.927",
+      "etf_low": "4.876"
+    },
+    {
+      "date": "2026-01-08",
+      "index_close": "4082.98",
+      "etf_open": "4.888",
+      "etf_close": "4.863",
+      "etf_high": "4.894",
+      "etf_low": "4.843"
+    },
+    {
+      "date": "2026-01-09",
+      "index_close": "4120.43",
+      "etf_open": "4.857",
+      "etf_close": "4.885",
+      "etf_high": "4.903",
+      "etf_low": "4.844"
+    },
+    {
+      "date": "2026-01-12",
+      "index_close": "4165.29",
+      "etf_open": "4.893",
+      "etf_close": "4.913",
+      "etf_high": "4.929",
+      "etf_low": "4.861"
+    },
+    {
+      "date": "2026-01-13",
+      "index_close": "4138.76",
+      "etf_open": "4.922",
+      "etf_close": "4.896",
+      "etf_high": "4.965",
+      "etf_low": "4.876"
+    },
+    {
+      "date": "2026-01-14",
+      "index_close": "4126.09",
+      "etf_open": "4.896",
+      "etf_close": "4.866",
+      "etf_high": "4.949",
+      "etf_low": "4.841"
+    },
+    {
+      "date": "2026-01-15",
+      "index_close": "4112.6",
+      "etf_open": "4.849",
+      "etf_close": "4.875",
+      "etf_high": "4.894",
+      "etf_low": "4.843"
+    },
+    {
+      "date": "2026-01-16",
+      "index_close": "4101.91",
+      "etf_open": "4.905",
+      "etf_close": "4.859",
+      "etf_high": "4.919",
+      "etf_low": "4.838"
+    },
+    {
+      "date": "2026-01-19",
+      "index_close": "4114.0",
+      "etf_open": "4.737",
+      "etf_close": "4.738",
+      "etf_high": "4.769",
+      "etf_low": "4.718"
+    },
+    {
+      "date": "2026-01-20",
+      "index_close": "4113.65",
+      "etf_open": "4.735",
+      "etf_close": "4.724",
+      "etf_high": "4.751",
+      "etf_low": "4.688"
+    },
+    {
+      "date": "2026-01-21",
+      "index_close": "4116.94",
+      "etf_open": "4.709",
+      "etf_close": "4.730",
+      "etf_high": "4.764",
+      "etf_low": "4.709"
+    },
+    {
+      "date": "2026-01-22",
+      "index_close": "4122.58",
+      "etf_open": "4.741",
+      "etf_close": "4.727",
+      "etf_high": "4.760",
+      "etf_low": "4.703"
+    },
+    {
+      "date": "2026-01-23",
+      "index_close": "4136.16",
+      "etf_open": "4.732",
+      "etf_close": "4.704",
+      "etf_high": "4.742",
+      "etf_low": "4.687"
+    },
+    {
+      "date": "2026-01-26",
+      "index_close": "4132.61",
+      "etf_open": "4.712",
+      "etf_close": "4.712",
+      "etf_high": "4.760",
+      "etf_low": "4.694"
+    },
+    {
+      "date": "2026-01-27",
+      "index_close": "4139.9",
+      "etf_open": "4.712",
+      "etf_close": "4.710",
+      "etf_high": "4.742",
+      "etf_low": "4.679"
+    },
+    {
+      "date": "2026-01-28",
+      "index_close": "4151.24",
+      "etf_open": "4.725",
+      "etf_close": "4.725",
+      "etf_high": "4.743",
+      "etf_low": "4.704"
+    },
+    {
+      "date": "2026-01-29",
+      "index_close": "4157.98",
+      "etf_open": "4.724",
+      "etf_close": "4.768",
+      "etf_high": "4.779",
+      "etf_low": "4.704"
+    },
+    {
+      "date": "2026-01-30",
+      "index_close": "4117.95",
+      "etf_open": "4.736",
+      "etf_close": "4.711",
+      "etf_high": "4.758",
+      "etf_low": "4.642"
+    },
+    {
+      "date": "2026-02-02",
+      "index_close": "4015.75",
+      "etf_open": "4.680",
+      "etf_close": "4.600",
+      "etf_high": "4.719",
+      "etf_low": "4.591"
+    },
+    {
+      "date": "2026-02-03",
+      "index_close": "4067.74",
+      "etf_open": "4.640",
+      "etf_close": "4.664",
+      "etf_high": "4.668",
+      "etf_low": "4.585"
+    },
+    {
+      "date": "2026-02-04",
+      "index_close": "4102.2",
+      "etf_open": "4.652",
+      "etf_close": "4.707",
+      "etf_high": "4.709",
+      "etf_low": "4.643"
+    },
+    {
+      "date": "2026-02-05",
+      "index_close": "4075.92",
+      "etf_open": "4.680",
+      "etf_close": "4.679",
+      "etf_high": "4.695",
+      "etf_low": "4.645"
+    },
+    {
+      "date": "2026-02-06",
+      "index_close": "4065.58",
+      "etf_open": "4.643",
+      "etf_close": "4.649",
+      "etf_high": "4.691",
+      "etf_low": "4.610"
+    },
+    {
+      "date": "2026-02-09",
+      "index_close": "4123.09",
+      "etf_open": "4.695",
+      "etf_close": "4.727",
+      "etf_high": "4.730",
+      "etf_low": "4.686"
+    },
+    {
+      "date": "2026-02-10",
+      "index_close": "4128.37",
+      "etf_open": "4.733",
+      "etf_close": "4.733",
+      "etf_high": "4.739",
+      "etf_low": "4.720"
+    },
+    {
+      "date": "2026-02-11",
+      "index_close": "4131.98",
+      "etf_open": "4.727",
+      "etf_close": "4.723",
+      "etf_high": "4.732",
+      "etf_low": "4.714"
+    },
+    {
+      "date": "2026-02-12",
+      "index_close": "4134.02",
+      "etf_open": "4.729",
+      "etf_close": "4.727",
+      "etf_high": "4.735",
+      "etf_low": "4.716"
+    },
+    {
+      "date": "2026-02-13",
+      "index_close": "4082.07",
+      "etf_open": "4.714",
+      "etf_close": "4.671",
+      "etf_high": "4.714",
+      "etf_low": "4.667"
+    },
+    {
+      "date": "2026-02-24",
+      "index_close": "4117.41",
+      "etf_open": "4.725",
+      "etf_close": "4.716",
+      "etf_high": "4.736",
+      "etf_low": "4.705"
+    },
+    {
+      "date": "2026-02-25",
+      "index_close": "4147.23",
+      "etf_open": "4.717",
+      "etf_close": "4.750",
+      "etf_high": "4.778",
+      "etf_low": "4.716"
+    },
+    {
+      "date": "2026-02-26",
+      "index_close": "4146.63",
+      "etf_open": "4.751",
+      "etf_close": "4.735",
+      "etf_high": "4.754",
+      "etf_low": "4.712"
+    },
+    {
+      "date": "2026-02-27",
+      "index_close": "4162.88",
+      "etf_open": "4.720",
+      "etf_close": "4.725",
+      "etf_high": "4.732",
+      "etf_low": "4.700"
+    },
+    {
+      "date": "2026-03-02",
+      "index_close": "4182.59",
+      "etf_open": "4.694",
+      "etf_close": "4.739",
+      "etf_high": "4.743",
+      "etf_low": "4.674"
+    },
+    {
+      "date": "2026-03-03",
+      "index_close": "4122.68",
+      "etf_open": "4.741",
+      "etf_close": "4.678",
+      "etf_high": "4.751",
+      "etf_low": "4.665"
+    },
+    {
+      "date": "2026-03-04",
+      "index_close": "4082.47",
+      "etf_open": "4.640",
+      "etf_close": "4.610",
+      "etf_high": "4.650",
+      "etf_low": "4.587"
+    },
+    {
+      "date": "2026-03-05",
+      "index_close": "4108.57",
+      "etf_open": "4.647",
+      "etf_close": "4.654",
+      "etf_high": "4.678",
+      "etf_low": "4.639"
+    },
+    {
+      "date": "2026-03-06",
+      "index_close": "4124.19",
+      "etf_open": "4.640",
+      "etf_close": "4.667",
+      "etf_high": "4.682",
+      "etf_low": "4.624"
+    },
+    {
+      "date": "2026-03-09",
+      "index_close": "4096.6",
+      "etf_open": "4.623",
+      "etf_close": "4.629",
+      "etf_high": "4.638",
+      "etf_low": "4.560"
+    },
+    {
+      "date": "2026-03-10",
+      "index_close": "4123.14",
+      "etf_open": "4.642",
+      "etf_close": "4.683",
+      "etf_high": "4.689",
+      "etf_low": "4.641"
+    },
+    {
+      "date": "2026-03-11",
+      "index_close": "4133.43",
+      "etf_open": "4.686",
+      "etf_close": "4.711",
+      "etf_high": "4.719",
+      "etf_low": "4.682"
+    },
+    {
+      "date": "2026-03-12",
+      "index_close": "4129.1",
+      "etf_open": "4.711",
+      "etf_close": "4.694",
+      "etf_high": "4.711",
+      "etf_low": "4.665"
+    },
+    {
+      "date": "2026-03-13",
+      "index_close": "4095.45",
+      "etf_open": "4.672",
+      "etf_close": "4.677",
+      "etf_high": "4.716",
+      "etf_low": "4.670"
+    },
+    {
+      "date": "2026-03-16",
+      "index_close": "4084.79",
+      "etf_open": "4.675",
+      "etf_close": "4.680",
+      "etf_high": "4.686",
+      "etf_low": "4.632"
+    },
+    {
+      "date": "2026-03-17",
+      "index_close": "4049.91",
+      "etf_open": "4.686",
+      "etf_close": "4.646",
+      "etf_high": "4.731",
+      "etf_low": "4.645"
+    },
+    {
+      "date": "2026-03-18",
+      "index_close": "4062.98",
+      "etf_open": "4.652",
+      "etf_close": "4.662",
+      "etf_high": "4.670",
+      "etf_low": "4.616"
+    },
+    {
+      "date": "2026-03-19",
+      "index_close": "4006.55",
+      "etf_open": "4.621",
+      "etf_close": "4.599",
+      "etf_high": "4.641",
+      "etf_low": "4.581"
+    },
+    {
+      "date": "2026-03-20",
+      "index_close": "3957.05",
+      "etf_open": "4.598",
+      "etf_close": "4.576",
+      "etf_high": "4.635",
+      "etf_low": "4.573"
+    },
+    {
+      "date": "2026-03-23",
+      "index_close": "3813.28",
+      "etf_open": "4.528",
+      "etf_close": "4.430",
+      "etf_high": "4.537",
+      "etf_low": "4.406"
+    },
+    {
+      "date": "2026-03-24",
+      "index_close": "3881.28",
+      "etf_open": "4.463",
+      "etf_close": "4.479",
+      "etf_high": "4.480",
+      "etf_low": "4.405"
+    },
+    {
+      "date": "2026-03-25",
+      "index_close": "3931.84",
+      "etf_open": "4.510",
+      "etf_close": "4.544",
+      "etf_high": "4.549",
+      "etf_low": "4.504"
+    },
+    {
+      "date": "2026-03-26",
+      "index_close": "3889.08",
+      "etf_open": "4.536",
+      "etf_close": "4.488",
+      "etf_high": "4.547",
+      "etf_low": "4.477"
+    },
+    {
+      "date": "2026-03-27",
+      "index_close": "3913.72",
+      "etf_open": "4.450",
+      "etf_close": "4.508",
+      "etf_high": "4.530",
+      "etf_low": "4.445"
+    },
+    {
+      "date": "2026-03-30",
+      "index_close": "3923.29",
+      "etf_open": "4.462",
+      "etf_close": "4.500",
+      "etf_high": "4.505",
+      "etf_low": "4.453"
+    },
+    {
+      "date": "2026-03-31",
+      "index_close": "3891.86",
+      "etf_open": "4.501",
+      "etf_close": "4.463",
+      "etf_high": "4.529",
+      "etf_low": "4.462"
+    },
+    {
+      "date": "2026-04-01",
+      "index_close": "3948.55",
+      "etf_open": "4.520",
+      "etf_close": "4.534",
+      "etf_high": "4.542",
+      "etf_low": "4.501"
+    },
+    {
+      "date": "2026-04-02",
+      "index_close": "3919.29",
+      "etf_open": "4.521",
+      "etf_close": "4.489",
+      "etf_high": "4.526",
+      "etf_low": "4.470"
+    },
+    {
+      "date": "2026-04-03",
+      "index_close": "3880.1",
+      "etf_open": "4.495",
+      "etf_close": "4.454",
+      "etf_high": "4.506",
+      "etf_low": "4.446"
+    },
+    {
+      "date": "2026-04-07",
+      "index_close": "3890.16",
+      "etf_open": "4.455",
+      "etf_close": "4.446",
+      "etf_high": "4.470",
+      "etf_low": "4.431"
+    },
+    {
+      "date": "2026-04-08",
+      "index_close": "3995.0",
+      "etf_open": "4.519",
+      "etf_close": "4.602",
+      "etf_high": "4.604",
+      "etf_low": "4.517"
+    },
+    {
+      "date": "2026-04-09",
+      "index_close": "3966.17",
+      "etf_open": "4.573",
+      "etf_close": "4.572",
+      "etf_high": "4.586",
+      "etf_low": "4.560"
+    },
+    {
+      "date": "2026-04-10",
+      "index_close": "3986.22",
+      "etf_open": "4.588",
+      "etf_close": "4.642",
+      "etf_high": "4.664",
+      "etf_low": "4.588"
+    },
+    {
+      "date": "2026-04-13",
+      "index_close": "3988.56",
+      "etf_open": "4.629",
+      "etf_close": "4.652",
+      "etf_high": "4.660",
+      "etf_low": "4.623"
+    },
+    {
+      "date": "2026-04-14",
+      "index_close": "4026.63",
+      "etf_open": "4.679",
+      "etf_close": "4.712",
+      "etf_high": "4.712",
+      "etf_low": "4.663"
+    },
+    {
+      "date": "2026-04-15",
+      "index_close": "4027.21",
+      "etf_open": "4.732",
+      "etf_close": "4.694",
+      "etf_high": "4.746",
+      "etf_low": "4.684"
+    },
+    {
+      "date": "2026-04-16",
+      "index_close": "4055.55",
+      "etf_open": "4.704",
+      "etf_close": "4.746",
+      "etf_high": "4.747",
+      "etf_low": "4.700"
+    },
+    {
+      "date": "2026-04-17",
+      "index_close": "4051.43",
+      "etf_open": "4.737",
+      "etf_close": "4.739",
+      "etf_high": "4.750",
+      "etf_low": "4.722"
+    },
+    {
+      "date": "2026-04-20",
+      "index_close": "4082.13",
+      "etf_open": "4.735",
+      "etf_close": "4.765",
+      "etf_high": "4.777",
+      "etf_low": "4.728"
+    },
+    {
+      "date": "2026-04-21",
+      "index_close": "4085.08",
+      "etf_open": "4.764",
+      "etf_close": "4.776",
+      "etf_high": "4.786",
+      "etf_low": "4.730"
+    },
+    {
+      "date": "2026-04-22",
+      "index_close": "4106.26",
+      "etf_open": "4.760",
+      "etf_close": "4.811",
+      "etf_high": "4.813",
+      "etf_low": "4.756"
+    },
+    {
+      "date": "2026-04-23",
+      "index_close": "4093.25",
+      "etf_open": "4.820",
+      "etf_close": "4.801",
+      "etf_high": "4.834",
+      "etf_low": "4.772"
+    },
+    {
+      "date": "2026-04-24",
+      "index_close": "4079.9",
+      "etf_open": "4.785",
+      "etf_close": "4.782",
+      "etf_high": "4.798",
+      "etf_low": "4.750"
+    },
+    {
+      "date": "2026-04-27",
+      "index_close": "4086.34",
+      "etf_open": "4.786",
+      "etf_close": "4.782",
+      "etf_high": "4.810",
+      "etf_low": "4.773"
+    },
+    {
+      "date": "2026-04-28",
+      "index_close": "4078.64",
+      "etf_open": "4.766",
+      "etf_close": "4.770",
+      "etf_high": "4.790",
+      "etf_low": "4.757"
+    },
+    {
+      "date": "2026-04-29",
+      "index_close": "4107.51",
+      "etf_open": "4.755",
+      "etf_close": "4.821",
+      "etf_high": "4.828",
+      "etf_low": "4.755"
+    },
+    {
+      "date": "2026-04-30",
+      "index_close": "4112.16",
+      "etf_open": "4.830",
+      "etf_close": "4.824",
+      "etf_high": "4.841",
+      "etf_low": "4.808"
+    },
+    {
+      "date": "2026-05-06",
+      "index_close": "4160.17",
+      "etf_open": "4.866",
+      "etf_close": "4.888",
+      "etf_high": "4.914",
+      "etf_low": "4.852"
+    },
+    {
+      "date": "2026-05-07",
+      "index_close": "4180.09",
+      "etf_open": "4.905",
+      "etf_close": "4.912",
+      "etf_high": "4.914",
+      "etf_low": "4.879"
+    },
+    {
+      "date": "2026-05-08",
+      "index_close": "4179.95",
+      "etf_open": "4.890",
+      "etf_close": "4.886",
+      "etf_high": "4.902",
+      "etf_low": "4.862"
+    },
+    {
+      "date": "2026-05-11",
+      "index_close": "4225.02",
+      "etf_open": "4.911",
+      "etf_close": "4.966",
+      "etf_high": "4.980",
+      "etf_low": "4.900"
+    },
+    {
+      "date": "2026-05-12",
+      "index_close": "4214.49",
+      "etf_open": "4.975",
+      "etf_close": "4.963",
+      "etf_high": "4.987",
+      "etf_low": "4.944"
+    },
+    {
+      "date": "2026-05-13",
+      "index_close": "4242.57",
+      "etf_open": "4.940",
+      "etf_close": "5.017",
+      "etf_high": "5.023",
+      "etf_low": "4.939"
+    },
+    {
+      "date": "2026-05-14",
+      "index_close": "4177.92",
+      "etf_open": "5.037",
+      "etf_close": "4.941",
+      "etf_high": "5.041",
+      "etf_low": "4.931"
+    },
+    {
+      "date": "2026-05-15",
+      "index_close": "4135.39",
+      "etf_open": "4.935",
+      "etf_close": "4.878",
+      "etf_high": "4.954",
+      "etf_low": "4.852"
+    },
+    {
+      "date": "2026-05-18",
+      "index_close": "4131.53",
+      "etf_open": "4.855",
+      "etf_close": "4.852",
+      "etf_high": "4.885",
+      "etf_low": "4.819"
+    },
+    {
+      "date": "2026-05-19",
+      "index_close": "4169.54",
+      "etf_open": "4.843",
+      "etf_close": "4.869",
+      "etf_high": "4.874",
+      "etf_low": "4.789"
+    },
+    {
+      "date": "2026-05-20",
+      "index_close": "4162.18",
+      "etf_open": "4.845",
+      "etf_close": "4.871",
+      "etf_high": "4.882",
+      "etf_low": "4.840"
+    },
+    {
+      "date": "2026-05-21",
+      "index_close": "4077.28",
+      "etf_open": "4.897",
+      "etf_close": "4.808",
+      "etf_high": "4.954",
+      "etf_low": "4.801"
+    },
+    {
+      "date": "2026-05-22",
+      "index_close": "4112.9",
+      "etf_open": "4.828",
+      "etf_close": "4.862",
+      "etf_high": "4.868",
+      "etf_low": "4.807"
+    },
+    {
+      "date": "2026-05-25",
+      "index_close": "4152.57",
+      "etf_open": "4.880",
+      "etf_close": "4.937",
+      "etf_high": "4.938",
+      "etf_low": "4.872"
+    },
+    {
+      "date": "2026-05-26",
+      "index_close": "4145.37",
+      "etf_open": "4.912",
+      "etf_close": "4.972",
+      "etf_high": "4.975",
+      "etf_low": "4.910"
+    },
+    {
+      "date": "2026-05-27",
+      "index_close": "4093.73",
+      "etf_open": "4.963",
+      "etf_close": "4.932",
+      "etf_high": "4.993",
+      "etf_low": "4.913"
+    },
+    {
+      "date": "2026-05-28",
+      "index_close": "4098.64",
+      "etf_open": "4.917",
+      "etf_close": "4.932",
+      "etf_high": "4.948",
+      "etf_low": "4.866"
+    },
+    {
+      "date": "2026-05-29",
+      "index_close": "4068.57",
+      "etf_open": "4.946",
+      "etf_close": "4.923",
+      "etf_high": "4.978",
+      "etf_low": "4.900"
+    },
+    {
+      "date": "2026-06-01",
+      "index_close": "4057.74",
+      "etf_open": "4.923",
+      "etf_close": "4.868",
+      "etf_high": "4.940",
+      "etf_low": "4.861"
+    },
+    {
+      "date": "2026-06-02",
+      "index_close": "4075.1",
+      "etf_open": "4.867",
+      "etf_close": "4.936",
+      "etf_high": "4.956",
+      "etf_low": "4.856"
+    },
+    {
+      "date": "2026-06-03",
+      "index_close": "4083.97",
+      "etf_open": "4.938",
+      "etf_close": "4.965",
+      "etf_high": "5.016",
+      "etf_low": "4.928"
+    },
+    {
+      "date": "2026-06-04",
+      "index_close": "4057.78",
+      "etf_open": "4.919",
+      "etf_close": "4.926",
+      "etf_high": "4.961",
+      "etf_low": "4.910"
+    },
+    {
+      "date": "2026-06-05",
+      "index_close": "4027.74",
+      "etf_open": "4.909",
+      "etf_close": "4.843",
+      "etf_high": "4.948",
+      "etf_low": "4.825"
+    },
+    {
+      "date": "2026-06-08",
+      "index_close": "3959.34",
+      "etf_open": "4.790",
+      "etf_close": "4.739",
+      "etf_high": "4.808",
+      "etf_low": "4.705"
+    },
+    {
+      "date": "2026-06-09",
+      "index_close": "4010.03",
+      "etf_open": "4.764",
+      "etf_close": "4.826",
+      "etf_high": "4.828",
+      "etf_low": "4.741"
+    },
+    {
+      "date": "2026-06-10",
+      "index_close": "3993.23",
+      "etf_open": "4.790",
+      "etf_close": "4.784",
+      "etf_high": "4.814",
+      "etf_low": "4.751"
+    },
+    {
+      "date": "2026-06-11",
+      "index_close": "3987.01",
+      "etf_open": "4.766",
+      "etf_close": "4.751",
+      "etf_high": "4.793",
+      "etf_low": "4.718"
+    },
+    {
+      "date": "2026-06-12",
+      "index_close": "4031.51",
+      "etf_open": "4.810",
+      "etf_close": "4.818",
+      "etf_high": "4.846",
+      "etf_low": "4.789"
+    },
+    {
+      "date": "2026-06-15",
+      "index_close": "4096.47",
+      "etf_open": "4.858",
+      "etf_close": "4.919",
+      "etf_high": "4.920",
+      "etf_low": "4.839"
+    },
+    {
+      "date": "2026-06-16",
+      "index_close": "4091.89",
+      "etf_open": "4.920",
+      "etf_close": "4.910",
+      "etf_high": "4.933",
+      "etf_low": "4.893"
+    },
+    {
+      "date": "2026-06-17",
+      "index_close": "4108.08",
+      "etf_open": "4.898",
+      "etf_close": "4.958",
+      "etf_high": "4.960",
+      "etf_low": "4.894"
+    },
+    {
+      "date": "2026-06-18",
+      "index_close": "4090.48",
+      "etf_open": "4.943",
+      "etf_close": "4.984",
+      "etf_high": "5.001",
+      "etf_low": "4.941"
+    },
+    {
+      "date": "2026-06-22",
+      "index_close": "4163.1",
+      "etf_open": "4.983",
+      "etf_close": "5.091",
+      "etf_high": "5.095",
+      "etf_low": "4.954"
+    },
+    {
+      "date": "2026-06-23",
+      "index_close": "4106.25",
+      "etf_open": "5.079",
+      "etf_close": "4.942",
+      "etf_high": "5.095",
+      "etf_low": "4.915"
+    },
+    {
+      "date": "2026-06-24",
+      "index_close": "4110.81",
+      "etf_open": "4.929",
+      "etf_close": "4.967",
+      "etf_high": "4.978",
+      "etf_low": "4.916"
+    },
+    {
+      "date": "2026-06-25",
+      "index_close": "4120.28",
+      "etf_open": "4.973",
+      "etf_close": "5.048",
+      "etf_high": "5.055",
+      "etf_low": "4.966"
+    },
+    {
+      "date": "2026-06-26",
+      "index_close": "4027.26",
+      "etf_open": "5.008",
+      "etf_close": "4.907",
+      "etf_high": "5.015",
+      "etf_low": "4.880"
+    },
+    {
+      "date": "2026-06-29",
+      "index_close": "4073.9",
+      "etf_open": "4.897",
+      "etf_close": "4.959",
+      "etf_high": "4.966",
+      "etf_low": "4.866"
+    },
+    {
+      "date": "2026-06-30",
+      "index_close": "4094.4",
+      "etf_open": "4.947",
+      "etf_close": "5.019",
+      "etf_high": "5.022",
+      "etf_low": "4.942"
+    },
+    {
+      "date": "2026-07-01",
+      "index_close": "4112.45",
+      "etf_open": "5.009",
+      "etf_close": "4.998",
+      "etf_high": "5.054",
+      "etf_low": "4.957"
+    },
+    {
+      "date": "2026-07-02",
+      "index_close": "4028.9",
+      "etf_open": "4.955",
+      "etf_close": "4.850",
+      "etf_high": "4.960",
+      "etf_low": "4.835"
+    },
+    {
+      "date": "2026-07-03",
+      "index_close": "4043.64",
+      "etf_open": "4.830",
+      "etf_close": "4.876",
+      "etf_high": "4.927",
+      "etf_low": "4.828"
+    },
+    {
+      "date": "2026-07-06",
+      "index_close": "4041.24",
+      "etf_open": "4.900",
+      "etf_close": "4.877",
+      "etf_high": "4.914",
+      "etf_low": "4.831"
+    },
+    {
+      "date": "2026-07-07",
+      "index_close": "3990.24",
+      "etf_open": "4.858",
+      "etf_close": "4.826",
+      "etf_high": "4.877",
+      "etf_low": "4.796"
+    },
+    {
+      "date": "2026-07-08",
+      "index_close": "3970.88",
+      "etf_open": "4.836",
+      "etf_close": "4.798",
+      "etf_high": "4.872",
+      "etf_low": "4.793"
+    },
+    {
+      "date": "2026-07-09",
+      "index_close": "4036.59",
+      "etf_open": "4.813",
+      "etf_close": "4.916",
+      "etf_high": "4.925",
+      "etf_low": "4.777"
+    },
+    {
+      "date": "2026-07-10",
+      "index_close": "3996.16",
+      "etf_open": "4.918",
+      "etf_close": "4.829",
+      "etf_high": "4.949",
+      "etf_low": "4.827"
+    },
+    {
+      "date": "2026-07-13",
+      "index_close": "3913.79",
+      "etf_open": "4.802",
+      "etf_close": "4.744",
+      "etf_high": "4.821",
+      "etf_low": "4.719"
+    },
+    {
+      "date": "2026-07-14",
+      "index_close": "3967.13",
+      "etf_open": "4.744",
+      "etf_close": "4.837",
+      "etf_high": "4.838",
+      "etf_low": "4.696"
+    },
+    {
+      "date": "2026-07-15",
+      "index_close": "3955.58",
+      "etf_open": "4.829",
+      "etf_close": "4.838",
+      "etf_high": "4.870",
+      "etf_low": "4.819"
+    },
+    {
+      "date": "2026-07-16",
+      "index_close": "3882.41",
+      "etf_open": "4.775",
+      "etf_close": "4.753",
+      "etf_high": "4.825",
+      "etf_low": "4.724"
+    },
+    {
+      "date": "2026-07-17",
+      "index_close": "3764.15",
+      "etf_open": "4.720",
+      "etf_close": "4.589",
+      "etf_high": "4.730",
+      "etf_low": "4.546"
+    },
+    {
+      "date": "2026-07-20",
+      "index_close": "3796.28",
+      "etf_open": "4.630",
+      "etf_close": "4.650",
+      "etf_high": "4.685",
+      "etf_low": "4.577"
+    },
+    {
+      "date": "2026-07-21",
+      "index_close": "3864.37",
+      "etf_open": "4.677",
+      "etf_close": "4.787",
+      "etf_high": "4.789",
+      "etf_low": "4.617"
+    },
+    {
+      "date": "2026-07-22",
+      "index_close": "3867.03",
+      "etf_open": "4.750",
+      "etf_close": "4.765",
+      "etf_high": "4.823",
+      "etf_low": "4.750"
+    },
+    {
+      "date": "2026-07-23",
+      "index_close": "3876.78",
+      "etf_open": "4.774",
+      "etf_close": "4.787",
+      "etf_high": "4.795",
+      "etf_low": "4.755"
+    },
+    {
+      "date": "2026-07-24",
+      "index_close": "3814.2",
+      "etf_open": "4.750",
+      "etf_close": "4.701",
+      "etf_high": "4.759",
+      "etf_low": "4.699"
+    },
+    {
+      "date": "2026-07-27",
+      "index_close": "3858.25",
+      "etf_open": "4.702",
+      "etf_close": "4.753",
+      "etf_high": "4.758",
+      "etf_low": "4.674"
+    },
+    {
+      "date": "2026-07-28",
+      "index_close": "3813.31",
+      "etf_open": "4.690",
+      "etf_close": "4.627",
+      "etf_high": "4.700",
+      "etf_low": "4.609"
+    },
+    {
+      "date": "2026-07-29",
+      "index_close": "3828.47",
+      "etf_open": "4.624",
+      "etf_close": "4.657",
+      "etf_high": "4.686",
+      "etf_low": "4.574"
+    },
+    {
+      "date": "2026-07-30",
+      "index_close": "3804.69",
+      "etf_open": "4.630",
+      "etf_close": "4.605",
+      "etf_high": "4.655",
+      "etf_low": "4.536"
+    },
+    {
+      "date": "2026-07-31",
+      "index_close": "3832.26",
+      "etf_open": "4.680",
+      "etf_close": "4.653",
+      "etf_high": "4.703",
+      "etf_low": "4.644"
+    },
+    {
+      "date": "2026-08-03",
+      "index_close": "3809.66",
+      "etf_open": "4.624",
+      "etf_close": "4.599",
+      "etf_high": "4.638",
+      "etf_low": "4.591"
+    },
+    {
+      "date": "2026-08-04",
+      "index_close": "3822.28",
+      "etf_open": "4.618",
+      "etf_close": "4.651",
+      "etf_high": "4.672",
+      "etf_low": "4.615"
+    },
+    {
+      "date": "2026-08-05",
+      "index_close": "3878.43",
+      "etf_open": "4.620",
+      "etf_close": "4.714",
+      "etf_high": "4.737",
+      "etf_low": "4.613"
+    },
+    {
+      "date": "2026-08-06",
+      "index_close": "3900.35",
+      "etf_open": "4.688",
+      "etf_close": "4.709",
+      "etf_high": "4.731",
+      "etf_low": "4.668"
+    },
+    {
+      "date": "2026-08-07",
+      "index_close": "3940.04",
+      "etf_open": "4.706",
+      "etf_close": "4.751",
+      "etf_high": "4.764",
+      "etf_low": "4.706"
+    },
+    {
+      "date": "2026-08-10",
+      "index_close": "3966.59",
+      "etf_open": "4.755",
+      "etf_close": "4.759",
+      "etf_high": "4.772",
+      "etf_low": "4.720"
+    },
+    {
+      "date": "2026-08-11",
+      "index_close": "3934.09",
+      "etf_open": "4.750",
+      "etf_close": "4.728",
+      "etf_high": "4.775",
+      "etf_low": "4.722"
+    },
+    {
+      "date": "2026-08-12",
+      "index_close": "3946.68",
+      "etf_open": "4.727",
+      "etf_close": "4.748",
+      "etf_high": "4.759",
+      "etf_low": "4.720"
+    },
+    {
+      "date": "2026-08-13",
+      "index_close": "3926.96",
+      "etf_open": "4.770",
+      "etf_close": "4.729",
+      "etf_high": "4.786",
+      "etf_low": "4.725"
+    },
+    {
+      "date": "2026-08-14",
+      "index_close": "3927.18",
+      "etf_open": "4.737",
+      "etf_close": "4.726",
+      "etf_high": "4.742",
+      "etf_low": "4.701"
+    },
+    {
+      "date": "2026-08-17",
+      "index_close": "3982.65",
+      "etf_open": "4.730",
+      "etf_close": "4.801",
+      "etf_high": "4.802",
+      "etf_low": "4.725"
+    },
+    {
+      "date": "2026-08-18",
+      "index_close": "3990.3",
+      "etf_open": "4.794",
+      "etf_close": "4.787",
+      "etf_high": "4.803",
+      "etf_low": "4.751"
+    },
+    {
+      "date": "2026-08-19",
+      "index_close": "3894.42",
+      "etf_open": "4.748",
+      "etf_close": "4.654",
+      "etf_high": "4.749",
+      "etf_low": "4.627"
+    },
+    {
+      "date": "2026-08-20",
+      "index_close": "3903.72",
+      "etf_open": "4.670",
+      "etf_close": "4.653",
+      "etf_high": "4.689",
+      "etf_low": "4.632"
+    },
+    {
+      "date": "2026-08-21",
+      "index_close": "3905.2",
+      "etf_open": "4.648",
+      "etf_close": "4.680",
+      "etf_high": "4.693",
+      "etf_low": "4.641"
+    },
+    {
+      "date": "2026-08-24",
+      "index_close": "3882.01",
+      "etf_open": "4.678",
+      "etf_close": "4.627",
+      "etf_high": "4.692",
+      "etf_low": "4.593"
+    },
+    {
+      "date": "2026-08-25",
+      "index_close": "3889.44",
+      "etf_open": "4.601",
+      "etf_close": "4.616",
+      "etf_high": "4.639",
+      "etf_low": "4.587"
+    },
+    {
+      "date": "2026-08-26",
+      "index_close": "3912.52",
+      "etf_open": "4.615",
+      "etf_close": "4.652",
+      "etf_high": "4.680",
+      "etf_low": "4.611"
+    },
+    {
+      "date": "2026-08-27",
+      "index_close": "3956.57",
+      "etf_open": "4.659",
+      "etf_close": "4.691",
+      "etf_high": "4.694",
+      "etf_low": "4.649"
+    },
+    {
+      "date": "2026-08-28",
+      "index_close": "3952.18",
+      "etf_open": "4.684",
+      "etf_close": "4.679",
+      "etf_high": "4.706",
+      "etf_low": "4.675"
+    },
+    {
+      "date": "2026-08-31",
+      "index_close": "3986.3",
+      "etf_open": "4.640",
+      "etf_close": "4.685",
+      "etf_high": "4.692",
+      "etf_low": "4.618"
+    },
+    {
+      "date": "2026-09-01",
+      "index_close": "3979.89",
+      "etf_open": "4.683",
+      "etf_close": "4.684",
+      "etf_high": "4.705",
+      "etf_low": "4.666"
+    },
+    {
+      "date": "2026-09-02",
+      "index_close": "3941.39",
+      "etf_open": "4.650",
+      "etf_close": "4.620",
+      "etf_high": "4.654",
+      "etf_low": "4.601"
+    },
+    {
+      "date": "2026-09-03",
+      "index_close": "3942.09",
+      "etf_open": "4.631",
+      "etf_close": "4.621",
+      "etf_high": "4.650",
+      "etf_low": "4.605"
+    },
+    {
+      "date": "2026-09-04",
+      "index_close": "3930.12",
+      "etf_open": "4.637",
+      "etf_close": "4.616",
+      "etf_high": "4.672",
+      "etf_low": "4.599"
+    },
+    {
+      "date": "2026-09-07",
+      "index_close": "3932.7",
+      "etf_open": "4.635",
+      "etf_close": "4.634",
+      "etf_high": "4.649",
+      "etf_low": "4.612"
+    },
+    {
+      "date": "2026-09-08",
+      "index_close": "3940.55",
+      "etf_open": "4.638",
+      "etf_close": "4.624",
+      "etf_high": "4.657",
+      "etf_low": "4.610"
+    },
+    {
+      "date": "2026-09-09",
+      "index_close": "3951.51",
+      "etf_open": "4.638",
+      "etf_close": "4.637",
+      "etf_high": "4.648",
+      "etf_low": "4.613"
+    },
+    {
+      "date": "2026-09-10",
+      "index_close": "3934.4",
+      "etf_open": "4.617",
+      "etf_close": "4.617",
+      "etf_high": "4.640",
+      "etf_low": "4.599"
+    },
+    {
+      "date": "2026-09-11",
+      "index_close": "3888.11",
+      "etf_open": "4.592",
+      "etf_close": "4.579",
+      "etf_high": "4.592",
+      "etf_low": "4.532"
+    },
+    {
+      "date": "2026-09-14",
+      "index_close": "3885.33",
+      "etf_open": "4.551",
+      "etf_close": "4.552",
+      "etf_high": "4.574",
+      "etf_low": "4.538"
+    },
+    {
+      "date": "2026-09-15",
+      "index_close": "3864.28",
+      "etf_open": "4.541",
+      "etf_close": "4.523",
+      "etf_high": "4.568",
+      "etf_low": "4.515"
+    },
+    {
+      "date": "2026-09-16",
+      "index_close": "3891.6",
+      "etf_open": "4.522",
+      "etf_close": "4.550",
+      "etf_high": "4.555",
+      "etf_low": "4.485"
+    },
+    {
+      "date": "2026-09-17",
+      "index_close": "3875.6",
+      "etf_open": "4.539",
+      "etf_close": "4.532",
+      "etf_high": "4.568",
+      "etf_low": "4.524"
+    },
+    {
+      "date": "2026-09-18",
+      "index_close": "3911.87",
+      "etf_open": "4.556",
+      "etf_close": "4.582",
+      "etf_high": "4.596",
+      "etf_low": "4.548"
+    },
+    {
+      "date": "2026-09-21",
+      "index_close": "3949.91",
+      "etf_open": "4.586",
+      "etf_close": "4.608",
+      "etf_high": "4.615",
+      "etf_low": "4.581"
+    },
+    {
+      "date": "2026-09-22",
+      "index_close": "3952.13",
+      "etf_open": "4.636",
+      "etf_close": "4.613",
+      "etf_high": "4.658",
+      "etf_low": "4.612"
+    },
+    {
+      "date": "2026-09-23",
+      "index_close": "3936.52",
+      "etf_open": "4.620",
+      "etf_close": "4.590",
+      "etf_high": "4.621",
+      "etf_low": "4.586"
+    },
+    {
+      "date": "2026-09-24",
+      "index_close": "3888.37",
+      "etf_open": "4.578",
+      "etf_close": "4.515",
+      "etf_high": "4.579",
+      "etf_low": "4.512"
+    },
+    {
+      "date": "2026-09-28",
+      "index_close": "3823.62",
+      "etf_open": "4.499",
+      "etf_close": "4.417",
+      "etf_high": "4.503",
+      "etf_low": "4.397"
+    },
+    {
+      "date": "2026-09-29",
+      "index_close": "3830.45",
+      "etf_open": "4.399",
+      "etf_close": "4.416",
+      "etf_high": "4.431",
+      "etf_low": "4.398"
+    },
+    {
+      "date": "2026-09-30",
+      "index_close": "3842.19",
+      "etf_open": "4.421",
+      "etf_close": "4.432",
+      "etf_high": "4.444",
+      "etf_low": "4.415"
+    },
+    {
+      "date": "2026-10-08",
+      "index_close": "3811.9",
+      "etf_open": "4.418",
+      "etf_close": "4.389",
+      "etf_high": "4.459",
+      "etf_low": "4.358"
+    },
+    {
+      "date": "2026-10-09",
+      "index_close": "3813.79",
+      "etf_open": "4.369",
+      "etf_close": "4.385",
+      "etf_high": "4.400",
+      "etf_low": "4.309"
+    },
+    {
+      "date": "2026-10-12",
+      "index_close": "3797.24",
+      "etf_open": "4.384",
+      "etf_close": "4.360",
+      "etf_high": "4.408",
+      "etf_low": "4.351"
+    },
+    {
+      "date": "2026-10-13",
+      "index_close": "3800.86",
+      "etf_open": "4.313",
+      "etf_close": "4.345",
+      "etf_high": "4.384",
+      "etf_low": "4.286"
+    },
+    {
+      "date": "2026-10-14",
+      "index_close": "3767.23",
+      "etf_open": "4.336",
+      "etf_close": "4.294",
+      "etf_high": "4.351",
+      "etf_low": "4.284"
+    },
+    {
+      "date": "2026-10-15",
+      "index_close": "3707.48",
+      "etf_open": "4.245",
+      "etf_close": "4.242",
+      "etf_high": "4.250",
+      "etf_low": "4.187"
+    },
+    {
+      "date": "2026-10-16",
+      "index_close": "3716.28",
+      "etf_open": "4.255",
+      "etf_close": "4.236",
+      "etf_high": "4.282",
+      "etf_low": "4.200"
+    },
+    {
+      "date": "2026-10-19",
+      "index_close": "3730.92",
+      "etf_open": "4.224",
+      "etf_close": "4.240",
+      "etf_high": "4.267",
+      "etf_low": "4.220"
+    },
+    {
+      "date": "2026-10-20",
+      "index_close": "3735.37",
+      "etf_open": "4.229",
+      "etf_close": "4.220",
+      "etf_high": "4.250",
+      "etf_low": "4.186"
+    },
+    {
+      "date": "2026-10-21",
+      "index_close": "3713.03",
+      "etf_open": "4.234",
+      "etf_close": "4.185",
+      "etf_high": "4.237",
+      "etf_low": "4.170"
+    },
+    {
+      "date": "2026-10-22",
+      "index_close": "3658.03",
+      "etf_open": "4.185",
+      "etf_close": "4.107",
+      "etf_high": "4.189",
+      "etf_low": "4.097"
+    },
+    {
+      "date": "2026-10-23",
+      "index_close": "3690.48",
+      "etf_open": "4.080",
+      "etf_close": "4.178",
+      "etf_high": "4.186",
+      "etf_low": "4.031"
+    },
+    {
+      "date": "2026-10-26",
+      "index_close": "3697.52",
+      "etf_open": "4.155",
+      "etf_close": "4.179",
+      "etf_high": "4.187",
+      "etf_low": "4.130"
+    },
+    {
+      "date": "2026-10-27",
+      "index_close": "3648.3",
+      "etf_open": "4.186",
+      "etf_close": "4.123",
+      "etf_high": "4.192",
+      "etf_low": "4.123"
+    },
+    {
+      "date": "2026-10-28",
+      "index_close": "3681.47",
+      "etf_open": "4.155",
+      "etf_close": "4.152",
+      "etf_high": "4.166",
+      "etf_low": "4.132"
+    },
+    {
+      "date": "2026-10-29",
+      "index_close": "3651.43",
+      "etf_open": "4.145",
+      "etf_close": "4.111",
+      "etf_high": "4.146",
+      "etf_low": "4.103"
+    }
+  ]
+}

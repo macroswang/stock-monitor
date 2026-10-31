@@ -5,9 +5,9 @@ export type PaperPoint={code:string;name:string;stamp:string;origin:string;price
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 type Account={id:string;name:string;initial:number;cash:number;clock:string;realized:number;revision?:number;fees:{commission_wan:string;minimum:number;slippage_bps:string}};
 type Position={code:string;name:string;shares:number;available:number;frozen?:number;cost:number;market_value:number;price:number|null;price_time:string;unrealized:number;valuation:string};
-type Order={id:string;code:string;name:string;stamp:string;side:'buy'|'sell';shares:number;price:number;amount:number;fees:number;commission:number;stamp_tax:number;transfer:number;realized:number;status:string;filled?:number;reason:string;origin:string;source:string;parent_id?:string;reference_price?:number;fee_settings?:Account['fees'];accepted_at?:string;reference_stamp?:string;eligible_from?:string;execution_mode?:'live'|'historical'};
+type Order={id:string;code:string;name:string;stamp:string;side:'buy'|'sell';shares:number;price:number;amount:number;fees:number;commission:number;stamp_tax:number;transfer:number;realized:number;status:string;filled?:number;reason:string;origin:string;source:string;parent_id?:string;reference_price?:number;fee_settings?:Account['fees'];accepted_at?:string;reference_stamp?:string;eligible_from?:string;execution_mode?:'live'|'historical';plan?:{reason:string;invalidation_price:number|null;risk_budget?:number|null};review?:string};
 type Snapshot={accounts:{id:string;name:string}[];account:Account|null;positions:Position[];orders:Order[];fills?:Order[];order_count?:number;fill_count?:number;history_limit?:number;day_pnl?:{date:string|null;profit:number|null;opening_equity:number|null;reason:string;basis?:string};available_cash?:number;frozen_cash?:number;equity?:number;profit?:number;market_value?:number;unrealized?:number;total_fees?:number};
-type Quote={code:string;name:string;stamp:string;price:number;volume:number;source:string;token:string;order_mode?:'live'|'historical'};
+type Quote={code:string;name:string;stamp:string;price:number;volume:number;source:string;token:string;order_mode?:'live'|'historical';limit_up?:number|null;limit_down?:number|null};
 const money=(n:number|undefined)=>n===undefined?'—':(n/100).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const statusLabel=(s:string)=>({open:'未成交',partial:'部分成交',filled:'已成交',cancelled:'已撤单',expired:'已到期',rejected:'已拒绝'} as Record<string,string>)[s]||s;
 const signed=(n=0)=>(n>0?'+':'')+money(n);
@@ -23,11 +23,22 @@ function PaperRecordDetails({order:o,kind}:{order:Order;kind:'orders'|'fills'}){
  <dt>数据来源</dt><dd>{o.source||'未记录'}</dd><dt>操作入口</dt><dd>{o.origin||'手动'}</dd>
  {o.reference_price!==undefined&&<><dt>参考价格</dt><dd>{money(o.reference_price)} 元</dd></>}
  {kind==='orders'&&executed(o)>0&&<><dt>成交均价</dt><dd>{money(o.amount/executed(o))} 元</dd></>}
+ {kind==='orders'&&<><dt>计划对照</dt><dd>委托 {o.shares} 股，成交 {executed(o)} 股，未成 {o.shares-executed(o)} 股</dd></>}
+ {kind==='orders'&&executed(o)>0&&o.price>0&&<><dt>成交与限价</dt><dd>{((o.amount/executed(o)/o.price-1)*100).toFixed(2)}%（按成交均价）</dd></>}
  {kind==='orders'&&o.status==='cancelled'&&<><dt>撤销数量</dt><dd>{o.shares-executed(o)} 股</dd></>}
  <dt>佣金</dt><dd>{money(o.commission)} 元</dd><dt>印花税</dt><dd>{money(o.stamp_tax)} 元</dd><dt>过户费</dt><dd>{money(o.transfer)} 元</dd><dt>费用合计</dt><dd>{money(o.fees)} 元</dd>
  {o.fee_settings&&<><dt>佣金参数</dt><dd>万{o.fee_settings.commission_wan}，最低{money(o.fee_settings.minimum)}元</dd><dt>单边滑点</dt><dd>{o.fee_settings.slippage_bps} 基点</dd></>}
  {o.reason&&<><dt>说明</dt><dd>{o.reason}</dd></>}
+ {o.plan?.reason&&<><dt>交易计划</dt><dd>{o.plan.reason}</dd></>}
+ {o.plan?.invalidation_price!=null&&<><dt>计划失效价</dt><dd>{money(o.plan.invalidation_price)} 元</dd></>}
+ {o.plan?.risk_budget!=null&&<><dt>计划风险上限</dt><dd>{money(o.plan.risk_budget)} 元</dd></>}
+ {o.review&&<><dt>复盘</dt><dd>{o.review}</dd></>}
  </dl>}</details>;
+}
+function PaperReview({order,onSave,busy}:{order:Order;onSave:(value:string)=>void;busy:boolean}){
+ const [value,setValue]=useState(order.review||'');
+ useEffect(()=>setValue(order.review||''),[order.id,order.review]);
+ return <details className="paper-record-details"><summary>复盘</summary><label>记录实际操作与计划的差异<textarea aria-label={`复盘 ${order.id}`} value={value} maxLength={500} onChange={e=>setValue(e.target.value)}/></label><button disabled={busy||value===(order.review||'')} onClick={()=>onSave(value)}>保存复盘</button></details>;
 }
 export default function PaperTrading({request,point,context,onClosePoint,onOpenStock,onAccountState,onManageAccount,onOrderResult}:{onManageAccount?:()=>void;onOrderResult?:(message:string)=>void;onAccountState?:(state:{id:string;revision:number}|null)=>void;request:Request;point:PaperPoint|null;context?:PaperPoint;onClosePoint:()=>void;onOpenStock:(code:string,day:string)=>void}){
  const [data,setData]=useState<Snapshot>({accounts:[],account:null,positions:[],orders:[]});
@@ -36,15 +47,16 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  const [create,setCreate]=useState(false),[name,setName]=useState('回放账户'),[cash,setCash]=useState(''),[commission,setCommission]=useState('2'),[minimum,setMinimum]=useState('5'),[slip,setSlip]=useState('0');
  const [seed,setSeed]=useState(false),[seedCode,setSeedCode]=useState(''),[seedShares,setSeedShares]=useState('1000'),[seedCost,setSeedCost]=useState('');
  const [ticket,setTicket]=useState<PaperPoint|null>(null),[quote,setQuote]=useState<Quote|null>(null),[limitPrice,setLimitPrice]=useState(''),[shares,setShares]=useState('1000'),[tab,setTab]=useState('positions'),[filter,setFilter]=useState('');
+ const [planReason,setPlanReason]=useState(''),[planInvalidation,setPlanInvalidation]=useState(''),[planBudget,setPlanBudget]=useState('');
  const id=useRef(''),sequence=useRef(0),ticketSeq=useRef(0);
  const refresh=async(selected=account)=>{const seq=++sequence.current;const d=await request<Snapshot>('paper_sync',selected?{account:selected,history_limit:historyLimit}:{});if(seq!==sequence.current)return;setData(d);onAccountState?.(d.account?{id:d.account.id,revision:d.account.revision||0}:null);if(d.account&&d.account.id!==selected)setAccount(d.account.id);};
  useEffect(()=>{let active=true,running=false;const update=async()=>{if(running)return;running=true;try{await refresh();}catch(e){if(active)setError(String(e));}finally{running=false;}};void update();const timer=setInterval(()=>{void update();},3000);return()=>{active=false;sequence.current++;clearInterval(timer);};},[account,historyLimit]);
- const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current;setTicket(p);setQuote(null);setLimitPrice('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));}}catch(e){if(seq===ticketSeq.current)setError(String(e));}};
+ const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current;setTicket(p);setQuote(null);setLimitPrice('');setPlanReason('');setPlanInvalidation('');setPlanBudget('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));}}catch(e){if(seq===ticketSeq.current)setError(String(e));}};
  useEffect(()=>{if(point)void open(point);},[point]);
  const close=()=>{ticketSeq.current++;setTicket(null);setQuote(null);onClosePoint();};
  useEffect(()=>{if(!ticket)return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!busy){event.preventDefault();close();}};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[ticket,busy]);
  const run=async(work:()=>Promise<void>)=>{if(busy)return;setBusy(true);setError('');setNotice('');try{await work();}catch(e){setError(String(e));}finally{setBusy(false);}};
- const submit=()=>run(async()=>{if(!ticket||!quote||!data.account)throw Error('请先创建账户，并等待分钟报价');const result=await request<Order>('paper_order',{account:data.account.id,id:id.current,code:quote.code,stamp:quote.stamp,token:quote.token,side:ticket.side,shares:Number(shares),limit_price:limitPrice,origin:ticket.origin});await refresh(data.account.id);if(result.status==='rejected'){id.current=crypto.randomUUID();throw Error(result.reason);}const message=`委托已受理：${result.side==='buy'?'买入':'卖出'} ${result.name} ${result.shares}股，限价${money(result.price)}元，${result.execution_mode==='live'?`生效时间${result.accepted_at?.slice(11,19)||result.stamp.slice(11)}，等待提交后的完整分钟撮合`:'等待后续分钟撮合'}`;setNotice(message);onOrderResult?.(message);close();});
+ const submit=()=>run(async()=>{if(!ticket||!quote||!data.account)throw Error('请先创建账户，并等待分钟报价');const result=await request<Order>('paper_order',{account:data.account.id,id:id.current,code:quote.code,stamp:quote.stamp,token:quote.token,side:ticket.side,shares:Number(shares),limit_price:limitPrice,origin:ticket.origin,plan:{reason:planReason,invalidation_price:planInvalidation,risk_budget:ticket.side==='buy'?planBudget:''}});await refresh(data.account.id);if(result.status==='rejected'){id.current=crypto.randomUUID();throw Error(result.reason);}const message=`委托已受理：${result.side==='buy'?'买入':'卖出'} ${result.name} ${result.shares}股，限价${money(result.price)}元，${result.execution_mode==='live'?`生效时间${result.accepted_at?.slice(11,19)||result.stamp.slice(11)}，等待提交后的完整分钟撮合`:'等待后续分钟撮合'}`;setNotice(message);onOrderResult?.(message);close();});
 
  const a=data.account,position=ticket?data.positions.find(p=>p.code===ticket.code):undefined;
  const n=Number(shares);
@@ -55,6 +67,12 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  const changePrice=(delta:number)=>{setLimitPrice((Math.max(1,(Number.isFinite(limitCents)?limitCents:quote?.price||1)+delta)/100).toFixed(2));id.current=crypto.randomUUID();};
  const changeShares=(delta:number)=>{setShares(String(Math.max(100,Math.floor((Number(shares)||0)/100)*100+delta*100)));id.current=crypto.randomUUID();};
  const amount=Math.round(Number(limitPrice)*100*n),feeEstimate=quote&&a&&n>0?Math.max(Math.round(amount*Number(a.fees.commission_wan)/10000),a.fees.minimum)+Math.round(amount*.00001)+(ticket?.side==='sell'?Math.round(amount*.0005):0):0;
+ const stop=Number(planInvalidation),priceRisk=ticket?.side==='buy'&&planInvalidation!==''&&Number.isFinite(stop)&&stop>0&&stop<Number(limitPrice)&&Number.isSafeInteger(n)&&n>0?(Number(limitPrice)-stop)*n:null;
+ const stopCents=Math.round(stop*100),budgetCents=Math.round(Number(planBudget)*100);
+ const referenceAge=quote?.order_mode==='live'?Date.now()-Date.parse(quote.stamp.replace(' ','T')+':00+08:00'):0;
+ const validRisk=!!a&&ticket?.side==='buy'&&validLimit&&planInvalidation!==''&&Number.isSafeInteger(stopCents)&&stopCents>0&&stopCents<limitCents&&stop===stopCents/100&&planBudget!==''&&Number.isSafeInteger(budgetCents)&&budgetCents>0&&Number(planBudget)===budgetCents/100;
+ const assumedLoss=(count:number)=>{if(!a)return Infinity;const fees=(gross:number,sell:boolean)=>Math.max(Math.round(gross*Number(a.fees.commission_wan)/10000),a.fees.minimum)+Math.round(gross*.00001)+(sell?Math.round(gross*.0005):0);return (limitCents-stopCents)*count+fees(limitCents*count,false)+fees(stopCents*count,true);};
+ let riskShares=0;if(validRisk){let low=0,high=Math.floor(availableShares/100);while(low<high){const mid=Math.ceil((low+high)/2);if(assumedLoss(mid*100)<=budgetCents)low=mid;else high=mid-1;}riskShares=low*100;}
  const orders=(tab==='fills'?(data.fills||[]).filter(o=>o.status==='filled'):data.orders).filter(o=>!filter||`${o.code} ${o.name} ${o.stamp}`.includes(filter));
  return <section className="paper-panel card" aria-label="历史回放模拟交易">
  <div className="paper-heading"><div><h2>模拟交易 <span className="chip amber">历史回放</span></h2><small>账户时间 {a?.clock||'尚未开始'} · 限价委托 · 后续分钟撮合</small></div><div className="paper-actions"><select aria-label="模拟账户" value={a?.id||''} onChange={e=>{setAccount(e.target.value);close();}}>{data.accounts.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select><button onClick={()=>setCreate(!create)}>新建账户</button><button disabled={!a||!!a.clock||data.orders.length>0} onClick={()=>setSeed(!seed)}>期初持仓</button><button onClick={()=>run(()=>refresh())} disabled={busy}>刷新</button></div></div>
@@ -92,7 +110,7 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  {tab==='fills'?<><td>{money(o.price)}<small className="table-code">{o.shares} 股</small></td><td>{money(o.amount)}<small className="table-code">费用 {money(o.fees)}</small></td><td className={color(o.realized)}>{o.side==='sell'?signed(o.realized):'—'}</td></>:<>
  <td>{money(o.price)}</td><td>{o.shares} / {executed(o)} / {o.shares-executed(o)}</td>
  <td title={o.reason}>{statusLabel(o.status)}</td>
- <td><div className="paper-actions">{['open','partial'].includes(o.status)&&<button disabled={busy} onClick={()=>run(async()=>{await request('paper_cancel',{account:a.id,id:o.id});await refresh();setNotice('已撤销未成交部分，冻结资源已释放');})}>撤单</button>}<PaperRecordDetails order={o} kind="orders"/></div></td>
+ <td><div className="paper-actions">{['open','partial'].includes(o.status)&&<button disabled={busy} onClick={()=>run(async()=>{await request('paper_cancel',{account:a.id,id:o.id});await refresh();setNotice('已撤销未成交部分，冻结资源已释放');})}>撤单</button>}<PaperRecordDetails order={o} kind="orders"/>{o.execution_mode&&<PaperReview order={o} busy={busy} onSave={review=>void run(async()=>{await request('paper_review',{account:a.id,id:o.id,review});await refresh();setNotice('已保存模拟交易复盘');})}/>}</div></td>
  </>}
  </tr>)}</tbody></table>{!orders.length&&<p className="paper-empty">暂无记录</p>}</div></>}
  </>}
@@ -113,6 +131,11 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  <div className="ticket-row"><label className="ticket-label" htmlFor="paper-shares">数量</label><div className="ticket-stepper"><button aria-label="减少委托数量" disabled={busy||n<=100} onClick={()=>changeShares(-1)}>−</button><input id="paper-shares" aria-label="模拟交易股数" type="number" min="1" step="100" placeholder="输入股数" value={shares} disabled={busy} onChange={e=>{setShares(e.target.value);id.current=crypto.randomUUID();}}/><button aria-label="增加委托数量" disabled={busy} onClick={()=>changeShares(1)}>＋</button></div></div>
  <div className="ticket-fractions">{[[1,'全仓'],[2,'1/2仓'],[3,'1/3仓'],[4,'1/4仓']].map(([divisor,label])=><button key={divisor} disabled={busy||!a||!quote||fractionShares(availableShares,Number(divisor))<=0} onClick={()=>{setShares(String(fractionShares(availableShares,Number(divisor))));id.current=crypto.randomUUID();}}>{label}</button>)}</div>
  <div className="ticket-estimate">委托金额 <b>{Number.isFinite(amount)?money(amount):'—'}</b><span>费用约 {Number.isFinite(feeEstimate)?money(feeEstimate):'—'} 元</span></div>
+ {quote&&validLimit&&<div className="ticket-available">限价{limitCents===quote.price?'等于':limitCents>quote.price?'高于':'低于'}参考价 {money(quote.price)} 元<span>委托后等待撮合</span></div>}
+ {quote&&(quote.limit_up==null||quote.limit_down==null?<div className="ticket-warning">涨跌停价格数据不完整，委托前请核对。</div>:<div className="ticket-available">跌停 {money(quote.limit_down)} 元<span>涨停 {money(quote.limit_up)} 元</span></div>)}
+ {quote?.order_mode==='live'&&referenceAge>120000&&<div className="ticket-warning">所选参考价距今超过两分钟，请核对当前行情后再委托。</div>}
+ {Number.isSafeInteger(n)&&n>0&&n>availableShares&&<div className="ticket-warning">{ticket.side==='buy'?'委托数量超过当前可买数量':'委托数量超过当前可卖数量'}，请核对。</div>}
+ <details className="ticket-details"><summary>交易计划（选填）</summary><label>买卖理由<input aria-label="交易计划理由" maxLength={200} value={planReason} onChange={e=>{setPlanReason(e.target.value);id.current=crypto.randomUUID();}}/></label><label>计划失效价（元）<input aria-label="交易计划失效价" type="number" min="0.01" step="0.01" value={planInvalidation} onChange={e=>{setPlanInvalidation(e.target.value);id.current=crypto.randomUUID();}}/></label>{ticket.side==='buy'&&<label>风险上限（元）<input aria-label="交易计划风险上限" type="number" min="0.01" step="0.01" value={planBudget} onChange={e=>{setPlanBudget(e.target.value);id.current=crypto.randomUUID();}}/></label>}{priceRisk!==null&&<div>计划价差约 {priceRisk.toFixed(2)} 元（未计费用与滑点）</div>}{validRisk&&<div>按计划价格及费用估算可买 {riskShares} 股 <button disabled={!riskShares||busy} onClick={()=>{setShares(String(riskShares));id.current=crypto.randomUUID();}}>采用数量</button></div>}<small>失效价用于记录计划，不会自动卖出；实际价格可能跌破失效价，亏损可能超过上限。</small></details>
  {ticket.stamp<(a?.clock||'')&&<div className="ticket-warning">所选时间早于账户时间，请选择更晚分钟。</div>}
  {!a&&<div className="ticket-warning">请先填写初始资金创建账户。<button onClick={()=>{close();setCreate(true);onManageAccount?.();}}>设置模拟账户</button></div>}
  {error&&<div role="alert" className="paper-error ticket-warning">{error}</div>}

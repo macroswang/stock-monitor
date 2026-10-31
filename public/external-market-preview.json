@@ -1,0 +1,51 @@
+{
+  "snapshot": {
+    "source": "腾讯行情",
+    "source_url": "https://gu.qq.com/",
+    "collected_at": "2026-10-31T17:17:07.628532+08:00",
+    "quotes": [
+      {
+        "code": "hkHSI",
+        "name": "恒生指数",
+        "price": 23294.42,
+        "percent": 1.46,
+        "source_time": "2026/10/30 18:31:07",
+        "time_basis": "来源时间，时区及延迟未核实"
+      },
+      {
+        "code": "us.IXIC",
+        "name": "纳斯达克",
+        "price": 25437.0,
+        "percent": -2.86,
+        "source_time": "2026-10-30 17:15:59",
+        "time_basis": "来源时间，时区及延迟未核实"
+      },
+      {
+        "code": "us.INX",
+        "name": "标普500",
+        "price": 7580.07,
+        "percent": -1.82,
+        "source_time": "2026-10-30 16:47:43",
+        "time_basis": "来源时间，时区及延迟未核实"
+      },
+      {
+        "code": "hf_GC",
+        "name": "纽约黄金",
+        "price": 3884.28,
+        "percent": -3.65,
+        "source_time": "2026-10-31 04:59:59",
+        "time_basis": "来源时间，时区及延迟未核实"
+      },
+      {
+        "code": "hf_CL",
+        "name": "纽约原油",
+        "price": 102.91,
+        "percent": 0.89,
+        "source_time": "2026-10-31 04:59:59",
+        "time_basis": "来源时间，时区及延迟未核实"
+      }
+    ]
+  },
+  "running": false,
+  "error": ""
+}

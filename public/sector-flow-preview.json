@@ -1,0 +1,94 @@
+{
+  "snapshot": {
+    "date": "2026-10-30",
+    "source": "新浪行业资金流",
+    "source_url": "https://finance.sina.com.cn/temp/guest4377.shtml",
+    "quote_time": null,
+    "anchor_time": "2026-10-30T16:14:58+08:00",
+    "collected_at": "2026-10-31T14:02:25.294289+08:00",
+    "total": 48,
+    "measure": "买卖方向净额",
+    "date_inferred": true,
+    "anchor_details": [
+      {
+        "code": "sz000995",
+        "sector_price": "14.1800",
+        "reference_price": "14.18",
+        "reference_time": "2026-10-30T16:14:48+08:00"
+      },
+      {
+        "code": "sh600285",
+        "sector_price": "22.0000",
+        "reference_price": "22.00",
+        "reference_time": "2026-10-30T16:14:58+08:00"
+      },
+      {
+        "code": "sh601919",
+        "sector_price": "17.8400",
+        "reference_price": "17.84",
+        "reference_time": "2026-10-30T16:14:57+08:00"
+      },
+      {
+        "code": "sz002510",
+        "sector_price": "5.9800",
+        "reference_price": "5.98",
+        "reference_time": "2026-10-30T16:14:39+08:00"
+      },
+      {
+        "code": "sz000719",
+        "sector_price": "13.2000",
+        "reference_price": "13.20",
+        "reference_time": "2026-10-30T16:14:27+08:00"
+      },
+      {
+        "code": "sh600289",
+        "sector_price": "5.2700",
+        "reference_price": "5.27",
+        "reference_time": "2026-10-30T16:14:53+08:00"
+      }
+    ],
+    "inflow": [
+      {
+        "code": "new_ljhy",
+        "name": "酿酒行业",
+        "net_yuan": 5137657900.24,
+        "change_percent": 3.4891
+      },
+      {
+        "code": "new_swzz",
+        "name": "生物制药",
+        "net_yuan": 3009386100.55,
+        "change_percent": 0.192647
+      },
+      {
+        "code": "new_jtys",
+        "name": "交通运输",
+        "net_yuan": 1594501012.8,
+        "change_percent": 2.20578
+      }
+    ],
+    "outflow": [
+      {
+        "code": "new_dzxx",
+        "name": "电子信息",
+        "net_yuan": -7132703780.97,
+        "change_percent": -4.62202
+      },
+      {
+        "code": "new_cmyl",
+        "name": "传媒娱乐",
+        "net_yuan": -1721887899.26,
+        "change_percent": -5.29333
+      },
+      {
+        "code": "new_qczz",
+        "name": "汽车制造",
+        "net_yuan": -1471364654.92,
+        "change_percent": -2.24561
+      }
+    ]
+  },
+  "running": false,
+  "error": "",
+  "source_url": "https://finance.sina.com.cn/temp/guest4377.shtml"
+}

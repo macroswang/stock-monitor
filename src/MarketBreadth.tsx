@@ -1,3 +1,4 @@
+import MarketPanorama from './MarketPanorama';
 import React,{useEffect,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 import OptionPCRPanel from './OptionPCRPanel';
@@ -63,7 +64,7 @@ export const sessionWindow=(days:BreadthDay[],count:number)=>{
  return {rows:days.filter(d=>d.date>=start!&&d.date<=end),start,known:true};
 };
 
-export default function MarketBreadth({request,market,preview=false,mode,setMode}:{request:Request;market:MarketData;preview?:boolean;mode:'volume'|'amount';setMode:(mode:'volume'|'amount')=>void}){
+export default function MarketBreadth({request,market,preview=false,mode,setMode,watch=[],onOpenStock}:{request:Request;market:MarketData;preview?:boolean;mode:'volume'|'amount';setMode:(mode:'volume'|'amount')=>void;watch?:{code:string;name:string}[];onOpenStock?:(code:string)=>void}){
  const [report,setReport]=useState<Report>({days:[],running:false,error:'',history_note:''});
  const [error,setError]=useState(''),[busy,setBusy]=useState(false),[span,setSpan]=useState(30),[selected,setSelected]=useState('');
  const [stage,setStage]=useState<'unknown'|'early'|'late'>('unknown');
@@ -151,6 +152,7 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
   {day&&stale&&<div className="breadth-preview-notice" role="status">{day.date} 的盘中快照已过期，以下数据仅供回看；请刷新后再判断当前市场。</div>}
   {timingInvalid&&<div className="breadth-preview-notice" role="status">盘中快照时间信息异常，暂不用于市场判断；请刷新数据。</div>}
   {(error||report.error)&&<div className="breadth-error" role="status">{error||report.error}；已保留上次有效统计。</div>}
+  <MarketPanorama request={request} preview={preview} day={report.days.at(-1)} breadthError={error||report.error} watch={watch} onOpenStock={onOpenStock}/>
   <MarketDecision request={request} day={day} previous={previousDay} byAmount={true} market={market} stage={stage} feedError={error||report.error}/>
   <section className="market-trend" id="breadth-structure" aria-label="市场趋势图">
    <div className="market-trend-header"><div><h3>市场宽度与成交趋势</h3><p>{days.length?`${dateWindow.known?`最近${span}个交易日 · `:''}${dateWindow.start||days[0].date} 至 ${days.at(-1)!.date} · ${days.length} 条记录${dateWindow.known?'':span===120?'（按记录数展示）':'（交易日历不足，按记录数展示）'} · `:''}点击查看某日判断；缺失或来源变化时断开</p></div><div className="market-trend-ranges" role="group" aria-label="图表时间范围">{[30,60,90].map(n=><button key={n} type="button" aria-pressed={span===n} onClick={()=>changeSpan(n)}>{n}日</button>)}<button type="button" aria-label="查看最新市场数据" disabled={!selected||day?.date===days.at(-1)?.date} onClick={()=>setSelected('')}>最新</button></div></div>

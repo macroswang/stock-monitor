@@ -2571,3 +2571,65 @@ test('market interface removes author material while retaining indicators',async
  await expect(page.getByText('计算口径与数据明细',{exact:true})).toBeVisible();
  await expect(page.getByRole('img',{name:/上涨股成交额占比柱状图/})).toBeVisible();
 });
+
+test('固定规则回放对照显示收益、回撤及成交次数',async({page})=>{
+ await page.goto('/?sample=csi300');
+ await page.getByRole('button',{name:'查看市场趋势'}).click();
+ await page.getByLabel('市场图表与研究详情').locator(':scope > summary').click();
+ await page.getByRole('region',{name:'市场状态与操作参考'}).locator('.market-summary-details > summary').click();
+ const research=page.getByLabel('仓位动作历史实验');await research.locator(':scope > summary').click();
+ await expect(research).toContainText('均线＋广度＋TRIN');await expect(research).toContainText('-8.30%');
+ await expect(research).toContainText('非独立样本外验证');await expect(research.getByRole('columnheader',{name:'最大回撤'})).toBeVisible();
+});
+
+test('首页趋势对齐三项指标并支持从下方图表选择日期',async({page})=>{
+ await page.clock.install({time:new Date('2026-10-30T20:00:00Z')});
+ await page.goto('/?sample=csi300');
+ const region=page.getByRole('region',{name:'首页市场趋势'}),metrics=region.getByLabel('同日市场指标');
+ const chart=region.getByRole('img',{name:'首页上涨家数、成交占比与TRIN趋势'});
+ const option=()=>chart.evaluate(async el=>{
+  const source=await fetch('/src/HomeMarketTrend.tsx').then(r=>r.text());
+  const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);
+  const o=e.getInstanceByDom(el).getOption();return {grids:o.grid.length,aligned:JSON.stringify(o.xAxis[0].data)===JSON.stringify(o.xAxis[1].data),series:o.series.length,lowerAxis:o.series[2].xAxisIndex};
+ });
+ await expect(metrics).toContainText('上涨股票 16.4%');await expect(metrics).toContainText('TRIN 0.674');
+ await expect(region.locator('.home-trend-explanation')).toContainText('同一日期对齐');
+ await expect.poll(option).toEqual({grids:2,aligned:true,series:3,lowerAxis:1});
+ await expect(region.getByLabel('首页趋势解读')).toContainText('2026-10-30 · 收盘');
+ const point=await chart.evaluate(async el=>{
+  const source=await fetch('/src/HomeMarketTrend.tsx').then(r=>r.text());
+  const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);
+  return e.getInstanceByDom(el).convertToPixel({xAxisIndex:1,yAxisIndex:1},['2026-10-23',1.066]);
+ });
+ const chartBox=await chart.boundingBox();expect(chartBox).not.toBeNull();await page.mouse.click(chartBox!.x+point[0],chartBox!.y+point[1]);
+ await expect(region.getByLabel('首页趋势解读')).toContainText('2026-10-23 · 收盘');
+ await expect(metrics).toContainText('TRIN 1.066');
+ await page.mouse.move(chartBox!.x+point[0],chartBox!.y+point[1]);
+ await expect(chart).toContainText('上涨股票：80.4%');await expect(chart).toContainText('TRIN：1.066');
+ await page.setViewportSize({width:1000,height:680});
+ await expect(async()=>{
+  const bounds=await region.boundingBox();expect(bounds).not.toBeNull();
+  for(const item of await metrics.locator(':scope > span').all()){
+   const box=await item.boundingBox();expect(box).not.toBeNull();
+   expect(box!.x).toBeGreaterThanOrEqual(bounds!.x-1);expect(box!.x+box!.width).toBeLessThanOrEqual(bounds!.x+bounds!.width+1);
+  }
+ }).toPass();
+});
+
+test('首页行业资金展示来源时间和正负方向，缺数据时不编造排行',async({page})=>{
+ await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:{running:false,error:'',source_url:'https://data.eastmoney.com/bkzj/hy.html',snapshot:{date:'2026-10-30',quote_time:'2026-10-30T15:39:30+08:00',collected_at:'2026-10-31T01:00:00+08:00',source:'东方财富行业板块资金流',inflow:[{code:'BK0001',name:'示例甲',net_yuan:230000000,change_percent:1.5}],outflow:[{code:'BK0002',name:'示例乙',net_yuan:-80000000,change_percent:-0.5}]}}}));
+ await page.goto('/?sample=csi300');const panel=page.getByLabel('行业资金观察');
+ await expect(panel).toContainText('2026-10-30 · 15:39:30');await expect(panel).toContainText('示例甲');await expect(panel).toContainText('+2.30亿');
+ await expect(panel).toContainText('示例乙');await expect(panel).toContainText('−8000万');await expect(panel).toContainText('板块可能重叠');
+ await page.unroute('**/sector-flow-preview.json');await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:{snapshot:null,running:false,error:'不可用'}}));await page.reload();
+ await expect(panel).toContainText('板块资金暂不可用');await expect(panel).not.toContainText('示例甲');
+});
+
+test('新浪备源明确标注推定日期和统计口径',async({page})=>{
+ await page.clock.install({time:new Date('2026-10-31T08:00:00Z')});
+ await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:{running:false,error:'',snapshot:{date:'2026-10-30',date_inferred:true,quote_time:null,collected_at:'2026-10-31T13:00:00+08:00',source:'新浪行业资金流',inflow:[{code:'new_a',name:'行业甲',net_yuan:100000000,change_percent:1}],outflow:[{code:'new_b',name:'行业乙',net_yuan:-200000000,change_percent:-2}]}}}));
+ await page.goto('/?sample=csi300');const panel=page.getByLabel('行业资金观察');
+ await expect(panel).toContainText('2026-10-30 · 日期推定 · 新浪行业资金流');await expect(panel).toContainText('方向净流入较多');
+ await expect(panel).toContainText('行业统计时间未提供');await expect(panel).not.toContainText('大单净流入');
+ await expect(panel).toContainText('可先观察行业甲');await expect(panel).toContainText('持有行业乙');
+});

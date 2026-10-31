@@ -4,10 +4,15 @@ import entry from '../fixtures/low-trin-entry-experiment.json';
 import comparison from '../fixtures/low-trin-baseline-comparison.json';
 import broadWeak from '../fixtures/broad-weak-position-experiment.json';
 import trendCash from '../fixtures/trend-etf-cash-experiment.json';
+import validation from '../fixtures/market-validation-results.json';
 
 export default function PositionExperiment(){
  return <details className="breadth-method" aria-label="仓位动作历史实验">
   <summary>仓位动作历史实验 · 固定案例</summary>
+  <h4>规则对照：{validation.windows[0].start} 至 {validation.windows[0].end}</h4>
+  <p>上证及全市场收盘数据形成条件，次日按假设开盘价交易沪深300 ETF。初始10万元，计入佣金和假设滑点；每段从相同资金重新开始。</p>
+  <div className="table-scroll"><table><thead><tr><th>时间段</th><th>规则</th><th>净收益</th><th>最大回撤</th><th>完成交易</th><th>胜率</th><th>盈亏比</th></tr></thead><tbody>{validation.windows.flatMap(period=>period.strategies.map(strategy=><tr key={period.name+strategy.mode}><td>{period.name}<small className="table-code">{period.start} 至 {period.end}</small></td><td>{strategy.name}</td><td>{strategy.net_return_percent.toFixed(2)}%</td><td>{strategy.max_drawdown_percent.toFixed(2)}%</td><td>{strategy.closed_trades}</td><td>{strategy.win_rate_percent==null?'—':strategy.win_rate_percent.toFixed(2)+'%'}</td><td>{strategy.profit_loss_ratio==null?'—':strategy.profit_loss_ratio.toFixed(2)}</td></tr>))}</tbody></table></div>
+  <p>胜率与盈亏比仅统计已完成的买卖；期末持仓未计入这两项。{validation.limitations}</p>
   <p>独立研究条件：收盘时上涨家数占比低于 20%，且上证收盘低于 20 日均线。假设原有 10,000 份 510300，下一交易日开盘卖出 5,000 份，第 6 个交易日开盘买回同等份额，与一直持有比较。</p>
   <p>{sample.start} 至 {sample.end} 的 {sample.n} 个单次对照案例中，卖出再买回优于一直持有 {sample.better} 次、低于一直持有 {sample.worse} 次；每个案例平均差额 {Number(sample.average_difference_yuan).toFixed(2)} 元。差额是相对于一直持有，非账户实际盈亏；案例可能重叠，不能相加。</p>
   <p>按时间先后排除持有期重叠后，剩余 {sample.non_overlapping.n} 个案例：较好 {sample.non_overlapping.better} 次、较差 {sample.non_overlapping.worse} 次，平均差额 {Number(sample.non_overlapping.average_difference_yuan).toFixed(2)} 元。排除重叠不代表样本在统计上独立。</p>
