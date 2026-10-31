@@ -1,0 +1,6349 @@
+[
+  {
+    "date": "2026-03-23",
+    "trin": 0.299941999622362,
+    "advance": 290,
+    "decline": 4886,
+    "flat": 6,
+    "advance_volume": 27034359930,
+    "decline_volume": 136618288008,
+    "flat_volume": 1944548192,
+    "trin_amount": 0.31720385730179546,
+    "advance_amount": 382008389982.65,
+    "decline_amount": 2041581990175.08,
+    "advancing_amount_percent": 15.762085586335282,
+    "advancing_percent": 5.596294866846777,
+    "advancing_volume_percent": 16.51935380858732,
+    "expected": 5190,
+    "covered": 5190,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T09:42:46.809443+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-24",
+    "trin": 1.756344137003126,
+    "advance": 4866,
+    "decline": 298,
+    "flat": 16,
+    "advance_volume": 126812997594,
+    "decline_volume": 13640099654,
+    "flat_volume": 692827207,
+    "trin_amount": 3.1963001378190183,
+    "advance_amount": 1735320467293.52,
+    "decline_amount": 339681114782.9,
+    "advancing_amount_percent": 83.62983827496716,
+    "advancing_percent": 93.93822393822394,
+    "advancing_volume_percent": 90.28850205423701,
+    "expected": 5190,
+    "covered": 5190,
+    "suspended": 10,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T10:04:14.966481+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-25",
+    "trin": 1.4504815980203614,
+    "advance": 4615,
+    "decline": 520,
+    "flat": 46,
+    "advance_volume": 120275446173,
+    "decline_volume": 19657162971,
+    "flat_volume": 1173137234,
+    "trin_amount": 1.508889795826544,
+    "advance_amount": 1851495476446.17,
+    "decline_amount": 314783395090.55,
+    "advancing_amount_percent": 85.46893480675236,
+    "advancing_percent": 89.07546805635978,
+    "advancing_volume_percent": 85.952407311457,
+    "expected": 5192,
+    "covered": 5192,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T10:02:20.189628+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-26",
+    "trin": 0.5482839578144834,
+    "trin_amount": 0.5239427962148328,
+    "advance": 877,
+    "decline": 4234,
+    "flat": 69,
+    "advance_volume": 34519390404,
+    "decline_volume": 91373427729,
+    "flat_volume": 2345717857,
+    "advance_amount": 546484518236.19,
+    "decline_amount": 1382334021561.2,
+    "advancing_percent": 16.93050193050193,
+    "advancing_volume_percent": 27.419666122281768,
+    "advancing_amount_percent": 28.332603972875265,
+    "expected": 5192,
+    "covered": 5192,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T10:02:17.078252+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-27",
+    "trin": 1.9848176283519439,
+    "trin_amount": 1.9762425889639166,
+    "advance": 4155,
+    "decline": 958,
+    "flat": 63,
+    "advance_volume": 80178223241,
+    "decline_volume": 36692011206,
+    "flat_volume": 2261597799,
+    "advance_amount": 1263163076550.15,
+    "decline_amount": 575564709651.1,
+    "advancing_percent": 80.27434312210201,
+    "advancing_volume_percent": 68.60448566770043,
+    "advancing_amount_percent": 68.6976661814527,
+    "expected": 5191,
+    "covered": 5191,
+    "suspended": 15,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T10:02:43.774319+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-30",
+    "trin": 1.209419796586691,
+    "trin_amount": 1.1234305329826921,
+    "advance": 2806,
+    "decline": 2229,
+    "flat": 138,
+    "advance_volume": 61886033876,
+    "decline_volume": 59455512311,
+    "flat_volume": 3481450869,
+    "advance_amount": 1001678025272.23,
+    "decline_amount": 893916124674.07,
+    "advancing_percent": 54.24318577227914,
+    "advancing_volume_percent": 51.00152076571297,
+    "advancing_amount_percent": 52.842430712323434,
+    "expected": 5191,
+    "covered": 5191,
+    "suspended": 18,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T10:02:56.800208+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-03-31",
+    "trin": 0.5644982347585753,
+    "trin_amount": 0.5791419838901424,
+    "advance": 903,
+    "decline": 4191,
+    "flat": 84,
+    "advance_volume": 34630833827,
+    "decline_volume": 90730947692,
+    "flat_volume": 1690491197,
+    "advance_amount": 536693868069.71,
+    "decline_amount": 1442585602123.94,
+    "advancing_percent": 17.439165701042874,
+    "advancing_volume_percent": 27.624714173155958,
+    "advancing_amount_percent": 27.115618393050912,
+    "expected": 5192,
+    "covered": 5192,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:11:35.819054+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-01",
+    "trin": 2.384072814058315,
+    "trin_amount": 1.6692363207702527,
+    "advance": 4227,
+    "decline": 853,
+    "flat": 101,
+    "advance_volume": 79965469859,
+    "decline_volume": 38471470984,
+    "flat_volume": 3512675228,
+    "advance_amount": 1490907230270.96,
+    "decline_amount": 502209854321.31,
+    "advancing_percent": 81.58656629994209,
+    "advancing_volume_percent": 67.51733816310083,
+    "advancing_amount_percent": 74.80279215889384,
+    "expected": 5193,
+    "covered": 5193,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:11:50.868369+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-02",
+    "trin": 0.4542616115829391,
+    "trin_amount": 0.48675710372803993,
+    "advance": 894,
+    "decline": 4236,
+    "flat": 51,
+    "advance_volume": 36843279076,
+    "decline_volume": 79301745331,
+    "flat_volume": 1819917870,
+    "advance_amount": 553912799405.87,
+    "decline_amount": 1277533012814.93,
+    "advancing_percent": 17.255356108859292,
+    "advancing_volume_percent": 31.72178856917049,
+    "advancing_amount_percent": 30.244563923744963,
+    "expected": 5193,
+    "covered": 5193,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:12:03.464897+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-03",
+    "trin": 0.5820312052488859,
+    "trin_amount": 0.279885924878245,
+    "advance": 697,
+    "decline": 4461,
+    "flat": 24,
+    "advance_volume": 22687541470,
+    "decline_volume": 84514874533,
+    "flat_volume": 668487474,
+    "advance_amount": 590577101668.44,
+    "decline_amount": 1057930427391.03,
+    "advancing_percent": 13.450405248938633,
+    "advancing_volume_percent": 21.16327440732782,
+    "advancing_amount_percent": 35.824956286695546,
+    "expected": 5193,
+    "covered": 5193,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:12:16.737290+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-07",
+    "trin": 1.0199648832288446,
+    "trin_amount": 1.462372280073416,
+    "advance": 3803,
+    "decline": 1302,
+    "flat": 75,
+    "advance_volume": 73654521003,
+    "decline_volume": 25719900720,
+    "flat_volume": 1990982389,
+    "advance_amount": 1066412041294.73,
+    "decline_amount": 533909496092.65,
+    "advancing_percent": 73.41698841698842,
+    "advancing_volume_percent": 74.11818828823716,
+    "advancing_amount_percent": 66.63736107905609,
+    "expected": 5193,
+    "covered": 5193,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:12:31.593973+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-08",
+    "trin": 2.7427570478724994,
+    "trin_amount": 1.6939151181550494,
+    "advance": 4877,
+    "decline": 293,
+    "flat": 15,
+    "advance_volume": 118918451459,
+    "decline_volume": 19595278924,
+    "flat_volume": 647834549,
+    "advance_amount": 2204380849080.89,
+    "decline_amount": 224332986590.91,
+    "advancing_percent": 94.05978784956605,
+    "advancing_volume_percent": 85.85318663368771,
+    "advancing_amount_percent": 90.76330099923617,
+    "expected": 5194,
+    "covered": 5194,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:12:42.519216+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-09",
+    "trin": 0.5383842052874888,
+    "trin_amount": 0.31805296411776945,
+    "advance": 1115,
+    "decline": 4019,
+    "flat": 52,
+    "advance_volume": 39687995335,
+    "decline_volume": 77018421272,
+    "flat_volume": 2706487697,
+    "advance_amount": 980968434776.03,
+    "decline_amount": 1124598808964.38,
+    "advancing_percent": 21.500192826841495,
+    "advancing_volume_percent": 34.00669516625321,
+    "advancing_amount_percent": 46.589271261334794,
+    "expected": 5194,
+    "covered": 5194,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:12:57.744648+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-10",
+    "trin": 1.92214035485984,
+    "trin_amount": 1.4108907665857562,
+    "advance": 3709,
+    "decline": 1361,
+    "flat": 119,
+    "advance_volume": 68897061824,
+    "decline_volume": 48594496877,
+    "flat_volume": 3972262205,
+    "advance_amount": 1516898818179.63,
+    "decline_amount": 785328387182.56,
+    "advancing_percent": 71.4781268067065,
+    "advancing_volume_percent": 58.64001004475022,
+    "advancing_amount_percent": 65.88831956492274,
+    "expected": 5196,
+    "covered": 5196,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:13:11.850273+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-13",
+    "trin": 0.5256453737026084,
+    "trin_amount": 0.5422858253357086,
+    "advance": 2317,
+    "decline": 2719,
+    "flat": 151,
+    "advance_volume": 69711591953,
+    "decline_volume": 43001244113,
+    "flat_volume": 4174218616,
+    "advance_amount": 1298737276603.2,
+    "decline_amount": 826480730484.57,
+    "advancing_percent": 44.6693657219973,
+    "advancing_volume_percent": 61.84884915164388,
+    "advancing_amount_percent": 61.11077885994795,
+    "expected": 5195,
+    "covered": 5195,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:13:22.021472+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-14",
+    "trin": 1.1392606332182222,
+    "trin_amount": 0.7934351707455886,
+    "advance": 3515,
+    "decline": 1505,
+    "flat": 169,
+    "advance_volume": 81876688508,
+    "decline_volume": 39938755742,
+    "flat_volume": 3495079228,
+    "advance_amount": 1763625373785.74,
+    "decline_amount": 599140885169.08,
+    "advancing_percent": 67.73944883407208,
+    "advancing_volume_percent": 67.21371744946043,
+    "advancing_amount_percent": 74.64239710981346,
+    "expected": 5195,
+    "covered": 5195,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:13:36.815085+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-15",
+    "trin": 0.7868193283650131,
+    "trin_amount": 0.7200884664226304,
+    "advance": 1701,
+    "decline": 3387,
+    "flat": 99,
+    "advance_volume": 48352599537,
+    "decline_volume": 75754028075,
+    "flat_volume": 2516244773,
+    "advance_amount": 985315111721.29,
+    "decline_amount": 1412771357850.44,
+    "advancing_percent": 32.79352226720648,
+    "advancing_volume_percent": 38.96052972139962,
+    "advancing_amount_percent": 41.087555608337,
+    "expected": 5195,
+    "covered": 5195,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:13:52.917276+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-16",
+    "trin": 1.411235070378165,
+    "trin_amount": 1.064536991632823,
+    "advance": 4064,
+    "decline": 1004,
+    "flat": 122,
+    "advance_volume": 88196437180,
+    "decline_volume": 30748958871,
+    "flat_volume": 4226205069,
+    "advance_amount": 1833359486553.82,
+    "decline_amount": 482156916428.91,
+    "advancing_percent": 78.30443159922929,
+    "advancing_volume_percent": 74.14867671060104,
+    "advancing_amount_percent": 79.17713233178482,
+    "expected": 5197,
+    "covered": 5197,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:14:05.713045+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-17",
+    "trin": 0.7746726119692482,
+    "trin_amount": 0.5219328104999885,
+    "advance": 2091,
+    "decline": 2983,
+    "flat": 115,
+    "advance_volume": 57416721531,
+    "decline_volume": 63453533797,
+    "flat_volume": 3536840726,
+    "advance_amount": 1378776380235.07,
+    "decline_amount": 1026615115653.32,
+    "advancing_percent": 40.29678165349778,
+    "advancing_volume_percent": 47.502771773908236,
+    "advancing_amount_percent": 57.32024839165911,
+    "expected": 5198,
+    "covered": 5198,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:14:21.272358+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-20",
+    "trin": 0.7766378432452917,
+    "trin_amount": 0.9036049287981364,
+    "advance": 3196,
+    "decline": 1822,
+    "flat": 166,
+    "advance_volume": 88512039611,
+    "decline_volume": 39188848176,
+    "flat_volume": 3566611560,
+    "advance_amount": 1688059684456.47,
+    "decline_amount": 869576893268.49,
+    "advancing_percent": 61.651234567901234,
+    "advancing_volume_percent": 69.31200020992381,
+    "advancing_amount_percent": 66.00076411004467,
+    "expected": 5198,
+    "covered": 5198,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:14:34.062906+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-21",
+    "trin": 0.7311026117866726,
+    "trin_amount": 0.6324411545128296,
+    "advance": 1916,
+    "decline": 3156,
+    "flat": 117,
+    "advance_volume": 56866572761,
+    "decline_volume": 68482070139,
+    "flat_volume": 2379288511,
+    "advance_amount": 1168878552128.0,
+    "decline_amount": 1217673914161.94,
+    "advancing_percent": 36.92426286375024,
+    "advancing_volume_percent": 45.36672391927428,
+    "advancing_amount_percent": 48.97770187910857,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:14:51.768474+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-22",
+    "trin": 0.8031061406651194,
+    "trin_amount": 0.47526977864141523,
+    "advance": 2657,
+    "decline": 2390,
+    "flat": 141,
+    "advance_volume": 72535560791,
+    "decline_volume": 52399876834,
+    "flat_volume": 3143550331,
+    "advance_amount": 1776938757253.15,
+    "decline_amount": 759659556894.07,
+    "advancing_percent": 51.21434078643022,
+    "advancing_volume_percent": 58.058435756809956,
+    "advancing_amount_percent": 70.05203572606409,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:15:04.314950+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-23",
+    "trin": 0.5264440453853326,
+    "trin_amount": 0.6020035263174742,
+    "advance": 1304,
+    "decline": 3796,
+    "flat": 86,
+    "advance_volume": 55682180755,
+    "decline_volume": 85333010170,
+    "flat_volume": 2130926404,
+    "advance_amount": 1012466816228.21,
+    "decline_amount": 1774305691327.36,
+    "advancing_percent": 25.144620131122252,
+    "advancing_volume_percent": 39.48665416097971,
+    "advancing_amount_percent": 36.33116135182128,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:15:19.611946+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-24",
+    "trin": 1.1635640293524687,
+    "trin_amount": 0.848120974639588,
+    "advance": 1995,
+    "decline": 3084,
+    "flat": 107,
+    "advance_volume": 45665874440,
+    "decline_volume": 82139779843,
+    "flat_volume": 3588014415,
+    "advance_amount": 1133359649023.09,
+    "decline_amount": 1485925444617.67,
+    "advancing_percent": 38.46895487851909,
+    "advancing_volume_percent": 35.730715277183336,
+    "advancing_amount_percent": 43.269808688436434,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:15:40.640019+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-27",
+    "trin": 1.2982146264117207,
+    "trin_amount": 1.0781158443903176,
+    "advance": 3181,
+    "decline": 1900,
+    "flat": 103,
+    "advance_volume": 71808262511,
+    "decline_volume": 55681490006,
+    "flat_volume": 2424342278,
+    "advance_amount": 1561153822322.96,
+    "decline_amount": 1005312441249.95,
+    "advancing_percent": 61.36188271604938,
+    "advancing_volume_percent": 56.3247328458221,
+    "advancing_amount_percent": 60.82892436503713,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 15,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:15:54.213671+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-28",
+    "trin": 0.5914749165057716,
+    "trin_amount": 0.7599936918092668,
+    "advance": 1661,
+    "decline": 3408,
+    "flat": 108,
+    "advance_volume": 58540254401,
+    "decline_volume": 71042934270,
+    "flat_volume": 2744626460,
+    "advance_amount": 983361055385.5,
+    "decline_amount": 1533391126868.22,
+    "advancing_percent": 32.08421865945528,
+    "advancing_volume_percent": 45.17580945598461,
+    "advancing_amount_percent": 39.072621544522214,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 22,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:16:13.121017+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-29",
+    "trin": 0.9525658249853146,
+    "trin_amount": 1.1853474017069612,
+    "advance": 3730,
+    "decline": 1338,
+    "flat": 83,
+    "advance_volume": 98893129335,
+    "decline_volume": 33791572148,
+    "flat_volume": 2317334866,
+    "advance_amount": 1801739206426.04,
+    "decline_amount": 766098942268.02,
+    "advancing_percent": 72.41312366530771,
+    "advancing_volume_percent": 74.53242780040509,
+    "advancing_amount_percent": 70.16560632306054,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 48,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:16:28.855131+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-04-30",
+    "trin": 1.3235368003667023,
+    "trin_amount": 0.9448941818959855,
+    "advance": 2671,
+    "decline": 2361,
+    "flat": 118,
+    "advance_volume": 63039578280,
+    "decline_volume": 73751595392,
+    "flat_volume": 2569215362,
+    "advance_amount": 1475833824767.16,
+    "decline_amount": 1232658383279.09,
+    "advancing_percent": 51.86407766990291,
+    "advancing_volume_percent": 46.08453644177166,
+    "advancing_amount_percent": 54.489129427170894,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 50,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:16:44.005742+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-06",
+    "trin": 0.693254253988769,
+    "trin_amount": 0.6265895978121185,
+    "advance": 3647,
+    "decline": 1423,
+    "flat": 109,
+    "advance_volume": 117684227715,
+    "decline_volume": 31833173894,
+    "flat_volume": 3126813858,
+    "advance_amount": 2572394878197.42,
+    "decline_amount": 628912104760.2,
+    "advancing_percent": 70.41899980691254,
+    "advancing_volume_percent": 78.70938529466537,
+    "advancing_amount_percent": 80.35452057212079,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 21,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:16:58.952355+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-07",
+    "trin": 0.8651961754330605,
+    "trin_amount": 0.6442645647536418,
+    "advance": 3246,
+    "decline": 1800,
+    "flat": 135,
+    "advance_volume": 100868476171,
+    "decline_volume": 48394280853,
+    "flat_volume": 3654966301,
+    "advance_amount": 2293538541557.61,
+    "decline_amount": 819396826370.97,
+    "advancing_percent": 62.65199768384482,
+    "advancing_volume_percent": 67.57779246619525,
+    "advancing_amount_percent": 73.6776794400259,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 19,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:17:15.497235+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-08",
+    "trin": 1.311301766500132,
+    "trin_amount": 1.6795892132930796,
+    "advance": 3374,
+    "decline": 1682,
+    "flat": 123,
+    "advance_volume": 89624874871,
+    "decline_volume": 58588465275,
+    "flat_volume": 4036230765,
+    "advance_amount": 1642795026369.13,
+    "decline_amount": 1375521456903.66,
+    "advancing_percent": 65.14771191349682,
+    "advancing_volume_percent": 60.47018087758736,
+    "advancing_amount_percent": 54.427527248164225,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 21,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:17:45.602366+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-11",
+    "trin": 0.811430351502825,
+    "trin_amount": 0.5741780338111417,
+    "advance": 3030,
+    "decline": 2023,
+    "flat": 126,
+    "advance_volume": 105497483667,
+    "decline_volume": 57153996467,
+    "flat_volume": 4709069204,
+    "advance_amount": 2533588585822.5,
+    "decline_amount": 971260936098.94,
+    "advancing_percent": 58.50550299285576,
+    "advancing_volume_percent": 64.86106586923536,
+    "advancing_amount_percent": 72.28808455187337,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 23,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:18:03.582307+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-12",
+    "trin": 0.5196458952591789,
+    "trin_amount": 0.4367851335957416,
+    "advance": 1276,
+    "decline": 3845,
+    "flat": 57,
+    "advance_volume": 59653560493,
+    "decline_volume": 93409175999,
+    "flat_volume": 3537887322,
+    "advance_amount": 1386991096498.89,
+    "decline_amount": 1825522504982.39,
+    "advancing_percent": 24.642719196601004,
+    "advancing_volume_percent": 38.97327452793702,
+    "advancing_amount_percent": 43.17463732634012,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 24,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:18:15.481443+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-13",
+    "trin": 0.6555042157410995,
+    "trin_amount": 0.5808055052265327,
+    "advance": 3036,
+    "decline": 2007,
+    "flat": 139,
+    "advance_volume": 104070469259,
+    "decline_volume": 45097099172,
+    "flat_volume": 3970002721,
+    "advance_amount": 2321878831229.46,
+    "decline_amount": 891488779758.75,
+    "advancing_percent": 58.58741798533385,
+    "advancing_volume_percent": 69.76749058367842,
+    "advancing_amount_percent": 72.25686918887598,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 20,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:18:30.740509+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-14",
+    "trin": 0.7813794628747271,
+    "trin_amount": 0.701993934200512,
+    "advance": 1009,
+    "decline": 4115,
+    "flat": 58,
+    "advance_volume": 38557719737,
+    "decline_volume": 122871739881,
+    "flat_volume": 2241522104,
+    "advance_amount": 863314486077.8,
+    "decline_amount": 2471616359145.3,
+    "advancing_percent": 19.471246622925513,
+    "advancing_volume_percent": 23.885181693751186,
+    "advancing_amount_percent": 25.887028131764634,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 20,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:18:52.017432+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-15",
+    "trin": 1.0356815917779814,
+    "trin_amount": 0.8415987966542663,
+    "advance": 1692,
+    "decline": 3404,
+    "flat": 87,
+    "advance_volume": 50486265451,
+    "decline_volume": 105193449400,
+    "flat_volume": 2532443395,
+    "advance_amount": 1232735874454.25,
+    "decline_amount": 2087201284354.11,
+    "advancing_percent": 32.64518618560679,
+    "advancing_volume_percent": 32.42957215030877,
+    "advancing_amount_percent": 37.131301452004635,
+    "expected": 5203,
+    "covered": 5203,
+    "suspended": 20,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:19:04.662662+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-18",
+    "trin": 0.9169616882967615,
+    "trin_amount": 0.6365526959665225,
+    "advance": 2311,
+    "decline": 2758,
+    "flat": 117,
+    "advance_volume": 63494668837,
+    "decline_volume": 69483673280,
+    "flat_volume": 3483631619,
+    "advance_amount": 1632954266895.07,
+    "decline_amount": 1240516942548.08,
+    "advancing_percent": 44.562283069803314,
+    "advancing_volume_percent": 47.748127872683725,
+    "advancing_amount_percent": 56.82862809025743,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 18,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:22:00.696043+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-19",
+    "trin": 0.9082197380211968,
+    "trin_amount": 1.192973006214297,
+    "advance": 3356,
+    "decline": 1713,
+    "flat": 112,
+    "advance_volume": 90018833440,
+    "decline_volume": 41731089901,
+    "flat_volume": 3063191377,
+    "advance_amount": 1776584486870.99,
+    "decline_amount": 1081812245748.73,
+    "advancing_percent": 64.7751399343756,
+    "advancing_volume_percent": 68.32553003238563,
+    "advancing_amount_percent": 62.15318071829556,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 23,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:22:03.821272+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-20",
+    "trin": 0.8481696681860785,
+    "trin_amount": 0.36355116130881354,
+    "advance": 1599,
+    "decline": 3531,
+    "flat": 55,
+    "advance_volume": 46614161478,
+    "decline_volume": 87307161233,
+    "flat_volume": 1016475780,
+    "advance_amount": 1632288033099.22,
+    "decline_amount": 1310423240521.38,
+    "advancing_percent": 30.838958534233367,
+    "advancing_volume_percent": 34.80712446261645,
+    "advancing_amount_percent": 55.46884764847878,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 19,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:19:18.838901+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-21",
+    "trin": 0.5183316573623171,
+    "trin_amount": 0.516271253827183,
+    "advance": 667,
+    "decline": 4489,
+    "flat": 32,
+    "advance_volume": 35436037476,
+    "decline_volume": 123616561227,
+    "flat_volume": 1450073543,
+    "advance_amount": 775849040462.13,
+    "decline_amount": 2695745834968.67,
+    "advancing_percent": 12.856592135697763,
+    "advancing_volume_percent": 22.27944577137652,
+    "advancing_amount_percent": 22.348490198351634,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:19:30.919309+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-22",
+    "trin": 0.9920866477749806,
+    "trin_amount": 0.7390150113979541,
+    "advance": 3736,
+    "decline": 1340,
+    "flat": 114,
+    "advance_volume": 96962503824,
+    "decline_volume": 34502562957,
+    "flat_volume": 3700932460,
+    "advance_amount": 2273836322038.93,
+    "decline_amount": 602712766354.72,
+    "advancing_percent": 71.98458574181117,
+    "advancing_volume_percent": 73.75533759513787,
+    "advancing_amount_percent": 79.04736725034327,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:19:40.537490+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-25",
+    "trin": 0.5158015744141546,
+    "trin_amount": 0.37942026794754347,
+    "advance": 2121,
+    "decline": 2975,
+    "flat": 94,
+    "advance_volume": 79068856920,
+    "decline_volume": 57205057349,
+    "flat_volume": 3351949463,
+    "advance_amount": 2079635162628.08,
+    "decline_amount": 1106761338352.9,
+    "advancing_percent": 40.86705202312139,
+    "advancing_volume_percent": 58.02200468383172,
+    "advancing_amount_percent": 65.26605091324426,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:19:51.896989+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-26",
+    "trin": 0.45615188738749435,
+    "trin_amount": 0.43649826803379116,
+    "advance": 1313,
+    "decline": 3811,
+    "flat": 66,
+    "advance_volume": 62747051102,
+    "decline_volume": 83076275734,
+    "flat_volume": 1894987795,
+    "advance_amount": 1425580686157.62,
+    "decline_amount": 1806128103743.95,
+    "advancing_percent": 25.29865125240848,
+    "advancing_volume_percent": 43.02950183859705,
+    "advancing_amount_percent": 44.11228792062789,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:20:07.588763+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-27",
+    "trin": 0.5207225627187876,
+    "trin_amount": 0.3907344274075018,
+    "advance": 935,
+    "decline": 4212,
+    "flat": 43,
+    "advance_volume": 43729169849,
+    "decline_volume": 102578036171,
+    "flat_volume": 1236853748,
+    "advance_amount": 1168042116780.49,
+    "decline_amount": 2055970754547.76,
+    "advancing_percent": 18.015414258188823,
+    "advancing_volume_percent": 29.888596083929237,
+    "advancing_amount_percent": 36.229449552391905,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 17,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:20:24.996674+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-28",
+    "trin": 0.9562094490127379,
+    "trin_amount": 0.7573103643764358,
+    "advance": 2747,
+    "decline": 2321,
+    "flat": 122,
+    "advance_volume": 73456831341,
+    "decline_volume": 59347400711,
+    "flat_volume": 4011684553,
+    "advance_amount": 1795960031122.05,
+    "decline_amount": 1149177326857.86,
+    "advancing_percent": 52.92870905587669,
+    "advancing_volume_percent": 55.31211634297746,
+    "advancing_amount_percent": 60.980518489430025,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 17,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:20:41.317224+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-05-29",
+    "trin": 0.5603568977483357,
+    "trin_amount": 0.8565700183868941,
+    "advance": 1446,
+    "decline": 3671,
+    "flat": 72,
+    "advance_volume": 64103291780,
+    "decline_volume": 91192924913,
+    "flat_volume": 2646731205,
+    "advance_amount": 1040077590760.2,
+    "decline_amount": 2261750526073.63,
+    "advancing_percent": 27.86664097128541,
+    "advancing_volume_percent": 41.27807691975117,
+    "advancing_amount_percent": 31.500052515075957,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 18,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:20:56.223917+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-06-01",
+    "trin": 1.102391612320778,
+    "trin_amount": 3.0522666827150755,
+    "advance": 3512,
+    "decline": 1629,
+    "flat": 50,
+    "advance_volume": 93514345063,
+    "decline_volume": 47816822570,
+    "flat_volume": 2230426520,
+    "advance_amount": 1185634096443.65,
+    "decline_amount": 1678571068567.49,
+    "advancing_percent": 67.65555769601232,
+    "advancing_volume_percent": 66.16682408358236,
+    "advancing_amount_percent": 41.39487320696311,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:05:32.405718+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-01",
+      "active": 5191,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-02",
+    "trin": 0.5035130443023679,
+    "trin_amount": 0.24013188125989726,
+    "advance": 1373,
+    "decline": 3741,
+    "flat": 76,
+    "advance_volume": 56884949160,
+    "decline_volume": 78041439475,
+    "flat_volume": 2932307717,
+    "advance_amount": 1675234074325.55,
+    "decline_amount": 1096080602935.85,
+    "advancing_percent": 26.454720616570327,
+    "advancing_volume_percent": 42.15998792785002,
+    "advancing_amount_percent": 60.44907451581819,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 17,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:07:44.850323+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-02",
+      "active": 5190,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-03",
+    "trin": 0.5099897157380321,
+    "trin_amount": 0.2924859234854773,
+    "advance": 1644,
+    "decline": 3483,
+    "flat": 67,
+    "advance_volume": 69361955376,
+    "decline_volume": 74943575208,
+    "flat_volume": 1725330375,
+    "advance_amount": 1922414451871.31,
+    "decline_amount": 1191252029284.8,
+    "advancing_percent": 31.65190604543704,
+    "advancing_volume_percent": 48.06604091700042,
+    "advancing_amount_percent": 61.74118080744197,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:08:13.592528+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-03",
+      "active": 5194,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-04",
+    "trin": 0.5406410894325968,
+    "trin_amount": 0.31114055305326527,
+    "advance": 1294,
+    "decline": 3854,
+    "flat": 46,
+    "advance_volume": 50863113412,
+    "decline_volume": 81901041412,
+    "flat_volume": 1175224792,
+    "advance_amount": 1426047550370.36,
+    "decline_amount": 1321502716675.88,
+    "advancing_percent": 24.913361571043513,
+    "advancing_volume_percent": 38.31087802233001,
+    "advancing_amount_percent": 51.90250993673122,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:08:33.537203+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-04",
+      "active": 5194,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-05",
+    "trin": 1.3511603865083948,
+    "trin_amount": 2.2225772323140722,
+    "advance": 2981,
+    "decline": 2091,
+    "flat": 124,
+    "advance_volume": 73783237694,
+    "decline_volume": 69928895614,
+    "flat_volume": 4291053098,
+    "advance_amount": 1188753341042.72,
+    "decline_amount": 1853278419102.92,
+    "advancing_percent": 57.37105465742879,
+    "advancing_volume_percent": 51.34099396873452,
+    "advancing_amount_percent": 39.077611109024296,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 10,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:09:00.480956+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-05",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-08",
+    "trin": 0.5231591513773256,
+    "trin_amount": 0.5342235140638191,
+    "advance": 664,
+    "decline": 4513,
+    "flat": 20,
+    "advance_volume": 31650192010,
+    "decline_volume": 112540134498,
+    "flat_volume": 531116596,
+    "advance_amount": 602363419344.26,
+    "decline_amount": 2187151383959.76,
+    "advancing_percent": 12.77660188570329,
+    "advancing_volume_percent": 21.9502880508728,
+    "advancing_amount_percent": 21.593842005455397,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:09:34.959290+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "reconciliation_note": "Money Tree 成交股数按手取整，逐股最大相差50股；MCL家数一致。",
+    "ma_breadth": {
+      "date": "2026-06-08",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-09",
+    "trin": 0.8758837595357075,
+    "trin_amount": 0.4170941002258295,
+    "advance": 3216,
+    "decline": 1841,
+    "flat": 140,
+    "advance_volume": 84130739198,
+    "decline_volume": 42183142204,
+    "flat_volume": 3089225389,
+    "advance_amount": 2112917799906.17,
+    "decline_amount": 504492131523.05,
+    "advancing_percent": 61.88185491629786,
+    "advancing_volume_percent": 66.60450796397419,
+    "advancing_amount_percent": 80.72552084924752,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 10,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:09:55.619601+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-09",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-10",
+    "trin": 0.8421666858090832,
+    "trin_amount": 0.8009893822802627,
+    "advance": 1519,
+    "decline": 3601,
+    "flat": 74,
+    "advance_volume": 42949142251,
+    "decline_volume": 85746795769,
+    "flat_volume": 2153899937,
+    "advance_amount": 899536544338.73,
+    "decline_amount": 1708090661474.15,
+    "advancing_percent": 29.245283018867923,
+    "advancing_volume_percent": 33.372570192794655,
+    "advancing_amount_percent": 34.49636291313029,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:10:17.804315+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-10",
+      "active": 5194,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-11",
+    "trin": 0.6890258125842709,
+    "trin_amount": 0.4172314006196214,
+    "advance": 1348,
+    "decline": 3772,
+    "flat": 72,
+    "advance_volume": 41601533925,
+    "decline_volume": 80209651236,
+    "flat_volume": 1970058196,
+    "advance_amount": 1170902529462.96,
+    "decline_amount": 1367034647247.91,
+    "advancing_percent": 25.96302003081664,
+    "advancing_volume_percent": 34.15247447926438,
+    "advancing_amount_percent": 46.1359934441101,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:10:52.679977+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-11",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-12",
+    "trin": 1.2708559172004883,
+    "trin_amount": 2.1119001168665172,
+    "advance": 3707,
+    "decline": 1413,
+    "flat": 73,
+    "advance_volume": 101857288379,
+    "decline_volume": 49341006176,
+    "flat_volume": 2282700936,
+    "advance_amount": 1771133632843.79,
+    "decline_amount": 1425752954384.97,
+    "advancing_percent": 71.38455613325631,
+    "advancing_volume_percent": 67.36669132332595,
+    "advancing_amount_percent": 55.40182876425115,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:11:13.902877+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-12",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-15",
+    "trin": 0.7971867915754783,
+    "trin_amount": 0.43264900788694693,
+    "advance": 3667,
+    "decline": 1401,
+    "flat": 120,
+    "advance_volume": 107040493069,
+    "decline_volume": 32601337715,
+    "flat_volume": 3895245951,
+    "advance_amount": 2585031716742.43,
+    "decline_amount": 427295986379.73,
+    "advancing_percent": 70.68234387047032,
+    "advancing_volume_percent": 76.65360190999772,
+    "advancing_amount_percent": 85.81508957551814,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 18,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:11:35.883201+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-15",
+      "active": 5188,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-16",
+    "trin": 0.7300721105810386,
+    "trin_amount": 0.4689537825265418,
+    "advance": 2626,
+    "decline": 2467,
+    "flat": 100,
+    "advance_volume": 80001277660,
+    "decline_volume": 54870271486,
+    "flat_volume": 2124576531,
+    "advance_amount": 2119439824979.7,
+    "decline_amount": 933739135282.91,
+    "advancing_percent": 50.56807240516079,
+    "advancing_volume_percent": 59.3166447383189,
+    "advancing_amount_percent": 69.4174777359727,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:12:05.477233+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-16",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-17",
+    "trin": 0.5207382782858998,
+    "trin_amount": 0.23033936224388388,
+    "advance": 1596,
+    "decline": 3549,
+    "flat": 44,
+    "advance_volume": 62036459475,
+    "decline_volume": 71835582731,
+    "flat_volume": 1459454086,
+    "advance_amount": 2039791438926.21,
+    "decline_amount": 1044785260484.51,
+    "advancing_percent": 30.75737136249759,
+    "advancing_volume_percent": 46.34011586940562,
+    "advancing_amount_percent": 66.12873135285932,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 17,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:12:31.705081+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-17",
+      "active": 5189,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-18",
+    "trin": 1.0949807451210398,
+    "trin_amount": 0.38881240863210276,
+    "advance": 1961,
+    "decline": 3141,
+    "flat": 85,
+    "advance_volume": 50998924142,
+    "decline_volume": 89445364766,
+    "flat_volume": 1771769881,
+    "advance_amount": 2032105626608.39,
+    "decline_amount": 1265542509623.33,
+    "advancing_percent": 37.80605359552728,
+    "advancing_volume_percent": 36.312565315779814,
+    "advancing_amount_percent": 61.622876142586655,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 19,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:12:58.849956+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-18",
+      "active": 5187,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-22",
+    "trin": 0.5153902296234091,
+    "trin_amount": 0.5367706706013854,
+    "advance": 2690,
+    "decline": 2376,
+    "flat": 124,
+    "advance_volume": 109309345032,
+    "decline_volume": 49760831600,
+    "flat_volume": 2889449689,
+    "advance_amount": 2525895380556.69,
+    "decline_amount": 1197562788149.4,
+    "advancing_percent": 51.83044315992293,
+    "advancing_volume_percent": 68.71768633593781,
+    "advancing_amount_percent": 67.83735082041876,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:13:35.254633+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-22",
+      "active": 5190,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-23",
+    "trin": 1.5329911595345649,
+    "trin_amount": 2.168152995549603,
+    "advance": 2549,
+    "decline": 2547,
+    "flat": 96,
+    "advance_volume": 58746611895,
+    "decline_volume": 89987375223,
+    "flat_volume": 2948404109,
+    "advance_amount": 1081276185749.28,
+    "decline_amount": 2342532756502.89,
+    "advancing_percent": 49.09476117103236,
+    "advancing_volume_percent": 39.4977725221557,
+    "advancing_amount_percent": 31.581090066258785,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:14:02.743196+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-23",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-24",
+    "trin": 0.5766032310637383,
+    "trin_amount": 0.189897554498812,
+    "advance": 1381,
+    "decline": 3768,
+    "flat": 42,
+    "advance_volume": 54685796913,
+    "decline_volume": 86033745912,
+    "flat_volume": 2727431047,
+    "advance_amount": 2150798019105.33,
+    "decline_amount": 1114387457130.05,
+    "advancing_percent": 26.603737237526488,
+    "advancing_volume_percent": 38.86155100788503,
+    "advancing_amount_percent": 65.87062311648859,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:14:26.162097+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-24",
+      "active": 5191,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-25",
+    "trin": 0.4065729336027304,
+    "trin_amount": 0.189895769818865,
+    "advance": 1198,
+    "decline": 3940,
+    "flat": 52,
+    "advance_volume": 63627352910,
+    "decline_volume": 85078871910,
+    "flat_volume": 1350276348,
+    "advance_amount": 2206722750055.77,
+    "decline_amount": 1378168967170.83,
+    "advancing_percent": 23.082851637764932,
+    "advancing_volume_percent": 42.78728276978123,
+    "advancing_amount_percent": 61.556189813257994,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 17,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:15:00.438541+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-25",
+      "active": 5190,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-26",
+    "trin": 0.43089690147941423,
+    "trin_amount": 0.39489483346248144,
+    "advance": 755,
+    "decline": 4394,
+    "flat": 43,
+    "advance_volume": 42375160304,
+    "decline_volume": 106266854645,
+    "flat_volume": 963981531,
+    "advance_amount": 1072938990486.72,
+    "decline_amount": 2465866613319.61,
+    "advancing_percent": 14.541602465331279,
+    "advancing_volume_percent": 28.50819824969352,
+    "advancing_amount_percent": 30.31924074418413,
+    "expected": 5206,
+    "covered": 5206,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:15:26.923482+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-26",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-29",
+    "trin": 0.8821277210041478,
+    "trin_amount": 0.765642899328558,
+    "advance": 2392,
+    "decline": 2689,
+    "flat": 107,
+    "advance_volume": 71957096750,
+    "decline_volume": 71356695452,
+    "flat_volume": 3372229441,
+    "advance_amount": 1881420900908.71,
+    "decline_amount": 1619354194051.35,
+    "advancing_percent": 46.106399383191984,
+    "advancing_volume_percent": 50.20947087114747,
+    "advancing_amount_percent": 53.74298119343125,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:15:48.459989+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-29",
+      "active": 5188,
+      "windows": {
+        "20": {
+          "eligible": 5132,
+          "above": 1185,
+          "percent": 23.09041309431021
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-06-30",
+    "trin": 0.7879744685148384,
+    "trin_amount": 0.44314644462455927,
+    "advance": 2901,
+    "decline": 2200,
+    "flat": 84,
+    "advance_volume": 83038116486,
+    "decline_volume": 49620894364,
+    "flat_volume": 1611004916,
+    "advance_amount": 2441398961318.21,
+    "decline_amount": 820466733250.66,
+    "advancing_percent": 55.94985535197686,
+    "advancing_volume_percent": 62.59515727875639,
+    "advancing_amount_percent": 74.84670400081866,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 19,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:16:16.075862+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-06-30",
+      "active": 5185,
+      "windows": {
+        "20": {
+          "eligible": 5131,
+          "above": 1407,
+          "percent": 27.42155525238745
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-01",
+    "trin": 1.1754255059105263,
+    "trin_amount": 3.2449594716526673,
+    "advance": 4042,
+    "decline": 1110,
+    "flat": 36,
+    "advance_volume": 115384735677,
+    "decline_volume": 37245185317,
+    "flat_volume": 1877403120,
+    "advance_amount": 1928293334796.47,
+    "decline_amount": 1718339789749.75,
+    "advancing_percent": 77.91056283731689,
+    "advancing_volume_percent": 75.59771696503456,
+    "advancing_amount_percent": 52.87873139243814,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 16,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:16:39.422507+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-01",
+      "active": 5188,
+      "windows": {
+        "20": {
+          "eligible": 5132,
+          "above": 1694,
+          "percent": 33.008573655494935
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-02",
+    "trin": 1.1916124122873364,
+    "trin_amount": 2.039719472867433,
+    "advance": 2113,
+    "decline": 2954,
+    "flat": 126,
+    "advance_volume": 55749235099,
+    "decline_volume": 92872027191,
+    "flat_volume": 2652968034,
+    "advance_amount": 890809645778.34,
+    "decline_amount": 2540190847801.94,
+    "advancing_percent": 40.689389562873096,
+    "advancing_volume_percent": 37.51094173202369,
+    "advancing_amount_percent": 25.96355341379657,
+    "expected": 5205,
+    "covered": 5205,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:17:01.592750+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-02",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5132,
+          "above": 1702,
+          "percent": 33.16445830085737
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-03",
+    "trin": 1.7612327547309206,
+    "trin_amount": 2.0479875872937336,
+    "advance": 3526,
+    "decline": 1584,
+    "flat": 82,
+    "advance_volume": 75630507680,
+    "decline_volume": 59839318484,
+    "flat_volume": 3260072732,
+    "advance_amount": 1647606720164.28,
+    "decline_amount": 1515841329788.68,
+    "advancing_percent": 67.91217257318952,
+    "advancing_volume_percent": 55.82830496028066,
+    "advancing_amount_percent": 52.082622952786586,
+    "expected": 5203,
+    "covered": 5203,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:17:29.463644+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-03",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 5133,
+          "above": 2040,
+          "percent": 39.74284044418469
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-06",
+    "trin": 0.7898362335726915,
+    "trin_amount": 0.9078392729289488,
+    "advance": 1817,
+    "decline": 3277,
+    "flat": 99,
+    "advance_volume": 54890387867,
+    "decline_volume": 78190657790,
+    "flat_volume": 2703915788,
+    "advance_amount": 1166142543069.91,
+    "decline_amount": 1909334939384.7,
+    "advancing_percent": 34.9894088195648,
+    "advancing_volume_percent": 41.245834518368014,
+    "advancing_amount_percent": 37.91744695653517,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:17:51.951312+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-06",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5132,
+          "above": 1909,
+          "percent": 37.197973499610285
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-07",
+    "trin": 0.4360679026820886,
+    "trin_amount": 0.27147975890107146,
+    "advance": 639,
+    "decline": 4534,
+    "flat": 20,
+    "advance_volume": 28946703757,
+    "decline_volume": 89564085370,
+    "flat_volume": 736896611,
+    "advance_amount": 879198096298.52,
+    "decline_amount": 1693576627554.67,
+    "advancing_percent": 12.305025996533795,
+    "advancing_volume_percent": 24.42537423827275,
+    "advancing_amount_percent": 34.173147308512256,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:18:23.291591+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-07",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5133,
+          "above": 1245,
+          "percent": 24.254821741671538
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-08",
+    "trin": 0.8036235945687631,
+    "trin_amount": 0.8686327054292383,
+    "advance": 1532,
+    "decline": 3532,
+    "flat": 129,
+    "advance_volume": 39334523241,
+    "decline_volume": 72876666568,
+    "flat_volume": 2843330575,
+    "advance_amount": 850139501630.5,
+    "decline_amount": 1702504634945.74,
+    "advancing_percent": 29.501251684960526,
+    "advancing_volume_percent": 35.054011376185535,
+    "advancing_amount_percent": 33.304270244686684,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:18:44.770362+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-08",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5132,
+          "above": 1058,
+          "percent": 20.615744349181604
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-09",
+    "trin": 0.6371858347847528,
+    "trin_amount": 0.24526195190633152,
+    "advance": 2381,
+    "decline": 2674,
+    "flat": 138,
+    "advance_volume": 71987817185,
+    "decline_volume": 51514219611,
+    "flat_volume": 3406060077,
+    "advance_amount": 2269929520609.25,
+    "decline_amount": 625236841789.66,
+    "advancing_percent": 45.85018293857115,
+    "advancing_volume_percent": 58.28876919974129,
+    "advancing_amount_percent": 78.40411349378921,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:19:13.416897+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-09",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5134,
+          "above": 1077,
+          "percent": 20.977795091546554
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-10",
+    "trin": 1.2140794837667979,
+    "trin_amount": 3.473681849972546,
+    "advance": 3512,
+    "decline": 1611,
+    "flat": 70,
+    "advance_volume": 92494211686,
+    "decline_volume": 51511323523,
+    "flat_volume": 1565796025,
+    "advance_amount": 1300408703499.79,
+    "decline_amount": 2072101094717.97,
+    "advancing_percent": 67.62950125168496,
+    "advancing_volume_percent": 64.22962252927299,
+    "advancing_amount_percent": 38.559078588504185,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:19:33.471060+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-10",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5137,
+          "above": 1353,
+          "percent": 26.338329764453963
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-13",
+    "trin": 0.6707196141373917,
+    "trin_amount": 0.7797699303103265,
+    "advance": 780,
+    "decline": 4376,
+    "flat": 40,
+    "advance_volume": 27540598027,
+    "decline_volume": 103632764586,
+    "flat_volume": 1248103013,
+    "advance_amount": 521929065127.59,
+    "decline_amount": 2283287909082.94,
+    "advancing_percent": 15.011547344110854,
+    "advancing_volume_percent": 20.99557217897422,
+    "advancing_amount_percent": 18.605657598891298,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:05:58.076013+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-13",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5138,
+          "above": 928,
+          "percent": 18.06150253016738
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-14",
+    "trin": 1.1556663345917308,
+    "trin_amount": 1.307234537602122,
+    "advance": 3918,
+    "decline": 1215,
+    "flat": 63,
+    "advance_volume": 91107480374,
+    "decline_volume": 32651139662,
+    "flat_volume": 1666720318,
+    "advance_amount": 1915699814244.58,
+    "decline_amount": 776591829362.7,
+    "advancing_percent": 75.4041570438799,
+    "advancing_volume_percent": 73.6170784285554,
+    "advancing_amount_percent": 71.15498868012013,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:20:04.584764+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-14",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5144,
+          "above": 1317,
+          "percent": 25.602643856920686
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-15",
+    "trin": 1.1288666976390043,
+    "trin_amount": 2.4117085172765034,
+    "advance": 3197,
+    "decline": 1930,
+    "flat": 70,
+    "advance_volume": 73776255538,
+    "decline_volume": 50277531076,
+    "flat_volume": 2397224123,
+    "advance_amount": 1038126354093.16,
+    "decline_amount": 1511435804954.35,
+    "advancing_percent": 61.516259380411775,
+    "advancing_volume_percent": 59.47118387249135,
+    "advancing_amount_percent": 40.71782876166444,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:20:32.844408+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-15",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 5144,
+          "above": 1757,
+          "percent": 34.15629860031104
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-16",
+    "trin": 1.274578187433624,
+    "trin_amount": 2.0158043218138606,
+    "advance": 2343,
+    "decline": 2695,
+    "flat": 158,
+    "advance_volume": 47534763804,
+    "decline_volume": 69689011300,
+    "flat_volume": 2835116004,
+    "advance_amount": 719303807136.2,
+    "decline_amount": 1667812451478.72,
+    "advancing_percent": 45.09237875288684,
+    "advancing_volume_percent": 40.55044615465381,
+    "advancing_amount_percent": 30.13275137062502,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:21:06.269704+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-16",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5144,
+          "above": 1901,
+          "percent": 36.9556765163297
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-17",
+    "trin": 0.31521811382436266,
+    "trin_amount": 0.6155430451626789,
+    "advance": 405,
+    "decline": 4757,
+    "flat": 32,
+    "advance_volume": 29733190286,
+    "decline_volume": 110085673681,
+    "flat_volume": 1536174505,
+    "advance_amount": 321611453350.87,
+    "decline_amount": 2325241489601.81,
+    "advancing_percent": 7.797458606083943,
+    "advancing_volume_percent": 21.265506986966805,
+    "advancing_amount_percent": 12.150711062628904,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:21:42.847871+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-17",
+      "active": 5194,
+      "windows": {
+        "20": {
+          "eligible": 5147,
+          "above": 1224,
+          "percent": 23.780843209636682
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-20",
+    "trin": 0.4693085522649117,
+    "trin_amount": 0.6749928939275286,
+    "advance": 1708,
+    "decline": 3415,
+    "flat": 73,
+    "advance_volume": 75124162591,
+    "decline_volume": 70492182044,
+    "flat_volume": 2526351586,
+    "advance_amount": 1144471286892.99,
+    "decline_amount": 1544567682694.78,
+    "advancing_percent": 32.871439568899156,
+    "advancing_volume_percent": 51.590474118345185,
+    "advancing_amount_percent": 42.56060621793211,
+    "expected": 5199,
+    "covered": 5199,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:22:01.695611+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-20",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5153,
+          "above": 1314,
+          "percent": 25.499708907432563
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-21",
+    "trin": 0.7563967701888115,
+    "trin_amount": 0.2901538760502921,
+    "advance": 2871,
+    "decline": 2218,
+    "flat": 108,
+    "advance_volume": 96411635817,
+    "decline_volume": 56338783688,
+    "flat_volume": 4268827760,
+    "advance_amount": 2395059850617.75,
+    "decline_amount": 536874895174.75,
+    "advancing_percent": 55.243409659418894,
+    "advancing_volume_percent": 63.117100515618645,
+    "advancing_amount_percent": 81.68871609625019,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:22:42.066826+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-21",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 5154,
+          "above": 1283,
+          "percent": 24.89328676755918
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-22",
+    "trin": 0.40306326862280595,
+    "trin_amount": 0.5189449467363622,
+    "advance": 1432,
+    "decline": 3649,
+    "flat": 116,
+    "advance_volume": 61952929415,
+    "decline_volume": 63630584771,
+    "flat_volume": 3905475550,
+    "advance_amount": 1130702453387.99,
+    "decline_amount": 1495204058597.16,
+    "advancing_percent": 27.554358283625167,
+    "advancing_volume_percent": 49.33205589647888,
+    "advancing_amount_percent": 43.059509096277544,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:23:12.391558+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-22",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 5155,
+          "above": 1209,
+          "percent": 23.452958292919497
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-23",
+    "trin": 1.0830683800371799,
+    "trin_amount": 2.905404722707493,
+    "advance": 3996,
+    "decline": 1143,
+    "flat": 58,
+    "advance_volume": 89398679851,
+    "decline_volume": 27695405827,
+    "flat_volume": 1594866027,
+    "advance_amount": 1192348534599.08,
+    "decline_amount": 990901786192.04,
+    "advancing_percent": 76.89051375793727,
+    "advancing_volume_percent": 76.34773296478842,
+    "advancing_amount_percent": 54.61345972307115,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:23:36.886542+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-23",
+      "active": 5197,
+      "windows": {
+        "20": {
+          "eligible": 5157,
+          "above": 1619,
+          "percent": 31.39422144657747
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-24",
+    "trin": 0.6428423796241048,
+    "trin_amount": 0.3575825800034751,
+    "advance": 534,
+    "decline": 4631,
+    "flat": 31,
+    "advance_volume": 16214397685,
+    "decline_volume": 90393841807,
+    "flat_volume": 1030730921,
+    "advance_amount": 469201497682.72,
+    "decline_amount": 1455021019336.75,
+    "advancing_percent": 10.277136258660509,
+    "advancing_volume_percent": 15.20932881197869,
+    "advancing_amount_percent": 24.383952143408603,
+    "expected": 5200,
+    "covered": 5200,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:23:56.779436+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-24",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5159,
+          "above": 899,
+          "percent": 17.425857724365187
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-27",
+    "trin": 2.1934583406616555,
+    "trin_amount": 2.835092920125928,
+    "advance": 4884,
+    "decline": 268,
+    "flat": 40,
+    "advance_volume": 94206380660,
+    "decline_volume": 11338845769,
+    "flat_volume": 2037667039,
+    "advance_amount": 1781998907396.47,
+    "decline_amount": 277225943131.97,
+    "advancing_percent": 94.0677966101695,
+    "advancing_volume_percent": 89.25688432093364,
+    "advancing_amount_percent": 86.53736414161726,
+    "expected": 5201,
+    "covered": 5201,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:24:23.403321+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-27",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 5157,
+          "above": 1479,
+          "percent": 28.679464805119256
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-28",
+    "trin": 1.1438234356833312,
+    "trin_amount": 2.9000071059999954,
+    "advance": 2372,
+    "decline": 2673,
+    "flat": 148,
+    "advance_volume": 45046752634,
+    "decline_volume": 58063973582,
+    "flat_volume": 3677754680,
+    "advance_amount": 470155380160.08,
+    "decline_amount": 1536472340083.09,
+    "advancing_percent": 45.67687271326786,
+    "advancing_volume_percent": 43.687746451939894,
+    "advancing_amount_percent": 23.430124851614476,
+    "expected": 5201,
+    "covered": 5201,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:24:56.561323+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-28",
+      "active": 5193,
+      "windows": {
+        "20": {
+          "eligible": 5162,
+          "above": 1600,
+          "percent": 30.995738086013173
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-29",
+    "trin": 1.2288621949859762,
+    "trin_amount": 2.4880006187756716,
+    "advance": 3967,
+    "decline": 1173,
+    "flat": 52,
+    "advance_volume": 90198038476,
+    "decline_volume": 32774501020,
+    "flat_volume": 1581679962,
+    "advance_amount": 1317957015323.89,
+    "decline_amount": 969588691982.42,
+    "advancing_percent": 76.40600924499229,
+    "advancing_volume_percent": 73.34811401445761,
+    "advancing_amount_percent": 57.614456013464526,
+    "expected": 5201,
+    "covered": 5201,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:25:27.402080+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-29",
+      "active": 5192,
+      "windows": {
+        "20": {
+          "eligible": 5166,
+          "above": 2298,
+          "percent": 44.48315911730546
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-30",
+    "trin": 0.6984234540165325,
+    "trin_amount": 1.0529341140931874,
+    "advance": 1635,
+    "decline": 3447,
+    "flat": 114,
+    "advance_volume": 50265153346,
+    "decline_volume": 74013229279,
+    "flat_volume": 3568215859,
+    "advance_amount": 723013622218.31,
+    "decline_amount": 1604985831647.92,
+    "advancing_percent": 31.46651270207852,
+    "advancing_volume_percent": 40.44561273191899,
+    "advancing_amount_percent": 31.057293463602992,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:25:49.510758+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-30",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5164,
+          "above": 2197,
+          "percent": 42.54453911696359
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-07-31",
+    "trin": 1.7159169667507177,
+    "trin_amount": 1.5164584454283991,
+    "advance": 4394,
+    "decline": 695,
+    "flat": 107,
+    "advance_volume": 100477001200,
+    "decline_volume": 27270159953,
+    "flat_volume": 3877692138,
+    "advance_amount": 2032570427540.85,
+    "decline_amount": 487529465313.33,
+    "advancing_percent": 84.56505003849115,
+    "advancing_volume_percent": 78.65302077410618,
+    "advancing_amount_percent": 80.65435950790146,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:26:12.838353+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-07-31",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5164,
+          "above": 2848,
+          "percent": 55.15104570100697
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-03",
+    "trin": 1.3433255976460896,
+    "trin_amount": 3.2590547123549225,
+    "advance": 3866,
+    "decline": 1278,
+    "flat": 52,
+    "advance_volume": 78269282243,
+    "decline_volume": 34756948935,
+    "flat_volume": 1248574210,
+    "advance_amount": 957319384383.36,
+    "decline_amount": 1031377156920.44,
+    "advancing_percent": 74.40338722093918,
+    "advancing_volume_percent": 69.24877652492648,
+    "advancing_amount_percent": 48.13803234935665,
+    "expected": 5202,
+    "covered": 5202,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:26:35.736776+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-03",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5162,
+          "above": 3329,
+          "percent": 64.49050755521115
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-04",
+    "trin": 0.9383653406681507,
+    "trin_amount": 0.43396700626603757,
+    "advance": 3406,
+    "decline": 1663,
+    "flat": 127,
+    "advance_volume": 80794278258,
+    "decline_volume": 37016910565,
+    "flat_volume": 2639481032,
+    "advance_amount": 1814434972687.09,
+    "decline_amount": 384455188076.17,
+    "advancing_percent": 65.5504234026174,
+    "advancing_volume_percent": 68.57946097071107,
+    "advancing_amount_percent": 82.51594395498495,
+    "expected": 5203,
+    "covered": 5203,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:27:02.793526+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-04",
+      "active": 5196,
+      "windows": {
+        "20": {
+          "eligible": 5161,
+          "above": 3705,
+          "percent": 71.78841309823677
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-05",
+    "trin": 0.8204071983291847,
+    "trin_amount": 0.5064046132343436,
+    "advance": 3427,
+    "decline": 1598,
+    "flat": 173,
+    "advance_volume": 92802254293,
+    "decline_volume": 35501823354,
+    "flat_volume": 4086860534,
+    "advance_amount": 2130965166500.52,
+    "decline_amount": 503195414166.96,
+    "advancing_percent": 65.929203539823,
+    "advancing_volume_percent": 72.32993369729422,
+    "advancing_amount_percent": 80.8973143907782,
+    "expected": 5203,
+    "covered": 5203,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:27:39.227759+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-05",
+      "active": 5198,
+      "windows": {
+        "20": {
+          "eligible": 5162,
+          "above": 4039,
+          "percent": 78.2448663308795
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-06",
+    "trin": 1.1964735942826898,
+    "trin_amount": 0.7071060971200276,
+    "advance": 2638,
+    "decline": 2416,
+    "flat": 145,
+    "advance_volume": 60768340808,
+    "decline_volume": 66589021907,
+    "flat_volume": 3061316364,
+    "advance_amount": 1524150592174.14,
+    "decline_amount": 987039652312.18,
+    "advancing_percent": 50.74052702442778,
+    "advancing_volume_percent": 47.714823479807166,
+    "advancing_amount_percent": 60.69434984149975,
+    "expected": 5204,
+    "covered": 5204,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:32:28.621681+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-06",
+      "active": 5199,
+      "windows": {
+        "20": {
+          "eligible": 5163,
+          "above": 4153,
+          "percent": 80.43773000193686
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-07",
+    "trin": 0.7721165111122651,
+    "trin_amount": 0.31537093305023756,
+    "advance": 2671,
+    "decline": 2398,
+    "flat": 132,
+    "advance_volume": 73992317416,
+    "decline_volume": 51291424393,
+    "flat_volume": 3127685928,
+    "advance_amount": 2056259554366.15,
+    "decline_amount": 582203600606.85,
+    "advancing_percent": 51.355508556046914,
+    "advancing_volume_percent": 59.05979207486012,
+    "advancing_amount_percent": 77.9339878402506,
+    "expected": 5205,
+    "covered": 5205,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:34:09.937398+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-07",
+      "active": 5201,
+      "windows": {
+        "20": {
+          "eligible": 5167,
+          "above": 4418,
+          "percent": 85.50416102186956
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-10",
+    "trin": 1.2850747102846174,
+    "trin_amount": 2.3405754743306155,
+    "advance": 3877,
+    "decline": 1253,
+    "flat": 74,
+    "advance_volume": 84233447564,
+    "decline_volume": 34983900013,
+    "flat_volume": 3694927796,
+    "advance_amount": 1421021938962.36,
+    "decline_amount": 1074926335007.16,
+    "advancing_percent": 74.50038431975403,
+    "advancing_volume_percent": 70.655361217121,
+    "advancing_amount_percent": 56.933148566512045,
+    "expected": 5205,
+    "covered": 5205,
+    "suspended": 1,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:35:03.476851+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-10",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5170,
+          "above": 4645,
+          "percent": 89.84526112185686
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-11",
+    "trin": 0.7260628572347012,
+    "trin_amount": 0.7384606303364272,
+    "advance": 1559,
+    "decline": 3506,
+    "flat": 139,
+    "advance_volume": 43337186819,
+    "decline_volume": 70762103292,
+    "flat_volume": 3082262144,
+    "advance_amount": 862632695975.33,
+    "decline_amount": 1432580575479.25,
+    "advancing_percent": 29.95772482705611,
+    "advancing_volume_percent": 37.9819951349741,
+    "advancing_amount_percent": 37.58398867346392,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:35:41.103974+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-11",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5170,
+          "above": 4567,
+          "percent": 88.33655705996132
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-12",
+    "trin": 1.013365920797493,
+    "trin_amount": 1.0452529811456648,
+    "advance": 3860,
+    "decline": 1216,
+    "flat": 127,
+    "advance_volume": 83276455457,
+    "decline_volume": 26584885676,
+    "flat_volume": 2952978258,
+    "advance_amount": 1606125324775.93,
+    "decline_amount": 528867786818.59,
+    "advancing_percent": 74.18796847972324,
+    "advancing_volume_percent": 75.80141895062442,
+    "advancing_amount_percent": 75.22859516752234,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:36:54.626939+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-12",
+      "active": 5203,
+      "windows": {
+        "20": {
+          "eligible": 5170,
+          "above": 4664,
+          "percent": 90.2127659574468
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-13",
+    "trin": 0.5919754262994769,
+    "trin_amount": 0.5130966091960238,
+    "advance": 1084,
+    "decline": 4041,
+    "flat": 79,
+    "advance_volume": 40246026012,
+    "decline_volume": 88814985808,
+    "flat_volume": 1976341802,
+    "advance_amount": 869790499617.41,
+    "decline_amount": 1663693702082.18,
+    "advancing_percent": 20.83013066871637,
+    "advancing_volume_percent": 31.183721128833778,
+    "advancing_amount_percent": 34.331790939683394,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:37:43.111687+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-13",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5170,
+          "above": 4439,
+          "percent": 85.86073500967117
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-14",
+    "trin": 1.1677576989300609,
+    "trin_amount": 0.5091261936989627,
+    "advance": 2322,
+    "decline": 2719,
+    "flat": 163,
+    "advance_volume": 47170966384,
+    "decline_volume": 64502196666,
+    "flat_volume": 2494167448,
+    "advance_amount": 1331256826245.1,
+    "decline_amount": 793659613611.57,
+    "advancing_percent": 44.619523443504995,
+    "advancing_volume_percent": 42.24019907350515,
+    "advancing_amount_percent": 62.649843602080466,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:38:32.856455+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-14",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5172,
+          "above": 4206,
+          "percent": 81.32250580046404
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-17",
+    "trin": 1.26672842015679,
+    "trin_amount": 0.676959265641283,
+    "advance": 4067,
+    "decline": 999,
+    "flat": 136,
+    "advance_volume": 83528663721,
+    "decline_volume": 25990244431,
+    "flat_volume": 3610082304,
+    "advance_amount": 2030512899948.41,
+    "decline_amount": 337644442366.02,
+    "advancing_percent": 78.18146866589773,
+    "advancing_volume_percent": 76.26871480956655,
+    "advancing_amount_percent": 85.74231380943482,
+    "expected": 5207,
+    "covered": 5207,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T09:40:09.977125+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-17",
+      "active": 5202,
+      "windows": {
+        "20": {
+          "eligible": 5171,
+          "above": 4357,
+          "percent": 84.25836395281377
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-18",
+    "trin": 0.7524922518248914,
+    "trin_amount": 0.7475606912500387,
+    "advance": 1840,
+    "decline": 3240,
+    "flat": 123,
+    "advance_volume": 49610341107,
+    "decline_volume": 65735721321,
+    "flat_volume": 3193593511,
+    "advance_amount": 1030550741657.97,
+    "decline_amount": 1356572548021.04,
+    "advancing_percent": 35.36421295406496,
+    "advancing_volume_percent": 43.009999702388804,
+    "advancing_amount_percent": 43.17124071947475,
+    "expected": 5208,
+    "covered": 5208,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T10:00:23.592987+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-18",
+      "active": 5203,
+      "windows": {
+        "20": {
+          "eligible": 5171,
+          "above": 4167,
+          "percent": 80.58402630052214
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-19",
+    "trin": 0.39560636700849067,
+    "trin_amount": 0.6261317237907453,
+    "advance": 420,
+    "decline": 4760,
+    "flat": 23,
+    "advance_volume": 23036850544,
+    "decline_volume": 103286613845,
+    "flat_volume": 519983000,
+    "advance_amount": 309644300334.91,
+    "decline_amount": 2197285354681.0,
+    "advancing_percent": 8.072266000384394,
+    "advancing_volume_percent": 18.236398641712682,
+    "advancing_amount_percent": 12.351535262083166,
+    "expected": 5209,
+    "covered": 5209,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T10:02:33.953499+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-19",
+      "active": 5203,
+      "windows": {
+        "20": {
+          "eligible": 5173,
+          "above": 2606,
+          "percent": 50.37695727817514
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-20",
+    "trin": 1.6973321595790019,
+    "trin_amount": 2.1119796606839865,
+    "advance": 3916,
+    "decline": 1203,
+    "flat": 84,
+    "advance_volume": 71332148800,
+    "decline_volume": 37194188778,
+    "flat_volume": 1752164789,
+    "advance_amount": 1254023573785.03,
+    "decline_amount": 813613931324.88,
+    "advancing_percent": 75.26427061310783,
+    "advancing_volume_percent": 65.72796096498898,
+    "advancing_amount_percent": 60.65006901286449,
+    "expected": 5210,
+    "covered": 5210,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T10:04:43.577614+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-20",
+      "active": 5203,
+      "windows": {
+        "20": {
+          "eligible": 5172,
+          "above": 3082,
+          "percent": 59.59010054137664
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-21",
+    "trin": 0.8836083072486919,
+    "trin_amount": 0.5855439517765066,
+    "advance": 2407,
+    "decline": 2626,
+    "flat": 171,
+    "advance_volume": 48614750394,
+    "decline_volume": 46864769139,
+    "flat_volume": 3565521199,
+    "advance_amount": 1135121621739.25,
+    "decline_amount": 725137770655.61,
+    "advancing_percent": 46.252882398155265,
+    "advancing_volume_percent": 50.916417082720635,
+    "advancing_amount_percent": 61.01953450039661,
+    "expected": 5210,
+    "covered": 5210,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T10:06:47.118788+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-21",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5173,
+          "above": 2842,
+          "percent": 54.93910690121786
+        },
+        "60": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-24",
+    "trin": 0.5343957201894234,
+    "trin_amount": 0.9115913980959486,
+    "advance": 1384,
+    "decline": 3704,
+    "flat": 118,
+    "advance_volume": 42216612360,
+    "decline_volume": 60378349915,
+    "flat_volume": 2391590362,
+    "advance_amount": 580246308217.78,
+    "decline_amount": 1415622616012.97,
+    "advancing_percent": 26.584709950057626,
+    "advancing_volume_percent": 41.14881610545434,
+    "advancing_amount_percent": 29.072365483190193,
+    "expected": 5210,
+    "covered": 5210,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T08:06:17.525890+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-24",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5172,
+          "above": 2242,
+          "percent": 43.348801237432326
+        },
+        "60": {
+          "eligible": 5085,
+          "above": 1834,
+          "percent": 36.06686332350049
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-25",
+    "trin": 1.586960306423583,
+    "trin_amount": 2.7352860937070416,
+    "advance": 3966,
+    "decline": 1177,
+    "flat": 64,
+    "advance_volume": 69230967838,
+    "decline_volume": 32605451631,
+    "flat_volume": 2489540027,
+    "advance_amount": 1002416552832.56,
+    "decline_amount": 813719530803.1,
+    "advancing_percent": 76.16669867486077,
+    "advancing_volume_percent": 67.98252354019043,
+    "advancing_amount_percent": 55.195013295801985,
+    "expected": 5211,
+    "covered": 5211,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:16:38.112980+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-25",
+      "active": 5207,
+      "windows": {
+        "20": {
+          "eligible": 5170,
+          "above": 2829,
+          "percent": 54.71953578336557
+        },
+        "60": {
+          "eligible": 5085,
+          "above": 2312,
+          "percent": 45.46705998033432
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-26",
+    "trin": 0.5870864005036018,
+    "trin_amount": 0.875092935612396,
+    "advance": 2760,
+    "decline": 2309,
+    "flat": 139,
+    "advance_volume": 69178576492,
+    "decline_volume": 33977270863,
+    "flat_volume": 3487673707,
+    "advance_amount": 1032432648949.3,
+    "decline_amount": 755841543883.3,
+    "advancing_percent": 52.995391705069125,
+    "advancing_volume_percent": 67.06219595475689,
+    "advancing_amount_percent": 57.73346464917339,
+    "expected": 5211,
+    "covered": 5211,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:17:47.877898+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-26",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5175,
+          "above": 2858,
+          "percent": 55.227053140096615
+        },
+        "60": {
+          "eligible": 5088,
+          "above": 2454,
+          "percent": 48.2311320754717
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-27",
+    "trin": 0.7273766524941107,
+    "trin_amount": 0.35639097260308494,
+    "advance": 3190,
+    "decline": 1821,
+    "flat": 197,
+    "advance_volume": 77519394187,
+    "decline_volume": 32187629201,
+    "flat_volume": 3317745306,
+    "advance_amount": 1748977996509.01,
+    "decline_amount": 355819957360.82,
+    "advancing_percent": 61.25192012288787,
+    "advancing_volume_percent": 70.66037505441902,
+    "advancing_amount_percent": 83.09481645463318,
+    "expected": 5211,
+    "covered": 5211,
+    "suspended": 3,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:19:05.466045+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-27",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5176,
+          "above": 3079,
+          "percent": 59.486089644513136
+        },
+        "60": {
+          "eligible": 5088,
+          "above": 2610,
+          "percent": 51.29716981132076
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-28",
+    "trin": 0.8365952484298198,
+    "trin_amount": 1.7644014212001178,
+    "advance": 2796,
+    "decline": 2269,
+    "flat": 142,
+    "advance_volume": 65137833991,
+    "decline_volume": 44222779495,
+    "flat_volume": 4632909171,
+    "advance_amount": 852202238147.76,
+    "decline_amount": 1220217918552.48,
+    "advancing_percent": 53.69694641828308,
+    "advancing_volume_percent": 59.562425552174446,
+    "advancing_amount_percent": 41.121113177390534,
+    "expected": 5211,
+    "covered": 5211,
+    "suspended": 4,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:19:55.963176+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-28",
+      "active": 5207,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 3078,
+          "percent": 59.455282982422254
+        },
+        "60": {
+          "eligible": 5087,
+          "above": 2758,
+          "percent": 54.216630627088655
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-08-31",
+    "trin": 1.3420295556616988,
+    "trin_amount": 0.9085580065028143,
+    "advance": 3000,
+    "decline": 2070,
+    "flat": 135,
+    "advance_volume": 62536687856,
+    "decline_volume": 57908997557,
+    "flat_volume": 2987389507,
+    "advance_amount": 1294142470950.03,
+    "decline_amount": 811304417440.52,
+    "advancing_percent": 57.636887608069166,
+    "advancing_volume_percent": 51.92106935301666,
+    "advancing_amount_percent": 61.466403075087825,
+    "expected": 5211,
+    "covered": 5211,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:21:09.062418+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-08-31",
+      "active": 5205,
+      "windows": {
+        "20": {
+          "eligible": 5175,
+          "above": 3227,
+          "percent": 62.35748792270532
+        },
+        "60": {
+          "eligible": 5083,
+          "above": 2868,
+          "percent": 56.42337202439504
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-01",
+    "trin": 0.7046647115115843,
+    "trin_amount": 1.9548431493253045,
+    "advance": 3095,
+    "decline": 1994,
+    "flat": 117,
+    "advance_volume": 83642533571,
+    "decline_volume": 37972938264,
+    "flat_volume": 4097673756,
+    "advance_amount": 887180341819.41,
+    "decline_amount": 1117347669261.06,
+    "advancing_percent": 59.450633883980025,
+    "advancing_volume_percent": 68.7762274889504,
+    "advancing_amount_percent": 44.25881488885789,
+    "expected": 5213,
+    "covered": 5213,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:21:40.850056+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-01",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5175,
+          "above": 3295,
+          "percent": 63.671497584541065
+        },
+        "60": {
+          "eligible": 5084,
+          "above": 3014,
+          "percent": 59.28402832415421
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-02",
+    "trin": 0.9925261710244969,
+    "trin_amount": 0.868039421850579,
+    "advance": 1247,
+    "decline": 3857,
+    "flat": 103,
+    "advance_volume": 27248142952,
+    "decline_volume": 83649251951,
+    "flat_volume": 1803172975,
+    "advance_amount": 482275582011.83,
+    "decline_amount": 1294845370042.62,
+    "advancing_percent": 23.948530823890916,
+    "advancing_volume_percent": 24.570588854529426,
+    "advancing_amount_percent": 27.1380280252896,
+    "expected": 5214,
+    "covered": 5214,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:22:26.940930+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-02",
+      "active": 5207,
+      "windows": {
+        "20": {
+          "eligible": 5175,
+          "above": 2874,
+          "percent": 55.53623188405797
+        },
+        "60": {
+          "eligible": 5083,
+          "above": 2854,
+          "percent": 56.14794412748377
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-03",
+    "trin": 0.7510843222094434,
+    "trin_amount": 0.5353910374877613,
+    "advance": 1804,
+    "decline": 3275,
+    "flat": 129,
+    "advance_volume": 44222346276,
+    "decline_volume": 60298325087,
+    "flat_volume": 3636253686,
+    "advance_amount": 880080105912.82,
+    "decline_amount": 855397687472.11,
+    "advancing_percent": 34.63901689708141,
+    "advancing_volume_percent": 42.30966535070935,
+    "advancing_amount_percent": 50.71111305874357,
+    "expected": 5214,
+    "covered": 5214,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:23:00.431308+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-03",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 2573,
+          "percent": 49.70059880239521
+        },
+        "60": {
+          "eligible": 5086,
+          "above": 2812,
+          "percent": 55.28902870625246
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-04",
+    "trin": 0.693095057010504,
+    "trin_amount": 1.2981154470136547,
+    "advance": 2249,
+    "decline": 2772,
+    "flat": 185,
+    "advance_volume": 62611780004,
+    "decline_volume": 53487539805,
+    "flat_volume": 5426138053,
+    "advance_amount": 771934081666.53,
+    "decline_amount": 1235086299605.02,
+    "advancing_percent": 43.20015366884364,
+    "advancing_volume_percent": 53.92949769818233,
+    "advancing_amount_percent": 38.46169619749802,
+    "expected": 5214,
+    "covered": 5214,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:23:50.455476+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-04",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5178,
+          "above": 2527,
+          "percent": 48.802626496716876
+        },
+        "60": {
+          "eligible": 5089,
+          "above": 2850,
+          "percent": 56.003144036156414
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-07",
+    "trin": 1.1458616999927378,
+    "trin_amount": 0.6566136910559127,
+    "advance": 3039,
+    "decline": 1987,
+    "flat": 180,
+    "advance_volume": 58659577433,
+    "decline_volume": 43947917511,
+    "flat_volume": 3848727734,
+    "advance_amount": 1346239920132.42,
+    "decline_amount": 577962373047.34,
+    "advancing_percent": 58.374951978486365,
+    "advancing_volume_percent": 57.168901224042735,
+    "advancing_amount_percent": 69.9635337149374,
+    "expected": 5215,
+    "covered": 5215,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:24:42.719348+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-07",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5178,
+          "above": 2761,
+          "percent": 53.32174584781769
+        },
+        "60": {
+          "eligible": 5089,
+          "above": 2908,
+          "percent": 57.142857142857146
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-08",
+    "trin": 0.6738622336465034,
+    "trin_amount": 1.550073002437502,
+    "advance": 3257,
+    "decline": 1858,
+    "flat": 91,
+    "advance_volume": 83509503287,
+    "decline_volume": 32102212764,
+    "flat_volume": 1763676190,
+    "advance_amount": 1032524952052.93,
+    "decline_amount": 913020773590.04,
+    "advancing_percent": 62.56242796772954,
+    "advancing_volume_percent": 72.23273396457614,
+    "advancing_amount_percent": 53.07122512947867,
+    "expected": 5215,
+    "covered": 5215,
+    "suspended": 9,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:25:18.620758+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-08",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 3087,
+          "percent": 59.629128839096005
+        },
+        "60": {
+          "eligible": 5095,
+          "above": 3056,
+          "percent": 59.98037291462218
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-09",
+    "trin": 0.5543364602924272,
+    "trin_amount": 0.47314981593501043,
+    "advance": 1729,
+    "decline": 3368,
+    "flat": 109,
+    "advance_volume": 52455743892,
+    "decline_volume": 56642652704,
+    "flat_volume": 2912779029,
+    "advance_amount": 955832839237.25,
+    "decline_amount": 880963088725.7,
+    "advancing_percent": 33.21167883211679,
+    "advancing_volume_percent": 48.081131830239244,
+    "advancing_amount_percent": 52.038053040399056,
+    "expected": 5216,
+    "covered": 5216,
+    "suspended": 10,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:27:16.425798+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-09",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5178,
+          "above": 2856,
+          "percent": 55.15643105446118
+        },
+        "60": {
+          "eligible": 5094,
+          "above": 2983,
+          "percent": 58.55908912446015
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-10",
+    "trin": 0.4495720024681805,
+    "trin_amount": 0.41836065603144207,
+    "advance": 932,
+    "decline": 4191,
+    "flat": 82,
+    "advance_volume": 33718785398,
+    "decline_volume": 68166803290,
+    "flat_volume": 2439307762,
+    "advance_amount": 567226210839.01,
+    "decline_amount": 1067109225868.19,
+    "advancing_percent": 17.905859750240154,
+    "advancing_volume_percent": 33.09475445173668,
+    "advancing_amount_percent": 34.70684157603759,
+    "expected": 5217,
+    "covered": 5217,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:28:44.216713+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-10",
+      "active": 5205,
+      "windows": {
+        "20": {
+          "eligible": 5176,
+          "above": 2325,
+          "percent": 44.91885625965997
+        },
+        "60": {
+          "eligible": 5095,
+          "above": 2767,
+          "percent": 54.3081452404318
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-11",
+    "trin": 0.4781825659088581,
+    "trin_amount": 0.33664462204377893,
+    "advance": 605,
+    "decline": 4566,
+    "flat": 35,
+    "advance_volume": 26135144842,
+    "decline_volume": 94318998769,
+    "flat_volume": 1011121148,
+    "advance_amount": 554142918768.51,
+    "decline_amount": 1407907107304.6,
+    "advancing_percent": 11.621206300422589,
+    "advancing_volume_percent": 21.697173761329463,
+    "advancing_amount_percent": 28.243057587964962,
+    "expected": 5218,
+    "covered": 5218,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:29:21.653834+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-11",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5175,
+          "above": 1421,
+          "percent": 27.458937198067634
+        },
+        "60": {
+          "eligible": 5098,
+          "above": 2281,
+          "percent": 44.74303648489604
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-14",
+    "trin": 1.4347170986938573,
+    "trin_amount": 1.3632377376062395,
+    "advance": 2938,
+    "decline": 2083,
+    "flat": 185,
+    "advance_volume": 46224862606,
+    "decline_volume": 47019648875,
+    "flat_volume": 3508102544,
+    "advance_amount": 811745457744.08,
+    "decline_amount": 784565027938.91,
+    "advancing_percent": 56.434882827506726,
+    "advancing_volume_percent": 49.573816058244915,
+    "advancing_amount_percent": 50.85135160261572,
+    "expected": 5218,
+    "covered": 5218,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:30:21.016766+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-14",
+      "active": 5206,
+      "windows": {
+        "20": {
+          "eligible": 5174,
+          "above": 1496,
+          "percent": 28.913799768071126
+        },
+        "60": {
+          "eligible": 5100,
+          "above": 2460,
+          "percent": 48.23529411764706
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-15",
+    "trin": 0.7304392257385566,
+    "trin_amount": 0.3387930283590096,
+    "advance": 1054,
+    "decline": 4102,
+    "flat": 48,
+    "advance_volume": 24985264928,
+    "decline_volume": 71026937825,
+    "flat_volume": 1116952041,
+    "advance_amount": 691446013185.78,
+    "decline_amount": 911691250539.66,
+    "advancing_percent": 20.253651037663335,
+    "advancing_volume_percent": 26.02300979624104,
+    "advancing_amount_percent": 43.130805379632164,
+    "expected": 5218,
+    "covered": 5218,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:31:22.268456+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-15",
+      "active": 5204,
+      "windows": {
+        "20": {
+          "eligible": 5171,
+          "above": 1097,
+          "percent": 21.214465287178495
+        },
+        "60": {
+          "eligible": 5097,
+          "above": 1945,
+          "percent": 38.15970178536394
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-16",
+    "trin": 1.4944413186413068,
+    "trin_amount": 0.912025812667765,
+    "advance": 3888,
+    "decline": 1133,
+    "flat": 184,
+    "advance_volume": 66198610459,
+    "decline_volume": 28829120513,
+    "flat_volume": 3940038511,
+    "advance_amount": 1436234836942.27,
+    "decline_amount": 381712375473.71,
+    "advancing_percent": 74.69740634005764,
+    "advancing_volume_percent": 69.6624130470983,
+    "advancing_amount_percent": 79.0031100536506,
+    "expected": 5219,
+    "covered": 5219,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:32:20.921417+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-16",
+      "active": 5205,
+      "windows": {
+        "20": {
+          "eligible": 5172,
+          "above": 1436,
+          "percent": 27.764887857695282
+        },
+        "60": {
+          "eligible": 5099,
+          "above": 2291,
+          "percent": 44.93037850558933
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-17",
+    "trin": 1.0814074104899913,
+    "trin_amount": 1.2355230083767752,
+    "advance": 2503,
+    "decline": 2558,
+    "flat": 147,
+    "advance_volume": 46707204176,
+    "decline_volume": 51619394234,
+    "flat_volume": 2756288668,
+    "advance_amount": 798238685929.56,
+    "decline_amount": 1007913586831.52,
+    "advancing_percent": 48.06067588325653,
+    "advancing_volume_percent": 47.50210515901442,
+    "advancing_amount_percent": 44.195536443296994,
+    "expected": 5220,
+    "covered": 5220,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:33:24.133299+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-17",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5173,
+          "above": 1447,
+          "percent": 27.972163154842452
+        },
+        "60": {
+          "eligible": 5103,
+          "above": 2337,
+          "percent": 45.796590241034686
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-18",
+    "trin": 1.1975265805650008,
+    "trin_amount": 0.7978126028596441,
+    "advance": 3936,
+    "decline": 1109,
+    "flat": 163,
+    "advance_volume": 78403005443,
+    "decline_volume": 26454181520,
+    "flat_volume": 3376045538,
+    "advance_amount": 1681517372403.11,
+    "decline_amount": 377988604816.66,
+    "advancing_percent": 75.57603686635944,
+    "advancing_volume_percent": 74.77122714598987,
+    "advancing_amount_percent": 81.64663715485179,
+    "expected": 5220,
+    "covered": 5220,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:34:50.640324+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-18",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 2015,
+          "percent": 38.92215568862275
+        },
+        "60": {
+          "eligible": 5106,
+          "above": 2632,
+          "percent": 51.54719937328633
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-21",
+    "trin": 0.9421607781707245,
+    "trin_amount": 1.8404901166610221,
+    "advance": 4215,
+    "decline": 914,
+    "flat": 79,
+    "advance_volume": 91800556310,
+    "decline_volume": 18755081277,
+    "flat_volume": 2812180463,
+    "advance_amount": 1438618762708.35,
+    "decline_amount": 574153248770.76,
+    "advancing_percent": 80.9331797235023,
+    "advancing_volume_percent": 83.03561746252787,
+    "advancing_amount_percent": 71.47450155823478,
+    "expected": 5220,
+    "covered": 5220,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:35:30.870464+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-21",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5178,
+          "above": 2882,
+          "percent": 55.65855542680572
+        },
+        "60": {
+          "eligible": 5107,
+          "above": 3137,
+          "percent": 61.42549441942432
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-22",
+    "trin": 0.9711077235338328,
+    "trin_amount": 0.8644394764702898,
+    "advance": 2284,
+    "decline": 2782,
+    "flat": 142,
+    "advance_volume": 51039281865,
+    "decline_volume": 60371642193,
+    "flat_volume": 3743704538,
+    "advance_amount": 1026635293928.59,
+    "decline_amount": 1080965437591.32,
+    "advancing_percent": 43.855606758832565,
+    "advancing_volume_percent": 45.81173910596881,
+    "advancing_amount_percent": 48.711090225719616,
+    "expected": 5221,
+    "covered": 5221,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:36:38.112056+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-22",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5179,
+          "above": 2890,
+          "percent": 55.802278432129754
+        },
+        "60": {
+          "eligible": 5111,
+          "above": 3173,
+          "percent": 62.0817843866171
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-23",
+    "trin": 1.0526389882320801,
+    "trin_amount": 0.6431179481947199,
+    "advance": 1757,
+    "decline": 3365,
+    "flat": 87,
+    "advance_volume": 34113631500,
+    "decline_volume": 68773434383,
+    "flat_volume": 2289176853,
+    "advance_amount": 784759093635.35,
+    "decline_amount": 966585540463.12,
+    "advancing_percent": 33.730082549433675,
+    "advancing_volume_percent": 33.15638482566212,
+    "advancing_amount_percent": 44.80894727149555,
+    "expected": 5221,
+    "covered": 5221,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:37:10.615321+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-23",
+      "active": 5209,
+      "windows": {
+        "20": {
+          "eligible": 5180,
+          "above": 2564,
+          "percent": 49.4980694980695
+        },
+        "60": {
+          "eligible": 5116,
+          "above": 3037,
+          "percent": 59.36278342455043
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-24",
+    "trin": 0.7203225960492579,
+    "trin_amount": 0.9731891467581656,
+    "advance": 1084,
+    "decline": 4000,
+    "flat": 125,
+    "advance_volume": 25808733759,
+    "decline_volume": 68600052037,
+    "flat_volume": 2027373880,
+    "advance_amount": 357994340669.92,
+    "decline_amount": 1285594859560.19,
+    "advancing_percent": 20.810136302553275,
+    "advancing_volume_percent": 27.337216066699472,
+    "advancing_amount_percent": 21.78125413697043,
+    "expected": 5221,
+    "covered": 5221,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:37:47.517374+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-24",
+      "active": 5209,
+      "windows": {
+        "20": {
+          "eligible": 5180,
+          "above": 2106,
+          "percent": 40.656370656370655
+        },
+        "60": {
+          "eligible": 5115,
+          "above": 2744,
+          "percent": 53.64613880742913
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-28",
+    "trin": 0.6251898701570451,
+    "trin_amount": 1.0699784467630686,
+    "advance": 862,
+    "decline": 4244,
+    "flat": 103,
+    "advance_volume": 23811123930,
+    "decline_volume": 73292567797,
+    "flat_volume": 2117298778,
+    "advance_amount": 269580823545.06,
+    "decline_amount": 1420143186895.3,
+    "advancing_percent": 16.54828181992705,
+    "advancing_volume_percent": 24.521337455370134,
+    "advancing_amount_percent": 15.954133448976936,
+    "expected": 5221,
+    "covered": 5221,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:38:41.917054+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-28",
+      "active": 5209,
+      "windows": {
+        "20": {
+          "eligible": 5181,
+          "above": 1399,
+          "percent": 27.002509168114262
+        },
+        "60": {
+          "eligible": 5116,
+          "above": 2274,
+          "percent": 44.4487881157154
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-29",
+    "trin": 1.0023971010384016,
+    "trin_amount": 1.2151709311475074,
+    "advance": 3261,
+    "decline": 1809,
+    "flat": 140,
+    "advance_volume": 55313994636,
+    "decline_volume": 30758318754,
+    "flat_volume": 2114498830,
+    "advance_amount": 832459343714.58,
+    "decline_amount": 561161893922.71,
+    "advancing_percent": 62.591170825335894,
+    "advancing_volume_percent": 64.26456134084395,
+    "advancing_amount_percent": 59.73354317747844,
+    "expected": 5222,
+    "covered": 5222,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:39:24.357758+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-29",
+      "active": 5210,
+      "windows": {
+        "20": {
+          "eligible": 5181,
+          "above": 1722,
+          "percent": 33.23682686740012
+        },
+        "60": {
+          "eligible": 5114,
+          "above": 2502,
+          "percent": 48.92452092295659
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-09-30",
+    "trin": 0.6207572968889906,
+    "trin_amount": 1.0233014092634996,
+    "advance": 2345,
+    "decline": 2713,
+    "flat": 154,
+    "advance_volume": 51407961762,
+    "decline_volume": 36919785163,
+    "flat_volume": 2554364553,
+    "advance_amount": 653114701158.29,
+    "decline_amount": 773214480004.07,
+    "advancing_percent": 44.99232540291635,
+    "advancing_volume_percent": 58.20137335287294,
+    "advancing_amount_percent": 45.789899679823314,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:40:20.045949+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-09-30",
+      "active": 5212,
+      "windows": {
+        "20": {
+          "eligible": 5180,
+          "above": 1729,
+          "percent": 33.37837837837838
+        },
+        "60": {
+          "eligible": 5112,
+          "above": 2531,
+          "percent": 49.51095461658842
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-08",
+    "trin": 0.6580809644546413,
+    "trin_amount": 1.0598064364492727,
+    "advance": 1634,
+    "decline": 3465,
+    "flat": 109,
+    "advance_volume": 41185162128,
+    "decline_volume": 57473983022,
+    "flat_volume": 2830090755,
+    "advance_amount": 513891924985.12,
+    "decline_amount": 1154913699598.55,
+    "advancing_percent": 31.374807987711215,
+    "advancing_volume_percent": 41.74490065303389,
+    "advancing_amount_percent": 30.79399526312866,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 15,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:41:04.011513+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-08",
+      "active": 5208,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 1600,
+          "percent": 30.905930075333206
+        },
+        "60": {
+          "eligible": 5109,
+          "above": 2309,
+          "percent": 45.1947543550597
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-09",
+    "trin": 0.7894035267376841,
+    "trin_amount": 1.4763892697514194,
+    "advance": 2988,
+    "decline": 2108,
+    "flat": 113,
+    "advance_volume": 72111699791,
+    "decline_volume": 40160102116,
+    "flat_volume": 4461738956,
+    "advance_amount": 918381333165.64,
+    "decline_amount": 956563799531.69,
+    "advancing_percent": 57.362257631023226,
+    "advancing_volume_percent": 64.22957373636304,
+    "advancing_amount_percent": 48.98177110091963,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 14,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:41:59.821138+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-09",
+      "active": 5209,
+      "windows": {
+        "20": {
+          "eligible": 5177,
+          "above": 2058,
+          "percent": 39.75275255939734
+        },
+        "60": {
+          "eligible": 5110,
+          "above": 2462,
+          "percent": 48.18003913894325
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-12",
+    "trin": 0.5790274442865802,
+    "trin_amount": 0.6925218379535658,
+    "advance": 1110,
+    "decline": 4036,
+    "flat": 65,
+    "advance_volume": 31398932925,
+    "decline_volume": 66106203531,
+    "flat_volume": 2204281034,
+    "advance_amount": 434205592664.17,
+    "decline_amount": 1093344600999.07,
+    "advancing_percent": 21.301093839953943,
+    "advancing_volume_percent": 32.20233729857814,
+    "advancing_amount_percent": 28.42496400219068,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 12,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:42:41.570316+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-12",
+      "active": 5211,
+      "windows": {
+        "20": {
+          "eligible": 5179,
+          "above": 1567,
+          "percent": 30.256806333268973
+        },
+        "60": {
+          "eligible": 5114,
+          "above": 2142,
+          "percent": 41.88502150958154
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "trin": 0.8901107907817176,
+    "trin_amount": 0.8901001868185457,
+    "advance": 2791,
+    "decline": 2266,
+    "flat": 154,
+    "advance_volume": 58271844378,
+    "decline_volume": 42111712178,
+    "flat_volume": 4088756407,
+    "advance_amount": 959439523084.3,
+    "decline_amount": 693356459670.83,
+    "advancing_percent": 53.55977739397429,
+    "advancing_volume_percent": 58.04919289295399,
+    "advancing_amount_percent": 58.04948300303594,
+    "expected": 5224,
+    "covered": 5224,
+    "suspended": 13,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:43:20.063329+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-13",
+      "active": 5211,
+      "windows": {
+        "20": {
+          "eligible": 5178,
+          "above": 1740,
+          "percent": 33.603707995365006
+        },
+        "60": {
+          "eligible": 5115,
+          "above": 2223,
+          "percent": 43.46041055718475
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-14",
+    "trin": 0.43111522092219956,
+    "trin_amount": 0.5950229258059165,
+    "advance": 917,
+    "decline": 4213,
+    "flat": 83,
+    "advance_volume": 30389581929,
+    "decline_volume": 60192198387,
+    "flat_volume": 2886496684,
+    "advance_amount": 374877941597.93,
+    "decline_amount": 1024815556215.84,
+    "advancing_percent": 17.59063878764627,
+    "advancing_volume_percent": 33.54933169008614,
+    "advancing_amount_percent": 26.782859403395452,
+    "expected": 5224,
+    "covered": 5224,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:43:53.101713+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-14",
+      "active": 5213,
+      "windows": {
+        "20": {
+          "eligible": 5179,
+          "above": 1224,
+          "percent": 23.633906159490248
+        },
+        "60": {
+          "eligible": 5116,
+          "above": 1809,
+          "percent": 35.35965598123534
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-15",
+    "trin": 0.4644036871591857,
+    "trin_amount": 0.3336883626054302,
+    "advance": 399,
+    "decline": 4790,
+    "flat": 25,
+    "advance_volume": 15977092240,
+    "decline_volume": 89075038639,
+    "flat_volume": 1025171172,
+    "advance_amount": 324077157059.26,
+    "decline_amount": 1298231369790.18,
+    "advancing_percent": 7.652474108170311,
+    "advancing_volume_percent": 15.208727425436576,
+    "advancing_amount_percent": 19.97629622822887,
+    "expected": 5225,
+    "covered": 5225,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:44:24.273806+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-15",
+      "active": 5214,
+      "windows": {
+        "20": {
+          "eligible": 5180,
+          "above": 764,
+          "percent": 14.749034749034749
+        },
+        "60": {
+          "eligible": 5117,
+          "above": 1150,
+          "percent": 22.474105921438344
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-16",
+    "trin": 1.0810948106731364,
+    "trin_amount": 1.516385005723892,
+    "advance": 3061,
+    "decline": 2022,
+    "flat": 132,
+    "advance_volume": 57872744331,
+    "decline_volume": 41329074639,
+    "flat_volume": 3110092132,
+    "advance_amount": 767688403560.72,
+    "decline_amount": 768975110914.14,
+    "advancing_percent": 58.6960690316395,
+    "advancing_volume_percent": 58.33839029554641,
+    "advancing_amount_percent": 49.95813308049226,
+    "expected": 5225,
+    "covered": 5225,
+    "suspended": 10,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:45:07.177126+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-16",
+      "active": 5215,
+      "windows": {
+        "20": {
+          "eligible": 5182,
+          "above": 868,
+          "percent": 16.750289463527597
+        },
+        "60": {
+          "eligible": 5118,
+          "above": 1289,
+          "percent": 25.185619382571318
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-19",
+    "trin": 0.9153618103262013,
+    "trin_amount": 0.8531766684448026,
+    "advance": 2201,
+    "decline": 2861,
+    "flat": 150,
+    "advance_volume": 40061031759,
+    "decline_volume": 47666441892,
+    "flat_volume": 3399634984,
+    "advance_amount": 673851988805.9,
+    "decline_amount": 747310871431.62,
+    "advancing_percent": 42.22947045280123,
+    "advancing_volume_percent": 45.66532021470488,
+    "advancing_amount_percent": 47.41553608382917,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 11,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:45:39.273078+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-19",
+      "active": 5212,
+      "windows": {
+        "20": {
+          "eligible": 5181,
+          "above": 920,
+          "percent": 17.757189731712025
+        },
+        "60": {
+          "eligible": 5116,
+          "above": 1151,
+          "percent": 22.49804534792807
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-20",
+    "trin": 1.992467013840802,
+    "trin_amount": 1.3538462658126094,
+    "advance": 3432,
+    "decline": 1662,
+    "flat": 122,
+    "advance_volume": 43503152120,
+    "decline_volume": 41975473742,
+    "flat_volume": 2344706520,
+    "advance_amount": 869372612924.66,
+    "decline_amount": 569979251352.03,
+    "advancing_percent": 65.79754601226993,
+    "advancing_volume_percent": 50.89360256005188,
+    "advancing_amount_percent": 60.40028394040684,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:46:23.410361+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-20",
+      "active": 5216,
+      "windows": {
+        "20": {
+          "eligible": 5183,
+          "above": 1031,
+          "percent": 19.891954466525178
+        },
+        "60": {
+          "eligible": 5117,
+          "above": 1255,
+          "percent": 24.52608950556967
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-21",
+    "trin": 0.5690074081662162,
+    "trin_amount": 0.6040628373398351,
+    "advance": 1941,
+    "decline": 3054,
+    "flat": 220,
+    "advance_volume": 42458584613,
+    "decline_volume": 38012543540,
+    "flat_volume": 4445778083,
+    "advance_amount": 720309392790.05,
+    "decline_amount": 684612293680.95,
+    "advancing_percent": 37.219558964525405,
+    "advancing_volume_percent": 52.76250698545367,
+    "advancing_amount_percent": 51.27043021162151,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 8,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:47:10.014036+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-21",
+      "active": 5215,
+      "windows": {
+        "20": {
+          "eligible": 5183,
+          "above": 984,
+          "percent": 18.98514373914721
+        },
+        "60": {
+          "eligible": 5117,
+          "above": 1169,
+          "percent": 22.845417236662108
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-22",
+    "trin": 0.5049559386216957,
+    "trin_amount": 0.508939623854593,
+    "advance": 448,
+    "decline": 4738,
+    "flat": 31,
+    "advance_volume": 15092665831,
+    "decline_volume": 80600267455,
+    "flat_volume": 582529767,
+    "advance_amount": 238415290906.04,
+    "decline_amount": 1283268141504.67,
+    "advancing_percent": 8.58731071497029,
+    "advancing_volume_percent": 15.77197533060477,
+    "advancing_amount_percent": 15.667864013498079,
+    "expected": 5224,
+    "covered": 5224,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T09:59:12.526989+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-22",
+      "active": 5217,
+      "windows": {
+        "20": {
+          "eligible": 5186,
+          "above": 595,
+          "percent": 11.47319706903201
+        },
+        "60": {
+          "eligible": 5119,
+          "above": 785,
+          "percent": 15.335026372338348
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-23",
+    "trin": 1.456961757800716,
+    "trin_amount": 1.0660917324900157,
+    "advance": 4196,
+    "decline": 887,
+    "flat": 135,
+    "advance_volume": 91309169855,
+    "decline_volume": 28122290315,
+    "flat_volume": 4853088374,
+    "advance_amount": 1579318163284.54,
+    "decline_amount": 355919961555.06,
+    "advancing_percent": 80.41395170563435,
+    "advancing_volume_percent": 76.45319727735856,
+    "advancing_amount_percent": 81.60846683482117,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 5,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T09:50:41.367454+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-23",
+      "active": 5218,
+      "windows": {
+        "20": {
+          "eligible": 5186,
+          "above": 1003,
+          "percent": 19.34053220208253
+        },
+        "60": {
+          "eligible": 5119,
+          "above": 1006,
+          "percent": 19.652275835124048
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-26",
+    "trin": 0.7201790677766351,
+    "trin_amount": 1.1300715115274,
+    "advance": 2082,
+    "decline": 2990,
+    "flat": 144,
+    "advance_volume": 46373529510,
+    "decline_volume": 47962422336,
+    "flat_volume": 3171245777,
+    "advance_amount": 606670174011.86,
+    "decline_amount": 984575521050.47,
+    "advancing_percent": 39.91564417177914,
+    "advancing_volume_percent": 49.15785403395632,
+    "advancing_amount_percent": 38.12548721384578,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T15:48:27.063016+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-26",
+      "active": 5216,
+      "windows": {
+        "20": {
+          "eligible": 5184,
+          "above": 1113,
+          "percent": 21.46990740740741
+        },
+        "60": {
+          "eligible": 5117,
+          "above": 1055,
+          "percent": 20.617549345319524
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-27",
+    "trin": 0.3792551254877803,
+    "trin_amount": 0.46587838477176546,
+    "advance": 576,
+    "decline": 4600,
+    "flat": 40,
+    "advance_volume": 23045508362,
+    "decline_volume": 69799626671,
+    "flat_volume": 1079137801,
+    "advance_amount": 307667525784.56,
+    "decline_amount": 1144694426757.79,
+    "advancing_percent": 11.042944785276074,
+    "advancing_volume_percent": 24.82144956093706,
+    "advancing_amount_percent": 21.18394283504811,
+    "expected": 5223,
+    "covered": 5223,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-28T10:05:36.024560+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-27",
+      "active": 5216,
+      "windows": {
+        "20": {
+          "eligible": 5185,
+          "above": 758,
+          "percent": 14.619093539054965
+        },
+        "60": {
+          "eligible": 5118,
+          "above": 748,
+          "percent": 14.615084017194217
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T10:32:33.313348+08:00"
+    }
+  },
+  {
+    "date": "2026-10-28",
+    "trin": 1.4095411438020395,
+    "trin_amount": 0.8780863667413731,
+    "advance": 3872,
+    "decline": 1175,
+    "flat": 169,
+    "advance_volume": 65046501341,
+    "decline_volume": 27823016757,
+    "flat_volume": 4257891360,
+    "advance_amount": 1266502688903.11,
+    "decline_amount": 337478312207.22,
+    "advancing_percent": 74.23312883435582,
+    "advancing_volume_percent": 70.04074390949253,
+    "advancing_amount_percent": 78.95995576172,
+    "expected": 5222,
+    "covered": 5222,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-29T10:45:19.747638+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表",
+    "ma_breadth": {
+      "date": "2026-10-28",
+      "active": 5216,
+      "windows": {
+        "20": {
+          "eligible": 5186,
+          "above": 1049,
+          "percent": 20.227535672965676
+        },
+        "60": {
+          "eligible": 5118,
+          "above": 952,
+          "percent": 18.60101602188355
+        },
+        "250": {
+          "eligible": 0,
+          "above": 0,
+          "percent": null
+        }
+      },
+      "source": "Money Tree 未复权日线；BaoStock 逐日逐股核对",
+      "computed_at": "2026-10-29T13:07:42.323174+08:00"
+    }
+  },
+  {
+    "date": "2026-10-29",
+    "trin": 0.41429886889891976,
+    "trin_amount": 0.535686763325648,
+    "advance": 756,
+    "decline": 4399,
+    "flat": 60,
+    "advance_volume": 28312659838,
+    "decline_volume": 68253760663,
+    "flat_volume": 1777594004,
+    "advance_amount": 375861617635.12,
+    "decline_amount": 1171577601729.51,
+    "advancing_percent": 14.496644295302014,
+    "advancing_volume_percent": 29.31936349210211,
+    "advancing_amount_percent": 24.289265318572365,
+    "expected": 5222,
+    "covered": 5222,
+    "suspended": 7,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:32:26.421199+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  },
+  {
+    "date": "2026-10-30",
+    "trin": 0.602235729851903,
+    "trin_amount": 0.6742832210223383,
+    "advance": 853,
+    "decline": 4290,
+    "flat": 73,
+    "advance_volume": 26732413650,
+    "decline_volume": 80967914218,
+    "flat_volume": 2887403441,
+    "advance_amount": 378663502682.9,
+    "decline_amount": 1284115421464.91,
+    "advancing_percent": 16.353527607361965,
+    "advancing_volume_percent": 24.821107028349868,
+    "advancing_amount_percent": 22.772931337036802,
+    "expected": 5222,
+    "covered": 5222,
+    "suspended": 6,
+    "missing": 0,
+    "status": "closed",
+    "historical": true,
+    "first_quote": null,
+    "last_quote": null,
+    "collected_at": "2026-10-31T09:32:42.293405+08:00",
+    "source": "BaoStock 收盘日线；Money Tree 逐股交叉核对",
+    "universe": "沪深当日日线股票，排除689类存托凭证；近似新浪列表"
+  }
+]

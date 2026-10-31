@@ -13,6 +13,13 @@ from .daily_cache import DailyCache
 from .minute_cache import MinuteCache
 from .archive import Archive
 from .market import Market
+from .breadth import Breadth, CODE as BREADTH_CODE, KIND as BREADTH_KIND, BREADTH_INTERVAL_SECONDS, valid_closed_breadth
+from .csi300 import CSI300
+from .option_pcr import OptionPCR, eligible_sessions, NOT_PUBLISHED
+from .etf_option_pcr import ETFOptionPCR
+from .index_option_pcr import IndexOptionPCR
+from .equity_bond import EquityBond
+from .index_technical import IndexTechnical, trading_day
 from .volume_flow import VolumeFlow
 
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parent.parent))
@@ -23,6 +30,25 @@ SEEDS=[('sh603002','宏昌电子'),('sh688680','海优新材'),('sh600392','盛�
 def trading(now):
     t=now.strftime('%H:%M:%S')
     return now.weekday()<5 and ('09:30:00'<=t<='11:31:00' or '13:00:00'<=t<='15:00:00')
+
+def breadth_close_date(now):
+    """The breadth collector accepts a complete close from 15:15 onward."""
+    sessions = eligible_sessions(now + timedelta(minutes=75), 1)
+    return sessions[-1] if sessions else None
+
+def breadth_collection_due(now, initial, missing_close, seconds_since_retry):
+    t = now.strftime('%H:%M')
+    market_window = now.weekday() < 5 and trading_day(now.date()) is not False and ('09:30' <= t <= '11:30' or '13:00' <= t <= '15:20')
+    return initial or market_window or (missing_close and (seconds_since_retry is None or seconds_since_retry >= 1800))
+
+def postclose_check_wait(now, checked_at=None):
+    """Wake at the next eligibility boundary without increasing retry frequency."""
+    if checked_at and eligible_sessions(checked_at, 1) != eligible_sessions(now, 1):
+        return 1
+    boundary = now.replace(hour=16, minute=30, second=0, microsecond=0)
+    if now < boundary and eligible_sessions(now, 1) != eligible_sessions(boundary, 1):
+        return min(3600, max(1, (boundary-now).total_seconds()))
+    return 3600
 
 def observed_elapsed(start,end):
     """The scheduled lunch break is not a data outage."""
@@ -54,12 +80,27 @@ class App:
         self.minute_cache=MinuteCache(self)
         self.archive=Archive(self)
         self.market=Market(self)
+        self.breadth=Breadth(self.store)
+        self.csi300=CSI300(self.store)
+        self.option_pcr=OptionPCR(self.store)
+        self.option_pcr_300=OptionPCR(self.store, '510300')
+        self.etf_option_pcr=ETFOptionPCR(self.store)
+        self.index_option_pcr=IndexOptionPCR(self.store)
+        self.equity_bond=EquityBond(self.store)
+        self.index_technical=IndexTechnical(self.store)
         self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
         if start_worker:
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
             threading.Thread(target=self.market_loop,daemon=True).start()
+            threading.Thread(target=self.breadth_loop,daemon=True).start()
+            threading.Thread(target=self.csi300_loop,daemon=True).start()
+            threading.Thread(target=self.option_pcr_loop,daemon=True).start()
+            threading.Thread(target=self.etf_option_pcr_loop,daemon=True).start()
+            threading.Thread(target=self.index_option_pcr_loop,daemon=True).start()
+            threading.Thread(target=self.equity_bond_loop,daemon=True).start()
+            threading.Thread(target=self.index_technical_loop,daemon=True).start()
             threading.Thread(target=self.paper_loop,daemon=True).start()
 
     def paper_service(self):
@@ -187,6 +228,103 @@ class App:
             if initial or trading(now_cn()):self.market.poll();initial=False
             self.stop.wait(30)
 
+    def breadth_loop(self):
+        # Separate, low-frequency IO; never block individual-stock monitoring.
+        initial=True
+        last_recovery_day, last_recovery_time = None, None
+        while not self.stop.is_set():
+            now=now_cn()
+            target=breadth_close_date(now)
+            previous = self.store.getcache(BREADTH_CODE, BREADTH_KIND, target) if target else []
+            missing_close=bool(target and not (previous and valid_closed_breadth(previous[0]['data'], target, now)))
+            stamp=time.monotonic()
+            since_retry=stamp-last_recovery_time if last_recovery_day == target and last_recovery_time is not None else None
+            if breadth_collection_due(now, initial, missing_close, since_retry):
+                if missing_close:
+                    last_recovery_day, last_recovery_time = target, stamp
+                self.breadth.refresh()
+                initial=False
+            # Schedule from scan start so network time does not extend the
+            # intended cadence; retain a pause after unusually slow scans.
+            last_start=max(stamp, getattr(self.breadth, 'last_attempt', stamp))
+            self.stop.wait(max(15, last_start + BREADTH_INTERVAL_SECONDS - time.monotonic()))
+
+    def csi300_loop(self):
+        # The official constituent list has its own cadence and must not delay quotes.
+        while not self.stop.is_set():
+            self.csi300.refresh()
+            self.stop.wait(1800)
+
+    def option_pcr_loop(self):
+        # Separate low-frequency post-close collection; never blocks quote monitoring.
+        checked = {}
+        attempted = {}
+        while not self.stop.is_set():
+            now = now_cn()
+            days = eligible_sessions(now, 1)
+            for service in (self.option_pcr, self.option_pcr_300):
+                last = attempted.get(service.security_code)
+                retry = 600 if service.error == NOT_PUBLISHED else 3600
+                if (days and days[-1] != checked.get(service.security_code)
+                    and (not last or last[0] != days[-1] or time.monotonic()-last[1] >= retry)):
+                    attempted[service.security_code] = (days[-1], time.monotonic())
+                    service.refresh(now)
+                    if not service.error:
+                        checked[service.security_code] = days[-1]
+            pending = any(s.error == NOT_PUBLISHED for s in (self.option_pcr, self.option_pcr_300))
+            self.stop.wait(min(600 if pending else 3600, postclose_check_wait(now_cn(), now)))
+
+    def etf_option_pcr_loop(self):
+        # Separate IO from the existing per-product services and monitoring.
+        checked, attempted = None, None
+        while not self.stop.is_set():
+            now = now_cn()
+            days = eligible_sessions(now, 1)
+            if days and days[-1] != checked and (attempted is None or attempted[0] != days[-1] or time.monotonic()-attempted[1] >= 3600):
+                attempted = (days[-1], time.monotonic())
+                self.etf_option_pcr.refresh(now)
+                if not self.etf_option_pcr.error:
+                    checked = days[-1]
+            self.stop.wait(min(3600, postclose_check_wait(now_cn(), now)))
+
+    def index_option_pcr_loop(self):
+        checked, attempted = None, None
+        while not self.stop.is_set():
+            now = now_cn()
+            days = eligible_sessions(now, 1)
+            if days and days[-1] != checked and (attempted is None or attempted[0] != days[-1] or time.monotonic()-attempted[1] >= 3600):
+                attempted = (days[-1], time.monotonic())
+                self.index_option_pcr.refresh(now)
+                if not self.index_option_pcr.error:
+                    checked = days[-1]
+            self.stop.wait(min(3600, postclose_check_wait(now_cn(), now)))
+
+    def equity_bond_loop(self):
+        # Separate post-close read-only collection, independent of stock monitoring.
+        checked = None
+        while not self.stop.is_set():
+            now = now_cn()
+            days = eligible_sessions(now, 1)
+            if days and days[-1] != checked:
+                self.equity_bond.refresh(now)
+                if not self.equity_bond.error:
+                    checked = days[-1]
+            self.stop.wait(postclose_check_wait(now_cn(), now))
+
+    def index_technical_loop(self):
+        checked = None
+        while not self.stop.is_set():
+            now = now_cn()
+            days = eligible_sessions(now,1)
+            if days and days[-1] != checked:
+                self.index_technical.refresh(now)
+                if not self.index_technical.error:
+                    checked = days[-1]
+            wait = postclose_check_wait(now_cn(), now)
+            # A transient quote failure should not hide market guidance for an
+            # hour. Retry slowly, while still waking at the next close boundary.
+            self.stop.wait(min(wait, 300) if self.index_technical.error else wait)
+
     def daily_loop(self):
         # Keep slow historical IO off the live quote/minute polling path.
         while not self.stop.is_set():
@@ -251,6 +389,28 @@ class App:
                 return report
             return self.start_job(research)
         if method=='market':return self.market.view(args.get('day'))
+        if method=='breadth':return self.breadth.view()
+        if method=='csi300':return self.csi300.view(args.get('day'))
+        # A deliberate manual refresh must not silently hit the automatic
+        # five-minute cooldown; the collector still prevents concurrent runs.
+        if method=='breadth_refresh':return self.start_job(lambda:(self.breadth.refresh(force=True),self.breadth.view())[1])
+        if method=='equity_bond':return self.equity_bond.view()
+        if method=='equity_bond_refresh':return self.start_job(lambda:(self.equity_bond.refresh(),self.equity_bond.view())[1])
+        if method=='index_technical':return self.index_technical.view()
+        if method=='index_technical_refresh':return self.start_job(lambda:(self.index_technical.refresh(),self.index_technical.view())[1])
+        if method in ('etf_option_pcr','etf_option_pcr_refresh'):
+            if method=='etf_option_pcr':return self.etf_option_pcr.view()
+            return self.start_job(lambda:(self.etf_option_pcr.refresh(),self.etf_option_pcr.view())[1])
+        if method in ('index_option_pcr','index_option_pcr_refresh'):
+            product=args.get('product','IO')
+            if method=='index_option_pcr':return self.index_option_pcr.view(product)
+            return self.start_job(lambda:(self.index_option_pcr.refresh(),self.index_option_pcr.view(product))[1])
+        if method in ('option_pcr','option_pcr_refresh'):
+            product=args.get('security_code','510050')
+            if product not in ('510050','510300'):raise ValueError('不支持的期权标的')
+            service=self.option_pcr if product=='510050' else self.option_pcr_300
+            if method=='option_pcr':return service.view()
+            return self.start_job(lambda:(service.refresh(),service.view())[1])
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')

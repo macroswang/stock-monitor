@@ -1,0 +1,18 @@
+{
+  "all": {
+    "n": 19,
+    "positive": 10,
+    "nonpositive": 9,
+    "average_net_yuan": "58.16"
+  },
+  "non_overlapping": {
+    "n": 11,
+    "positive": 7,
+    "nonpositive": 4,
+    "average_net_yuan": "224.09"
+  },
+  "units": 5000,
+  "start": "2026-02-02",
+  "end": "2026-10-15",
+  "skipped": 1
+}

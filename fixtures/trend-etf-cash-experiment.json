@@ -1,0 +1,57 @@
+{
+  "period": [
+    "2026-01-19",
+    "2026-10-29"
+  ],
+  "initial_cash": "100000",
+  "trend": {
+    "final_value": "92883.57",
+    "return_percent": "-7.12",
+    "max_drawdown_percent": "12.25",
+    "trade_count": 26
+  },
+  "buy_and_hold": {
+    "final_value": "86750.31",
+    "return_percent": "-13.25",
+    "max_drawdown_percent": "19.33",
+    "trade_count": 1
+  },
+  "segments": [
+    {
+      "period": [
+        "2026-01-19",
+        "2026-06-30"
+      ],
+      "trend": {
+        "final_value": "103232.77",
+        "return_percent": "3.23",
+        "max_drawdown_percent": "5.20",
+        "trade_count": 17
+      },
+      "buy_and_hold": {
+        "final_value": "105909.11",
+        "return_percent": "5.91",
+        "max_drawdown_percent": "7.09",
+        "trade_count": 1
+      }
+    },
+    {
+      "period": [
+        "2026-07-01",
+        "2026-10-29"
+      ],
+      "trend": {
+        "final_value": "90110.18",
+        "return_percent": "-9.89",
+        "max_drawdown_percent": "9.89",
+        "trade_count": 10
+      },
+      "buy_and_hold": {
+        "final_value": "82089.96",
+        "return_percent": "-17.91",
+        "max_drawdown_percent": "17.99",
+        "trade_count": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "n": 22,
+  "better": 10,
+  "worse": 12,
+  "average_difference_yuan": "-44.55",
+  "assumed_existing_units": 10000,
+  "sell_and_rebuy_units": 5000,
+  "start": "2026-02-02",
+  "end": "2026-10-15",
+  "non_overlapping": {
+    "n": 12,
+    "better": 5,
+    "worse": 7,
+    "average_difference_yuan": "-178.33"
+  }
+}

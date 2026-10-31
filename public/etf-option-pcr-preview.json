@@ -1,0 +1,39 @@
+{
+  "days": [
+    {
+      "date": "2026-10-29",
+      "call_volume": 3935317,
+      "put_volume": 3569015,
+      "total_volume": 7504332,
+      "pcr": 0.9069193155214688,
+      "sse_call": 2700191,
+      "sse_put": 2594224,
+      "szse_call": 1235126,
+      "szse_put": 974791,
+      "collected_at": "2026-10-31T04:18:24.808039+08:00",
+      "band_mid": null,
+      "band_upper": null,
+      "band_lower": null,
+      "gap_before": false
+    },
+    {
+      "date": "2026-10-30",
+      "call_volume": 4611003,
+      "put_volume": 3926198,
+      "total_volume": 8537201,
+      "pcr": 0.8514845902290673,
+      "sse_call": 3032822,
+      "sse_put": 2786902,
+      "szse_call": 1578181,
+      "szse_put": 1139296,
+      "collected_at": "2026-10-31T04:18:25.297386+08:00",
+      "band_mid": null,
+      "band_upper": null,
+      "band_lower": null,
+      "gap_before": false
+    }
+  ],
+  "running": false,
+  "error": "",
+  "latest_eligible": "2026-10-30"
+}

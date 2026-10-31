@@ -1,0 +1,25 @@
+{
+  "start": "2026-01-19",
+  "end": "2026-10-21",
+  "baseline": {
+    "n": 173,
+    "better": 97,
+    "worse": 75,
+    "equal": 1,
+    "mean": "73.18"
+  },
+  "condition": {
+    "n": 51,
+    "better": 28,
+    "worse": 22,
+    "equal": 1,
+    "mean": "83.73"
+  },
+  "condition_non_overlapping": {
+    "n": 19,
+    "better": 8,
+    "worse": 11,
+    "equal": 0,
+    "mean": "-51.32"
+  }
+}

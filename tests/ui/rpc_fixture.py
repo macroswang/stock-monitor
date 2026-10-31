@@ -40,6 +40,24 @@ for line in sys.stdin:
    paper_clock.return_value=datetime.fromisoformat(req['args']['now']);data=True
   elif req['method']=='__audit_event':
    app.store.event(req['args'],'live');data=True
+  elif req['method']=='__audit_market_decision_reference':
+   # Use recorded public responses and an isolated store, never the user's account.
+   from pathlib import Path
+   from core.index_technical import parse_daily
+   now=datetime.fromisoformat('2026-10-31T04:00:00+08:00')
+   for module in ('core.breadth','core.index_technical','core.csi300'):
+    patch(module+'.now_cn',return_value=now).start()
+   source=Path(__file__).resolve().parents[2]/'docs/author-trading-system-20261028/vwmacd-tencent-20261031.json'
+   rows=parse_daily(json.loads(source.read_text(encoding='utf-8')),'2026-01-01','2026-10-30')
+   with patch('core.index_technical.fetch_daily',return_value=rows):app.index_technical.refresh(now)
+   if app.index_technical.error:raise ValueError(app.index_technical.error)
+   data=True
+  elif req['method']=='__audit_breadth_error':
+   app.breadth.error=req['args']['error'];data=True
+  elif req['method']=='__audit_index_error':
+   app.index_technical.error=req['args']['error'];data=True
+  elif req['method']=='__audit_etf_option_clock':
+   patch('core.etf_option_pcr.now_cn',return_value=datetime.fromisoformat(req['args']['now'])).start();data=True
   else:data=app.call(req['method'],req.get('args',{}))
   print(json.dumps(dict(ok=True,data=data),ensure_ascii=False),flush=True)
  except Exception as e:print(json.dumps(dict(ok=False,error=str(e)),ensure_ascii=False),flush=True)

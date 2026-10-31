@@ -27,14 +27,16 @@ fn main(){
  .setup(|app|{
   let dir=app.path().app_data_dir()?;std::fs::create_dir_all(&dir)?;
   let executable=std::env::current_exe()?.parent().unwrap().join(if cfg!(windows){"monitor-core.exe"}else{"monitor-core"});
-  let mut command=if executable.exists(){Command::new(executable)}else{
-   #[cfg(debug_assertions)] {
+  #[cfg(debug_assertions)]
+  let mut command={
     let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let python=root.join(if cfg!(windows){".venv/Scripts/python.exe"}else{".venv/bin/python"});
-    let mut c=Command::new(python);c.args(["-m","core.app"]).current_dir(root);c
-   }
-   #[cfg(not(debug_assertions))] {return Err("缺少内置监控程序，请重新安装".into());}
+    if python.exists(){let mut c=Command::new(python);c.args(["-m","core.app"]).current_dir(root);c}
+    else if executable.exists(){Command::new(executable)}
+    else{return Err("缺少开发环境和内置监控程序".into());}
   };
+  #[cfg(not(debug_assertions))]
+  let mut command=if executable.exists(){Command::new(executable)}else{return Err("缺少内置监控程序，请重新安装".into());};
   #[cfg(windows)] {use std::os::windows::process::CommandExt;command.creation_flags(0x08000000);}
   let mut child=command.env("STOCK_MONITOR_DATA",dir).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).spawn()?;
   let input=child.stdin.take().unwrap();let output=BufReader::new(child.stdout.take().unwrap());

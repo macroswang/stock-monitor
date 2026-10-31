@@ -30,6 +30,76 @@ test.beforeEach(async({page})=>{
 });
 test.afterEach(async({page})=>{await page.close();process.stdin.end();await new Promise(resolve=>process.once('exit',resolve));await rm(directory,{recursive:true,force:true});});
 
+test('market guidance uses isolated real RPC data and pauses after a backend failure',async({page})=>{
+ await rpc('__audit_market_decision_reference');
+ await page.clock.install({time:new Date('2026-10-30T19:30:00Z')});
+ await page.reload();
+ const home=page.getByRole('region',{name:'首页市场判断'});
+ await expect(home).toContainText('数据不足，等待更新');
+ await expect(home).not.toContainText('先不加仓');
+ await page.clock.setFixedTime(new Date('2026-10-30T20:00:00Z'));
+ await page.reload();
+ await expect(home).toContainText('2026-10-30 · 最近收盘');
+ await expect(home).not.toContainText('静态预览');
+ await expect(home).toContainText('先不加仓；空仓继续观望');
+ await expect(home).toContainText('上涨股票 16.4%');
+ await expect(home).toContainText('上涨组成交额更集中在沪深300');
+ await expect(home.locator('.home-market-core')).toHaveText('沪深300：上涨组成交额占比高于下跌组（35.4% 对 24.8%）。');
+ const evidence=home.locator('.home-market-evidence');
+ await evidence.locator('summary').click();
+ await expect(evidence).toContainText('2026-10-30 收盘沪深股票成交股数较 2026-10-29 增加 12.4%');
+ await rpc('__audit_breadth_error',{error:'全市场数据获取失败'});
+ await page.reload();
+ await expect(home).toContainText('市场数据更新失败');
+ await expect(home).not.toContainText('先不加仓');
+ await expect(home.locator('.home-market-core')).toHaveCount(0);
+ await home.getByRole('button',{name:'查看市场趋势'}).click();
+ const summary=page.getByRole('region',{name:'市场状态与操作参考'}).locator('.market-summary');
+ await expect(summary.locator('.market-summary-action')).toContainText('市场数据更新失败');
+ await expect(page.getByRole('img',{name:/上涨股成交额占比柱状图/})).toBeVisible();
+ await rpc('__audit_breadth_error',{error:''});
+ await page.goto('/');
+ await expect(home).toContainText('先不加仓；空仓继续观望');
+ await expect(home).toContainText('少数上涨股相对放量');
+ await rpc('__audit_index_error',{error:'指数数据获取失败'});
+ await page.reload();
+ await expect(home).toContainText('指数数据更新失败');
+ await expect(home).not.toContainText('分批减仓');
+ await home.getByRole('button',{name:'查看市场趋势'}).click();
+ await expect(summary.locator('.market-summary-action')).toContainText('指数数据更新失败');
+ await expect(page.getByRole('img',{name:/上涨股成交额占比柱状图/})).toBeVisible();
+ await rpc('__audit_index_error',{error:''});
+ await page.goto('/');
+ await expect(home).toContainText('先不加仓；空仓继续观望');
+});
+
+test('exchange ETF PCR reaches the chart through the real isolated backend',async({page})=>{
+ await rpc('__audit_market_decision_reference');
+ await rpc('__audit_etf_option_clock',{now:'2026-10-31T05:00:00+08:00'});
+ await page.clock.install({time:new Date('2026-10-30T21:00:00Z')});
+ await page.reload();
+ await page.getByRole('region',{name:'首页市场判断'}).getByRole('button',{name:'查看市场趋势'}).click();
+ await page.getByLabel('市场图表与研究详情').locator(':scope > summary').click();
+ await page.getByLabel('期权标的').selectOption('etf-exchanges');
+ const panel=page.getByRole('region',{name:'沪深ETF合计期权PCR'});
+ await expect(panel.locator('.option-readout strong').first()).toHaveText('0.851');
+ await expect(panel).toContainText('3,926,198 / 4,611,003 张');
+ await expect(panel).toContainText('不含中金所');
+});
+
+test('index-option PCR reaches the chart through the real isolated backend',async({page})=>{
+ await rpc('__audit_market_decision_reference');
+ await page.clock.install({time:new Date('2026-10-30T22:00:00Z')});
+ await page.reload();
+ await page.getByRole('region',{name:'首页市场判断'}).getByRole('button',{name:'查看市场趋势'}).click();
+ await page.getByLabel('市场图表与研究详情').locator(':scope > summary').click();
+ await page.getByLabel('期权标的').selectOption('cffex-IO');
+ const panel=page.getByRole('region',{name:'沪深300股指期权PCR'});
+ await expect(panel.locator('.option-readout strong').first()).toHaveText('0.612');
+ await expect(panel).toContainText('47,939 / 78,341 张');
+ await expect(panel).toContainText('不代表全市场');
+});
+
 test('same-stock click preserves graph; rapid selection never shows the previous stock cache',async({page})=>{
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  await page.locator('.stock').filter({hasText:'宏昌电子'}).click();

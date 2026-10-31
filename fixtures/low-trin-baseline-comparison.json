@@ -1,0 +1,38 @@
+{
+  "all_dates": {
+    "summary": {
+      "n": 174,
+      "positive": 74,
+      "nonpositive": 100,
+      "average_net_yuan": "-99.63"
+    },
+    "skipped": 7
+  },
+  "weak_low_trin": {
+    "summary": {
+      "n": 19,
+      "positive": 10,
+      "nonpositive": 9,
+      "average_net_yuan": "58.16"
+    },
+    "skipped": 1
+  },
+  "weak_other_trin": {
+    "summary": {
+      "n": 2,
+      "positive": 0,
+      "nonpositive": 2,
+      "average_net_yuan": "-402.50"
+    },
+    "skipped": 0
+  },
+  "not_weak": {
+    "summary": {
+      "n": 153,
+      "positive": 64,
+      "nonpositive": 89,
+      "average_net_yuan": "-115.26"
+    },
+    "skipped": 6
+  }
+}

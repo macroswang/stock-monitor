@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-30",
+  "member_date": "2026-10-30",
+  "collected_at": "2026-10-31T03:14:31.055070+08:00",
+  "member_collected_at": "2026-10-31T03:14:31.055070+08:00",
+  "available_at": "2026-10-31T03:14:31.055070+08:00",
+  "status": "closed",
+  "advance": 102,
+  "decline": 189,
+  "flat": 9,
+  "suspended": 0,
+  "advance_amount": 133928610000.0,
+  "market_advance_amount": 378663410000.0,
+  "advance_amount_percent": 35.36877513462418,
+  "decline_amount": 319102500000.0,
+  "market_decline_amount": 1284115260000.0,
+  "decline_amount_percent": 24.849988933236414,
+  "source": "https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/cons/000300cons.xls"
+}
