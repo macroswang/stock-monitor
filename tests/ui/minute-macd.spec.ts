@@ -1,0 +1,104 @@
+import {test,expect,Page} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+import {benchmarkForStock,minuteMacd,minuteSlots} from '../../src/minuteMacd';
+
+const at=(time:string)=>minuteSlots.indexOf(time);
+test('market mapping distinguishes Shanghai, Shenzhen and ChiNext without guessing',()=>{
+ for(const code of ['sh603938','sh688680','600519'])expect(benchmarkForStock(code)?.code).toBe('sh000001');
+ for(const code of ['sz000981','sz002001','001001'])expect(benchmarkForStock(code)?.code).toBe('sz399001');
+ for(const code of ['sz300672','sz301001','300001'])expect(benchmarkForStock(code)?.code).toBe('sz399006');
+ expect(benchmarkForStock('bj920001')).toBeNull();expect(benchmarkForStock('')).toBeNull();
+});
+test('standard MACD has known EMA values, zero constant-price values and no future dependency',()=>{
+ const bars=[{time:'09:30',close:10},{time:'09:31',close:11},{time:'09:32',close:12}];
+ const result=minuteMacd(bars);
+ expect(result[0]).toEqual({dif:0,dea:0,histogram:0});
+ expect(result[1]!.dif).toBeCloseTo(.079772079772,10);expect(result[1]!.dea).toBeCloseTo(.0159544159544,10);expect(result[1]!.histogram).toBeCloseTo(.127635327635,10);
+ expect(result[2]!.dif).toBeCloseTo(.221134568713,10);expect(result[2]!.histogram).toBeCloseTo(.328288244413,10);
+ const all=minuteSlots.map((time,i)=>({time,close:10+Math.sin(i/9)}));
+ expect(minuteMacd(all).slice(0,90)).toEqual(minuteMacd(all.slice(0,90)).slice(0,90));
+ expect(minuteMacd(all.map(b=>({...b,close:20}))).every(p=>p?.histogram===0&&p?.dif===0&&p?.dea===0)).toBe(true);
+});
+test('lunch stays continuous; invalid, duplicate or missing minutes break and reset the curve',()=>{
+ const bars=minuteSlots.map((time,i)=>({time,close:10+i/100}));
+ expect(minuteMacd(bars)[at('13:01')]!.dif).toBeGreaterThan(0);
+ for(const broken of [bars.filter(b=>b.time!=='10:00'),[...bars,{time:'10:00',close:11}],bars.map(b=>b.time==='10:00'?{...b,close:NaN}:b)]){
+  const points=minuteMacd(broken);expect(points[at('10:00')]).toBeNull();expect(points[at('10:01')]).toEqual({dif:0,dea:0,histogram:0});
+ }
+ expect(minuteMacd(bars.slice(0,20))[20]).toBeNull();
+});
+
+const fixture=JSON.parse(readFileSync('public/preview.json','utf8'));
+async function setup(page:Page,wrongDate=false){
+ await page.clock.install({time:new Date('2026-11-02T12:00:00+08:00')});
+ for(const [file,code,name,base] of [['market-overview-preview.json','sh000001','上证指数',3600],['szse-preview.json','sz399001','深证成指',11000],['chinext-preview.json','sz399006','创业板指',2500]] as const){
+  await page.route('**/'+file,route=>route.fulfill({json:{quotes:[{code,name,timestamp:'2026-10-16T15:00:00+08:00',previous_close:String(base),price:String(base)}],collected_at:'2026-10-16T15:01:00+08:00',minute:{code,name,date:wrongDate?'2026-10-15':'2026-10-16',previous_close:String(base),bars:minuteSlots.map((time,i)=>({time,close:String(base+12*Math.sin(i/14)+i/20)}))}}}));
+ }
+ const data=structuredClone(fixture);data.minutes['sz000981'][0].data.previous_close='2.40';await page.route('**/preview.json',route=>route.fulfill({json:data}));
+ await page.goto('/');await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await expect(page.getByRole('group',{name:'个股MACD',exact:true})).toBeVisible();
+}
+async function option(page:Page){
+ return page.getByLabel('分时价格及分钟成交量',{exact:true}).evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();
+  return {grids:o.grid.length,axes:o.xAxis.length,series:o.series.map((s:any)=>({name:s.name,xAxis:s.xAxisIndex,yAxis:s.yAxisIndex,data:s.data})),zoom:o.dataZoom[0].xAxisIndex};
+ });
+}
+test('both MACD panes follow the selected market, keep one timeline and expose matching hover values',async({page})=>{
+ await setup(page);
+ for(const [stock,index] of [['宏昌电子','上证指数'],['山子高科','深证成指'],['国科微','创业板指']]){
+  await page.locator('.stock').filter({hasText:stock}).click();
+  const indicator=page.getByRole('group',{name:'指数MACD',exact:true});await expect(indicator).toContainText(index);
+  await expect.poll(async()=> (await option(page)).series.find((s:any)=>s.name==='指数 DIF')?.data.some((v:any)=>v!==null)).toBe(true);
+  const o=await option(page);expect(o.grids).toBe(4);expect(o.axes).toBe(4);expect(o.zoom).toEqual([0,1,2,3]);if(stock==='山子高科'){expect(o.series.find((s:any)=>s.name==='个股 DIF')?.yAxis).toBe(3);expect(o.series.find((s:any)=>s.name==='指数 DIF')?.yAxis).toBe(4);}
+ }
+ const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();c.dispatchAction({type:'showTip',seriesIndex:o.series.findIndex((v:any)=>v.name==='指数 DIF'),dataIndex:atBrowser('10:30')});function atBrowser(time:string){return o.xAxis[2].data.indexOf(time);}});
+ await expect(page.getByRole('group',{name:'个股MACD',exact:true}).locator('time')).toHaveText('10:30');
+ await expect(page.getByRole('group',{name:'指数MACD',exact:true}).locator('time')).toHaveText('10:30');
+ await page.locator('.chart-shell').screenshot({path:'outputs/macd-comparison-chinext.png'});
+});
+test('missing date never borrows a different day; toggle preserves the price/volume chart',async({page})=>{
+ await setup(page,true);
+ await expect(page.locator('.macd-unavailable')).toContainText('暂无可用分钟数据');
+ expect((await option(page)).series.find((s:any)=>s.name==='指数 MACD')?.data.every((v:any)=>v===null)).toBe(true);
+ await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).uncheck();
+ await expect(page.getByRole('group',{name:'个股MACD',exact:true})).toHaveCount(0);expect((await option(page)).grids).toBe(2);
+ await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).check();expect((await option(page)).grids).toBe(4);
+});
+
+
+test('indicator visibility persists between the daily linked chart and intraday chart',async({page})=>{
+ await setup(page);
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ await expect(page.getByLabel('日K线及成交量',{exact:true})).toBeVisible();
+ await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).uncheck();
+ await page.getByRole('button',{name:'分时',exact:true}).click();
+ await expect(page.getByRole('checkbox',{name:'显示MACD对照',exact:true})).not.toBeChecked();
+ expect((await option(page)).grids).toBe(2);
+ await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).check();
+ expect((await option(page)).grids).toBe(4);
+});
+
+test('MACD panels are passive references and zoom shares all four time axes',async({page})=>{
+ await setup(page);
+ const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
+ const point=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return c.convertToPixel({xAxisIndex:2,yAxisIndex:2},['10:30',0]);});
+ const box=(await chart.boundingBox())!;await page.mouse.click(box.x+point[0],box.y+point[1],{button:'right'});
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ const before=(await option(page)).series.find((s:any)=>s.name==='个股 DIF')!.data;
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'dataZoom',start:30,end:70});});
+ expect((await option(page)).series.find((s:any)=>s.name==='个股 DIF')!.data).toEqual(before);
+ const pixels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return [0,1,2,3].map(xAxisIndex=>c.convertToPixel({xAxisIndex},'11:00'));});
+ for(const x of pixels)expect(x).toBeCloseTo(pixels[0],5);
+});
+
+
+test('index MACD never reveals later minutes than the selected stock data',async({page})=>{
+ const data=structuredClone(fixture);data.minutes.sh603002[0].data.bars=data.minutes.sh603002[0].data.bars.filter((b:{time:string})=>b.time>='09:30'&&b.time<='09:40');
+ await setup(page);
+ await page.route('**/preview.json',route=>route.fulfill({json:data}));await page.reload();
+ await expect.poll(async()=> typeof (await option(page)).series.find((s:any)=>s.name==='指数 DIF')?.data[at('09:40')]).toBe('number');
+ const points=(await option(page)).series.find((s:any)=>s.name==='指数 DIF')!.data;
+ expect(points[at('09:41')]).toBeNull();expect(points[at('10:00')]).toBeNull();expect(points[at('15:00')]).toBeNull();
+});

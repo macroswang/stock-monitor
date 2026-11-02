@@ -453,12 +453,7 @@ class App:
             return self.start_job(research)
         if method=='market':return self.market.view(args.get('day'))
         if method=='index_minute':
-            code=args.get('code')
-            if code not in ('sh000001','sz399006'):raise ValueError('不支持的指数')
-            quotes=self.market.view(None)['quotes']
-            quote=next((q for q in quotes if q.get('code')==code),None)
-            rows=self.store.getcache(code,'market_minute',quote['timestamp'][:10]) if quote else []
-            return dict(quotes=[quote] if quote else [],minute=rows[0]['data'] if rows else None,error='')
+            return self.market.index_view(args.get('code'),args.get('day'))
         if method=='market_overview':
             head=self.market.view(None)
             index=next((q for q in head.get('quotes',[]) if q.get('code')=='sh000001'),None)
