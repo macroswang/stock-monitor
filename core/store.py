@@ -19,6 +19,9 @@ class Store:
         CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT);
         CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,dedupe_key TEXT UNIQUE,category TEXT,title TEXT,body TEXT,event_key TEXT,payload TEXT,created_at TEXT,read_at TEXT);
         CREATE INDEX IF NOT EXISTS messages_created ON messages(created_at DESC);
+        CREATE TABLE IF NOT EXISTS broker_accounts(id TEXT PRIMARY KEY,broker TEXT NOT NULL,account TEXT NOT NULL,label TEXT,enabled INTEGER DEFAULT 1,is_default INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(broker,account));
+        CREATE TABLE IF NOT EXISTS broker_requests(request_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL,result TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS broker_requests_account ON broker_requests(account_id,created_at);
         PRAGMA user_version=3;''')
         self.db.execute('INSERT OR IGNORE INTO instruments SELECT code,name FROM watch')
         # An interrupted OS submission has an unknown outcome: never automatically duplicate it.

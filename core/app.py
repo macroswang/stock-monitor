@@ -6,6 +6,7 @@ from .provider import Tencent,symbol,now_cn,CN
 from .rules import Session
 from .store import Store
 from . import notify
+from . import brokers
 from .validated_engine import evaluate, MINUTES
 from .sources import SOURCES,daily_view,provider_name
 from .history import view as history_view,bounds
@@ -356,6 +357,14 @@ class App:
         threading.Thread(target=work,daemon=True).start()
         return {'job':job}
 
+    def broker_job(self,fn):
+        """券商操作的失败原因对用户有意义，按 ValueError 原样返回。"""
+        def work():
+            try: return fn()
+            except ValueError: raise
+            except Exception as e: raise ValueError(str(e) or type(e).__name__) from e
+        return self.start_job(work)
+
     def delivery_loop(self):
         while not self.stop.is_set():
             try: notify.drain(self.store,self.store.config().get('phone_enabled',False))
@@ -504,6 +513,28 @@ class App:
             import re
             if not re.fullmatch(r'[A-Za-z0-9_-]{8,200}',args['key']): raise ValueError('请填写设备密钥，不是完整网址')
             notify.key(args['key']); return {'saved':True}
+        if method=='broker_specs': return brokers.specs()
+        if method=='broker_accounts': return brokers.list_accounts(self.store)
+        if method=='broker_requests': return brokers.requests(self.store,args['id'])
+        if method=='broker_request_resolve':
+            if args.get('confirm') is not True: raise ValueError('人工核实结果需要确认')
+            return self.broker_job(lambda: brokers.resolve_request(self.store,args['request_id'],args['outcome'],args.get('note',''),args.get('order_id','')))
+        if method=='broker_account_save':
+            return brokers.save_account(self.store,args['broker'],args['account'],args.get('values') or {},args.get('label',''))
+        if method=='broker_account_delete': return brokers.delete_account(self.store,args['id'])
+        if method=='broker_login': return self.broker_job(lambda: brokers.login(self.store,args['id']))
+        if method=='broker_ready': return self.broker_job(lambda: brokers.ensure_ready(self.store,args['id']))
+        if method=='broker_preview':
+            return self.broker_job(lambda: brokers.preview_order(self.store,args['id'],args['side'],args['code'],int(args['quantity']),args.get('price')))
+        if method=='broker_submit':
+            if args.get('confirm') is not True: raise ValueError('真实委托需要在界面二次确认')
+            return self.broker_job(lambda: brokers.submit_order(self.store,args['id'],args['side'],args['code'],args['quantity'],args.get('price'),float(args.get('max_value',1000)),bool(args.get('dry_run')),request_id=args.get('request_id')))
+        if method=='broker_orders': return self.broker_job(lambda: brokers.orders(self.store,args['id'],args.get('kind','today')))
+        if method=='broker_trades': return self.broker_job(lambda: brokers.trades(self.store,args['id'],args.get('kind','today')))
+        if method=='broker_snapshot': return self.broker_job(lambda: brokers.snapshot(self.store,args['id']))
+        if method=='broker_cancel':
+            if not args.get('dry_run') and args.get('confirm') is not True: raise ValueError('真实撤单需要在界面二次确认')
+            return self.broker_job(lambda: brokers.cancel(self.store,args['id'],args.get('scope','all'),args.get('code'),args.get('side'),bool(args.get('dry_run',True))))
         if method=='test_push':
             title='观量 · 手机推送测试（非卖点信号）';body='这是一条通道测试，不是卖点信号。请确认 iPhone 锁屏是否收到。'
             ident=self.store.message('push_test',title,body,payload={'status':'pending'})
@@ -635,20 +666,51 @@ class App:
         raise ValueError('不支持的操作')
 
 def main():
+    # When the UI reports "stuck", `kill -USR1 <pid>` dumps every Python thread
+    # stack into monitor-core.log. No effect unless the signal is sent.
+    try:
+        import faulthandler, signal
+        faulthandler.register(signal.SIGUSR1, all_threads=True)
+        if os.environ.get('STOCK_MONITOR_TRACE') == '1':
+            faulthandler.dump_traceback_later(30, repeat=True)
+    except Exception:
+        pass
     # Native host IPC is UTF-8 on every platform, including Windows pipes.
     for stream in (sys.stdin,sys.stdout):
         if hasattr(stream,'reconfigure'):stream.reconfigure(encoding='utf-8')
+    # stdout is the JSON protocol channel: anything else printed by a library
+    # would desync the client. Keep a private handle and send every other
+    # write to stderr.
+    protocol=sys.stdout
+    sys.stdout=sys.stderr if sys.stderr is not None else protocol
     data_dir=os.environ.get('STOCK_MONITOR_DATA',str(Path.home()/'.stock-monitor'))
     app=App(data_dir)
+    trace=os.environ.get('STOCK_MONITOR_TRACE')=='1'
     try:
         for line in sys.stdin:
+            started=0.0
+            method='?'
             try:
-                request=json.loads(line); result=app.call(request['method'],request.get('args',{}))
-                print(json.dumps({'ok':True,'data':result},ensure_ascii=False),flush=True)
+                request=json.loads(line); method=request['method']
+                if trace:
+                    import time as _time
+                    started=_time.monotonic()
+                    print(f'>>> {method}',file=sys.stderr,flush=True)
+                result=app.call(method,request.get('args',{}))
+                if trace:
+                    import time as _time
+                    print(f'<<< {method} {_time.monotonic()-started:.2f}s',file=sys.stderr,flush=True)
+                print(json.dumps({'ok':True,'data':result},ensure_ascii=False),file=protocol,flush=True)
             except Exception as e:
+                if trace:
+                    try:
+                        import time as _time
+                        print(f'!!! {method} {_time.monotonic()-started:.2f}s {type(e).__name__}: {e}',file=sys.stderr,flush=True)
+                    except Exception:
+                        pass
                 # Never return credential values, endpoint URLs or raw transport exceptions.
                 message=str(e) if isinstance(e,ValueError) else '操作失败（'+type(e).__name__+'），请检查网络或系统配置'
-                print(json.dumps({'ok':False,'error':message},ensure_ascii=False),flush=True)
+                print(json.dumps({'ok':False,'error':message},ensure_ascii=False),file=protocol,flush=True)
     finally: app.stop.set()
 
 if __name__=='__main__': main()
