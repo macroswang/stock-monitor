@@ -12,9 +12,20 @@ _deadline = ContextVar("executor_deadline", default=None)
 _device = ContextVar("executor_device", default=None)
 _locks = {}
 _guard = threading.Lock()
+_cancelled = ContextVar("executor_cancelled", default=None)
+
+
+class DeviceBusy(RuntimeError):
+    """No device action has started; safe to defer an unsubmitted intent."""
+
+
+class OperationInterrupted(RuntimeError):pass
 
 
 def bound_timeout(seconds):
+    cancelled = _cancelled.get()
+    if cancelled is not None and cancelled():
+        raise OperationInterrupted("有新信号等待处理，已让出设备，稍后继续核实回报")
     deadline = _deadline.get()
     if deadline is None:
         return seconds
@@ -25,14 +36,16 @@ def bound_timeout(seconds):
 
 
 @contextmanager
-def budget(seconds):
+def budget(seconds, cancelled=None):
     outer = _deadline.get()
     deadline = time.monotonic() + seconds
     token = _deadline.set(min(deadline, outer) if outer is not None else deadline)
+    cancel_token = _cancelled.set(cancelled or _cancelled.get())
     try:
         yield
     finally:
         _deadline.reset(token)
+        _cancelled.reset(cancel_token)
 
 
 def active_serial():
@@ -61,7 +74,7 @@ def device_operation(adb, seconds=120):
         with _guard:
             lock = _locks.setdefault(serial, threading.Lock())
         if not lock.acquire(blocking=False):
-            raise RuntimeError("模拟器正在执行其他操作，请等待当前操作完成")
+            raise DeviceBusy("模拟器正在执行其他操作，请等待当前操作完成")
         handle = None
         token = None
         try:
@@ -84,7 +97,7 @@ def device_operation(adb, seconds=120):
             token = _device.set(serial)
             yield
         except (BlockingIOError, PermissionError):
-            raise RuntimeError("模拟器已被另一个执行器占用") from None
+            raise DeviceBusy("模拟器已被另一个执行器占用") from None
         finally:
             if token is not None:
                 _device.reset(token)

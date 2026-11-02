@@ -65,10 +65,13 @@ def observed_elapsed(start,end):
     return seconds
 
 class App:
+    POLL_SECONDS=8
     def __init__(self,data_dir,start_worker=True):
         self.dir=Path(data_dir); self.store=Store(self.dir/'monitor.sqlite3')
         self.provider=Tencent(); self.lock=threading.RLock(); self.stop=threading.Event()
         self.health={}; self.sessions={}; self.quotes={}; self.last_poll=None; self.jobs={}
+        self.jobs_lock=threading.Lock(); self.job_slots=threading.BoundedSemaphore(8)
+        self.job_times={}
         self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None
         if not self.store.config().get('initialized'):
             rows=[]
@@ -114,11 +117,18 @@ class App:
             threading.Thread(target=self.index_technical_loop,daemon=True).start()
             threading.Thread(target=self.paper_loop,daemon=True).start()
             threading.Thread(target=self.trading_loop,daemon=True).start()
+            threading.Thread(target=self.trading_report_loop,daemon=True).start()
 
     def trading_loop(self):
         while not self.stop.is_set():
-            try:self.live_trading.drain()
+            try:self.live_trading.drain(reports=False)
             except Exception as e:print('trading: '+type(e).__name__,file=sys.stderr,flush=True)
+            self.stop.wait(1)
+
+    def trading_report_loop(self):
+        while not self.stop.is_set():
+            try:self.live_trading.poll_reports()
+            except Exception as e:print('trading report: '+type(e).__name__,file=sys.stderr,flush=True)
             self.stop.wait(1)
 
     def paper_service(self):
@@ -233,14 +243,25 @@ class App:
                     self.health[code]='获取失败：'+type(e).__name__; self.sessions.pop(code,None)
 
     def loop(self):
-        initial=True
-        while not self.stop.is_set():
-            now=now_cn()
-            if initial or (self.store.config().get('monitor') and trading(now)):
-                codes=[r['code'] for r in self.store.query('SELECT code FROM watch'+('' if initial else ' WHERE enabled=1'))]
-                with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool: list(pool.map(self.poll_one,codes))
-                self.last_poll=now_cn().isoformat(); initial=False
-            self.stop.wait(8)
+        import time
+        initial={r['code'] for r in self.store.query('SELECT code FROM watch')}
+        pending={};due={}
+        pool=concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        try:
+            while not self.stop.is_set():
+                for future,code in list(pending.items()):
+                    if future.done():
+                        pending.pop(future);due[code]=time.monotonic()+self.POLL_SECONDS
+                        self.last_poll=now_cn().isoformat()
+                active={r['code'] for r in self.store.query('SELECT code FROM watch WHERE enabled=1')} if self.store.config().get('monitor') and trading(now_cn()) else set()
+                inflight=set(pending.values())
+                ready=sorted(initial|active,key=lambda code:(due.get(code,0),code))
+                for code in ready:
+                    if len(pending)>=4:break
+                    if code in inflight or due.get(code,0)>time.monotonic():continue
+                    pending[pool.submit(self.poll_one,code)]=code;initial.discard(code)
+                self.stop.wait(.25)
+        finally:pool.shutdown(wait=False,cancel_futures=True)
 
     def market_loop(self):
         initial=True
@@ -360,12 +381,26 @@ class App:
 
     def start_job(self,fn):
         import uuid
+        import time
+        if not self.job_slots.acquire(blocking=False):raise ValueError('后台任务较多，请稍后重试')
         job=uuid.uuid4().hex
-        self.jobs[job]={'status':'running'}
+        with self.jobs_lock:
+            finished=sorted((stamp,key) for key,stamp in self.job_times.items() if self.jobs[key]['status']!='running')
+            for index,(stamp,key) in enumerate(finished):
+                if time.monotonic()-stamp>900 or index<len(finished)-63:
+                    self.jobs.pop(key,None);self.job_times.pop(key,None)
+            self.jobs[job]={'status':'running'};self.job_times[job]=time.monotonic()
         def work():
-            try: self.jobs[job]={'status':'done','result':fn()}
-            except Exception as e: self.jobs[job]={'status':'failed','error':str(e) if isinstance(e,ValueError) else '操作失败：'+type(e).__name__}
-        threading.Thread(target=work,daemon=True).start()
+            try: result={'status':'done','result':fn()}
+            except Exception as e: result={'status':'failed','error':str(e) if isinstance(e,ValueError) else '操作失败：'+type(e).__name__}
+            finally:self.job_slots.release()
+            with self.jobs_lock:
+                self.jobs[job]=result;self.job_times[job]=time.monotonic()
+        try:threading.Thread(target=work,daemon=True).start()
+        except BaseException:
+            self.job_slots.release()
+            with self.jobs_lock:self.jobs.pop(job,None);self.job_times.pop(job,None)
+            raise
         return {'job':job}
 
     def broker_job(self,fn):
@@ -531,6 +566,7 @@ class App:
         if method=='broker_specs': return brokers.specs()
         if method=='trading_view':return self.live_trading.view()
         if method=='trading_config':return self.live_trading.configure(args)
+        if method=='trading_start':return self.broker_job(self.live_trading.prepare)
         if method=='trading_pause_account':return self.live_trading.pause_account(args['account_id'],args['paused'])
         if method=='trading_rule_save':return self.live_trading.save_rule(args['account_id'],args['code'],args['changes'],args['revision'])
         if method=='trading_sync':return self.broker_job(lambda:self.live_trading.sync(args['account_id']))

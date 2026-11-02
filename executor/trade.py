@@ -220,13 +220,30 @@ class TradePage:
         return focus, self.adb.nodes()
 
     # ----- navigation ------------------------------------------------------
-    def open(self, timeout: float = 20.0) -> tuple[str, list[Node]]:
+    def open(self, timeout: float = 20.0,side='buy') -> tuple[str, list[Node]]:
         """Return the trade form, opening it from the trade tab if needed."""
+        if side not in _SIDE_LABEL:raise ValueError('side 只能是 buy 或 sell')
         focus, nodes = self.snapshot()
         if is_trade_form(nodes, focus):
             return focus, nodes
 
-        entry = find_by_text(nodes, "买入")
+        entry = find_by_text(nodes, _SIDE_LABEL[side])
+        if entry is None:
+            from .zhangle import is_trade_page
+            # Holdings traversal can scroll the entire trade page, hiding its
+            # buy/sell shortcuts. Restore the header before opening the form.
+            account=find_by_id(nodes,'title_bar_right')
+            shown=account.text if account else None
+            if is_trade_page(nodes) and shown:
+                width,height=self.adb.display_size()
+                for _ in range(3):
+                    self.adb.shell('input','swipe',str(width//2),str(int(height*.3)),str(width//2),str(int(height*.85)),'450')
+                    focus,nodes=self.snapshot()
+                    current=find_by_id(nodes,'title_bar_right')
+                    if not is_trade_page(nodes) or current is None or current.text!=shown:
+                        raise TradeError('恢复交易入口时账户或页面变化，已停止')
+                    entry=find_by_text(nodes,_SIDE_LABEL[side])
+                    if entry is not None:break
         if entry is None:
             raise TradeError("当前页面不是交易页，也找不到“买入”入口")
         self.adb.tap_node(entry)
@@ -336,7 +353,7 @@ class TradePage:
 
         Nothing is submitted: the caller gets the parsed form for review.
         """
-        _, nodes = self.open()
+        _, nodes = self.open(side=side)
         nodes = self.switch(side, nodes=nodes)
         nodes = self.set_code(code, nodes=nodes)
         if price:

@@ -16,11 +16,17 @@ from .provider import now_cn, symbol
 from .turning_shapes import SIGNAL, LABEL
 from .trading_quantity import order_quantity,quantity as sized_quantity,migrate_rule
 from .trading_quantity import BUY_CASH_RESERVE_RATE, BUY_CASH_RESERVE_FIXED, buy_cash_required
+from executor.runtime import DeviceBusy, OperationInterrupted, budget
 
 
 DEFAULT_RULE = dict(buy_enabled=False,sell_enabled=False,buy_mode='lots',sell_mode='lots',
                     buy_lots=1,sell_lots=1,buy_percent=50,sell_percent=50,daily_orders=2,
                     max_deviation_pct=.5,signal=SIGNAL)
+
+# Native confirmation rehearsals take 37-46s even without holdings traversal.
+# Admit only newly discovered signals (45s); expire execution from the signal's
+# original minute after 90s, never restart that clock on retries or syncs.
+EXECUTION_SECONDS=90
 
 
 def number(value):
@@ -45,6 +51,9 @@ class LiveTrading:
         self.lock = threading.RLock()
         self.started_at = now_cn().isoformat()
         self.frames = {}
+        self.verified_sync = {}
+        self.control_revision = 0
+        self.synced_accounts = set()
         from .broker_reconciliation import Reconciler
         self.reconciler = Reconciler(self.store)
         with self.store.lock:
@@ -57,6 +66,12 @@ class LiveTrading:
             CREATE TABLE IF NOT EXISTS trading_runs(id TEXT PRIMARY KEY,account_id TEXT,code TEXT,side TEXT,signal_key TEXT,day TEXT,status TEXT,payload TEXT,created_at TEXT,updated_at TEXT,UNIQUE(account_id,code,side,signal_key));
             CREATE INDEX IF NOT EXISTS trading_runs_day ON trading_runs(account_id,day);
             ''')
+            # The gateway commits BOTH journals to sending before touching a
+            # submit button. Prepared + processing proves no submit boundary
+            # was crossed; it must not leave an account permanently blocked.
+            for row in self.store.db.execute("SELECT b.request_id FROM broker_requests b JOIN trading_runs t ON b.request_id='auto_'||t.id AND b.account_id=t.account_id WHERE b.status='prepared' AND t.status IN ('pending','processing')").fetchall():
+                result=dict(status='failed',submitted=False,request_id=row['request_id'],message='上次委托准备已中断，未进入提交阶段；不重放旧信号')
+                self.store.db.execute("UPDATE broker_requests SET status='failed',result=?,updated_at=? WHERE request_id=?",(json.dumps(result),self.started_at,row['request_id']))
             # Interrupted work is never automatically replayed after a process restart.
             self.store.db.execute("UPDATE trading_runs SET status='unknown' WHERE status='sending'")
             self.store.db.execute("UPDATE trading_runs SET status='skipped' WHERE status IN ('pending','processing')")
@@ -101,9 +116,14 @@ class LiveTrading:
             if 'paused' in args:
                 if type(args['paused']) is not bool:
                     raise ValueError('暂停状态必须为开或关')
+                if not args['paused'] and self.settings()['mode']=='live':
+                    enabled={r['account_id'] for r in self.store.query("SELECT account_id FROM trading_rules WHERE json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1")}
+                    if any(not a['supports_order'] or not a['supports_order_report'] for a in brokers.list_accounts(self.store) if a['id'] in enabled):
+                        raise ValueError('已开启规则的账户尚不支持本机下单及完整回报查询，请使用试运行')
                 self.store.setconfig('trading_paused', args['paused'])
                 if not args['paused']:self.store.setconfig('trading_signal_notice','')
                 self.started_at = now_cn().isoformat()
+            if 'mode' in args or 'paused' in args:self.control_revision+=1
             return self.view()
 
     def pause_account(self, ident, paused):
@@ -111,9 +131,25 @@ class LiveTrading:
         if type(paused) is not bool:
             raise ValueError('暂停状态必须为开或关')
         with self.lock:
+            self.control_revision+=1
             self.store.execute('INSERT OR REPLACE INTO trading_accounts VALUES(?,?)', (ident, int(paused)))
             self.store.execute('UPDATE trading_rules SET armed_at=? WHERE account_id=?', (now_cn().isoformat(), ident))
         return self.view()
+
+    def prepare(self):
+        """Warm up accounts before admitting NEW signals; a pause cancels startup."""
+        with self.lock:
+            epoch=self.control_revision
+            if not self.settings()['paused']:raise ValueError('自动执行已在运行')
+            accounts={r['account_id'] for r in self.store.query("SELECT account_id FROM trading_rules WHERE json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1")}
+            if not accounts:raise ValueError('请先开启股票的自动买卖规则')
+        for ident in sorted(accounts):
+            if self.sync(ident)['status']!='complete':raise ValueError('账户同步不完整，自动执行保持暂停，请检查账户提示')
+            with self.lock:
+                if epoch!=self.control_revision:raise ValueError('启动已取消，自动执行保持暂停')
+        with self.lock:
+            if epoch!=self.control_revision:raise ValueError('启动已取消，自动执行保持暂停')
+            return self.configure(dict(paused=False))
 
     def rule(self, ident, code):
         rows = self.store.query('SELECT * FROM trading_rules WHERE account_id=? AND code=?', (ident, code))
@@ -123,7 +159,7 @@ class LiveTrading:
         code = symbol(code)
         with self.lock:
             self.account(ident)
-            positions = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=? AND active=1', (ident, code))
+            positions = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=?', (ident, code))
             if not positions:
                 raise ValueError('请先同步并确认该账户的持仓')
             old = self.rule(ident, code)
@@ -154,18 +190,53 @@ class LiveTrading:
                 raise ValueError('自动交易使用图中已确认的顶／底信号')
             self.store.execute('INSERT OR REPLACE INTO trading_rules VALUES(?,?,?,?,?)',
                                (ident, code, json.dumps(new), old['revision']+1, now_cn().isoformat()))
+            self.control_revision+=1
             return self.rule(ident, code)
 
-    def sync(self, ident):
+    def sync(self, ident, reuse_seconds=0):
         self.account(ident)
+        if reuse_seconds and 0 <= stamp_age(self.verified_sync.get(ident), now_cn()) <= reuse_seconds:
+            state = self.store.query('SELECT status FROM trading_sync WHERE account_id=?',(ident,))
+            if state and state[0]['status']=='complete':return dict(status='complete',cached=True)
         try:
             snapshot = brokers.holdings(self.store, ident)
             with self.lock:
-                return self.apply_snapshot(ident, snapshot)
+                result = self.apply_snapshot(ident, snapshot)
+                if result['status']=='complete':
+                    self.verified_sync[ident]=snapshot['observed_at'];self.synced_accounts.add(ident)
+                else:self.verified_sync.pop(ident,None)
+                return result
+        except (DeviceBusy,OperationInterrupted):raise
         except Exception as exc:
+            self.verified_sync.pop(ident,None)
             self.store.execute("INSERT INTO trading_sync(account_id,status,error,updated_at) VALUES(?,'failed',?,?) ON CONFLICT(account_id) DO UPDATE SET status='failed',error=excluded.error,updated_at=excluded.updated_at",
                                (ident, str(exc), now_cn().isoformat()))
             raise
+
+    def execution_sync(self,ident,code):
+        if ident not in self.synced_accounts:return self.sync(ident)
+        if 0 <= stamp_age(self.verified_sync.get(ident),now_cn()) <= 30:return self.sync(ident,reuse_seconds=30)
+        states=self.store.query('SELECT * FROM trading_sync WHERE account_id=?',(ident,))
+        if not states or states[0]['status']!='complete':return self.sync(ident)
+        baseline=states[0]
+        snapshot=brokers.holdings(self.store,ident,target_code=code)
+        if snapshot.get('position_only') is not True:
+            with self.lock:return self.apply_snapshot(ident,snapshot)
+        if snapshot.get('account_id')!=ident or snapshot.get('account_verified') is not True or not 0<=stamp_age(snapshot.get('observed_at'),now_cn())<=30:
+            raise ValueError('目标持仓的账户或时间无法核验')
+        positions=snapshot.get('positions',[])
+        if len(positions)!=1 or symbol(positions[0].get('code',''))!=code:raise ValueError('目标持仓代码不一致')
+        row=dict(positions[0]);qty=number(row.get('quantity'));sellable=number(row.get('sellable'))
+        if qty is None or sellable is None or not 0<=sellable<=qty or qty!=int(qty) or sellable!=int(sellable):raise ValueError('目标持仓数量无法核验')
+        row.update(code=code,quantity=int(qty),sellable=int(sellable))
+        with self.lock,self.store.lock,self.store.db:
+            current=self.store.db.execute('SELECT token,status FROM trading_sync WHERE account_id=?',(ident,)).fetchone()
+            if not current or current['token']!=baseline['token'] or current['status']!='complete':raise ValueError('完整持仓快照已改变，请重新核验')
+            data=json.loads(baseline['payload']);data.update(funds=snapshot.get('funds',{}),observed_at=snapshot['observed_at'])
+            data['positions']=[row if p.get('code') in (code,code[2:]) or (not p.get('code') and p.get('name')==row.get('name')) else p for p in data.get('positions',[])]
+            self.store.db.execute('UPDATE trading_positions SET payload=?,active=?,updated_at=? WHERE account_id=? AND code=?',(json.dumps(row),int(qty>0),snapshot['observed_at'],ident,code))
+            self.store.db.execute('UPDATE trading_sync SET payload=?,updated_at=? WHERE account_id=?',(json.dumps(data),snapshot['observed_at'],ident))
+        return dict(status='complete',position_only=True)
 
     def sync_all(self):
         results = []
@@ -218,14 +289,11 @@ class LiveTrading:
             if complete:
                 for old in self.store.db.execute('SELECT code FROM trading_positions WHERE account_id=?', (ident,)).fetchall():
                     if old['code'] not in seen:
-                        self.store.db.execute('UPDATE trading_positions SET active=0,updated_at=? WHERE account_id=? AND code=?', (stamp, ident, old['code']))
-            inactive = self.store.db.execute('SELECT code FROM trading_positions WHERE account_id=? AND active=0', (ident,)).fetchall()
-            for p in inactive:
-                old = self.rule(ident, p['code'])
-                if old['buy_enabled'] or old['sell_enabled']:
-                    payload = {k: old[k] for k in DEFAULT_RULE}
-                    payload.update(buy_enabled=False, sell_enabled=False)
-                    self.store.db.execute('UPDATE trading_rules SET payload=?,revision=revision+1,armed_at=? WHERE account_id=? AND code=?', (json.dumps(payload), now_cn().isoformat(), ident, p['code']))
+                        stored = self.store.db.execute('SELECT payload FROM trading_positions WHERE account_id=? AND code=?',(ident,old['code'])).fetchone()
+                        zero = dict(json.loads(stored['payload']),quantity=0,sellable=0)
+                        self.store.db.execute('UPDATE trading_positions SET active=0,payload=?,updated_at=? WHERE account_id=? AND code=?', (json.dumps(zero),stamp, ident, old['code']))
+            # A cleared position keeps its strategy. Fixed lots can enter again;
+            # a percentage of zero remains zero and cannot produce an order.
             status = 'complete' if complete else 'partial'
             payload = dict(snapshot, unresolved=unresolved)
             self.store.db.execute('INSERT INTO trading_sync VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET token=excluded.token,payload=excluded.payload,status=excluded.status,error=excluded.error,updated_at=excluded.updated_at,last_success=COALESCE(excluded.last_success,trading_sync.last_success)',
@@ -325,7 +393,7 @@ class LiveTrading:
         now = now or now_cn()
         self.account(ident)
         rule = self.rule(ident, code)
-        rows = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=? AND active=1', (ident, code))
+        rows = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=?', (ident, code))
         if side not in ('buy','sell') or not rows:
             raise ValueError('该账户没有此股票的有效持仓')
         p = json.loads(rows[0]['payload'])
@@ -375,13 +443,32 @@ class LiveTrading:
                         continue
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
-                    payload = dict(signal=m,signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])
+                    payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])
                     self.store.execute('INSERT OR IGNORE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)', (ident,row['account_id'],code,side,key,now.date().isoformat(),'pending',json.dumps(payload),now.isoformat(),now.isoformat()))
 
     def finish(self, run, status, payload):
         self.store.execute('UPDATE trading_runs SET status=?,payload=?,updated_at=? WHERE id=?', (status,json.dumps(payload),now_cn().isoformat(),run['id']))
 
+    def check_open_orders(self,run):
+        """Known pending orders block their stock; uncertain sends block account."""
+        from .broker_reconciliation import known_id
+        for other in self.store.query("SELECT * FROM trading_runs WHERE account_id=? AND id<>? AND status IN ('sending','accepted','unknown','partial')",(run['account_id'],run['id'])):
+            requests=self.store.query('SELECT result FROM broker_requests WHERE request_id=? AND account_id=?',('auto_'+other['id'],run['account_id']))
+            try:ident=known_id(json.loads(requests[0]['result'] or '{}')) if len(requests)==1 else ''
+            except ValueError:ident=''
+            if other['status'] in ('sending','unknown') or not ident or other['code']==run['code']:
+                raise ValueError('该账户有未完成或待核实委托，请先核对执行记录')
+            # The broker's latest AVAILABLE cash/sellable shares include freezes.
+            self.verified_sync.pop(run['account_id'],None)
+
     def process(self, run):
+        with budget(max(0,EXECUTION_SECONDS-self.execution_age(run,now_cn()))):
+            self._process(run)
+
+    def execution_age(self,run,now):
+        return stamp_age(json.loads(run['payload']).get('signal_at',run['created_at']),now)
+
+    def _process(self, run):
         payload = json.loads(run['payload'])
         try:
             if self.settings()['paused'] or self.settings()['mode'] != payload['mode'] or payload.get('run_epoch') != self.started_at:
@@ -396,10 +483,12 @@ class LiveTrading:
             watch = self.store.query('SELECT enabled FROM watch WHERE code=?',(run['code'],))
             if not watch or not watch[0]['enabled'] or not self.store.config().get('monitor',False):
                 raise ValueError('自选监控已停止')
-            if not 0 <= stamp_age(run['created_at'],now) <= 45 or not 0 <= stamp_age(payload['quote'].get('timestamp'),now) <= 30:
+            quote = self.app.quotes.get(run['code'],payload['quote'])
+            if not 0 <= self.execution_age(run,now) <= EXECUTION_SECONDS or not 0 <= stamp_age(quote.get('timestamp'),now) <= 30:
                 raise ValueError('信号或行情已过期，未补下旧单')
             # Re-read and verify account identity before every plan, including trial mode.
-            self.sync(run['account_id'])
+            self.check_open_orders(run)
+            self.execution_sync(run['account_id'],run['code'])
             state = self.store.query('SELECT * FROM trading_sync WHERE account_id=?', (run['account_id'],))[0]
             if state['status'] != 'complete':
                 raise ValueError('持仓同步不完整或代码待确认，暂停执行')
@@ -412,7 +501,7 @@ class LiveTrading:
                 if self.settings()['paused'] or (paused and paused[0]['paused']) or self.rule(run['account_id'],run['code'])['revision']!=rule['revision']:
                     raise ValueError('自动交易已暂停')
                 quote = self.app.quotes.get(run['code'],payload['quote'])
-                if not 0 <= stamp_age(quote.get('timestamp'),now_cn()) <= 30 or not 0 <= stamp_age(run['created_at'],now_cn()) <= 45:
+                if not 0 <= stamp_age(quote.get('timestamp'),now_cn()) <= 30 or not 0 <= self.execution_age(run,now_cn()) <= EXECUTION_SECONDS:
                     raise ValueError('核验期间信号或行情已过期，已跳过')
                 price = number(quote.get('price'))
                 if price is None or abs(price/payload['reference_price']-1)*100 > rule['max_deviation_pct']:
@@ -426,9 +515,7 @@ class LiveTrading:
                 same = [r for r in previous if r['code']==run['code']]
                 if len(same) >= rule['daily_orders']:
                     raise ValueError('已达到该股每日执行次数上限')
-                unresolved = self.store.query("SELECT id FROM trading_runs WHERE account_id=? AND id<>? AND status IN ('sending','accepted','unknown','partial')",(run['account_id'],run['id']))
-                if unresolved:
-                    raise ValueError('该账户有未完成或待核实委托，请先核对执行记录')
+                self.check_open_orders(run)
                 if run['side']=='buy':
                     available = number(json.loads(state['payload']).get('funds',{}).get('available'))
                     reserved = sum(buy_cash_required(json.loads(r['payload']).get('plan',{}).get('value',0)) for r in previous if r['side']=='buy' and r['status']=='trial')
@@ -444,7 +531,7 @@ class LiveTrading:
                     payload['message'] = '试运行计划已生成，未发送券商委托'
                     self.finish(run,'trial',payload)
                     return
-                self.finish(run,'sending',payload)
+                self.finish(run,'processing',payload)
             # Recheck AFTER device login/preview and immediately before final confirmation.
             def authorize():
                 with self.lock:
@@ -458,25 +545,35 @@ class LiveTrading:
                         raise ValueError('确认前规则或暂停状态已改变，已阻止提交')
                     if not watch or not watch[0]['enabled'] or not self.store.config().get('monitor',False):
                         raise ValueError('自选监控已停止，已阻止提交')
-                    if not 0 <= stamp_age(run['created_at'],now_cn()) <= 45 or not 0 <= stamp_age(quote.get('timestamp'),now_cn()) <= 30:
+                    if not 0 <= self.execution_age(run,now_cn()) <= EXECUTION_SECONDS or not 0 <= stamp_age(quote.get('timestamp'),now_cn()) <= 30:
                         raise ValueError('确认前信号或行情已过期，已阻止提交')
                     if price is None or abs(price/payload['reference_price']-1)*100 > rule['max_deviation_pct']:
                         raise ValueError('确认前价格偏离超限，已阻止提交')
             # Existing durable broker gateway owns final account verification and deduplication.
             result = brokers.submit_order(self.store,run['account_id'],run['side'],run['code'][2:],plan['quantity'],plan['price'],None,request_id='auto_'+run['id'],authorize=authorize)
+            self.verified_sync.pop(run['account_id'],None)
             payload['result'] = result
             payload['message'] = result.get('message') or '请核对券商委托和成交；受理不代表成交'
             self.finish(run,result['status'],payload)
+        except DeviceBusy as exc:
+            payload['message'] = str(exc)+'；信号有效期内等待设备，不重复发送委托'
+            state=self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))
+            status='unknown' if state and state[0]['status']=='sending' else 'pending' if 0 <= self.execution_age(run,now_cn()) < EXECUTION_SECONDS else 'skipped'
+            self.finish(run,status,payload)
         except Exception as exc:
             payload['message'] = str(exc)
             state = self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))
             self.finish(run,'unknown' if state and state[0]['status']=='sending' else 'skipped',payload)
 
-    def drain(self):
+    def drain(self, reports=True):
         # Single worker, no device or broker IO on the monitoring/UI threads.
         for run in self.store.query("SELECT * FROM trading_runs WHERE status='pending' ORDER BY created_at LIMIT 20"):
             changed = self.store.execute("UPDATE trading_runs SET status='processing' WHERE id=? AND status='pending'",(run['id'],))
             if changed:
                 self.process(run)
         # Pausing new execution must not stop tracking already submitted orders.
-        self.reconciler.poll()
+        if reports:self.poll_reports()
+
+    def poll_reports(self):
+        with budget(120,cancelled=lambda:bool(self.store.query("SELECT 1 FROM trading_runs WHERE status='pending' LIMIT 1"))):
+            self.reconciler.poll()

@@ -144,3 +144,33 @@ class TradePageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class MaintenanceNoticeTests(unittest.TestCase):
+    def test_known_maintenance_notice_is_acknowledged_and_marked(self):
+        from executor.zhangle import Zhangle
+        from unittest.mock import Mock
+        adb=Mock()
+        notice=parse_nodes('<hierarchy><node text="尊敬的投资者，因后台数据清算维护，查到的数据可能不准确" resource-id="pkg:id/dialog_tv_message" bounds="[0,0][100,100]"/><node text="确定" resource-id="pkg:id/dialog_btn_right" clickable="true" bounds="[0,100][100,200]"/></hierarchy>')
+        adb.nodes.side_effect=[notice,parse_nodes(LOGGED_IN_XML)]
+        z=Zhangle(adb);_,nodes=z.snapshot()
+        self.assertTrue(z.maintenance);self.assertEqual(adb.tap_node.call_count,1)
+        self.assertTrue(any(n.text=='交易' for n in nodes))
+    def test_password_rejection_is_never_dismissed_as_maintenance(self):
+        from executor.zhangle import Zhangle
+        from unittest.mock import Mock
+        adb=Mock();adb.nodes.return_value=parse_nodes('<hierarchy><node text="密码错误" resource-id="pkg:id/dialog_tv_message" bounds="[0,0][100,100]"/></hierarchy>')
+        z=Zhangle(adb);z.snapshot();adb.tap_node.assert_not_called();self.assertFalse(z.maintenance)
+
+    def test_fresh_successful_authentication_clears_session_maintenance(self):
+        from executor.brokers.zhangle import ZhangleAdapter,_maintenance_sessions
+        from executor.brokers.base import BrokerCredentials
+        from unittest.mock import Mock,patch
+        adb=Mock(serial='maintenance-test');adapter=ZhangleAdapter(adb);client=Mock()
+        client.ensure_trade_ready.side_effect=[dict(account_verified=True,maintenance=True),dict(account_verified=True),dict(account_verified=True,authenticated_now=True)]
+        credentials=BrokerCredentials('zhangle','1234567890')
+        try:
+            with patch.object(adapter,'_client',return_value=client):
+                self.assertTrue(adapter.ensure_ready(credentials)['maintenance'])
+                self.assertTrue(adapter.ensure_ready(credentials)['maintenance'])
+                self.assertFalse(adapter.ensure_ready(credentials)['maintenance'])
+        finally:_maintenance_sessions.pop((adb.serial,credentials.account),None)

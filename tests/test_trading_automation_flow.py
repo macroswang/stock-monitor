@@ -62,3 +62,15 @@ class AutomaticFlowTests(unittest.TestCase):
  def test_rule_off_or_account_pause_blocks_before_gateway(self):
   self.service.pause_account('a',True);self.signal()
   self.clients['a'].submit_order.assert_not_called();self.assertFalse(self.store.query('SELECT * FROM broker_requests'))
+
+ def test_both_journals_and_plan_are_durable_before_native_confirmation(self):
+  def lost(*,before_confirm,**kwargs):
+   before_confirm()
+   run=self.store.query('SELECT * FROM trading_runs')[0]
+   self.assertEqual(run['status'],'sending');self.assertEqual(json.loads(run['payload'])['plan']['account_id'],'a')
+   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'sending')
+   raise RuntimeError('模拟点击后断连')
+  self.clients['a'].submit_order.side_effect=lost
+  self.signal();self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'unknown')
+  self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'unknown')
+  self.signal('another');self.assertEqual(self.clients['a'].submit_order.call_count,1)

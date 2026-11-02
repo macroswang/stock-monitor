@@ -334,6 +334,13 @@ def _verify_account(client, creds, store=None):
         matches = [r for r in store.query("SELECT account FROM broker_accounts WHERE broker=?", (creds.broker,)) if account_matches(result["account_display"], r["account"])]
         if len(matches) != 1:
             raise BrokerError("页面账号掩码对应多个本地账号，无法唯一核验，已停止")
+    if store is not None:
+        rows=store.query('SELECT id FROM broker_accounts WHERE broker=? AND account=?',(creds.broker,creds.account))
+        if len(rows)==1:
+            key='broker_maintenance:'+rows[0]['id'];today=now_cn().date().isoformat()
+            if result.get('maintenance') is True:store.setconfig(key,today)
+            elif result.get('authenticated_now') is True:store.setconfig(key,'')
+            if store.config().get(key)==today:result=dict(result,maintenance=True)
     return result
 
 
@@ -400,13 +407,19 @@ def submit_order(
         nonlocal dispatched
         if authorize is not None:
             authorize()
-        store.execute("UPDATE broker_requests SET status='sending',updated_at=? WHERE request_id=?", (now_cn().isoformat(), request_id))
+        with store.lock,store.db:
+            stamp=now_cn().isoformat()
+            if request_id.startswith('auto_'):
+                changed=store.db.execute("UPDATE trading_runs SET status='sending',updated_at=? WHERE id=? AND account_id=? AND status IN ('processing','sending')",(stamp,request_id[5:],account_id)).rowcount
+                if changed!=1:raise BrokerError('自动执行记录已改变，已阻止提交')
+            store.db.execute("UPDATE broker_requests SET status='sending',updated_at=? WHERE request_id=?", (stamp, request_id))
         dispatched = True
     try:
         _, creds, client = _adapter(store, account_id, secrets)
         if not client.spec.supports_order:
             raise BrokerError("该券商暂不支持真实委托")
-        _verify_account(client, creds, store)
+        ready=_verify_account(client, creds, store)
+        if ready.get('maintenance') is True and not dry_run:raise BrokerError('券商正在清算维护，数据可能不准确，本次不发送委托')
         result = client.submit_order(side=side, code=code, quantity=quantity, price=price,
                                      max_value=max_value, dry_run=dry_run, before_confirm=before_confirm)
         if result.get("status") not in ("accepted", "rejected", "preview", "unknown"):
@@ -484,9 +497,9 @@ def snapshot(store, account_id: str, secrets: SecretStore | None = None) -> dict
 
 
 @_device_operation
-def holdings(store, account_id: str, secrets: SecretStore | None = None) -> dict:
+def holdings(store, account_id: str, secrets: SecretStore | None = None,target_code=None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)
-    _verify_account(client, creds, store)
+    before=_verify_account(client, creds, store)
     known={}
     if store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_positions'"):
         candidates={}
@@ -495,9 +508,13 @@ def holdings(store, account_id: str, secrets: SecretStore | None = None) -> dict
         for row in store.query('SELECT name,code FROM trading_mappings WHERE account_id=?',(account_id,)):
             candidates.setdefault(row['name'],set()).add(row['code'])
         known={name:next(iter(codes))[2:] for name,codes in candidates.items() if len(codes)==1}
-    result = client.holdings(account=creds.account,known_codes=known)
+    kwargs=dict(account=creds.account,known_codes=known)
+    if target_code:kwargs['target_code']=target_code
+    result = client.holdings(**kwargs)
     # Reading and swiping must not silently cross into another account/session.
-    _verify_account(client, creds, store)
+    after=_verify_account(client, creds, store)
+    if before.get('maintenance') is True or after.get('maintenance') is True:
+        result.update(complete=False,position_only=False,warning='券商正在清算维护，持仓仅供查看，待维护结束后重新同步')
     return dict(result, account_id=account_id, account_verified=True, observed_at=now_cn().isoformat())
 
 

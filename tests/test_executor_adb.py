@@ -54,3 +54,22 @@ class NodeParsingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class ReconnectTests(unittest.TestCase):
+    def test_only_local_known_emulator_reconnects(self):
+        import subprocess
+        from executor.adb import Adb
+        adb_module._last_reconnect.clear()
+        empty=subprocess.CompletedProcess([],0,b'List of devices attached\n',b'')
+        connected=subprocess.CompletedProcess([],0,b'List of devices attached\n127.0.0.1:5555\tdevice\n',b'')
+        with patch.object(Adb,'run',side_effect=[empty,empty,connected]) as run,patch.object(adb_module.os.path,'isfile',return_value=True):
+            self.assertEqual(Adb(adb='fake').devices(),['127.0.0.1:5555'])
+            self.assertEqual(run.call_args_list[1].args,('connect','127.0.0.1:5555'))
+        with patch.object(Adb,'run',return_value=empty) as run:
+            self.assertEqual(Adb(adb='fake',serial='192.168.1.2:5555').devices(),[])
+            self.assertEqual(run.call_count,1)
+    def test_multiple_devices_are_never_silently_selected(self):
+        import subprocess
+        from executor.adb import Adb
+        with patch.object(Adb,'run',return_value=subprocess.CompletedProcess([],0,b'List of devices attached\na\tdevice\nb\tdevice\n',b'')) as run:
+            self.assertEqual(Adb(adb='fake').devices(),['a','b']);self.assertEqual(run.call_count,1)

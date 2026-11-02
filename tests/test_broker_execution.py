@@ -98,3 +98,10 @@ class ExecutionJournalTests(unittest.TestCase):
             self.submit(key=None)
         self.client.submit_order.assert_not_called()
 
+
+    def test_maintenance_prevents_real_submit_but_allows_cancelled_rehearsal(self):
+        self.client.ensure_ready.return_value={'account_verified':True,'maintenance':True}
+        result=self.submit();self.assertEqual(result['status'],'failed');self.client.submit_order.assert_not_called()
+        self.client.submit_order.return_value={'status':'preview','submitted':False}
+        result=self.submit('test-maintenance-0002',dry_run=True)
+        self.assertEqual(result['status'],'preview')

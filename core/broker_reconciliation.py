@@ -203,9 +203,9 @@ class Reconciler:
         for row in rows:
             result = json.loads(row['result'] or '{}')
             try:
-                # Missing IDs do not cause repeated UI navigation.
+                # Missing IDs still get an explicit persisted reason in the UI;
+                # they never trigger guessed bindings or duplicate submissions.
                 ident = known_id(result)
-                if not ident:continue
                 last = datetime.fromisoformat(result.get('reconciliation', {}).get('at', row['created_at']))
                 if (now-last).total_seconds() < 60:continue
             except (ValueError, TypeError):continue

@@ -342,3 +342,36 @@ test('adding an already-bound account requires using manage instead of overwriti
  await expect(page.getByRole('dialog').getByRole('button',{name:'检查连接',exact:true})).toHaveCount(1);
  await expect(page.getByRole('dialog').getByRole('button',{name:'重新登录',exact:true})).toHaveCount(0);
 });
+
+
+test('global and account pause remain available while holdings sync is running',async({page})=>{
+ await setup(page);
+ const rpc=(m:string)=>page.evaluate(method=>(window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc(method,{}),m);
+ await page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'}).check();
+ await page.getByRole('button',{name:'启动试运行',exact:true}).click();
+ await rpc('test_hold_sync');
+ await page.getByRole('button',{name:'一键同步全部持仓',exact:true}).click();
+ await expect(page.getByText('正在逐个核验账户并同步持仓…',{exact:true})).toBeVisible();
+ const accountA=page.getByRole('region',{name:/华泰涨乐通 · 123/});
+ await expect(accountA.getByRole('button',{name:'暂停账户',exact:true})).toBeEnabled();
+ await accountA.getByRole('button',{name:'暂停账户',exact:true}).click();
+ await expect(accountA.getByText('账户已暂停',{exact:true})).toBeVisible();
+ const pause=page.getByRole('button',{name:'暂停全部自动交易',exact:true});
+ await expect(pause).toBeEnabled();await pause.click();
+ await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
+ await rpc('test_release_sync');
+ await expect(page.getByRole('button',{name:'一键同步全部持仓',exact:true})).toBeEnabled();
+ await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
+});
+
+test('cancelling startup prevents its delayed sync from starting execution later',async({page})=>{
+ await setup(page);
+ const rpc=(m:string)=>page.evaluate(method=>(window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc(method,{}),m);
+ await page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'}).check();
+ await rpc('test_hold_sync');
+ await page.getByRole('button',{name:'启动试运行',exact:true}).click();
+ const cancel=page.getByRole('button',{name:'取消启动',exact:true});await expect(cancel).toBeEnabled();await cancel.click();
+ await rpc('test_release_sync');
+ await expect(page.getByRole('button',{name:'启动试运行',exact:true})).toBeEnabled();
+ await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
+});

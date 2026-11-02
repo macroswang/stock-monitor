@@ -176,11 +176,22 @@ def _error_reason(nodes: list[Node]) -> str | None:
 class Zhangle:
     def __init__(self, adb: Adb | None = None):
         self.adb = adb or Adb()
+        self.maintenance = False
+        self.authenticated_now = False
 
     # ----- reading ---------------------------------------------------------
     def snapshot(self) -> tuple[str, list[Node]]:
         focus = self.adb.current_focus()
-        return focus, self.adb.nodes()
+        nodes=self.adb.nodes()
+        # This informational notice appears AFTER a successful trade login.
+        # It is not a password rejection; retain its data-quality warning.
+        if any('后台数据清算维护' in n.text and '数据可能不准确' in n.text for n in nodes):
+            button=find_by_text(nodes,'确定')
+            if button is not None and button.clickable:
+                self.maintenance=True
+                self.adb.tap_node(button)
+                return self.adb.current_focus(),self.adb.nodes()
+        return focus,nodes
 
     def status(self, focus: str | None = None, nodes: list[Node] | None = None) -> LoginResult:
         if focus is None:
@@ -336,7 +347,9 @@ class Zhangle:
             )
 
         self.adb.tap_node(button)
-        return self._wait_for_login_result(timeout)
+        result=self._wait_for_login_result(timeout)
+        self.authenticated_now=True
+        return result
 
     def _wait_for_login_result(self, timeout: float) -> LoginResult:
         deadline = time.monotonic() + timeout
@@ -432,7 +445,7 @@ class Zhangle:
             focus, nodes = self.open_trade_tab(timeout=timeout)
 
         if not is_trade_locked(nodes):
-            return {**result.as_dict(), **self.trade_status(focus, nodes), **self.verify_trade_account(nodes, account)}
+            return {**result.as_dict(), **self.trade_status(focus, nodes), **self.verify_trade_account(nodes, account), 'maintenance':self.maintenance,'authenticated_now':self.authenticated_now}
 
         entry = find_by_id(nodes, TRADE_LOGIN_ENTRY_ID)
         if entry is None:
@@ -462,7 +475,7 @@ class Zhangle:
         status = self.trade_status(focus, nodes)
         if status["trade_locked"]:
             raise LoginError("交易登录后交易页仍未解锁")
-        return {**result.as_dict(), **status, **self.verify_trade_account(nodes, account), "logged_in": True}
+        return {**result.as_dict(), **status, **self.verify_trade_account(nodes, account), "logged_in": True, 'maintenance':self.maintenance,'authenticated_now':self.authenticated_now}
 
     @staticmethod
     def verify_trade_account(nodes, account):

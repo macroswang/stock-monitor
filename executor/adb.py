@@ -13,6 +13,7 @@ import struct
 import subprocess
 import time
 import uuid
+import threading
 from dataclasses import dataclass
 from xml.etree import ElementTree as ET
 from .runtime import active_serial, bound_timeout, budget
@@ -20,11 +21,14 @@ from .runtime import active_serial, bound_timeout, budget
 _DUMP_PATH = "/sdcard/zhangle_window.xml"
 _BOUNDS = re.compile(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]")
 _SAFE_TEXT = re.compile(r"[0-9A-Za-z._@-]+")
+_reconnect_lock = threading.Lock()
+_last_reconnect = {}
 
 # A GUI-launched Tauri app inherits a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin),
 # so `which adb` fails even though the user's terminal finds it. Keep a list of
 # the usual install locations instead of relying on PATH alone.
 _ADB_CANDIDATES = (
+    "/Applications/BlueStacks.app/Contents/MacOS/hd-adb",
     "/opt/homebrew/bin/adb",
     "/usr/local/bin/adb",
     "~/Library/Android/sdk/platform-tools/adb",
@@ -32,6 +36,8 @@ _ADB_CANDIDATES = (
     "~/Library/Android/sdk/platform-tools/adb.exe",
     "~/AppData/Local/Android/Sdk/platform-tools/adb.exe",
     "C:/Android/platform-tools/adb.exe",
+    "C:/Program Files/BlueStacks_nxt/HD-Adb.exe",
+    "C:/Program Files/BlueStacks/HD-Adb.exe",
 )
 
 
@@ -201,12 +207,26 @@ class Adb:
         return result.stdout.decode("utf-8", "replace").strip()
 
     def devices(self) -> list[str]:
-        output = self.run("devices").stdout.decode("utf-8", "replace")
-        return [
+        def listed():
+            output = self.run("devices").stdout.decode("utf-8", "replace")
+            return [
             line.split()[0]
             for line in output.splitlines()[1:]
             if line.strip() and line.split()[1:2] == ["device"]
-        ]
+            ]
+        devices=listed()
+        if devices and (not self.serial or self.serial in devices):return devices
+        # Only reconnect a local emulator. Never discover or connect LAN hosts.
+        target=self.serial or '127.0.0.1:5555'
+        local=re.fullmatch(r'(?:127\.0\.0\.1|localhost):([0-9]{1,5})',target)
+        installed=any(os.path.isfile(os.path.expanduser(p)) for p in _ADB_CANDIDATES if 'BlueStacks' in p)
+        if not local or not 0<int(local.group(1))<65536 or (not self.serial and not installed):return devices
+        with _reconnect_lock:
+            now=time.monotonic()
+            if now-_last_reconnect.get(target,-float('inf'))<5:return devices
+            _last_reconnect[target]=now
+            self.run('connect',target,timeout=3,check=False)
+        return listed()
 
     def is_installed(self, package: str) -> bool:
         output = self.shell("pm", "path", package)

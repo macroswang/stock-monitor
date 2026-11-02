@@ -83,12 +83,12 @@ class TradingTests(unittest.TestCase):
         self.assertEqual(self.store.query('SELECT active FROM trading_positions')[0]['active'],1)
         self.assertEqual(self.store.query('SELECT status FROM trading_sync')[0]['status'],'failed')
 
-    def test_complete_clear_disarms_and_reentry_stays_off(self):
+    def test_complete_clear_preserves_strategy_for_next_cycle(self):
         self.arm()
         self.service.apply_snapshot('a',self.snapshot(positions=[]))
-        self.assertFalse(self.service.rule('a','sz000981')['buy_enabled'])
+        self.assertTrue(self.service.rule('a','sz000981')['buy_enabled'])
         self.seed()
-        self.assertFalse(self.service.rule('a','sz000981')['buy_enabled'])
+        self.assertTrue(self.service.rule('a','sz000981')['buy_enabled'])
 
     def test_resync_does_not_compound_base_or_change_rule_revision(self):
         self.arm()

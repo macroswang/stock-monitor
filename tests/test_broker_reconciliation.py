@@ -217,7 +217,7 @@ class GatewayAccountProofTests(unittest.TestCase):
         from core import brokers
         client=Mock();client.ensure_ready.return_value={'account_verified':True}
         creds=SimpleNamespace(account='1234567890',broker='zhangle')
-        store=Mock()
+        store=Mock();store.query.return_value=[]
         for name in ('orders','trades','snapshot','order_report'):
             for failed_call in (0,1):
                 client.reset_mock();client.ensure_ready.side_effect=[{'account_verified':True} if i!=failed_call else {'account_verified':False} for i in (0,1)]

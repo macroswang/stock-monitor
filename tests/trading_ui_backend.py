@@ -4,6 +4,7 @@ import os
 from datetime import timedelta
 import sys
 import tempfile
+import threading
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -28,6 +29,13 @@ def holdings(_store,ident):
     if ident=='test-b':positions.append(dict(name='宏昌电子',quantity=500,sellable=500,price=2.13))
     return dict(account_id=ident,account_verified=True,observed_at=now_cn().isoformat(),complete=True,positions=positions,
                 funds={'available':'25000' if ident=='test-a' else '1000','market_value':'2556' if ident=='test-a' else '2343','total_assets':'27556' if ident=='test-a' else '3343'})
+
+sync_gate=threading.Event();sync_gate.set()
+original_holdings=holdings
+def delayed_holdings(*args):
+    if not sync_gate.wait(10):raise ValueError("隔离测试同步超时")
+    return original_holdings(*args)
+brokers.holdings=delayed_holdings
 
 broker_checks=[]
 def ready(_store,ident,secrets=None):
@@ -70,7 +78,9 @@ for ident in ('test-a','test-b'):app.live_trading.apply_snapshot(ident,holdings(
 for line in sys.stdin:
     try:
         request=json.loads(line)
-        if request['method']=='test_broker_checks':result=broker_checks
+        if request['method']=='test_hold_sync':sync_gate.clear();result=True
+        elif request['method']=='test_release_sync':sync_gate.set();result=True
+        elif request['method']=='test_broker_checks':result=broker_checks
         elif request['method']=='test_seed_notice':
             app.store.setconfig('trading_signal_notice','测试：原买卖开关已保留，自动执行已暂停。')
             result=True

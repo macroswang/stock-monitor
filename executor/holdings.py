@@ -6,7 +6,7 @@ confirmation against a public quote instead of guessing from a display name.
 from .adb import find_by_id
 
 
-def collect(adb, nodes, list_id, parse, funds, max_pages=30, verify=None, resolve=None):
+def collect(adb, nodes, list_id, parse, funds, max_pages=30, verify=None, resolve=None,target_code=None,target_name=None):
     def read(current):
         if verify is not None:
             verify(current)
@@ -28,6 +28,23 @@ def collect(adb, nodes, list_id, parse, funds, max_pages=30, verify=None, resolv
         return adb.nodes()
 
     container, rows, previous = read(nodes)
+    if target_code:
+        # A known position can be rechecked without traversing unrelated rows.
+        # Two independent readings must agree; this is NEVER a complete list.
+        matched=[]
+        for row in rows:
+            if row.get('code'):
+                if row['code'][-6:]!=target_code[-6:]:continue
+            elif row.get('name')!=target_name:continue
+            candidate=resolve(row,nodes) if resolve and not row.get('code') else row
+            if candidate.get('code','')[-6:]==target_code[-6:]:matched.append(candidate)
+        if len(matched)>1:raise ValueError('目标持仓无法唯一识别')
+        if matched:
+            second=read(adb.nodes())[1]
+            raw=next((r for r in second if r.get('name')==matched[0].get('name')),None)
+            if raw is None or (raw.get('code') and raw['code'][-6:]!=target_code[-6:]) or any(raw.get(k)!=matched[0].get(k) for k in ('quantity','sellable')):
+                raise ValueError('目标持仓数量读取期间变化，请重新核验')
+            return dict(funds=funds,positions=matched,complete=False,position_only=True)
     if not rows:
         empty = any(any(t in n.text for t in ('暂无持仓','无持仓','没有持仓','您还没有持仓')) for n in nodes)
         return dict(funds=funds, positions=[], complete=empty, warning='' if empty else '持仓列表为空但没有明确空仓提示，请重新同步')

@@ -84,3 +84,14 @@ class IdentityBoundaryTests(unittest.TestCase):
         self.assertTrue(result['complete'])
         self.assertEqual(resolve.call_count,3)
         self.assertEqual([r['code'] for r in result['positions']],['000001','000002','000003'])
+
+class TargetPositionTests(unittest.TestCase):
+    def test_targeted_read_is_not_a_full_snapshot_and_never_swipes_other_positions(self):
+        adb=ListDevice([['A:100','B:200'],['C:300']]);adb.shell=Mock(side_effect=AssertionError('Must not swipe'))
+        resolved=Mock(side_effect=lambda row,ns:dict(row,code='000981'))
+        r=collect(adb,adb.nodes(),'holdings',parse,{'available':'5000'},resolve=resolved,target_code='sz000981',target_name='B')
+        self.assertTrue(r['position_only']);self.assertFalse(r['complete']);self.assertEqual(r['positions'][0]['quantity'],200)
+        self.assertEqual(resolved.call_count,1);adb.shell.assert_not_called()
+    def test_targeted_read_rejects_changed_quantity(self):
+        adb=ListDevice([['A:100']]);first=adb.nodes();adb.nodes=Mock(return_value=[node(rid='holdings'),node('A:200','row')])
+        with self.assertRaisesRegex(ValueError,'变化'):collect(adb,first,'holdings',parse,{},resolve=lambda row,ns:dict(row,code='000981'),target_code='000981',target_name='A')

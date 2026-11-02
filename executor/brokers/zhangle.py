@@ -1,11 +1,13 @@
 """华泰涨乐通适配器：包装现有的 zhangle / trade / orderbook / cancel 页面对象。"""
 from __future__ import annotations
+from datetime import date
 
 from .base import BrokerAdapter, BrokerCredentials, BrokerSpec, CredentialField
 from ..cancel import CancelPage, plan_cancel
 from ..orderbook import OrderBook
 from ..trade import TradePage
 from ..zhangle import PACKAGE, Zhangle
+_maintenance_sessions={}
 
 SPEC = BrokerSpec(
     id="zhangle",
@@ -41,9 +43,14 @@ class ZhangleAdapter(BrokerAdapter):
         return self.ensure_ready(credentials)
 
     def ensure_ready(self, credentials: BrokerCredentials) -> dict:
-        result=self._client().ensure_trade_ready(
+        client=self._client()
+        result=client.ensure_trade_ready(
             account=credentials.account, password=credentials.get("password")
         )
+        key=(self.adb.serial,credentials.account)
+        if result.get('maintenance') is True:_maintenance_sessions[key]=date.today()
+        elif result.get('authenticated_now') is True:_maintenance_sessions.pop(key,None)
+        result['maintenance']=_maintenance_sessions.get(key)==date.today()
         self._verified_account=credentials.account if result.get('account_verified') is True else None
         return result
 
@@ -104,7 +111,7 @@ class ZhangleAdapter(BrokerAdapter):
     def account(self) -> dict:
         return OrderBook(self.adb).account()
 
-    def holdings(self, account: str | None = None, known_codes: dict | None = None) -> dict:
+    def holdings(self, account: str | None = None, known_codes: dict | None = None,target_code=None) -> dict:
         from ..holdings import collect
         from ..orderbook import POSITION_RECYCLER_ID, parse_positions, parse_funds
         nodes = OrderBook(self.adb).open_holdings()
@@ -113,7 +120,8 @@ class ZhangleAdapter(BrokerAdapter):
         def resolve(row,ns):
             code=(known_codes or {}).get(row['name'])
             return dict(row,code=code,code_source='account_verified_cache') if code else zhangle_code(self.adb,row,ns,verify)
-        return collect(self.adb,nodes,POSITION_RECYCLER_ID,lambda ns,_bounds: parse_positions(ns),parse_funds(nodes),verify=verify,resolve=resolve if verify else None)
+        names=[name for name,code in (known_codes or {}).items() if target_code and code[-6:]==target_code[-6:]]
+        return collect(self.adb,nodes,POSITION_RECYCLER_ID,lambda ns,_bounds: parse_positions(ns),parse_funds(nodes),verify=verify,resolve=resolve if verify else None,target_code=target_code,target_name=names[0] if len(names)==1 else None)
 
     # ----- 撤单 ------------------------------------------------------------
     def cancel(

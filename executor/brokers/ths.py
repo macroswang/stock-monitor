@@ -78,7 +78,7 @@ class ThsAdapter(BrokerAdapter):
         from core.provider import now_cn
         return report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
 
-    def holdings(self, account: str | None = None, known_codes: dict | None = None) -> dict:
+    def holdings(self, account: str | None = None, known_codes: dict | None = None,target_code=None) -> dict:
         from ..holdings import collect
         from ..ths_trade import POSITION_LIST_ID, parse_positions, parse_funds
         query = ThsQuery(self.adb)
@@ -96,7 +96,8 @@ class ThsAdapter(BrokerAdapter):
         def resolver(row,ns):
             code=(known_codes or {}).get(row['name'])
             return dict(row,code=code,code_source='account_verified_cache') if code else ths_code(self.adb,row,ns,verify)
-        return collect(self.adb,nodes,POSITION_LIST_ID,parse_positions,funds,verify=verify if account else None,resolve=resolver if account else None)
+        names=[name for name,code in (known_codes or {}).items() if target_code and code[-6:]==target_code[-6:]]
+        return collect(self.adb,nodes,POSITION_LIST_ID,parse_positions,funds,verify=verify if account else None,resolve=resolver if account else None,target_code=target_code,target_name=names[0] if len(names)==1 else None)
 
     # ----- 撤单 ------------------------------------------------------------
     def cancel(
