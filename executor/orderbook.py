@@ -231,6 +231,11 @@ def parse_rows(nodes: list[Node], kind: str) -> list[OrderRow]:
     scoped = _scoped(nodes, RECYCLER_ID) or nodes
     out: list[OrderRow] = []
     for raw in _rows(scoped):
+        # 2026-11 live native layout uses the shorter aliases for today's orders.
+        for target,alias in ((STATE_ID,'item_trade_state'),(AMOUNT_ID,'item_trade_success'),
+                             (TIME_ID,'item_trade_time'),(ORDER_PRICE_ID,'item_trade_trust_price')):
+            if target not in raw and alias in raw:
+                raw[target]=raw[alias]
         name = _text(raw.get(NAME_ID))
         code_text = _text(raw.get(CODE_ID))
         match = _CODE.search(code_text)
@@ -249,6 +254,8 @@ def parse_rows(nodes: list[Node], kind: str) -> list[OrderRow]:
             quantity = _number(left)
             filled = _number(right)
         price_text = _text(raw.get(ORDER_PRICE_ID if kind == "order" else TRADE_PRICE_ID))
+        if kind=='order' and filled is None and _text(raw.get(STATE_ID)) in ('已成','已成交','全部成交'):
+            filled=quantity
         if quantity is not None and kind == "trade":
             quantity = abs(quantity)
         out.append(
@@ -331,7 +338,7 @@ def parse_positions(nodes: list[Node]) -> list[dict]:
         row = {
             "name": name,
             # 只有当该列恰好显示 6 位代码时才填，否则留空。
-            "code": match.group(0) if match and "," not in value_text else "",
+            "code": "",  # This column is market value, even when it happens to be six digits.
             "market_value": _number(value_text),
         }
         for resource_id, key in POSITION_FIELDS:

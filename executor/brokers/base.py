@@ -27,6 +27,7 @@ class BrokerSpec:
     supports_order: bool = False
     supports_query: bool = False
     supports_cancel: bool = False
+    supports_order_report: bool = False
 
     def as_dict(self) -> dict:
         return {
@@ -40,6 +41,7 @@ class BrokerSpec:
             "supports_order": self.supports_order,
             "supports_query": self.supports_query,
             "supports_cancel": self.supports_cancel,
+            "supports_order_report": self.supports_order_report,
         }
 
 
@@ -80,9 +82,15 @@ class BrokerAdapter:
         """``kind`` is today / history; returns 成交列表。"""
         raise NotImplementedError("该券商尚未实现成交查询")
 
+    def order_report(self,order_id,day,expected):
+        raise ValueError('该券商当前查询页没有可核验的委托编号，保留待核实状态')
+
     def account(self) -> dict:
         """资金与持仓快照，用于对账。"""
         raise NotImplementedError("该券商尚未实现资金持仓查询")
+
+    def holdings(self, account: str | None = None, known_codes: dict | None = None) -> dict:
+        raise NotImplementedError('该券商尚未实现完整持仓同步')
 
     def cancel(
         self,

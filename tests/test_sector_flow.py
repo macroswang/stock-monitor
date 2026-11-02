@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from core.provider import CN
-from core.sector_flow import SectorFlow,expected_day,parse,parse_sina,fetch
+from core.sector_flow import SectorFlow,expected_day,parse,parse_sina,fetch,fetch_sina
 from core.store import Store
 
 
@@ -81,6 +81,11 @@ class SectorFlowTests(unittest.TestCase):
         self.assertEqual(data['date'],'2026-10-30');self.assertEqual(len(data['anchor_details']),6);self.assertEqual(len(data['sectors']),40)
         self.assertEqual(data['inflow'][0]['code'],'new_39')
         quotes['sz000000']['price']='10.10'
+        filtered=parse_sina(rows,[],quotes,self.now)
+        self.assertEqual(filtered['verified_count'],39)
+        self.assertEqual(filtered['excluded_count'],1)
+        self.assertNotIn('new_0',[r['code'] for r in filtered['sectors']+filtered['outflow']])
+        for i in range(9):quotes[f'sz{i:06d}']['price']='10.10'
         with self.assertRaisesRegex(ValueError,'未通过核对'):parse_sina(rows,[],quotes,self.now)
         with self.assertRaisesRegex(ValueError,'不完整'):parse_sina(rows,[rows[0]],quotes,self.now)
 
@@ -103,7 +108,9 @@ class SectorFlowTests(unittest.TestCase):
         self.assertEqual(len(data['anchor_details']),6)
         with self.assertRaises(ValueError):parse_sina(rows,[],quotes,self.now,'industry')
         quotes['sz000000']['stamp']=self.stamp-timedelta(days=1)
-        with self.assertRaises(ValueError):parse_sina(rows,[],quotes,self.now,'concept')
+        filtered=parse_sina(rows,[],quotes,self.now,'concept')
+        self.assertEqual(filtered['verified_count'],39)
+        self.assertNotIn('gn_Concept0',[r['code'] for r in filtered['sectors']+filtered['outflow']])
 
     def test_industry_and_concept_cache_are_independent(self):
         industry=SectorFlow(self.store,enabled=False)
@@ -113,6 +120,47 @@ class SectorFlowTests(unittest.TestCase):
             industry.refresh(force=True)
             self.assertIsNotNone(industry.view()['snapshot'])
             self.assertIsNone(concept.view()['snapshot'])
+
+    def test_fallback_uses_time_after_slow_primary_attempt(self):
+        with patch('core.sector_flow.time.monotonic',side_effect=[100,112]),patch('core.sector_flow.fetch_eastmoney',side_effect=OSError()),patch('core.sector_flow.fetch_sina') as fallback:
+            fetch(self.now)
+        self.assertEqual(fallback.call_args.args[0],self.now+timedelta(seconds=12))
+
+    def test_fresh_reference_after_network_io_is_not_misclassified_as_future(self):
+        now=datetime(2026,10,30,10,30,tzinfo=CN)
+        rows=[];quotes={}
+        for i in range(40):
+            code=f'sz{i:06d}'
+            rows.append(dict(cate_type='0',category=f'new_{i}',name=f'行业{i}',ts_symbol=code,netamount='0',inamount='100',outamount='100',avg_changeratio='0',ts_trade='10',ts_changeratio='0'))
+            quotes[code]=dict(price='10',previous='10',stamp=now+timedelta(seconds=12))
+        with patch('core.sector_flow._sina_page',side_effect=[rows,[]]),patch('core.sector_flow._reference_quotes',return_value=quotes),patch('core.sector_flow.time.monotonic',side_effect=[100,112]):
+            data=fetch_sina(now)
+        self.assertEqual(data['verified_count'],40)
+        self.assertEqual(data['collected_at'],(now+timedelta(seconds=12)).isoformat())
+
+    def test_expired_same_day_data_is_explicit_cache_and_never_carried_into_next_day(self):
+        now=datetime(2026,10,30,10,30,tzinfo=CN)
+        rows=[dict(r,f124=int((now-timedelta(seconds=60)).timestamp())) for r in self.rows]
+        flow=SectorFlow(self.store,enabled=False)
+        with patch('core.sector_flow.now_cn',return_value=now),patch('core.sector_flow.fetch',return_value=parse({'data':{'total':100,'diff':rows}},now)):
+            flow.refresh(force=True)
+        with patch('core.sector_flow.now_cn',return_value=now+timedelta(minutes=3)):
+            report=flow.view()
+        self.assertIsNone(report['snapshot']);self.assertIsNotNone(report['cached_snapshot']);self.assertTrue(report['stale'])
+        with patch('core.sector_flow.now_cn',return_value=datetime(2026,11,2,10,0,tzinfo=CN)):
+            report=flow.view()
+        self.assertIsNone(report['snapshot']);self.assertIsNone(report['cached_snapshot'])
+
+    def test_refresh_retries_failed_fetch_in_ten_seconds(self):
+        flow=SectorFlow(self.store,enabled=False)
+        with patch('core.sector_flow.time.monotonic',return_value=100),patch('core.sector_flow.fetch',side_effect=OSError()) as pull:
+            flow.refresh();self.assertEqual(pull.call_count,1)
+        with patch('core.sector_flow.time.monotonic',return_value=109),patch('core.sector_flow.fetch') as pull:
+            flow.refresh();pull.assert_not_called()
+        with patch('core.sector_flow.time.monotonic',return_value=110),patch('core.sector_flow.now_cn',return_value=self.now),patch('core.sector_flow.fetch',return_value=parse(self.payload,self.now)) as pull:
+            flow.refresh();self.assertEqual(pull.call_count,1)
+        with patch('core.sector_flow.time.monotonic',return_value=139),patch('core.sector_flow.fetch') as pull:
+            flow.refresh();pull.assert_not_called()
 
 
 if __name__=='__main__':unittest.main()

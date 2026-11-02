@@ -40,7 +40,7 @@ class BrokerAccountTests(unittest.TestCase):
         self.assertIn("ths", specs)
         ths = specs["ths"]
         self.assertEqual(ths["name"], "同花顺（银河证券）")
-        self.assertFalse(ths["supports_order"], "交易页下单表单未验证前不放开下单")
+        self.assertTrue(ths["supports_order"], "已核验原生表单及确认弹窗，真实入口仍受确认设置和持久化请求约束")
         self.assertTrue(ths["supports_query"], "委托/成交/资金持仓已实测")
         self.assertFalse(ths["supports_cancel"], "撤单按钮尚未实测")
         self.assertEqual([f["key"] for f in ths["fields"]], ["account", "password"])

@@ -1,4 +1,5 @@
 """东方财富行业大单统计：只读观察，不参与交易或市场信号。"""
+import concurrent.futures
 import json
 import math
 import re
@@ -14,7 +15,8 @@ from .provider import CN, now_cn
 
 CODE, KIND = 'eastmoney-industry', 'sector_flow_v1'
 # 刷新频率应快于盘中 180 秒的过期阈值，避免正常采集时出现空档。
-REFRESH_SECONDS = 120
+REFRESH_SECONDS = 30
+RETRY_SECONDS = 10
 SOURCE = '东方财富行业板块资金流'
 URL = 'https://push2.eastmoney.com/api/qt/clist/get'
 SOURCE_PAGE = 'https://data.eastmoney.com/bkzj/hy.html'
@@ -74,13 +76,14 @@ def parse(payload,now):
 
 
 def fetch_eastmoney(now):
+    started=time.monotonic()
     params={'pn':1,'pz':1000,'po':1,'np':1,'fltt':2,'fid':'f62','fs':'m:90+t:2',
             'fields':'f3,f12,f14,f62,f66,f72,f124'}
     req=Request(URL+'?'+urlencode(params),headers={'User-Agent':'Mozilla/5.0','Referer':'https://data.eastmoney.com/'})
     with urlopen(req,timeout=8) as response:
         raw=response.read(2_000_001)
     if len(raw)>2_000_000:raise ValueError('板块数据过大')
-    return parse(json.loads(raw),now)
+    return parse(json.loads(raw),now+timedelta(seconds=time.monotonic()-started))
 
 
 def _sina_page(page,kind='industry'):
@@ -92,7 +95,7 @@ def _sina_page(page,kind='industry'):
 
 
 def parse_sina(rows,extra,quotes,now,kind='industry'):
-    """新浪无板块时间：用两端代表股的同日价格匹配，日期仅作推定。"""
+    """新浪未提供板块时间：逐板块核对代表股，日期仅作推定。"""
     if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
     now=now.astimezone(CN);day=expected_day(now)
     if day is None or not isinstance(rows,list) or not 35<=len(rows)<=500 or extra!=[]:
@@ -112,51 +115,70 @@ def parse_sina(rows,extra,quotes,now,kind='industry'):
             output.append(dict(code=code,name=name,net_yuan=float(values[0]),change_percent=float(values[3]*100),
                                stock=stock,stock_price=values[4],stock_change=values[5]))
         output.sort(key=lambda x:x['net_yuan'],reverse=True)
-        picked=output[:3]+output[-3:]
-        if len({x['stock'] for x in picked})<3:raise ValueError()
-        anchor=[];anchor_details=[]
-        for row in picked:
-            q=quotes[row['stock']];ts=q['stamp'];price=Decimal(q['price']);previous=Decimal(q['previous'])
-            if (ts.tzinfo is None or ts.astimezone(CN).date().isoformat()!=day or ts>now+timedelta(seconds=5) or
-                previous<=0 or abs(price-row['stock_price'])>Decimal('0.0051') or
-                abs(price/previous-1-row['stock_change'])>Decimal('0.0001')):raise ValueError()
-            anchor.append(ts)
-            anchor_details.append(dict(code=row['stock'],sector_price=str(row['stock_price']),reference_price=str(price),reference_time=ts.isoformat()))
+        verified=[];details={};stamps=[]
         session=trading_day(now.date()) is True and (clock_time(9,30)<=now.time()<=clock_time(11,30) or clock_time(13)<=now.time()<clock_time(15))
-        if session and any((now-ts).total_seconds()>180 for ts in anchor):raise ValueError()
+        # Check each displayed sector's representative, instead of letting one
+        # moving price erase the whole screen or endorsing unchecked sectors.
+        for row in output:
+            try:
+                q=quotes[row['stock']];ts=q['stamp'];price=Decimal(q['price']);previous=Decimal(q['previous'])
+                if (ts.tzinfo is None or ts.astimezone(CN).date().isoformat()!=day or ts>now+timedelta(seconds=5) or
+                    previous<=0 or not price.is_finite() or not previous.is_finite() or abs(price-row['stock_price'])>Decimal('0.0051') or
+                    abs(price/previous-1-row['stock_change'])>Decimal('0.0001') or
+                    (session and (now-ts).total_seconds()>180)):continue
+            except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError):continue
+            verified.append(row);stamps.append(ts)
+            details[row['code']]=dict(code=row['stock'],sector_price=str(row['stock_price']),reference_price=str(price),reference_time=ts.isoformat())
+        if len(verified)<math.ceil(len(output)*.8):raise ValueError()
+        picked=verified[:3]+verified[-3:]
+        if len({r['stock'] for r in picked})<3:raise ValueError()
     except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError,OverflowError):
         raise ValueError('新浪数据日期、金额或代表股价格未通过核对') from None
     def simple(row):return {k:row[k] for k in ('code','name','net_yuan','change_percent')}
     return dict(date=day,source=SINA_SOURCE if kind=='industry' else SINA_CONCEPT_SOURCE,source_url='https://finance.sina.com.cn/temp/guest4377.shtml',
-                quote_time=None,anchor_time=max(anchor).isoformat(),collected_at=now.isoformat(),total=len(output),
-                measure='买卖方向净额',date_inferred=True,anchor_details=anchor_details,sectors=[simple(r) for r in output],
-                inflow=[simple(r) for r in output if r['net_yuan']>0][:3],
-                outflow=[simple(r) for r in reversed(output) if r['net_yuan']<0][:3])
+                quote_time=None,anchor_time=min(stamps).isoformat(),collected_at=now.isoformat(),total=len(output),
+                verified_count=len(verified),excluded_count=len(output)-len(verified),
+                measure='买卖方向净额',date_inferred=True,anchor_details=[details[r['code']] for r in picked],sectors=[simple(r) for r in verified],
+                inflow=[simple(r) for r in verified if r['net_yuan']>0][:3],
+                outflow=[simple(r) for r in reversed(verified) if r['net_yuan']<0][:3])
+
+
+def _reference_quotes(codes):
+    def batch(group):
+        req=Request('https://qt.gtimg.cn/q='+','.join(group),headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/'})
+        with urlopen(req,timeout=8) as response:text=response.read(100000).decode('gb18030')
+        found={}
+        for line in text.splitlines():
+            if '="' not in line:continue
+            code=line.split('=',1)[0].split('_')[-1];fields=line.split('="',1)[1].split('~')
+            if code in group and len(fields)>30 and fields[2]==code[2:]:
+                found[code]=dict(price=fields[3],previous=fields[4],stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
+        return found
+    groups=[codes[i:i+50] for i in range(0,len(codes),50)]
+    result={}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+        for rows in pool.map(batch,groups):result.update(rows)
+    return result
 
 
 def fetch_sina(now,kind='industry'):
     if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
+    started=time.monotonic()
     rows=_sina_page(1,kind);extra=_sina_page(2,kind)
     if not isinstance(rows,list) or len(rows)<35:raise ValueError('新浪行业数据不完整')
-    sorted_rows=sorted(rows,key=lambda r:Decimal(str(r['netamount'])),reverse=True)
-    codes=list(dict.fromkeys(r['ts_symbol'] for r in sorted_rows[:3]+sorted_rows[-3:]))
+    codes=list(dict.fromkeys(r['ts_symbol'] for r in rows))
     if any(not isinstance(c,str) or not re.fullmatch(r'(sh[69]|sz[03])\d{5}',c) for c in codes):raise ValueError('股票代码异常')
-    req=Request('https://qt.gtimg.cn/q='+','.join(codes),headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/'})
-    with urlopen(req,timeout=8) as response:text=response.read(100000).decode('gb18030')
-    quotes={}
-    for line in text.splitlines():
-        if '="' not in line:continue
-        code=line.split('=',1)[0].split('_')[-1];fields=line.split('="',1)[1].split('~')
-        if code in codes and len(fields)>30:
-            quotes[code]=dict(price=fields[3],previous=fields[4],stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
-    return parse_sina(rows,extra,quotes,now,kind)
+    quotes=_reference_quotes(codes)
+    return parse_sina(rows,extra,quotes,now+timedelta(seconds=time.monotonic()-started),kind)
+
 
 
 def fetch(now,kind='industry'):
     if kind=='concept':return fetch_sina(now,'concept')
     if kind!='industry':raise ValueError('不支持的板块类型')
+    started=time.monotonic()
     try:return fetch_eastmoney(now)
-    except Exception:return fetch_sina(now)
+    except Exception:return fetch_sina(now+timedelta(seconds=time.monotonic()-started))
 
 
 class SectorFlow:
@@ -167,7 +189,7 @@ class SectorFlow:
     def refresh(self,force=False):
         with self.lock:
             if self.running:return
-            if not force and time.monotonic()-self.last_attempt<REFRESH_SECONDS:return
+            if not force and time.monotonic()-self.last_attempt<(RETRY_SECONDS if self.error else REFRESH_SECONDS):return
             self.running=True;self.last_attempt=time.monotonic()
         try:
             now=now_cn();result=fetch(now,self.kind)
@@ -183,22 +205,24 @@ class SectorFlow:
             with self.lock:self.running=False
 
     def view(self):
-        if self.enabled and not self.running and time.monotonic()-self.last_attempt>=REFRESH_SECONDS:
+        if self.enabled and not self.running and time.monotonic()-self.last_attempt>=(RETRY_SECONDS if self.error else REFRESH_SECONDS):
             threading.Thread(target=self.refresh,daemon=True).start()
         rows=self.store.getcache(self.code,KIND)
         now=now_cn();wanted=expected_day(now)
         latest=rows[-1]['data'] if rows else None
         allowed=(SOURCE,SINA_SOURCE) if self.kind=='industry' else (SINA_CONCEPT_SOURCE,)
         usable=bool(latest and latest.get('source') in allowed and latest.get('date')==wanted)
+        checked=usable
         if usable:
             try:
                 ts=datetime.fromisoformat(latest.get('quote_time') or latest['anchor_time'])
                 collected=datetime.fromisoformat(latest['collected_at'])
                 age=(now-ts).total_seconds()
                 session=trading_day(now.date()) is True and (clock_time(9,30)<=now.time()<=clock_time(11,30) or clock_time(13)<=now.time()<clock_time(15))
-                usable=ts.tzinfo is not None and collected.tzinfo is not None and collected<=now+timedelta(seconds=5) and -5<=age and (not session or age<=180)
-            except (ValueError,TypeError,KeyError):usable=False
-        return dict(snapshot=latest if usable else None,running=self.running,error=self.error,expected_date=wanted,source_url=SOURCE_PAGE)
+                checked=ts.tzinfo is not None and collected.tzinfo is not None and collected<=now+timedelta(seconds=5) and -5<=age
+                usable=checked and (not session or age<=180)
+            except (ValueError,TypeError,KeyError):usable=False;checked=False
+        return dict(snapshot=latest if usable else None,cached_snapshot=latest if checked and not usable else None,stale=bool(checked and not usable),running=self.running,error=self.error,expected_date=wanted,source_url=SOURCE_PAGE,refresh_seconds=REFRESH_SECONDS)
 
     def intraday(self):
         from .sector_events import build_observations

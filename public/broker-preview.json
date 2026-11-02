@@ -37,8 +37,8 @@
           "secret": true
         }
       ],
-      "note": "需先在同花顺里添加并选中银河证券账户；这里只提交交易密码，不会新增账户，资金账号仅用于核对尾号。",
-      "supports_order": false,
+      "note": "买卖预填及确认弹窗已验证；免二次确认开启时拒绝下单，结果未知时停止重试。",
+      "supports_order": true,
       "supports_query": true,
       "supports_cancel": false
     }
@@ -70,7 +70,7 @@
       "enabled": true,
       "is_default": false,
       "password_saved": true,
-      "supports_order": false,
+      "supports_order": true,
       "supports_query": true,
       "supports_cancel": false
     }

@@ -29,8 +29,8 @@
 我们只校验当前选中的账户尾号与本地记录一致，再提交密码，避免把 A 券商的
 密码发到 B 券商的登录框里。
 
-登录成功后的交易页结构（买入/卖出/撤单/委托）尚未实测，因此 ``supports_order``
-暂时是 ``False``，委托/成交/撤单方法一律抛 ``NotImplementedError``。
+原生买卖表单与二次确认在 ``ths_order`` 中实现；正式提交必须经过观量的持久化请求入口。
+自动撤单仍未开放。
 """
 from __future__ import annotations
 
@@ -139,10 +139,11 @@ def read_status(nodes: list[Node], focus: str) -> ThsStatus:
     app_foreground = PACKAGE in focus
     open_panel = panel_open(nodes)
     trade_tab = is_trade_page(nodes)
-    broker = _text(find_by_id(nodes, "qs_name_text")) or _text(find_by_id(nodes, QS_NAME_ID)) or _text(find_by_id(nodes, PANEL_QS_ID))
+    broker = _text(find_by_id(nodes, "qs_name_text")) or _text(find_by_id(nodes, QS_NAME_ID)) or _text(find_by_id(nodes, PANEL_QS_ID)) or _text(find_by_id(nodes,'page_title_view'))
     account = _text(find_by_id(nodes, ACCOUNT_VALUE_ID)) or _text(
         find_by_id(nodes, PANEL_ACCOUNT_ID)
     )
+    account = account or _text(find_by_id(nodes,'account_info_view'))
     # 11.64.07 登录后的独立控件，文本带“k客户号”前缀，不能沿用密码框字段。
     signed_in_account = _text(find_by_id(nodes, "account_text"))
     if signed_in_account:

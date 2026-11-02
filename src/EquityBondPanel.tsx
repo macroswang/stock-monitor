@@ -1,3 +1,4 @@
+import InfoNote from './InfoNote';
 import React,{useEffect,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 
@@ -27,6 +28,6 @@ export default function EquityBondPanel({request,selectedDate,intradayDate}:{req
   <div className="option-readout"><div><span>{chosenDate||chosen?.date||'暂无统计日期'} · 股债差</span><strong>{chosen?`${fmt(chosen.spread)} 个百分点`:'—'}</strong></div><div><span>上交所股票平均市盈率</span><strong>{chosen?`${fmt(chosen.pe)} 倍`:'—'}</strong></div><div><span>国债 10 年收益率（11:30）</span><strong>{chosen?`${fmt(chosen.bond_yield,4)}%`:'—'}</strong></div></div>
   {!chosen&&<p className="option-missing">{intradayDate&&chosenDate>=intradayDate?'盘中不显示当日及之后的收盘股债参考。':chosenDate?'所选日期没有两项齐全的数据。':'暂无已核验的股债参照数据。'}</p>}
   <div className="option-chart" ref={ref} role="img" aria-label="沪市股票和十年国债估值差曲线"/>
-  <div className="option-note">独立参照：上交所“股票”统计包含主板 A、B 股和科创板，并非沪深全市场；国债为中国货币网 11:30 报价曲线均值，与市盈率时点不同。{chosenDate&&'图表仅显示所选日期及之前的数据。'}市盈率倒数为估值指标，非实际收益或资金流向。{chosen&&<> 数据采集于 {chosen.collected_at.slice(0,19).replace('T',' ')} 北京时间，补采不代表当时可得。</>} <a href="https://www.sse.com.cn/market/stockdata/overview/day/" target="_blank" rel="noreferrer">上交所</a> · <a href="https://www.chinamoney.com.cn/chinese/sddsintigy/" target="_blank" rel="noreferrer">中国货币网</a></div>
+  <InfoNote>独立参照：上交所“股票”统计包含主板 A、B 股和科创板，并非沪深全市场；国债为中国货币网 11:30 报价曲线均值，与市盈率时点不同。{chosenDate&&'图表仅显示所选日期及之前的数据。'}市盈率倒数为估值指标，非实际收益或资金流向。{chosen&&<> 数据采集于 {chosen.collected_at.slice(0,19).replace('T',' ')} 北京时间，补采不代表当时可得。</>} <a href="https://www.sse.com.cn/market/stockdata/overview/day/" target="_blank" rel="noreferrer">上交所</a> · <a href="https://www.chinamoney.com.cn/chinese/sddsintigy/" target="_blank" rel="noreferrer">中国货币网</a></InfoNote>
  </section>;
 }

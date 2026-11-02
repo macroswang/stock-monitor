@@ -11,6 +11,15 @@ from tests.test_executor_cancel import order
 
 
 class OrderSafetyTests(unittest.TestCase):
+    def test_pause_after_form_button_blocks_final_confirmation(self):
+        page=self.page()
+        guard=Mock(side_effect=[None,ValueError('用户已暂停')])
+        with self.assertRaisesRegex(ValueError,'暂停'):
+            page.submit('sell','000981',100,'2.13',before_confirm=guard)
+        self.assertEqual(guard.call_count,2)
+        self.assertEqual(page.adb.tap_node.call_count,1,'只能打开确认弹窗，不能确认委托')
+        page._cancel_dialog.assert_called_once()
+
     def test_unknown_or_changed_dialog_cannot_be_confirmed(self):
         page = self.page()
         form_nodes = page.snapshot.side_effect
@@ -50,6 +59,20 @@ class OrderSafetyTests(unittest.TestCase):
         page._cancel_dialog = Mock()
         page._dialog_button = Mock(return_value=Mock())
         return page
+
+    def test_no_amount_cap_accepts_large_exact_plan_but_keeps_price_identity(self):
+        from dataclasses import replace
+        def large_page():
+            page=self.page()
+            page.preview.return_value=replace(page.preview.return_value,price='30.00')
+            page.snapshot.side_effect=[(focus,[replace(n,text=n.text.replace('2.13','30.00')) for n in nodes]) for focus,nodes in page.snapshot.side_effect]
+            page._wait_confirm.return_value=replace(page._wait_confirm.return_value,price='30.00')
+            return page
+        page=large_page();result=page.submit('sell','000981',100,'30.00',max_value=None,dry_run=True)
+        self.assertEqual(result['status'],'preview');page._cancel_dialog.assert_called_once()
+        page=large_page();page._wait_confirm.return_value=replace(page._wait_confirm.return_value,price='31.00')
+        with self.assertRaises(TradeError):page.submit('sell','000981',100,'30.00',max_value=None,dry_run=True)
+        page._cancel_dialog.assert_called_once()
 
     def test_cancel_must_never_fall_back_to_positive_button(self):
         page = TradePage(Mock())

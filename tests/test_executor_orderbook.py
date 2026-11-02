@@ -127,6 +127,15 @@ ACCOUNT_XML = f"""<hierarchy rotation="1">
 
 
 class OrderBookParseTests(unittest.TestCase):
+    def test_current_native_aliases_do_not_hide_an_existing_filled_order(self):
+        xml=build_rows_xml(ROW_1)
+        for old,new in [('item_trade_trust_state','item_trade_state'),('item_trade_trust_success','item_trade_success'),('item_trade_trust_time','item_trade_time'),('item_trade_trust_num','item_trade_trust_price')]:
+            xml=xml.replace(old,new)
+        xml=xml.replace('2,300 | 0','2,300').replace('已报','已成')
+        rows=parse_rows(parse_nodes(xml),'order')
+        self.assertEqual(len(rows),1)
+        self.assertEqual((rows[0].code,rows[0].quantity,rows[0].filled,rows[0].state),('000981',2300,2300,'已成'))
+
     def test_parses_order_rows_and_flags_cancellable(self):
         nodes = parse_nodes(build_rows_xml(ROW_1, ROW_2, ROW_3))
         rows = parse_rows(nodes, "order")

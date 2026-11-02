@@ -1,3 +1,4 @@
+import InfoNote from './InfoNote';
 import React,{useEffect,useRef} from 'react';
 import * as echarts from 'echarts';
 import type {BreadthDay} from './MarketBreadth';
@@ -25,6 +26,6 @@ export default function AdvanceDeclinePanel({days,selected,onSelect}:{days:Bread
   <div className="option-readout"><div><span>{selected?.date||'暂无日期'} · 腾落线{selected&&selectedReference!==selected?'（历史参照）':''}</span><strong>{num(selectedReference?.adl)}</strong></div><div><span>涨跌家数比</span><strong>{num(selectedReference?.adr,2)}</strong></div><div><span>累计起点 / 交易日</span><strong>{selectedReference?.adl_start?`${selectedReference.adl_start} / ${selectedReference.adl_samples} 天`:'—'}</strong></div></div>
   <div className="option-chart" ref={ref} role="img" aria-label="腾落线和每日涨跌家数比曲线"/>
   <div className="breadth-key"><span><i style={{background:'#80b8ff'}}/>腾落线 ADL（左轴）</span><span><i style={{background:'#d8b663'}}/>每日涨跌比 ADR（右轴）</span></div>
-  <div className="option-note">ADL 为所示起点以来每日上涨家数减下跌家数的累计，绝对值受起点影响；ADR 为当日上涨家数 ÷ 下跌家数，下跌家数为 0 时留空。遇到缺日、数据不完整或来源变化时重新累计并断线；盘中为暂值。{selected&&selectedReference!==selected&&<>所选日使用单独计算的历史参照，来源：{selectedReference?.source}；未与当前报价拼接。</>}<a href="https://www.fidelity.com/learning-center/trading-investing/advance-decline" target="_blank" rel="noreferrer">ADL 说明</a> · <a href="https://www.tradingview.com/support/solutions/43000589093-advance-decline-ratio/" target="_blank" rel="noreferrer">ADR 说明</a></div>
+  <InfoNote>ADL 为所示起点以来每日上涨家数减下跌家数的累计，绝对值受起点影响；ADR 为当日上涨家数 ÷ 下跌家数，下跌家数为 0 时留空。遇到缺日、数据不完整或来源变化时重新累计并断线；盘中为暂值。{selected&&selectedReference!==selected&&<>所选日使用单独计算的历史参照，来源：{selectedReference?.source}；未与当前报价拼接。</>}<a href="https://www.fidelity.com/learning-center/trading-investing/advance-decline" target="_blank" rel="noreferrer">ADL 说明</a> · <a href="https://www.tradingview.com/support/solutions/43000589093-advance-decline-ratio/" target="_blank" rel="noreferrer">ADR 说明</a></InfoNote>
  </section>;
 }

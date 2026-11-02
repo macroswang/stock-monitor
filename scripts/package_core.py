@@ -3,6 +3,7 @@ import os,platform,subprocess,sys,shutil
 from pathlib import Path
 root=Path(__file__).resolve().parent.parent
 os.chdir(root)
+sys.path.insert(0,str(root))
 
 
 def _has_pyinstaller(python):
@@ -30,9 +31,15 @@ if not _has_pyinstaller(sys.executable):
     raise SystemExit(subprocess.call([str(alternative), __file__, *sys.argv[1:]]))
 
 if os.environ.get('PACKAGE_SKIP_BUILD')!='1':
-    subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onefile','--name','monitor-core',
+    command=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onefile','--name','monitor-core',
         '--paths',str(root),'--add-data',f'{root / "fixtures"}{os.pathsep}fixtures',
-        '--collect-all','keyring','--collect-all','tzdata','--collect-submodules','executor','--distpath','build/core','core/entry.py'],check=True)
+        '--collect-all','keyring','--collect-all','tzdata','--collect-submodules','executor','--distpath','build/core']
+    if platform.system()=='Darwin':
+        from executor.ocr import helper_binary
+        ocr=root/'build'/'ocr'/'vision-ocr';ocr.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(helper_binary(),ocr)
+        command.extend(['--add-binary',str(ocr)+os.pathsep+'.'])
+    subprocess.run(command+['core/entry.py'],check=True)
 
 
 def host_triple():

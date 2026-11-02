@@ -1,0 +1,108 @@
+{
+  "settings": {
+    "paused": true,
+    "mode": "trial",
+    "signal": "shape-v1",
+    "signal_label": "图中已确认的顶／底"
+  },
+  "accounts": [
+    {
+      "id": "demo-a",
+      "broker_name": "华泰涨乐通",
+      "account_masked": "***1001",
+      "label": "示例账户",
+      "supports_order": true,
+      "paused": false,
+      "sync_status": "complete",
+      "sync_error": "",
+      "last_success": "2026-11-02T11:38:32.343224+08:00",
+      "updated_at": "2026-11-02T11:38:32.343224+08:00",
+      "token": "example-token-demo-a",
+      "unresolved": [],
+      "funds": {
+        "available": "25000.00"
+      },
+      "supports_order_report": true,
+      "order_report_note": "按唯一合同编号自动核实；仅查询已有委托"
+    },
+    {
+      "id": "demo-b",
+      "broker_name": "同花顺（银河证券）",
+      "account_masked": "***2002",
+      "label": "示例账户",
+      "supports_order": true,
+      "paused": false,
+      "sync_status": "partial",
+      "sync_error": "部分持仓需要确认代码，确认前暂停本账户自动执行",
+      "last_success": null,
+      "updated_at": "2026-11-02T11:38:32.343224+08:00",
+      "token": "example-token-demo-b",
+      "unresolved": [
+        {
+          "name": "宏昌电子",
+          "quantity": 500,
+          "sellable": 500,
+          "reason": "券商列表没有提供股票代码"
+        }
+      ],
+      "funds": {
+        "available": "25000.00"
+      },
+      "supports_order_report": true,
+      "order_report_note": "按原生合同编号自动核对当日成交；跨日及尚无成交时继续保留待核实"
+    }
+  ],
+  "positions": [
+    {
+      "account_id": "demo-a",
+      "code": "sz000981",
+      "name": "山子高科",
+      "active": true,
+      "quantity": 1200,
+      "sellable": 900,
+      "price": 2.13,
+      "cost": 2.05,
+      "updated_at": "2026-11-02T11:38:32.343224+08:00",
+      "rule": {
+        "buy_enabled": false,
+        "sell_enabled": false,
+        "buy_mode": "lots",
+        "sell_mode": "lots",
+        "buy_lots": 6,
+        "sell_lots": 3,
+        "buy_percent": 50,
+        "sell_percent": 50,
+        "daily_orders": 3,
+        "max_deviation_pct": 0.5,
+        "signal": "shape-v1",
+        "revision": 1
+      }
+    },
+    {
+      "account_id": "demo-b",
+      "code": "sz000981",
+      "name": "山子高科",
+      "active": true,
+      "quantity": 600,
+      "sellable": 600,
+      "price": 2.13,
+      "cost": 2.05,
+      "updated_at": "2026-11-02T11:38:32.343224+08:00",
+      "rule": {
+        "buy_enabled": false,
+        "sell_enabled": false,
+        "buy_mode": "lots",
+        "sell_mode": "lots",
+        "buy_lots": 3,
+        "sell_lots": 2,
+        "buy_percent": 50,
+        "sell_percent": 50,
+        "daily_orders": 3,
+        "max_deviation_pct": 0.5,
+        "signal": "shape-v1",
+        "revision": 1
+      }
+    }
+  ],
+  "runs": []
+}

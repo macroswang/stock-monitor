@@ -1,0 +1,13 @@
+import type {ReactNode} from 'react';
+/** Shared 24px line icons keep navigation legible at every sidebar width. */
+export default function NavIcon({name}:{name:string}) {
+ const paths:Record<string,ReactNode>={
+  market:<><path d="M3 3v18h18M6 15l4-5 4 3 6-8"/><path d="M16 5h4v4"/></>,
+  breadth:<><path d="M4 20V10m5 10V4m5 16v-7m5 7V7M2 20h20"/></>,
+  paper:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6m-6 5 2 2 4-4"/></>,
+  trading:<><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></>,
+  data:<><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></>,
+  settings:<><path d="M4 7h8m4 0h4M4 17h3m4 0h9"/><circle cx="14" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></>,
+ };
+ return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{paths[name]||paths.market}</svg>;
+}

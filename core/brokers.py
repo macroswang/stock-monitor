@@ -14,6 +14,7 @@ import os
 import re
 import uuid
 import tempfile
+import sys
 from functools import wraps
 from pathlib import Path
 
@@ -219,6 +220,9 @@ def list_accounts(store, secrets: SecretStore | None = None) -> list[dict]:
                 "supports_order": spec.supports_order,
                 "supports_query": spec.supports_query,
                 "supports_cancel": spec.supports_cancel,
+                "supports_order_report": spec.supports_order_report and (spec.id=='ths' or sys.platform=='darwin'),
+                "order_report_note": ('按原生合同编号自动核对当日成交；跨日及尚无成交时继续保留待核实' if spec.id=='ths' else '按唯一合同编号自动核实；仅查询已有委托' if spec.supports_order_report and sys.platform=='darwin' else
+                                      '当前查询页未提供可核验的唯一委托编号，须人工核实' if not spec.supports_order_report else '当前系统的回报识别器尚未验证，须人工核实'),
             }
         )
     return items
@@ -269,8 +273,10 @@ def delete_account(store, account_id: str, secrets: SecretStore | None = None) -
     rows = store.query("SELECT * FROM broker_accounts WHERE id=?", (account_id,))
     if not rows:
         raise ValueError("账号不存在")
-    if store.query("SELECT request_id FROM broker_requests WHERE account_id=? AND status IN ('prepared','sending','unknown')", (account_id,)):
+    if store.query("SELECT request_id FROM broker_requests WHERE account_id=? AND status IN ('prepared','sending','unknown','accepted','partial')", (account_id,)):
         raise ValueError("账号有待核实委托，处理执行记录后才能删除")
+    if store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_runs'") and store.query("SELECT id FROM trading_runs WHERE account_id=? AND status IN ('pending','processing','sending','accepted','unknown','partial')",(account_id,)):
+        raise ValueError('账号有自动执行任务或未核实委托，请先暂停并处理执行记录后再删除')
     row = rows[0]
     spec = _spec(row["broker"])
     for field in spec.fields:
@@ -323,6 +329,8 @@ def _verify_account(client, creds, store=None):
         raise BrokerError("当前交易账号无法核验，请在券商 App 中确认所选账号后再操作")
     if store is not None and result.get("account_display"):
         from executor.identity import account_matches
+        if not account_matches(result['account_display'], creds.account):
+            raise BrokerError('券商当前账户与所选账户不一致，已停止')
         matches = [r for r in store.query("SELECT account FROM broker_accounts WHERE broker=?", (creds.broker,)) if account_matches(result["account_display"], r["account"])]
         if len(matches) != 1:
             raise BrokerError("页面账号掩码对应多个本地账号，无法唯一核验，已停止")
@@ -364,10 +372,11 @@ def submit_order(
     code: str,
     quantity: int,
     price: str | None = None,
-    max_value: float = 1000.0,
+    max_value: float | None = 1000.0,
     dry_run: bool = False,
     secrets: SecretStore | None = None,
     request_id: str | None = None,
+    authorize=None,
 ) -> dict:
     if not isinstance(request_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,80}", request_id):
         raise ValueError("委托缺少有效请求号，不能提交")
@@ -389,6 +398,8 @@ def submit_order(
     dispatched = False
     def before_confirm():
         nonlocal dispatched
+        if authorize is not None:
+            authorize()
         store.execute("UPDATE broker_requests SET status='sending',updated_at=? WHERE request_id=?", (now_cn().isoformat(), request_id))
         dispatched = True
     try:
@@ -410,7 +421,15 @@ def submit_order(
 
 
 def requests(store, account_id):
-    return store.query("SELECT request_id,status,created_at,updated_at FROM broker_requests WHERE account_id=? ORDER BY created_at DESC LIMIT 20", (account_id,))
+    from .broker_reconciliation import known_id
+    items=[]
+    for row in store.query("SELECT * FROM broker_requests WHERE account_id=? ORDER BY created_at DESC LIMIT 20",(account_id,)):
+        result=json.loads(row['result'] or '{}')
+        try:ident=known_id(result)
+        except ValueError:ident=''
+        items.append(dict(request_id=row['request_id'],status=row['status'],created_at=row['created_at'],updated_at=row['updated_at'],
+                          order_id=ident,verification=result.get('verification'),reconciliation=result.get('reconciliation')))
+    return items
 
 
 @_device_operation
@@ -432,21 +451,54 @@ def resolve_request(store, request_id, outcome, note, order_id=""):
 def orders(store, account_id: str, kind: str = "today", secrets: SecretStore | None = None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)
     _verify_account(client, creds, store)
-    return client.orders(kind)
+    result=client.orders(kind)
+    _verify_account(client,creds,store)
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
 
 
 @_device_operation
 def trades(store, account_id: str, kind: str = "today", secrets: SecretStore | None = None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)
     _verify_account(client, creds, store)
-    return client.trades(kind)
+    result=client.trades(kind)
+    _verify_account(client,creds,store)
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
+
+
+@_device_operation
+def order_report(store,account_id,order_id,day,expected,secrets=None):
+    _,creds,client=_adapter(store,account_id,secrets)
+    _verify_account(client,creds,store)
+    result=client.order_report(order_id,day,expected)
+    _verify_account(client,creds,store)
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
 
 
 @_device_operation
 def snapshot(store, account_id: str, secrets: SecretStore | None = None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)
     _verify_account(client, creds, store)
-    return client.account()
+    result=client.account()
+    _verify_account(client,creds,store)
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
+
+
+@_device_operation
+def holdings(store, account_id: str, secrets: SecretStore | None = None) -> dict:
+    _, creds, client = _adapter(store, account_id, secrets)
+    _verify_account(client, creds, store)
+    known={}
+    if store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_positions'"):
+        candidates={}
+        for row in store.query('SELECT name,code FROM trading_positions WHERE account_id=?',(account_id,)):
+            candidates.setdefault(row['name'],set()).add(row['code'])
+        for row in store.query('SELECT name,code FROM trading_mappings WHERE account_id=?',(account_id,)):
+            candidates.setdefault(row['name'],set()).add(row['code'])
+        known={name:next(iter(codes))[2:] for name,codes in candidates.items() if len(codes)==1}
+    result = client.holdings(account=creds.account,known_codes=known)
+    # Reading and swiping must not silently cross into another account/session.
+    _verify_account(client, creds, store)
+    return dict(result, account_id=account_id, account_verified=True, observed_at=now_cn().isoformat())
 
 
 @_device_operation

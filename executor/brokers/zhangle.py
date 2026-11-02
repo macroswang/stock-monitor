@@ -19,6 +19,7 @@ SPEC = BrokerSpec(
     supports_order=True,
     supports_query=True,
     supports_cancel=False,
+    supports_order_report=True,
 )
 
 
@@ -40,9 +41,11 @@ class ZhangleAdapter(BrokerAdapter):
         return self.ensure_ready(credentials)
 
     def ensure_ready(self, credentials: BrokerCredentials) -> dict:
-        return self._client().ensure_trade_ready(
+        result=self._client().ensure_trade_ready(
             account=credentials.account, password=credentials.get("password")
         )
+        self._verified_account=credentials.account if result.get('account_verified') is True else None
+        return result
 
     def preview_order(
         self,
@@ -93,8 +96,24 @@ class ZhangleAdapter(BrokerAdapter):
             raise ValueError("kind 只能是 today 或 history")
         return book.today_trades().as_dict()
 
+    def order_report(self,order_id,day,expected):
+        from ..order_report import zhangle_report
+        from core.provider import now_cn
+        return zhangle_report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
+
     def account(self) -> dict:
         return OrderBook(self.adb).account()
+
+    def holdings(self, account: str | None = None, known_codes: dict | None = None) -> dict:
+        from ..holdings import collect
+        from ..orderbook import POSITION_RECYCLER_ID, parse_positions, parse_funds
+        nodes = OrderBook(self.adb).open_holdings()
+        verify=(lambda ns: Zhangle.verify_trade_account(ns,account)) if account else None
+        from ..security_code import zhangle_code
+        def resolve(row,ns):
+            code=(known_codes or {}).get(row['name'])
+            return dict(row,code=code,code_source='account_verified_cache') if code else zhangle_code(self.adb,row,ns,verify)
+        return collect(self.adb,nodes,POSITION_RECYCLER_ID,lambda ns,_bounds: parse_positions(ns),parse_funds(nodes),verify=verify,resolve=resolve if verify else None)
 
     # ----- 撤单 ------------------------------------------------------------
     def cancel(

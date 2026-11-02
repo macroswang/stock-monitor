@@ -1,3 +1,4 @@
+import InfoNote from './InfoNote';
 import React,{useEffect,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 
@@ -74,6 +75,6 @@ function PCRContent({request,product,selectedDate,chosenDate,setChosenDate,onUpd
   {prior&&<button onClick={()=>setChosenDate(prior.date)}>查看最近有效记录 · {prior.date}</button>}
   {selectedDate&&chosenDate!==selectedDate&&<button onClick={()=>setChosenDate(selectedDate)}>返回大盘所选日期 · {selectedDate}</button>}
   <div className="option-chart" ref={ref} role="img" aria-label={`${label}期权PCR及20日通道曲线`}/>
-  <div className="option-note">{index?'中金所单一股指期权，不代表全市场；历史与后续数据按不同来源逐合约核对。':aggregate?'沪深9只ETF期权成交张数合计，不含中金所；深交所数据日期按查询确认。':'上交所单一 ETF 期权，不代表全市场 PCR；'}按收盘后统计，20 个连续交易日不足时通道留空。{chosenDate&&'图表仅显示所选日期及之前的数据。'}{chosen&&<> 本次数据采集于 {chosen.collected_at.slice(0,19).replace('T',' ')} 北京时间；历史补采不代表当时已可获取。</>}{index?<a href="https://www.cfachina.org/servicesupport/sspz/?type=5" target="_blank" rel="noreferrer">期货业协会</a>:<><a href="https://www.sse.com.cn/assortment/options/date/" target="_blank" rel="noreferrer">上交所</a>{aggregate&&<> · <a href="https://www.szse.cn/market/option/day/index.html" target="_blank" rel="noreferrer">深交所</a></>}</>}</div>
+  <InfoNote>{index?'中金所单一股指期权，不代表全市场；历史与后续数据按不同来源逐合约核对。':aggregate?'沪深9只ETF期权成交张数合计，不含中金所；深交所数据日期按查询确认。':'上交所单一 ETF 期权，不代表全市场 PCR；'}按收盘后统计，20 个连续交易日不足时通道留空。{chosenDate&&'图表仅显示所选日期及之前的数据。'}{chosen&&<> 本次数据采集于 {chosen.collected_at.slice(0,19).replace('T',' ')} 北京时间；历史补采不代表当时已可获取。</>}{index?<a href="https://www.cfachina.org/servicesupport/sspz/?type=5" target="_blank" rel="noreferrer">期货业协会</a>:<><a href="https://www.sse.com.cn/assortment/options/date/" target="_blank" rel="noreferrer">上交所</a>{aggregate&&<> · <a href="https://www.szse.cn/market/option/day/index.html" target="_blank" rel="noreferrer">深交所</a></>}</>}</InfoNote>
  </div>;
 }

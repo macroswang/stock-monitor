@@ -1,3 +1,4 @@
+import InfoNote from './InfoNote';
 import React,{useEffect,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 type Row={date:string;first_date:string;open:number;high:number;low:number;close:number;boll_mid:number|null;boll_upper:number|null;boll_lower:number|null;cci:number|null;gap_before:boolean};
@@ -24,10 +25,10 @@ export default function IndexTechnicalPanel({request,selectedDate,intradayDate}:
  return <section className="option-panel" id="breadth-index-technical" aria-label="上证指数技术参考">
   <div className="option-heading"><div><h3>上证指数技术参考 <small>已结束{period==='daily'?'日':'周'}线</small></h3><p>布林带（20，2 倍标准差） · CCI（14）</p></div><div><label>周期 <select aria-label="指数技术周期" value={period} onChange={e=>{setPeriod(e.target.value as typeof period);setSelected('');}}><option value="daily">日线</option><option value="weekly">周线</option></select></label> <button onClick={refresh} disabled={busy||report.running}>{busy||report.running?'采集中…':'刷新指数参考'}</button></div></div>
   {(error||report.error)&&<div className="breadth-error" role="status">{error||report.error}；保留已有有效数据。</div>}
-  <p className="option-note">{selectedDate?`大盘所选日期：${selectedDate}；${intradayDate?'盘中不显示当日及之后收盘数据':period==='daily'?'默认显示同日收盘':'默认显示该日之前（含当日）最近的完整周线'}，图表不显示该日期之后的数据。`:'未选择大盘日期，显示最新已结束行情。'}点击图表可查看更早的日期。</p>
+  <InfoNote>{selectedDate?`大盘所选日期：${selectedDate}；${intradayDate?'盘中不显示当日及之后收盘数据':period==='daily'?'默认显示同日收盘':'默认显示该日之前（含当日）最近的完整周线'}，图表不显示该日期之后的数据。`:'未选择大盘日期，显示最新已结束行情。'}点击图表可查看更早的日期。</InfoNote>
   <div className="option-readout"><div><span>{chosen?.date||selectedDate||'暂无日期'} · 收盘</span><strong>{fmt(chosen?.close)}</strong></div><div><span>布林中轨 / 上轨 / 下轨</span><strong>{chosen?`${fmt(chosen.boll_mid)} / ${fmt(chosen.boll_upper)} / ${fmt(chosen.boll_lower)}`:'—'}</strong></div><div><span>CCI（14）</span><strong>{fmt(chosen?.cci)}</strong></div></div>
   <div className="index-technical-chart" ref={ref} role="img" aria-label="上证指数K线、布林带和CCI"/>
   {!chosen&&<p className="option-missing">{selectedDate?`所选日期${period==='daily'?'没有同日指数收盘数据':'之前没有完整周线数据'}。`:'暂无完整的指数数据。'}</p>}
-  <div className="option-note">独立技术参照：使用腾讯上证指数日线，周线由完整交易周合成；缺日不连线，布林带与 CCI 分别需要 20 和 14 根连续K线。BOLL 采用简单均值和总体标准差；CCI 使用典型价格和平均绝对偏差。{report.collected_at&&<> 数据采集于 {report.collected_at.slice(0,19).replace('T',' ')} 北京时间；历史补采不代表当时已可获取。</>}</div>
+  <InfoNote>独立技术参照：使用腾讯上证指数日线，周线由完整交易周合成；缺日不连线，布林带与 CCI 分别需要 20 和 14 根连续K线。BOLL 采用简单均值和总体标准差；CCI 使用典型价格和平均绝对偏差。{report.collected_at&&<> 数据采集于 {report.collected_at.slice(0,19).replace('T',' ')} 北京时间；历史补采不代表当时已可获取。</>}</InfoNote>
  </section>;
 }

@@ -40,7 +40,7 @@ test('成分股报价显示覆盖和来源时间，不冒充板块资金',async(
  await expect(panel.getByText('成分股：上涨',{exact:false})).toBeVisible();
  await expect(panel.getByText('覆盖 32/33',{exact:false})).toBeVisible();
  await expect(panel.getByText('腾讯报价 2026-10-30',{exact:false})).toBeVisible();
- await expect(panel.getByText('新浪快照未提供板块统计时间',{exact:false})).toBeVisible();
+ await expect(panel.getByText('暂无资金走势',{exact:false})).toBeVisible();
 });
 
 test('示例模式可以查看异动和曲线，退出后不混入真实数据',async({page})=>{

@@ -98,6 +98,8 @@ class App:
         self.external_market=ExternalMarket(self.store,enabled=start_worker)
         self.sector_members=SectorMembers();self.sector_members_enabled=start_worker;self.sector_constituents=SectorConstituents()
         self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
+        from .live_trading import LiveTrading
+        self.live_trading=LiveTrading(self)
         if start_worker:
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
@@ -111,6 +113,13 @@ class App:
             threading.Thread(target=self.equity_bond_loop,daemon=True).start()
             threading.Thread(target=self.index_technical_loop,daemon=True).start()
             threading.Thread(target=self.paper_loop,daemon=True).start()
+            threading.Thread(target=self.trading_loop,daemon=True).start()
+
+    def trading_loop(self):
+        while not self.stop.is_set():
+            try:self.live_trading.drain()
+            except Exception as e:print('trading: '+type(e).__name__,file=sys.stderr,flush=True)
+            self.stop.wait(1)
 
     def paper_service(self):
         from .paper import Paper
@@ -196,6 +205,8 @@ class App:
         self.health[code]=('分钟数据延迟，暂停实时判断' if not minutes_fresh else '数据缺口，规则已阻断' if session.gap
             else '分钟数据修订，已恢复历史状态' if revised else '实时采样监控' if continuous else '已恢复历史状态；开始实时采样')
         self.store.cache(code,'state',today,dict(candidates=session.candidates,observed_at=now.isoformat()))
+        if hasattr(self,'live_trading'):
+            self.live_trading.ingest(code,bars,quote,now,continuous and not revised and minutes_fresh)
 
     def poll_one(self,code):
         if self.stop.is_set(): return
@@ -457,9 +468,11 @@ class App:
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
+                broker_sources=self.live_trading.sources()
                 for w in watch:
                     w.update(quote=self.quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not self.store.config().get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
                         candidates=self.sessions.get(w['code'],{}).get('candidates',[]))
+                    w['broker_sources']=broker_sources.get(w['code'],[])
                 events=self.event_rows()
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
@@ -493,6 +506,8 @@ class App:
                     if not isinstance(args['enabled'],bool): raise ValueError('监控状态必须为开或关')
                     self.store.execute('UPDATE watch SET enabled=? WHERE code=?',(int(args['enabled']),code))
                 self.sessions.pop(code,None); self.epochs[code]=self.epochs.get(code,0)+1
+                if method=='remove' or not args.get('enabled'):
+                    self.live_trading.disable_code(code)
             return True
         if method=='config':
             for k,v in args.items():
@@ -514,6 +529,17 @@ class App:
             if not re.fullmatch(r'[A-Za-z0-9_-]{8,200}',args['key']): raise ValueError('请填写设备密钥，不是完整网址')
             notify.key(args['key']); return {'saved':True}
         if method=='broker_specs': return brokers.specs()
+        if method=='trading_view':return self.live_trading.view()
+        if method=='trading_config':return self.live_trading.configure(args)
+        if method=='trading_pause_account':return self.live_trading.pause_account(args['account_id'],args['paused'])
+        if method=='trading_rule_save':return self.live_trading.save_rule(args['account_id'],args['code'],args['changes'],args['revision'])
+        if method=='trading_sync':return self.broker_job(lambda:self.live_trading.sync(args['account_id']))
+        if method=='trading_sync_all':return self.broker_job(self.live_trading.sync_all)
+        if method=='trading_map':return self.broker_job(lambda:self.live_trading.map_position(args['account_id'],args['token'],args['name'],args['code']))
+        if method=='trading_preview':return dict(self.live_trading.plan(args['account_id'],symbol(args['code']),args['side'],self.quotes.get(symbol(args['code']))),mode='trial',submitted=False)
+        if method=='trading_resolve':return self.live_trading.resolve(args['id'],args['status'],args.get('order_id',''),args['filled'],args['note'])
+        if method=='trading_reconcile':return self.broker_job(lambda:self.live_trading.reconcile(args['id'],args.get('order_id','')))
+        if method=='broker_reconcile':return self.broker_job(lambda:self.live_trading.reconciler.reconcile(args['account_id'],args['request_id'],args.get('order_id','')))
         if method=='broker_accounts': return brokers.list_accounts(self.store)
         if method=='broker_requests': return brokers.requests(self.store,args['id'])
         if method=='broker_request_resolve':

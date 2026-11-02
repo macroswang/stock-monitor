@@ -115,7 +115,11 @@ class OrderResult:
     message: str
 
     def as_dict(self) -> dict:
-        return {"kind": self.kind, "title": self.title, "message": self.message}
+        result={"kind": self.kind, "title": self.title, "message": self.message}
+        # Only an explicitly named unique contract number is an order identity.
+        ids=set(re.findall(r'(?:合同编号|合同号|委托编号|委托号)\s*[:：]\s*([0-9]{1,20})(?![0-9])',self.message))
+        if self.kind=='success' and len(ids)==1:result['order_id']=ids.pop()
+        return result
 
 
 def parse_confirm(nodes: list[Node]) -> OrderConfirm | None:
@@ -382,12 +386,14 @@ class TradePage:
         try:
             cap = Decimal(str(max_value)) if max_value is not None else None
             limit = Decimal(str(price)) if price is not None else None
-            if cap is None or not cap.is_finite() or cap <= 0:
+            if cap is not None and (not cap.is_finite() or cap <= 0):
+                raise ValueError()
+            if cap is None and limit is None:
                 raise ValueError()
             if limit is not None and (not limit.is_finite() or limit <= 0):
                 raise ValueError()
         except (InvalidOperation, ValueError):
-            raise TradeError("必须设置有效的正数价格和单笔金额上限") from None
+            raise TradeError("价格及可选金额上限必须为有效正数") from None
         form = self.preview(side=side, code=code, quantity=quantity, price=price)
         if form.side != side or form.code != code:
             raise TradeError(
@@ -401,7 +407,7 @@ class TradePage:
             raise TradeError("提交前表单发生变化，已停止")
         try:
             form_price = Decimal(current.price)
-            if not form_price.is_finite() or form_price <= 0 or form_price * quantity > cap:
+            if not form_price.is_finite() or form_price <= 0 or (cap is not None and form_price * quantity > cap):
                 raise ValueError()
             if limit is not None and form_price != limit:
                 raise ValueError()
@@ -436,7 +442,7 @@ class TradePage:
             value = confirmed_price * int(confirm.quantity)
         except (InvalidOperation, TypeError, ValueError):
             problems.append("无法计算委托金额")
-        if value is not None and value.is_finite() and value > cap:
+        if cap is not None and value is not None and value.is_finite() and value > cap:
             problems.append(f"金额 {value:.2f} 超过上限 {cap:.2f}")
 
         if problems:
@@ -457,6 +463,11 @@ class TradePage:
             raise TradeError("委托确认弹窗缺少“确定”按钮")
         if before_confirm is None:
             raise TradeError("真实委托必须通过观量持久化请求入口提交")
+        try:
+            before_confirm()
+        except Exception:
+            self._cancel_dialog()
+            raise
         try:
             self.adb.tap_node(ok)
             result = self._wait_result(timeout)

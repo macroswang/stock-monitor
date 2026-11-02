@@ -1,3 +1,4 @@
+import InfoNote from './InfoNote';
 import MarketPanorama from './MarketPanorama';
 import React,{useEffect,useRef,useState} from 'react';
 import * as echarts from 'echarts';
@@ -167,11 +168,11 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
     <div><strong><i className="guide-yellow"/>黄线 · TRIN 怎么看</strong><p>低于 1：上涨股平均成交较高；高于 1：下跌股平均成交较高。越低，上涨组的相对平均成交越高。</p><p>多数股票下跌、TRIN 较低时，结合趋势阶段观察大资金是否进入少数上涨股。</p></div>
    </div>
    {guideExample&&<p className="market-trend-note">{day!.date} 观察：上涨家数占比 {pct(day!.advancing_percent)} · TRIN {trin!.toFixed(3)}；{guideExample}。按股票涨跌分组统计。</p>}
-   <p className="market-trend-note">淡色柱为盘中暂值；点击图表可查看某一天的数据。</p>
+   <InfoNote>淡色柱为盘中暂值；点击图表可查看某一天的数据。</InfoNote>
   </section>
   <details className="breadth-method breadth-research-details" aria-label="市场图表与研究详情"><summary>查看历史图表与研究详情</summary>
   <label className="breadth-research-range">历史范围 <select aria-label="TRIN显示日期数" value={span} onChange={e=>changeSpan(Number(e.target.value))}><option value={30}>最近30个交易日</option><option value={60}>最近60个交易日</option><option value={90}>最近90个交易日</option><option value={120}>最近120条记录</option></select></label>
-  {!preview&&<div className="breadth-footnote">大盘数据独立采集：{report.interval_seconds===180?'交易时段约每 3 分钟启动检查，耗时较长时会延后':'交易时段每次采集结束后约 5 分钟检查'}；暂停自选监控不影响大盘采集。休市、断网、睡眠或退出会影响更新，请以数据时间为准。</div>}
+  {!preview&&<InfoNote>大盘数据独立采集：{report.interval_seconds===180?'交易时段约每 3 分钟启动检查，耗时较长时会延后':'交易时段每次采集结束后约 5 分钟检查'}；暂停自选监控不影响大盘采集。休市、断网、睡眠或退出会影响更新，请以数据时间为准。</InfoNote>}
   <section className="market-observation" aria-label="市场观察框架">
    <div className="observation-heading"><div><h3>市场观察</h3><p>结合趋势阶段、市场宽度与成交结构，辅助人工判断。</p></div><span>研究参考</span></div>
    <nav className="observation-nav" aria-label="市场观察顺序"><a href="#breadth-equity-bond">1 中期估值</a><a href="#breadth-index-technical">2 指数位置</a><a href="#breadth-structure">3 宽度与量价</a><a href="#breadth-option-pcr">4 期权情绪</a><a href="#breadth-institution">5 公开持仓</a></nav>
@@ -184,7 +185,7 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
    </div>
   </section>
   {day&&day.status!=='incomplete'&&<div className="breadth-stats"><div><span>{day.date} · {state(day)}{stale?' · 快照已过期，仅供回看':timingInvalid?' · 时间异常，仅供回看':''} · {byAmount?'成交额对照':'成交股数'}</span><strong style={{color:color(value(day))}}>{fmt(value(day),3)}</strong></div><div><span>上涨家数占比</span><strong>{pct(day.advancing_percent)}</strong><small>上涨 {day.advance} / 下跌 {day.decline} / 平盘 {day.flat}</small></div><div><span>上涨股{byAmount?'成交额':'成交量'}占比</span><strong>{pct(proportion(day))}</strong><small>仅比较上涨与下跌两组</small></div><div><span>{day.historical?'历史日线覆盖':'股票列表覆盖'}</span><strong>{day.covered}<em> / {day.expected}</em></strong><small>停牌 / 零成交 {day.suspended} 只</small></div></div>}
-  <div className="breadth-footnote">{report.history_note||'每日积累完整市场快照。'}{days.length>0&&` 共收录 ${report.days.length} 个日期，当前显示 ${days.length} 个；盘中暂值单独标示，日期间隔不代表连续交易日。`}<br/>红柱显示上涨股{byAmount?'成交额':'成交量'}占比。{byAmount&&' 成交额是对照口径，旧数据可能没有该字段。'}{day&&<><br/>{day.historical?'历史底表获取于':'采集于'} {day.collected_at.slice(0,19).replace('T',' ')} 北京时间 · {day.source}{day.reconciliation_note&&<> · {day.reconciliation_note}</>}</>}</div>
+  <InfoNote>{report.history_note||'每日积累完整市场快照。'}{days.length>0&&` 共收录 ${report.days.length} 个日期，当前显示 ${days.length} 个；盘中暂值单独标示，日期间隔不代表连续交易日。`}<br/>红柱显示上涨股{byAmount?'成交额':'成交量'}占比。{byAmount&&' 成交额是对照口径，旧数据可能没有该字段。'}{day&&<><br/>{day.historical?'历史底表获取于':'采集于'} {day.collected_at.slice(0,19).replace('T',' ')} 北京时间 · {day.source}{day.reconciliation_note&&<> · {day.reconciliation_note}</>}</>}</InfoNote>
   <AdvanceDeclinePanel days={days} selected={day} onSelect={setSelected}/>
   {day&&<OptionPCRPanel request={request} selectedDate={day.date} intradayDate={day.status!=='closed'?day.date:''}/>}
   <EquityBondPanel request={request} selectedDate={day?.date||''} intradayDate={day&&day.status!=='closed'?day.date:''}/>

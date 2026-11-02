@@ -257,13 +257,21 @@ def parse_positions(nodes: list[Node], bounds: tuple[int, int, int, int]) -> lis
 
 def parse_funds(nodes: list[Node]) -> dict:
     """交易主页的资金卡片（id 固定）。"""
-    return {
+    funds = {
         "total_assets": _text(find_by_id(nodes, "capital_value_text")),
         "holding_profit": _text(find_by_id(nodes, "yingkui_value_text")),
         "market_value": _text(find_by_id(nodes, "shizhi_value_text")),
         "today_profit": _text(find_by_id(nodes, "dryk_value_text")),
         "today_ratio": _text(find_by_id(nodes, "drykb_value_text")),
     }
+    labels={'总资产':'total_assets','浮动盈亏':'holding_profit','总市值':'market_value','可用':'available','可取':'withdrawable'}
+    label=None
+    for node in nodes:
+        rid=node.resource_id.rsplit('/',1)[-1]
+        if rid=='capital_cell_title':label=labels.get(node.text.strip())
+        elif rid=='capital_cell_value' and label:
+            funds[label]=node.text.strip();label=None
+    return {key:value for key,value in funds.items() if value}
 
 
 class ThsQuery:
@@ -301,6 +309,7 @@ class ThsQuery:
         nodes = self.open_home()
         funds = parse_funds(nodes)
         nodes = self._tap_text(nodes, "持仓")
+        funds.update(parse_funds(nodes))
         holdings = find_by_id(nodes, POSITION_LIST_ID)
         positions = []
         if holdings is not None:

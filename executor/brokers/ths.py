@@ -3,8 +3,8 @@
 同花顺是聚合平台，App 账号与券商账号分开；这里只接券商交易模块。资金账号
 必须在同花顺里事先添加好，本适配器只校验尾号并提交交易密码。
 
-交易页的买入/卖出表单尚未实测，因此 ``supports_order`` 暂为 ``False``；
-委托/成交/持仓/资金已经实测，``supports_query`` 为 ``True``。
+买卖预填及两种二次确认弹窗已实机核验并取消，未发送真实委托。
+真实入口仍必须核验二次确认设置，经过持久化请求和最后授权检查。
 """
 from __future__ import annotations
 
@@ -20,9 +20,10 @@ SPEC = BrokerSpec(
         CredentialField("account", "银河资金账号", secret=False),
         CredentialField("password", "交易密码"),
     ),
-    note="需先在同花顺里添加并选中银河证券账户；这里只提交交易密码，不会新增账户，资金账号仅用于核对尾号。",
-    supports_order=False,
+    note="需先在同花顺选中银河账户。买卖预填及确认弹窗已验证；免二次确认开启时拒绝下单，结果未知时停止重试。",
+    supports_order=True,
     supports_query=True,
+    supports_order_report=True,
 )
 
 
@@ -40,10 +41,21 @@ class ThsAdapter(BrokerAdapter):
 
     def ensure_ready(self, credentials: BrokerCredentials) -> dict:
         # 同花顺没有「App 登录」和「交易登录」两层：交易模块登录就是唯一入口。
-        return self._client().ensure_logged_in(
+        result=self._client().ensure_logged_in(
             account=credentials.account,
             password=credentials.get("password"),
         )
+        self._verified_account=credentials.account if result.get('account_verified') is True else None
+        return result
+
+    def preview_order(self,side,code,quantity,price=None):
+        from ..ths_order import ThsOrderPage
+        return dict(ThsOrderPage(self.adb,getattr(self,'_verified_account',None)).preview(side,code,quantity,price).as_dict(),submitted=False)
+
+    def submit_order(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None):
+        from ..ths_order import ThsOrderPage
+        if not getattr(self,'_verified_account',None):raise ValueError('尚未核验同花顺资金账户，禁止委托')
+        return ThsOrderPage(self.adb,self._verified_account).submit(side,code,quantity,price,max_value,dry_run,before_confirm)
 
     # ----- 查询 ------------------------------------------------------------
     def orders(self, kind: str = "today") -> dict:
@@ -60,6 +72,31 @@ class ThsAdapter(BrokerAdapter):
 
     def account(self) -> dict:
         return ThsQuery(self.adb).account()
+
+    def order_report(self,order_id,day,expected):
+        from ..ths_report import report
+        from core.provider import now_cn
+        return report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
+
+    def holdings(self, account: str | None = None, known_codes: dict | None = None) -> dict:
+        from ..holdings import collect
+        from ..ths_trade import POSITION_LIST_ID, parse_positions, parse_funds
+        query = ThsQuery(self.adb)
+        nodes = query.open_home()
+        funds = parse_funds(nodes)
+        nodes = query._tap_text(nodes,'持仓')
+        funds.update(parse_funds(nodes))
+        def verify(current):
+            from ..ths import read_status, ThsError
+            from ..identity import account_matches
+            status=read_status(current,self.adb.current_focus())
+            if not account_matches(status.account_masked,account) or '银河' not in status.broker_name:
+                raise ThsError('持仓读取期间券商或账户发生变化，已停止同步')
+        from ..security_code import ths_code
+        def resolver(row,ns):
+            code=(known_codes or {}).get(row['name'])
+            return dict(row,code=code,code_source='account_verified_cache') if code else ths_code(self.adb,row,ns,verify)
+        return collect(self.adb,nodes,POSITION_LIST_ID,parse_positions,funds,verify=verify if account else None,resolve=resolver if account else None)
 
     # ----- 撤单 ------------------------------------------------------------
     def cancel(

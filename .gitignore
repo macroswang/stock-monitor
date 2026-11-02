@@ -10,6 +10,7 @@ build/
 *.spec
 .runtime/
 test-results/
+/outputs/
 
 # User data, local verification outputs and distributable binaries
 .DS_Store

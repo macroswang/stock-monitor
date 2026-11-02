@@ -23,7 +23,7 @@ test('菜单来回切换保留已加载页面、图表与选择',async({page})=>
  const home=page.getByRole('region',{name:'首页市场趋势'});
  await expect(home.getByText('3599.02')).toBeVisible();
  await home.getByRole('button',{name:'概念',exact:true}).click();
- await expect(home.getByText('新浪概念资金流',{exact:false})).toBeVisible();
+ await expect(home.getByText('融资融券',{exact:true})).toBeVisible();
  await page.evaluate(()=>{(window as any).__homeNode=document.querySelector('[aria-label="首页市场趋势"]');(window as any).__chartNode=document.querySelector('[aria-label="上证当日分时涨跌幅"]');});
  await page.getByRole('button',{name:'大盘广度',exact:true}).click();
  const breadth=page.getByRole('region',{name:'市场趋势图'});
