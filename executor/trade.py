@@ -148,10 +148,15 @@ def parse_result(nodes: list[Node]) -> OrderResult | None:
     message = find_by_id(nodes, DIALOG_MESSAGE_ID)
     if message is None:
         return None
-    raw = _norm(message.text).strip()
+    title = find_by_id(nodes, DIALOG_TITLE_ID)
+    return parse_result_message(message.text, title.text.strip() if title else "")
+
+
+def parse_result_message(message: str, title: str = "") -> OrderResult | None:
+    """Classify a captured native receipt without accessing the device."""
+    raw = _norm(message).strip()
     if "证券代码" in raw:
         return None
-    title = find_by_id(nodes, DIALOG_TITLE_ID)
     success = any(needle in raw for needle in _SUCCESS_NEEDLES)
     error = any(needle in raw for needle in _ERROR_NEEDLES)
     # 网络错误或混合消息不能证明未受理，必须保留未知状态。
@@ -163,7 +168,7 @@ def parse_result(nodes: list[Node]) -> OrderResult | None:
         kind = "success"
     else:
         kind = "unknown"
-    return OrderResult(kind=kind, title=title.text.strip() if title else "", message=raw)
+    return OrderResult(kind=kind, title=title, message=raw)
 
 
 def _fields(nodes: list[Node]) -> list[Node]:

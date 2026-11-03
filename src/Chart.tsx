@@ -1,5 +1,5 @@
 import InfoNote from './InfoNote';
-import {autoTradeMarks,autoTradeRecords,autoTradeDetails,autoTradeStatus,type AutoTradeChart} from './autoTradeMarks';
+import {autoTradeMarks,autoTradeRecords,autoTradeDetails,autoTradeState,type AutoTradeChart} from './autoTradeMarks';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 import type {Bar,Daily,Event,IndexMinute,VolumeFlow} from './models';
@@ -329,5 +329,5 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   <div className="macd-panel-values"><span data-macd="histogram">MACD —</span><span className="macd-dif" data-macd="dif">DIF —</span><span className="macd-dea" data-macd="dea">DEA —</span></div>
  </div>)}
  {!macdDataReady&&<div className="macd-unavailable">该日{macdIndex!.name}暂无可用分钟数据</div>}
- </>}</div>{view!=='daily'&&autoTrading&&!!autoTrading.accounts.length&&<InfoNote label="自动委托详情"><div className="auto-trade-records">{autoTradeRecords(autoTrading,turningShapes(minute),selectedDay||'').map(m=><div key={m.point.id}><strong>{m.time} · {m.point.side==='buy'?'买':'卖'} · {m.point.account_masked} · {autoTradeStatus[m.point.status]||m.point.status}</strong>{autoTradeDetails(m.point).slice(1).map((line,i)=><span key={i}>{line}</span>)}</div>)}</div></InfoNote>}{hasMacd&&<InfoNote label="MACD计算口径">当日1分钟收盘价，EMA(12,26,9)，柱值＝2×(DIF−DEA)；两图独立刻度，比较走势。首个观测值初始化，午休连续，缺失分钟不补值并重新起算；实时未结束分钟会随行情变化。</InfoNote>}{view==='daily'&&<InfoNote label="图表操作">{Math.min(daily.length,DAILY_WINDOW)}根日K视窗 · ← / → 逐日移动，边界自动加载 · 缺口阴影：仅最近一个未回补区间，淡红向上、淡绿向下 · 盘中缺口待收盘确认 · 拖动浏览，缩放已关闭</InfoNote>}</>;
+ </>}</div>{view!=='daily'&&autoTrading&&!!autoTrading.accounts.length&&<InfoNote label="自动委托详情"><div className="auto-trade-records">{autoTradeRecords(autoTrading,turningShapes(minute),selectedDay||'').map(m=><div key={m.point.id}><strong>{m.time} · {m.point.side==='buy'?'买':'卖'} · {m.point.account_masked} · {autoTradeState(m.point)}</strong>{autoTradeDetails(m.point).slice(1).map((line,i)=><span key={i}>{line}</span>)}</div>)}</div></InfoNote>}{hasMacd&&<InfoNote label="MACD计算口径">当日1分钟收盘价，EMA(12,26,9)，柱值＝2×(DIF−DEA)；两图独立刻度，比较走势。首个观测值初始化，午休连续，缺失分钟不补值并重新起算；实时未结束分钟会随行情变化。</InfoNote>}{view==='daily'&&<InfoNote label="图表操作">{Math.min(daily.length,DAILY_WINDOW)}根日K视窗 · ← / → 逐日移动，边界自动加载 · 缺口阴影：仅最近一个未回补区间，淡红向上、淡绿向下 · 盘中缺口待收盘确认 · 拖动浏览，缩放已关闭</InfoNote>}</>;
 }

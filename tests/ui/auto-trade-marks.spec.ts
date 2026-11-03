@@ -24,3 +24,10 @@ test('two successful accounts keep separate lanes; hidden states do not reserve 
 test('success without a captured order attempt or valid limit cannot create a reminder',()=>{
  for(const p of [{...point,attempted:false},{...point,order_price:undefined},{...point,order_price:'NaN'},{...point,mode:'trial'}])expect(autoTradeMarks(view([p]),[],day)).toEqual([]);
 });
+test('a legacy success receipt can show B while settlement remains unknown; a mere contract binding cannot',()=>{
+ const legacy={...point,status:'unknown',receipt_accepted:true,order_id:'142783',receipt_message:'委托提交成功,合同号:142783'};
+ expect(autoTradeMarks(view([legacy]),[],day)[0]).toMatchObject({label:'B',price:27.90,time:'14:04'});
+ expect(autoTradeDetails(legacy).join(' ')).toContain('券商回执已受理，成交待核实');expect(autoTradeDetails(legacy).join(' ')).not.toContain('已核实成交：');
+ for(const p of [{...legacy,receipt_accepted:false},{...legacy,order_id:undefined},{...legacy,status:'skipped'},{...legacy,attempted:false},{...legacy,mode:'trial'}])expect(autoTradeMarks(view([p]),[],day)).toEqual([]);
+ expect(legacy.status).toBe('unknown');
+});

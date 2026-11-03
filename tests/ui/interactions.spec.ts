@@ -1020,6 +1020,17 @@ test('real automatic order annotations keep account, limit, fill and unknown sta
  for(const text of ['历史跳过原因未保存','222***002','提交结果待核实','账户可用资金不足'])await expect(page.locator('.auto-trade-records')).toContainText(text);
 });
 
+test('historical native success receipts draw B without upgrading unknown settlement records',async({page})=>{
+ const chart=await seedAutoChart(page);
+ await rpc('__audit_auto_runs',{code:'sh603002',day:'2026-10-19',rows:[{id:'legacy-success',account:'chart-a',time:'13:37',signal_key:'legacy-bottom',reference:33.2,limit:'33.18',status:'unknown',legacy_receipt:true}]});
+ await page.reload();
+ await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托')?.data.map((d:any)=>({id:d.autoTrade.id,label:d.label.formatter}));})).toContainEqual({id:'legacy-success',label:'B'});
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),si=o.series.findIndex((s:any)=>s.name==='自动委托');c.dispatchAction({type:'showTip',seriesIndex:si,dataIndex:o.series[si].data.findIndex((d:any)=>d.autoTrade.id==='legacy-success')});});
+ const tip=chart.locator('.auto-trade-tooltip');for(const text of ['111***001','33.18 元','142783','券商回执已受理，成交待核实'])await expect(tip).toContainText(text);
+ await expect(tip).not.toContainText('已核实成交：');
+ const view=await rpc('trading_chart',{code:'sh603002',day:'2026-10-19'});expect(view.points.find((p:any)=>p.id==='legacy-success').status).toBe('unknown');
+});
+
 test('signals and automatic markers use separate lanes and compact controls preserve chart space',async({page})=>{
  const chart=await seedAutoChart(page);
  for(const name of ['开盘量','高量','底/顶'])await expect(page.getByRole('checkbox',{name,exact:true})).toHaveCount(1);
