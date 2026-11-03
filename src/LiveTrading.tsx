@@ -31,9 +31,8 @@ function QuantityEditor({code,side,rule,onChange}:{code:string;side:'buy'|'sell'
  </>;
 }
 
-export default function LiveTrading({api,onRestartCore,onOpenStock,focusRun}:{api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void;focusRun?:{id:string;account_id:string}}){
+export default function LiveTrading({api,onRestartCore,onOpenStock}:{api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void}){
  const [data,setData]=useState<View|null>(null),[tab,setTab]=useState('positions'),[selected,setSelected]=useState('');
- useEffect(()=>{if(focusRun){setTab('runs');setSelected(focusRun.account_id);}},[focusRun]);
  const [pauseBusy,setPauseBusy]=useState(false),[preparing,setPreparing]=useState(false);
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [filter,setFilter]=useState(''),[enabledOnly,setEnabledOnly]=useState(false);

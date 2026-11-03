@@ -174,7 +174,7 @@ test('daily keyboard navigation and double click open selected intraday without 
  await page.mouse.dblclick(box.x+box.width-40,box.y+box.height*.86);
  await expect(page.getByRole('button',{name:'分时',exact:true})).toHaveClass('chosen');
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
- await expect(page.locator('.day-signals')).toContainText('438.45 / 146.10 / 195.70');
+ await expect(page.locator('.day-signals')).toHaveCount(0);
  await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.locator('.linked-minute h3')).toContainText('2026-10-16');
  await chart.focus();await chart.press('ArrowLeft');await chart.press('Enter');
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-15');
@@ -519,7 +519,7 @@ test('right percent axis mirrors price ticks using same-day previous close',asyn
  await expect(async()=>{expect(await inspect()).not.toBeNull();}).toPass({timeout:10000});
  const result=(await inspect())!;expect(result.left).toEqual(result.right);expect(result.labels).toEqual(['{rise|+1.00%}','{fall|-1.00%}','{flat|0.00%}']);
  for(const [price,percent] of result.pixels)expect(price).toBeCloseTo(percent,5);
- expect(result.gridRight).toEqual([72,72,72,72]);
+ expect(result.gridRight).toEqual([72,72,72,72,72]);
  for(const bar of [rows[0].data.bars.find((b:any)=>b.time==='09:31'),rows[0].data.bars.find((b:any)=>b.time==='15:00')]){
   const xy=await chart.evaluate(async(el,b)=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const url=source.match(/from "([^"]*echarts\.js[^"]*)"/)![1];const e=await import(url);return e.getInstanceByDom(el).convertToPixel({seriesIndex:0},[b.time,+b.close]) as number[];},bar);
   const box=(await chart.boundingBox())!;await page.mouse.move(box.x+xy[0],box.y+80);
@@ -995,4 +995,30 @@ test('模拟委托可保存计划并在复盘中记录实际过程',async({page}
  await row.getByText('复盘',{exact:true}).click();await row.locator('textarea').fill('价格未到，继续等待');await row.getByRole('button',{name:'保存复盘'}).click();
  await expect(page.getByLabel('历史回放模拟交易').getByRole('status')).toContainText('已保存模拟交易复盘');
  const snapshot=await rpc('paper_snapshot');expect(snapshot.orders[0].review).toBe('价格未到，继续等待');expect(snapshot.positions).toEqual([]);
+});
+
+
+test('daily crosshair tracks pointer dates across both the candles and volume',async({page})=>{
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const chart=page.getByLabel('日K线及成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
+ const points=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),days=o.xAxis[0].data.slice(-3);return days.map((day:string,i:number)=>{const grid=i===1?1:0,rect=c.getModel().getComponent('grid',grid).coordinateSystem.getRect();return {day,x:c.convertToPixel({xAxisIndex:grid},day),y:rect.y+rect.height*.35};});});
+ for(const point of points){
+  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point.x,box.y+point.y);
+  await expect(chart.locator('.daily-tooltip')).toContainText(point.day);
+  await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return [0,1].map(i=>{const a=c.getModel().getComponent('xAxis',i),p=a.getModel('axisPointer');return {date:a.axis.scale.getLabel({value:p.get('value')}),visible:p.get('status')};});})).toEqual([{date:point.day,visible:'show'},{date:point.day,visible:'show'}]);
+ }
+ await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getZr().storage.getDisplayList().filter((v:any)=>v.type.toLowerCase()==='line'&&v.style?.stroke==='#a8bad1').length;})).toBeGreaterThanOrEqual(2);
+ await page.screenshot({path:'outputs/daily-crosshair-restored.png'});
+});
+
+test('daily hover stays at the inspected date through a background data refresh',async({page})=>{
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const chart=page.getByLabel('日K线及成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
+ const point=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),day=o.xAxis[0].data.at(-10),last=o.series[0].data.at(-1),rect=c.getModel().getComponent('grid',0).coordinateSystem.getRect();return {day,lastDay:o.xAxis[0].data.at(-1),last,x:c.convertToPixel({xAxisIndex:0},day),y:rect.y+rect.height*.35};});
+ const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point.x,box.y+point.y);
+ await expect(chart.locator('.daily-tooltip')).toContainText(point.day);
+ await rpc('__audit_daily',{code:'sh603002',day:point.lastDay,data:{date:point.lastDay,open:String(point.last[0]),close:String(point.last[1]),low:String(point.last[2]),high:String(point.last[3]),volume:'1234567',volume_unit:'shares',source:'test'}});
+ await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[1].data.at(-1).value;})).toBeCloseTo(123.4567,4);
+ await expect(chart.locator('.daily-tooltip')).toContainText(point.day);
+ await expect(chart.locator('.daily-tooltip')).not.toContainText(point.lastDay);
 });

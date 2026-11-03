@@ -503,7 +503,6 @@ class App:
                     w.update(quote=self.quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not self.store.config().get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
                         candidates=self.sessions.get(w['code'],{}).get('candidates',[]))
                     w['broker_sources']=broker_sources.get(w['code'],[])
-                    w['last_auto_run']=self.live_trading.last_result(w['code'])
                 events=self.event_rows()
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],

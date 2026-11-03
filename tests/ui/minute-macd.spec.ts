@@ -32,7 +32,7 @@ const fixture=JSON.parse(readFileSync('public/preview.json','utf8'));
 async function setup(page:Page,wrongDate=false){
  await page.clock.install({time:new Date('2026-11-02T12:00:00+08:00')});
  for(const [file,code,name,base] of [['market-overview-preview.json','sh000001','上证指数',3600],['szse-preview.json','sz399001','深证成指',11000],['chinext-preview.json','sz399006','创业板指',2500]] as const){
-  await page.route('**/'+file,route=>route.fulfill({json:{quotes:[{code,name,timestamp:'2026-10-16T15:00:00+08:00',previous_close:String(base),price:String(base)}],collected_at:'2026-10-16T15:01:00+08:00',minute:{code,name,date:wrongDate?'2026-10-15':'2026-10-16',previous_close:String(base),bars:minuteSlots.map((time,i)=>({time,close:String(base+12*Math.sin(i/14)+i/20)}))}}}));
+  await page.route('**/'+file,route=>route.fulfill({json:{quotes:[{code,name,timestamp:'2026-10-16T15:00:00+08:00',previous_close:String(base),price:String(base)}],collected_at:'2026-10-16T15:01:00+08:00',minute:{code,name,date:wrongDate?'2026-10-15':'2026-10-16',previous_close:String(base),bars:minuteSlots.map((time,i)=>({time,close:String(base+12*Math.sin(i/14)+i/20),volume_lots:1000+i*17}))}}}));
  }
  const data=structuredClone(fixture);data.minutes['sz000981'][0].data.previous_close='2.40';await page.route('**/preview.json',route=>route.fulfill({json:data}));
  await page.goto('/');await page.getByRole('button',{name:'自选监控',exact:true}).click();
@@ -50,7 +50,7 @@ test('both MACD panes follow the selected market, keep one timeline and expose m
   await page.locator('.stock').filter({hasText:stock}).click();
   const indicator=page.getByRole('group',{name:'指数MACD',exact:true});await expect(indicator).toContainText(index);
   await expect.poll(async()=> (await option(page)).series.find((s:any)=>s.name==='指数 DIF')?.data.some((v:any)=>v!==null)).toBe(true);
-  const o=await option(page);expect(o.grids).toBe(4);expect(o.axes).toBe(4);expect(o.zoom).toEqual([0,1,2,3]);if(stock==='山子高科'){expect(o.series.find((s:any)=>s.name==='个股 DIF')?.yAxis).toBe(3);expect(o.series.find((s:any)=>s.name==='指数 DIF')?.yAxis).toBe(4);}
+  const o=await option(page);expect(o.grids).toBe(5);expect(o.axes).toBe(5);expect(o.zoom).toEqual([0,1,2,3,4]);if(stock==='山子高科'){expect(o.series.find((s:any)=>s.name==='个股 DIF')?.yAxis).toBe(3);expect(o.series.find((s:any)=>s.name==='指数 DIF')?.yAxis).toBe(5);}
  }
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();c.dispatchAction({type:'showTip',seriesIndex:o.series.findIndex((v:any)=>v.name==='指数 DIF'),dataIndex:atBrowser('10:30')});function atBrowser(time:string){return o.xAxis[2].data.indexOf(time);}});
@@ -58,29 +58,28 @@ test('both MACD panes follow the selected market, keep one timeline and expose m
  await expect(page.getByRole('group',{name:'指数MACD',exact:true}).locator('time')).toHaveText('10:30');
  await page.locator('.chart-shell').screenshot({path:'outputs/macd-comparison-chinext.png'});
 });
-test('missing date never borrows a different day; toggle preserves the price/volume chart',async({page})=>{
+test('missing date leaves both index panes empty instead of borrowing another day',async({page})=>{
  await setup(page,true);
  await expect(page.locator('.macd-unavailable')).toContainText('暂无可用分钟数据');
- expect((await option(page)).series.find((s:any)=>s.name==='指数 MACD')?.data.every((v:any)=>v===null)).toBe(true);
- await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).uncheck();
- await expect(page.getByRole('group',{name:'个股MACD',exact:true})).toHaveCount(0);expect((await option(page)).grids).toBe(2);
- await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).check();expect((await option(page)).grids).toBe(4);
+ for(const name of ['指数 MACD','指数成交量'])expect((await option(page)).series.find((s:any)=>s.name===name)?.data.every((v:any)=>v===null)).toBe(true);
+ expect((await option(page)).grids).toBe(5);
 });
 
-
-test('indicator visibility persists between the daily linked chart and intraday chart',async({page})=>{
+test('comparison is always on despite an old hidden preference, including the linked daily chart',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('stock-monitor-show-minute-macd','false'));
  await setup(page);
+ await expect(page.getByRole('checkbox',{name:'显示MACD对照',exact:true})).toHaveCount(0);
+ expect((await option(page)).grids).toBe(5);
  await page.getByRole('button',{name:'日K',exact:true}).click();
  await expect(page.getByLabel('日K线及成交量',{exact:true})).toBeVisible();
- await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).uncheck();
+ await expect(page.getByRole('group',{name:'指数MACD',exact:true})).toBeVisible();
+ expect((await option(page)).grids).toBe(5);
  await page.getByRole('button',{name:'分时',exact:true}).click();
- await expect(page.getByRole('checkbox',{name:'显示MACD对照',exact:true})).not.toBeChecked();
- expect((await option(page)).grids).toBe(2);
- await page.getByRole('checkbox',{name:'显示MACD对照',exact:true}).check();
- expect((await option(page)).grids).toBe(4);
+ expect((await option(page)).grids).toBe(5);
+ await expect(page.getByRole('checkbox',{name:'显示MACD对照',exact:true})).toHaveCount(0);
 });
 
-test('MACD panels are passive references and zoom shares all four time axes',async({page})=>{
+test('MACD panels are passive references and zoom shares all five time axes',async({page})=>{
  await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
  const point=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return c.convertToPixel({xAxisIndex:2,yAxisIndex:2},['10:30',0]);});
@@ -89,7 +88,7 @@ test('MACD panels are passive references and zoom shares all four time axes',asy
  const before=(await option(page)).series.find((s:any)=>s.name==='个股 DIF')!.data;
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'dataZoom',start:30,end:70});});
  expect((await option(page)).series.find((s:any)=>s.name==='个股 DIF')!.data).toEqual(before);
- const pixels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return [0,1,2,3].map(xAxisIndex=>c.convertToPixel({xAxisIndex},'11:00'));});
+ const pixels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el);return [0,1,2,3,4].map(xAxisIndex=>c.convertToPixel({xAxisIndex},'11:00'));});
  for(const x of pixels)expect(x).toBeCloseTo(pixels[0],5);
 });
 
@@ -99,8 +98,7 @@ test('index MACD never reveals later minutes than the selected stock data',async
  await setup(page);
  await page.route('**/preview.json',route=>route.fulfill({json:data}));await page.reload();
  await expect.poll(async()=> typeof (await option(page)).series.find((s:any)=>s.name==='指数 DIF')?.data[at('09:40')]).toBe('number');
- const points=(await option(page)).series.find((s:any)=>s.name==='指数 DIF')!.data;
- expect(points[at('09:41')]).toBeNull();expect(points[at('10:00')]).toBeNull();expect(points[at('15:00')]).toBeNull();
+ for(const name of ['指数 DIF','指数成交量']){const points=(await option(page)).series.find((s:any)=>s.name===name)!.data;expect(points[at('09:41')]).toBeNull();expect(points[at('10:00')]).toBeNull();expect(points[at('15:00')]).toBeNull();}
 });
 
 
@@ -108,7 +106,7 @@ test('comparison panes fit common desktop windows and reflow after the market ov
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
  await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
- const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),pairs:[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',i+2).coordinateSystem.getRect().y}))};});
+ const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),pairs:[...[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({h,grid:i?4:2})),...[...el.parentElement!.querySelectorAll('[data-volume-grid]')].map(h=>({h,grid:Number((h as HTMLElement).dataset.volumeGrid)}))].map(({h,grid})=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',grid).coordinateSystem.getRect().y}))};});
  for(const [width,height] of [[1380,900],[1280,800],[1100,768],[1000,680]]){
   await page.setViewportSize({width,height});
   await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeLessThanOrEqual(height-10);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);}).toPass();
@@ -123,4 +121,23 @@ test('comparison panes fit common desktop windows and reflow after the market ov
  await page.getByRole('button',{name:'收起市场趋势',exact:true}).click();
  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y+box.height).toBeLessThanOrEqual(890);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);}).toPass();
  await page.mouse.move(5,5);await page.screenshot({path:'outputs/macd-compact-1380x900.png'});
+});
+
+
+test('index volume uses actual minute lots in its own pane and follows the linked cursor',async({page})=>{
+ await setup(page);
+ const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
+ const o=await option(page),v=o.series.find((s:any)=>s.name==='指数成交量')!;
+ expect(v.xAxis).toBe(3);expect(v.data[at('10:30')]).toBe(2020);
+ await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();c.dispatchAction({type:'showTip',seriesIndex:o.series.findIndex((v:any)=>v.name==='指数成交量'),dataIndex:o.xAxis[3].data.indexOf('10:30')});});
+ const header=page.locator('[data-volume-grid="3"]');await expect(header).toContainText('上证指数成交量（手） · 总量');await expect(header.locator('time')).toHaveText('10:30');await expect(header.locator('.volume-value')).toHaveText('2,020.00 手');
+ await expect(page.getByRole('group',{name:'指数MACD',exact:true}).locator('time')).toHaveText('10:30');
+});
+
+test('old index caches with prices but no volume keep MACD and leave volume unavailable',async({page})=>{
+ await setup(page);
+ await page.route('**/market-overview-preview.json',route=>route.fulfill({json:{collected_at:'2026-10-16T15:01:00+08:00',quotes:[{code:'sh000001',name:'上证指数'}],minute:{code:'sh000001',date:'2026-10-16',previous_close:'3600',bars:minuteSlots.map((time,i)=>({time,close:String(3600+i)}))}}}));
+ await page.reload();
+ await expect.poll(async()=> (await option(page)).series.find((s:any)=>s.name==='指数 DIF')?.data.some((v:any)=>v!==null)).toBe(true);
+ expect((await option(page)).series.find((s:any)=>s.name==='指数成交量')?.data.every((v:any)=>v===null)).toBe(true);
 });

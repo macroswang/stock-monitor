@@ -1,11 +1,39 @@
 """Shared index feed; isolated from stock rules and fetched once per 30 seconds."""
 import json,threading,concurrent.futures
-from decimal import Decimal
+from decimal import Decimal,InvalidOperation
 from datetime import datetime
 from .provider import get,now_cn,CN
 
 CODES=('sh000001','sz399001','sz399006')
 NAMES={'sh000001':'上证指数','sz399001':'深证成指','sz399006':'创业板指'}
+MINUTE_SLOTS=tuple(range(570,691))+tuple(range(781,901))
+MINUTE_POSITION={slot:i for i,slot in enumerate(MINUTE_SLOTS)}
+
+def minute_volumes(bars):
+ """Tencent index field 3 is cumulative lots, not per-minute shares.
+
+ The opening slot includes the auction. Missing observations cannot be
+ apportioned; a regressing day total invalidates the rest of that day's volume.
+ Prices remain usable when volume is missing or malformed.
+ """
+ previous=None;previous_slot=None;last_total=None;regressed=False
+ for bar in bars:
+  h,m=map(int,bar['time'].split(':'));slot=h*60+m
+  if slot not in MINUTE_POSITION:continue  # 13:00 is a lunch snapshot, not a slot.
+  try:
+   total=Decimal(bar.pop('_cumulative_lots',''))
+   valid=total.is_finite() and total>=0 and total==total.to_integral_value() and total<=9007199254740991
+  except (InvalidOperation,ValueError):valid=False
+  if not valid:previous=None;previous_slot=slot;continue
+  total=int(total)
+  if last_total is not None and total<last_total:regressed=True
+  last_total=total
+  contiguous=previous_slot is not None and MINUTE_POSITION[slot]==MINUTE_POSITION[previous_slot]+1
+  if not regressed and (slot==570 or previous is not None and contiguous):
+   bar['volume_lots']=total if slot==570 else total-previous
+  previous=total;previous_slot=slot
+ for bar in bars:bar.pop('_cumulative_lots',None)
+ return bars
 
 def quotes():
  result=[]
@@ -27,11 +55,11 @@ def minutes(code='sh000001'):
   if not base.is_finite() or base<=0:continue
   bars=[]
   for line in item['data']:
-   t,p,*_=line.split();v=Decimal(p)
+   t,p,*fields=line.split();v=Decimal(p)
    if len(t)!=4 or not t.isdigit() or not v.is_finite() or v<=0:raise ValueError('指数分钟数据异常')
-   bars.append(dict(time=t[:2]+':'+t[2:],close=p))
+   bars.append(dict(time=t[:2]+':'+t[2:],close=p,_cumulative_lots=fields[0] if fields else ''))
   if [b['time'] for b in bars]!=sorted(set(b['time'] for b in bars)):raise ValueError('指数分钟顺序异常')
-  result.append(dict(code=code,name=NAMES[code],date=date,previous_close=str(base),bars=bars,source='tencent'))
+  result.append(dict(code=code,name=NAMES[code],date=date,previous_close=str(base),bars=minute_volumes(bars),source='tencent'))
  return result
 
 class Market:

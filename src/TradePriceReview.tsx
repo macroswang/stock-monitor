@@ -1,17 +1,8 @@
 export type PriceCheck={stage?:string;policy?:string;allowed:boolean;reference_price?:string|number|null;quote_price?:string|number|null;signed_deviation_pct?:number;adverse_deviation_pct?:number;maximum_pct?:number;boundary_price?:string;checked_at?:string;quote_at?:string;order_price?:string;order_allowed?:boolean;error?:string};
 export type PriceAudit={price_checks?:Record<string,PriceCheck>;timings?:{queue_ms?:number;holdings_ms?:number;gateway_ms?:number;elapsed_ms?:number;holdings_scope?:string}};
-export type AutoResult={id:string;account_id:string;account_masked:string;broker_name:string;side:string;status:string;message:string;created_at:string};
 const price=(v:unknown)=>v!==null&&v!==undefined&&Number.isFinite(Number(v))?Number(v).toFixed(2):'—';
 const seconds=(v:number|undefined)=>typeof v==='number'&&Number.isFinite(v)?(v/1000).toFixed(1)+'秒':'—';
 const stages=[['before_holdings','核验前'],['after_holdings','核验后'],['before_submit','提交前']] as const;
-const resultStatus:Record<string,string>={pending:'等待核验',processing:'核验中',sending:'提交中',skipped:'已跳过',trial:'试运行',accepted:'已受理',unknown:'待核实',partial:'部分成交',filled:'已成交',cancelled:'已撤销',rejected:'已拒绝',failed:'提交前停止',not_sent:'未发出'};
-
-export function AutoRunNotice({result,onOpen}:{result?:AutoResult;onOpen:()=>void}){
- if(!result)return null;
- const text=`${result.side==='sell'?'自动卖出':'自动买入'} ${result.created_at.slice(11,19)} · ${resultStatus[result.status]||result.status} · ${result.account_masked} · ${result.message||'查看执行详情'}`;
- return <button className="auto-run-notice" onClick={onOpen} title={`${result.broker_name} ${result.account_masked} · ${result.created_at.slice(5,19).replace('T',' ')}\n${text}`} aria-label="查看该股票的自动交易执行详情">{text}</button>;
-}
-
 export default function TradePriceReview({audit,side}:{audit:PriceAudit;side:string}){
  const entries=stages.flatMap(([key,label])=>audit.price_checks?.[key]?[{key,label,check:audit.price_checks[key]}]:[]);
  if(!entries.length)return null;

@@ -22,6 +22,29 @@ class MarketTest(unittest.TestCase):
    self.assertEqual(app.call('market',{'day':'2026-10-16'})['minute']['date'],'2026-10-16')
    with patch('core.market.quotes',side_effect=ValueError()),patch('core.market.minutes',side_effect=ValueError()):app.market.poll()
    self.assertEqual(app.market.view('2026-10-16')['quotes'][0]['price'],'3718');app.store.db.close()
+ def parse_volume(self,lines,code='sh000001'):
+  raw={'data':{code:{'data':[dict(date='20261103',prec='3600',data=lines)]}}}
+  with patch('core.market.get',return_value=json.dumps(raw)):return minutes(code)[0]['bars']
+ def test_actual_index_cumulative_lots_are_differenced_not_divided_by_100(self):
+  for code in ('sh000001','sz399001','sz399006'):
+   bars=self.parse_volume(['0930 3624.58 5974886 7682593279','0931 3613.59 23900726 31219088720','0932 3615.05 35289757 45381510324'],code)
+   self.assertEqual([b['volume_lots'] for b in bars],[5974886,17925840,11389031])
+   self.assertFalse(any('_cumulative_lots' in b for b in bars))
+ def test_missing_minutes_and_bad_values_never_create_spikes_or_fake_zeros(self):
+  bars=self.parse_volume(['0931 3600 100','0932 3601 140','0934 3601 200','0935 3602 230','0936 3603 NaN','0937 3604 280','0938 3604 300'])
+  self.assertEqual([b.get('volume_lots') for b in bars],[None,40,None,30,None,None,20])
+  for value in ('-1','1.5','Infinity','9007199254740992'):
+   self.assertNotIn('volume_lots',self.parse_volume(['0930 3600 '+value])[0])
+  self.assertEqual(self.parse_volume(['0930 3600 0','0931 3600 0'])[1]['volume_lots'],0)
+  self.assertNotIn('volume_lots',self.parse_volume(['0930 3600'])[0])
+ def test_lunch_snapshot_is_not_a_second_volume_bar_and_regressions_are_isolated_by_day(self):
+  bars=self.parse_volume(['1129 3600 100','1130 3601 140','1300 3602 150','1301 3602 190'])
+  self.assertEqual([b.get('volume_lots') for b in bars],[None,40,None,50])
+  bars=self.parse_volume(['0930 3600 100','0931 3601 90','0932 3602 130','0933 3603 150'])
+  self.assertEqual([b.get('volume_lots') for b in bars],[100,None,None,None])
+  self.assertEqual(self.parse_volume(['0930 3600 10','0931 3601 30'])[1]['volume_lots'],20)
+  bars=self.parse_volume(['0930 3600 100','0931 3601 NaN','0932 3602 80','0933 3603 90'])
+  self.assertEqual([b.get('volume_lots') for b in bars],[100,None,None,None])
 
 class MacdIndexFeedTests(unittest.TestCase):
  def test_all_three_feeds_are_shared_and_failure_is_isolated(self):

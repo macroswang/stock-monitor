@@ -343,13 +343,6 @@ class LiveTrading:
             result.setdefault(p['code'], []).append(dict(account_id=p['account_id'], broker_name=brokers._spec(p['broker']).name, account_masked=brokers.mask_account(p['account']), active=bool(p['active'])))
         return result
 
-    def last_result(self, code):
-        rows=self.store.query('SELECT r.id,r.account_id,r.side,r.status,r.payload,r.created_at,a.broker,a.account FROM trading_runs r LEFT JOIN broker_accounts a ON a.id=r.account_id WHERE r.code=? ORDER BY r.created_at DESC LIMIT 1',(code,))
-        if not rows:return None
-        row=rows[0];payload=json.loads(row['payload'])
-        return dict(id=row['id'],account_id=row['account_id'],side=row['side'],status=row['status'],created_at=row['created_at'],
-                    account_masked=brokers.mask_account(row['account'] or ''),broker_name=brokers._spec(row['broker']).name if row['broker'] else '已移除账户',message=payload.get('message',''))
-
     def disable_code(self, code):
         with self.lock:
             for row in self.store.query('SELECT * FROM trading_rules WHERE code=?',(code,)):

@@ -377,7 +377,7 @@ test('cancelling startup prevents its delayed sync from starting execution later
 });
 
 
-test('directional price protection and exact execution evidence are visible from the stock chart',async({page})=>{
+test('stock detail has no execution notice while exact evidence remains in execution records',async({page})=>{
  await setup(page);
  await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();
  const dialog=page.getByRole('dialog');await dialog.getByText('更多设置',{exact:true}).click();
@@ -387,12 +387,10 @@ test('directional price protection and exact execution evidence are visible from
  await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_price_checks',{}));
  await page.getByRole('button',{name:'自选监控',exact:true}).click();
  await page.locator('.stock').filter({hasText:'山子高科'}).click();
- const notice=page.getByRole('button',{name:'查看该股票的自动交易执行详情',exact:true});
- await expect(notice).toContainText('123***001');await expect(notice).toContainText('已跳过');await expect(notice).toContainText('28.89');
- await page.getByRole('button',{name:'收起市场趋势',exact:true}).click();await page.getByRole('button',{name:'折叠侧栏',exact:true}).click();await page.setViewportSize({width:1000,height:680});
- await expect(async()=>{const box=(await page.getByLabel('分时价格及分钟成交量',{exact:true}).boundingBox())!;expect(box.y+box.height).toBeLessThanOrEqual(670);}).toPass();
- await notice.click();
- await expect(page.getByRole('tab',{name:'执行记录',exact:true})).toHaveAttribute('aria-selected','true');
+ await expect(page.getByRole('button',{name:'查看该股票的自动交易执行详情',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'自动交易',exact:true}).click();
+ await page.getByRole('tab',{name:'执行记录',exact:true}).click();
+ await page.getByRole('button',{name:'刷新',exact:true}).click();
  const row=page.getByRole('row').filter({hasText:'29.04'});
  await expect(row).toContainText('123***001');await expect(row).toContainText('已跳过');await expect(row).not.toContainText('987***002');
  await row.locator('.trading-price-audit summary').click();
