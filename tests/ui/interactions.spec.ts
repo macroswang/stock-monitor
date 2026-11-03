@@ -1011,11 +1011,14 @@ test('daily crosshair tracks pointer dates across both the candles and volume',a
  await page.screenshot({path:'outputs/daily-crosshair-restored.png'});
 });
 
-test('daily hover stays at the inspected date through a background data refresh',async({page})=>{
+for(const input of ['mousemove','click'] as const)test(`daily hover stays at the inspected date through a background data refresh (${input})`,async({page})=>{
  await page.getByRole('button',{name:'日K',exact:true}).click();
  const chart=page.getByLabel('日K线及成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
  const point=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),day=o.xAxis[0].data.at(-10),last=o.series[0].data.at(-1),rect=c.getModel().getComponent('grid',0).coordinateSystem.getRect();return {day,lastDay:o.xAxis[0].data.at(-1),last,x:c.convertToPixel({xAxisIndex:0},day),y:rect.y+rect.height*.35};});
- const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point.x,box.y+point.y);
+ const box=(await chart.boundingBox())!;
+ if(input==='mousemove')await page.mouse.move(box.x+point.x,box.y+point.y);
+ else{const client=await page.context().newCDPSession(page);for(const type of ['mousePressed','mouseReleased'])await client.send('Input.dispatchMouseEvent',{type,x:box.x+point.x,y:box.y+point.y,button:'left',clickCount:1});await client.detach();}
+
  await expect(chart.locator('.daily-tooltip')).toContainText(point.day);
  await rpc('__audit_daily',{code:'sh603002',day:point.lastDay,data:{date:point.lastDay,open:String(point.last[0]),close:String(point.last[1]),low:String(point.last[2]),high:String(point.last[3]),volume:'1234567',volume_unit:'shares',source:'test'}});
  await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[1].data.at(-1).value;})).toBeCloseTo(123.4567,4);
