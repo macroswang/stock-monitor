@@ -102,3 +102,25 @@ test('index MACD never reveals later minutes than the selected stock data',async
  const points=(await option(page)).series.find((s:any)=>s.name==='指数 DIF')!.data;
  expect(points[at('09:41')]).toBeNull();expect(points[at('10:00')]).toBeNull();expect(points[at('15:00')]).toBeNull();
 });
+
+
+test('comparison panes fit common desktop windows and reflow after the market overview collapses',async({page})=>{
+ await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
+ await setup(page);
+ const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
+ const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),pairs:[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',i+2).coordinateSystem.getRect().y}))};});
+ for(const [width,height] of [[1380,900],[1280,800],[1100,768],[1000,680]]){
+  await page.setViewportSize({width,height});
+  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeLessThanOrEqual(height-10);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);}).toPass();
+  for(const name of ['个股MACD','指数MACD']){
+   const header=page.getByRole('group',{name,exact:true});await expect(header).toBeInViewport({ratio:1});
+   expect(await header.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  }
+  if(width===1000){await page.mouse.move(5,5);await page.screenshot({path:'outputs/macd-compact-1000x680.png'});}
+ }
+ await page.setViewportSize({width:1380,height:900});
+ await page.getByRole('button',{name:'展开市场趋势',exact:true}).click();
+ await page.getByRole('button',{name:'收起市场趋势',exact:true}).click();
+ await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y+box.height).toBeLessThanOrEqual(890);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);}).toPass();
+ await page.mouse.move(5,5);await page.screenshot({path:'outputs/macd-compact-1380x900.png'});
+});
