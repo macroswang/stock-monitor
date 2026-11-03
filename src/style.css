@@ -194,3 +194,5 @@
 .minute-detail .minute-chart-controls>.t-cost-settings{flex:0 1 auto;margin:0;font-size:10px}.minute-detail .minute-chart-controls>.t-cost-settings[open]{flex-basis:100%}.minute-detail .t-cost-settings summary{padding:2px 0}
 @media(max-width:1150px){.minute-detail .minute-chart-controls>.t-cost-settings{flex-basis:100%}.macd-panel-header{gap:5px}.macd-panel-values{gap:7px}.macd-panel-heading strong{font-size:9px}}
 @media(max-height:720px){.chart.compact-chart.macd-chart{height:360px}}
+
+.detail-top>div:first-child{min-width:0;flex:1}.auto-run-notice{display:block;max-width:100%;margin:4px 0 0;padding:2px 5px;font-size:10px;line-height:16px;color:#b1c8e5;background:#172941;border-color:#304960;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

@@ -49,7 +49,7 @@ class TradingTests(unittest.TestCase):
         self.service.observe('sz000981',[self.event(key,kind)],self.quote,self.now,continuous)
 
     def drain(self):
-        with patch('core.live_trading.brokers.holdings',side_effect=lambda _store,ident:self.snapshot(ident)):
+        with patch('core.live_trading.brokers.holdings',side_effect=lambda _store,ident,**_kwargs:self.snapshot(ident)):
             self.service.drain()
 
     def runs(self):

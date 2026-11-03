@@ -375,3 +375,27 @@ test('cancelling startup prevents its delayed sync from starting execution later
  await expect(page.getByRole('button',{name:'启动试运行',exact:true})).toBeEnabled();
  await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
 });
+
+
+test('directional price protection and exact execution evidence are visible from the stock chart',async({page})=>{
+ await setup(page);
+ await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();
+ const dialog=page.getByRole('dialog');await dialog.getByText('更多设置',{exact:true}).click();
+ await expect(dialog.getByLabel('最大不利价格偏离（%）',{exact:true})).toHaveValue('0.5');
+ await expect(dialog).toContainText('买入只限制高于信号价，卖出只限制低于信号价');
+ await dialog.getByRole('button',{name:'取消',exact:true}).click();
+ await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_price_checks',{}));
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.locator('.stock').filter({hasText:'山子高科'}).click();
+ const notice=page.getByRole('button',{name:'查看该股票的自动交易执行详情',exact:true});
+ await expect(notice).toContainText('123***001');await expect(notice).toContainText('已跳过');await expect(notice).toContainText('28.89');
+ await page.getByRole('button',{name:'收起市场趋势',exact:true}).click();await page.getByRole('button',{name:'折叠侧栏',exact:true}).click();await page.setViewportSize({width:1000,height:680});
+ await expect(async()=>{const box=(await page.getByLabel('分时价格及分钟成交量',{exact:true}).boundingBox())!;expect(box.y+box.height).toBeLessThanOrEqual(670);}).toPass();
+ await notice.click();
+ await expect(page.getByRole('tab',{name:'执行记录',exact:true})).toHaveAttribute('aria-selected','true');
+ const row=page.getByRole('row').filter({hasText:'29.04'});
+ await expect(row).toContainText('123***001');await expect(row).toContainText('已跳过');await expect(row).not.toContainText('987***002');
+ await row.locator('.trading-price-audit summary').click();
+ for(const text of ['参考 29.04 元 → 校验 28.89 元','不利偏离 0.517% / 上限 0.5%','本次最低卖价 28.90 元','持仓核验 24.3秒','目标股票'])await expect(row).toContainText(text);
+ await page.screenshot({path:'outputs/adverse-price-execution-details.png'});
+});

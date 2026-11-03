@@ -74,6 +74,16 @@ def seed_reports():
         app.store.execute('INSERT OR REPLACE INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+ident,account,json.dumps(request),'accepted',json.dumps(result),stamp,stamp))
     return dict(seeded=True)
 
+def seed_price_checks():
+    stamp=now_cn().isoformat();ident='price-check-fixture'
+    check=dict(policy='adverse-v1',allowed=False,reference_price='29.04',quote_price='28.89',signed_deviation_pct=-.516529,adverse_deviation_pct=.516529,maximum_pct=.5,boundary_price='28.90',quote_at=stamp,checked_at=stamp)
+    payload=dict(mode='live',signal_source='shape-v1',signal=dict(time=stamp[11:16],kind='top'),reference_price=29.04,
+                 message='卖出价低于信号价的允许范围：参考29.04元，校验28.89元，不利偏离0.517%（上限0.5%）',
+                 price_checks={'before_holdings':dict(check,allowed=True,quote_price='29.08',adverse_deviation_pct=0), 'after_holdings':check},
+                 timings=dict(queue_ms=300,holdings_ms=24324,gateway_ms=0,elapsed_ms=27897,holdings_scope='target'))
+    app.store.execute('INSERT OR REPLACE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',(ident,'test-a','sz000981','sell','fixture-top-price',stamp[:10],'skipped',json.dumps(payload),stamp,stamp))
+    return dict(seeded=True)
+
 for ident in ('test-a','test-b'):app.live_trading.apply_snapshot(ident,holdings(app.store,ident))
 for line in sys.stdin:
     try:
@@ -81,6 +91,7 @@ for line in sys.stdin:
         if request['method']=='test_hold_sync':sync_gate.clear();result=True
         elif request['method']=='test_release_sync':sync_gate.set();result=True
         elif request['method']=='test_broker_checks':result=broker_checks
+        elif request['method']=='test_seed_price_checks':result=seed_price_checks()
         elif request['method']=='test_seed_notice':
             app.store.setconfig('trading_signal_notice','测试：原买卖开关已保留，自动执行已暂停。')
             result=True

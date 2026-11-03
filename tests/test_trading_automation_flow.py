@@ -74,3 +74,56 @@ class AutomaticFlowTests(unittest.TestCase):
   self.signal();self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'unknown')
   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'unknown')
   self.signal('another');self.assertEqual(self.clients['a'].submit_order.call_count,1)
+
+ def test_sell_price_becomes_adverse_before_native_confirm_and_both_journals_fail_without_sending(self):
+  clicked=[]
+  def changed(*,before_confirm,**kwargs):
+   self.app.quotes['sz000981']={**self.app.quotes['sz000981'],'price':'2.10'}
+   before_confirm();clicked.append(True)
+   return dict(status='accepted',submitted=True)
+  self.clients['a'].submit_order.side_effect=changed
+  self.signal(kind='top')
+  self.assertEqual(clicked,[])
+  self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'failed')
+  run=self.store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
+  self.assertEqual(run['status'],'failed');self.assertFalse(payload['price_checks']['before_submit']['allowed'])
+  self.assertEqual(payload['price_checks']['before_submit']['quote_price'],'2.10')
+  self.assertIn('卖出价低于',payload['message'])
+
+ def test_sell_price_improves_at_final_confirmation_and_account_stays_bound(self):
+  confirmed=[]
+  def improved(*,before_confirm,**kwargs):
+   self.app.quotes['sz000981']={**self.app.quotes['sz000981'],'price':'2.20'}
+   before_confirm();confirmed.append(True)
+   return dict(status='accepted',submitted=True,order_id='contract-a')
+  self.clients['a'].submit_order.side_effect=improved
+  self.signal(kind='top')
+  self.assertEqual(confirmed,[True]);self.clients['b'].submit_order.assert_not_called()
+  request=self.store.query('SELECT * FROM broker_requests')[0]
+  self.assertEqual(request['account_id'],'a');self.assertEqual(request['status'],'accepted')
+  run=self.store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
+  self.assertTrue(payload['price_checks']['before_submit']['allowed'])
+  self.assertEqual(payload['price_checks']['before_submit']['order_price'],'2.13')
+
+ def test_actual_limit_is_guarded_when_rounding_would_cross_sell_boundary(self):
+  self.app.quotes['sz000981']={**self.app.quotes['sz000981'],'price':'2.1194'}
+  self.signal(kind='top')
+  run=self.store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
+  self.assertTrue(payload['price_checks']['after_holdings']['allowed'])
+  check=payload['price_checks']['before_submit'];self.assertFalse(check['allowed']);self.assertFalse(check['order_allowed'])
+  self.assertEqual(check['order_price'],'2.11');self.assertEqual(run['status'],'failed')
+  self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'failed')
+
+ def test_final_expired_quote_never_crosses_sending_and_has_audit(self):
+  clicked=[]
+  def stale(*,before_confirm,**kwargs):
+   self.now+=timedelta(seconds=31)
+   before_confirm();clicked.append(True)
+   return dict(status='accepted',submitted=True)
+  self.clients['a'].submit_order.side_effect=stale
+  self.signal(kind='top')
+  self.assertEqual(clicked,[])
+  self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'failed')
+  run=self.store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
+  self.assertEqual(run['status'],'failed');self.assertIn('过期',payload['message'])
+  self.assertEqual(payload['price_checks']['before_submit']['quote_age_ms'],31000)
