@@ -216,7 +216,8 @@ class App:
             else '分钟数据修订，已恢复历史状态' if revised else '实时采样监控' if continuous else '已恢复历史状态；开始实时采样')
         self.store.cache(code,'state',today,dict(candidates=session.candidates,observed_at=now.isoformat()))
         if hasattr(self,'live_trading'):
-            self.live_trading.ingest(code,bars,quote,now,continuous and not revised and minutes_fresh)
+            self.live_trading.ingest(code,bars,quote,now,continuous and not revised and minutes_fresh,
+                admission_reason='分钟数据修订，未补下旧信号' if revised else '分钟数据延迟，暂停执行' if not minutes_fresh else '采样中断或恢复，未补下旧信号' if not continuous else '')
 
     def poll_one(self,code):
         if self.stop.is_set(): return
@@ -559,6 +560,9 @@ class App:
             if not re.fullmatch(r'[A-Za-z0-9_-]{8,200}',args['key']): raise ValueError('请填写设备密钥，不是完整网址')
             notify.key(args['key']); return {'saved':True}
         if method=='broker_specs': return brokers.specs()
+        if method=='trading_chart':
+            from .trading_chart import chart
+            return chart(self.store,symbol(args['code']),datetime.fromisoformat(args['day']).date().isoformat())
         if method=='trading_view':return self.live_trading.view()
         if method=='trading_config':return self.live_trading.configure(args)
         if method=='trading_start':return self.broker_job(self.live_trading.prepare)

@@ -152,7 +152,9 @@ class TradingTests(unittest.TestCase):
 
     def test_noncontinuous_old_or_pre_enable_events_never_replayed(self):
         self.arm();self.observe(continuous=False)
-        self.assertEqual(self.runs(),[])
+        self.assertEqual([r['status'] for r in self.runs()],['skipped'])
+        self.assertIn('采样不连续',json.loads(self.runs()[0]['payload'])['message'])
+        self.store.execute('DELETE FROM trading_runs')
         self.service.started_at=self.now.isoformat();self.observe()
         self.assertEqual(self.runs(),[])
         self.service.started_at=(self.now-timedelta(minutes=5)).isoformat()
@@ -168,7 +170,9 @@ class TradingTests(unittest.TestCase):
         with patch('core.turning_shapes.signals',return_value=[self.event()]):
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
-        self.assertEqual(self.runs(),[])
+        self.assertEqual([r['status'] for r in self.runs()],['skipped'])
+        self.assertIn('数据修订',json.loads(self.runs()[0]['payload'])['message'])
+        self.submit.assert_not_called()
 
     def test_live_ingestion_only_dispatches_new_confirmations_after_baseline(self):
         self.arm()
@@ -179,6 +183,13 @@ class TradingTests(unittest.TestCase):
             self.service.ingest('sz000981',bars+[dict(bars[0],time='10:01')],self.quote,self.now,True)
             self.service.ingest('sz000981',bars+[dict(bars[0],time='10:01')],self.quote,self.now,True)
         self.assertEqual(len(self.runs()),1)
+
+    def test_expired_signal_is_logged_once_without_gateway_or_pending_task(self):
+        self.arm();self.now+=timedelta(seconds=45)
+        self.observe();self.observe();self.drain()
+        self.assertEqual([r['status'] for r in self.runs()],['skipped'])
+        payload=json.loads(self.runs()[0]['payload']);self.assertIn('45秒',payload['message'])
+        self.assertFalse(payload['admission']['allowed']);self.submit.assert_not_called()
 
     def test_repeated_signal_trial_is_durable_and_never_calls_broker_submit(self):
         self.arm();self.observe();self.observe();self.drain();self.observe();self.drain()

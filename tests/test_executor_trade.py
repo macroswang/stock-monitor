@@ -157,6 +157,14 @@ class DialogTests(unittest.TestCase):
         result = parse_result(parse_nodes(xml))
         self.assertEqual(result.kind, "success")
 
+    def test_native_submitted_success_contract_is_recognized_without_assuming_fill(self):
+        xml=self.RESULT_ERROR_XML.replace('当前时间不允许委托','委托提交成功,合同号:142783')
+        result=parse_result(parse_nodes(xml));self.assertEqual(result.kind,'success')
+        self.assertEqual(result.as_dict()['order_id'],'142783')
+        for text in ('委托提交成功,合同号:142783，网络超时','委托提交成功,合同号:142783，失败'):
+            parsed=parse_result(parse_nodes(self.RESULT_ERROR_XML.replace('当前时间不允许委托',text)))
+            self.assertEqual(parsed.kind,'unknown');self.assertNotIn('order_id',parsed.as_dict())
+
     def test_no_dialog_returns_none(self):
         nodes = parse_nodes(SELL_XML)
         self.assertIsNone(parse_confirm(nodes))

@@ -105,7 +105,9 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         raise ValueError('成交股数与券商委托状态不一致')
     if not report.get('source') or not re.fullmatch(r'[a-f0-9]{64}', report.get('evidence_hash', '')):
         raise ValueError('缺少完整的券商回报证据')
-    return dict(origin='broker_auto', status=status, order_id=order_id, filled=filled,
+    execution={}
+    if fills_report:execution=dict(average=str(average),amount=str(money))
+    return dict(**execution,origin='broker_auto', status=status, order_id=order_id, filled=filled,
                 at=now.isoformat(), observed_at=report['observed_at'], source=report['source'],
                 evidence_hash=report['evidence_hash'], note='已按账户、交易日及唯一委托号核对券商回报')
 

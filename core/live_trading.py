@@ -427,7 +427,7 @@ class LiveTrading:
         value = limit*qty
         return dict(account_id=ident, code=code, side=side, quantity=qty, price=str(limit), value=float(value),sizing_mode=rule[side+'_mode'],lots=rule[side+'_lots'],percent=rule[side+'_percent'],position_shares=p['quantity'],rule_revision=rule['revision'])
 
-    def ingest(self, code, bars, quote, now, continuous):
+    def ingest(self, code, bars, quote, now, continuous, admission_reason=''):
         if self.settings()['paused'] or not self.store.query("SELECT 1 FROM trading_rules WHERE code=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1) LIMIT 1",(code,)):
             self.frames.pop(code,None)
             return
@@ -444,17 +444,19 @@ class LiveTrading:
             # Baseline every recovered/revised observation so it cannot turn into a
             # "new" signal one poll later. Includes VWAP revisions affecting labelled chart shapes.
             self.frames[code]=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations})
-            self.observe(code,fresh,quote,now,continuous and same_day and not revised)
+            self.observe(code,fresh,quote,now,continuous and same_day and not revised,
+                         admission_reason='分钟数据修订，未补下旧信号' if revised else admission_reason or ('启动采样基线，未补下历史信号' if not same_day else ''))
 
-    def observe(self, code, observations, quote, now, continuous):
+    def observe(self, code, observations, quote, now, continuous, admission_reason=''):
         # Called only by live quote ingestion, never by chart rendering or replay.
-        if not continuous or self.settings()['paused']:
+        if self.settings()['paused']:
             return
         with self.lock:
             for m in observations:
                 event_at = datetime.fromisoformat(now.date().isoformat()+'T'+m['time']+':00').replace(tzinfo=now.tzinfo)
-                if not 0 <= (now-event_at).total_seconds() <= 45 or event_at.isoformat() <= self.started_at:
-                    continue
+                age=(now-event_at).total_seconds()
+                if age<0 or event_at.isoformat() <= self.started_at:continue
+                reason=(admission_reason or '采样不连续，未补下旧信号') if not continuous else '信号发现已超过45秒，未追单' if age>45 else ''
                 side = 'buy' if m['kind'] == 'bottom' else 'sell'
                 for row in self.store.query('SELECT * FROM trading_rules WHERE code=?', (code,)):
                     rule = json.loads(row['payload'])
@@ -463,7 +465,9 @@ class LiveTrading:
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
                     payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])
-                    self.store.execute('INSERT OR IGNORE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)', (ident,row['account_id'],code,side,key,now.date().isoformat(),'pending',json.dumps(payload),now.isoformat(),now.isoformat()))
+                    payload['admission']=dict(allowed=not bool(reason),continuous=continuous,observed_at=now.isoformat(),signal_age_ms=milliseconds(age),reason=reason)
+                    if reason:payload['message']=reason
+                    self.store.execute('INSERT OR IGNORE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)', (ident,row['account_id'],code,side,key,now.date().isoformat(),'skipped' if reason else 'pending',json.dumps(payload),now.isoformat(),now.isoformat()))
 
     def persist_progress(self, run, payload):
         self.store.execute('UPDATE trading_runs SET payload=?,updated_at=? WHERE id=?',(json.dumps(payload),now_cn().isoformat(),run['id']))

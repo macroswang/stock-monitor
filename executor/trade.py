@@ -45,7 +45,7 @@ _ERROR_NEEDLES = (
     "错误",
     "无效",
 )
-_SUCCESS_NEEDLES = ("已提交", "委托成功", "已受理", "受理成功", "已报", "已成交")
+_SUCCESS_NEEDLES = ("已提交", "委托成功", "委托提交成功", "已受理", "受理成功", "已报", "已成交")
 
 
 class TradeError(RuntimeError):

@@ -24,6 +24,20 @@ for line in sys.stdin:
   req=json.loads(line)
   if req['method']=='__audit_cache':
    arg=req['args'];app.store.cache(arg['code'],'minute',arg['day'],arg['data']);data=True
+  elif req['method']=='__audit_auto_runs':
+   arg=req['args']
+   for ident,number in [('chart-a','1111111001'),('chart-b','2222222002')]:
+    app.store.execute('INSERT OR REPLACE INTO broker_accounts(id,broker,account) VALUES(?,?,?)',(ident,'zhangle',number))
+    app.store.execute('INSERT OR REPLACE INTO trading_rules VALUES(?,?,?,?,?)',(ident,arg['code'],json.dumps(dict(buy_enabled=True,sell_enabled=True)),1,arg['day']+'T09:00:00+08:00'))
+   for row in arg['rows']:
+    account=row.get('account','chart-a');ident=row['id'];stamp=arg['day']+'T'+row['time']+':35+08:00'
+    payload=dict(mode=row.get('mode','live'),signal=dict(key=row['signal_key'],time=row['time'],price=row['reference']),reference_price=row['reference'],message=row.get('message','测试委托'),plan=dict(price=row['limit'],quantity=200),price_checks=dict(before_submit=dict(checked_at=stamp)))
+    if row.get('verification'):payload['verification']=row['verification']
+    app.store.execute('INSERT OR REPLACE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',(ident,account,arg['code'],row.get('side','buy'),arg['day']+'|'+ident,arg['day'],row['status'],json.dumps(payload),stamp,stamp))
+    if row['status'] not in ('skipped','trial'):
+     ack=dict(status=row['status'],order_id='contract-'+ident)
+     app.store.execute('INSERT OR REPLACE INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+ident,account,'{}',row['status'],json.dumps(ack),stamp,stamp))
+   data=True
   elif req['method']=='__audit_flow':
    arg=req['args'];app.store.cache(arg['code'],'volume_flow',arg['day'],arg['data']);data=True
   elif req['method']=='__audit_daily':
