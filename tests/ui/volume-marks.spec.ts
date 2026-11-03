@@ -9,7 +9,7 @@ test('no marker until both complete confirmation minutes and confirmed event exi
  expect(topVolumeMarks(bars.slice(0,2),[event()])).toEqual([]);
  expect(topVolumeMarks(bars.slice(0,3),[event()])).toEqual([]);
  expect(topVolumeMarks([...bars.slice(0,3),bar('09:34',80,false)],[event()])).toEqual([]);
- expect(topVolumeMarks(bars,[event()])).toEqual([{coord:['09:32',10],value:'触'}]);
+ expect(topVolumeMarks(bars,[event()])).toEqual([{coord:['09:32',10],value:'高'}]);
 });
 test('confirmed marker stays on original top even after later larger volume',()=>{
  const first=topVolumeMarks(bars,[event()]);
@@ -23,18 +23,18 @@ test('opening first minute needs its own confirmed event',()=>{
 test('limit-up wait keeps marker hidden until reopening event arrives',()=>{
  const reopen=event('09:32','09:34','09:36:05');
  expect(topVolumeMarks(bars,[reopen])).toEqual([]);
- expect(topVolumeMarks([...bars,bar('09:35',60),bar('09:36',30,false)],[reopen])).toEqual([{coord:['09:32',10],value:'触'}]);
+ expect(topVolumeMarks([...bars,bar('09:35',60),bar('09:36',30,false)],[reopen])).toEqual([{coord:['09:32',10],value:'高'}]);
 });
 test('lunch counts trading minutes and missing confirmation bars do not mark',()=>{
  const lunch=[bar('11:30',200),bar('13:01',90),bar('13:02',80)];
- expect(topVolumeMarks(lunch,[event('11:30','13:02')])).toEqual([{coord:['11:30',10],value:'触'}]);
+ expect(topVolumeMarks(lunch,[event('11:30','13:02')])).toEqual([{coord:['11:30',10],value:'高'}]);
  expect(topVolumeMarks([bars[1],bars[3]],[event()])).toEqual([]);
  expect(topVolumeMarks(bars,[{...event(),mode:'test'}])).toEqual([]);
 });
 
 test('opening visibility filters only opening marker and retains later confirmed marker',()=>{
  const events=[event('09:31','09:33'),event()];
- expect(topVolumeMarks(bars,events,false)).toEqual([{coord:['09:32',10],value:'触'}]);
- expect(topVolumeMarks(bars,events,true).map(m=>m.value)).toEqual(['开盘量','触']);
+ expect(topVolumeMarks(bars,events,false)).toEqual([{coord:['09:32',10],value:'高'}]);
+ expect(topVolumeMarks(bars,events,true).map(m=>m.value)).toEqual(['开盘量','高']);
  expect(topVolumeMarks(bars.slice(0,2),[event('09:31','09:33')])).toEqual([]);
 });

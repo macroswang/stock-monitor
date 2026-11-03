@@ -16,7 +16,7 @@ export function topVolumeMarks(bars:Bar[],events:Event[]=[],showOpening=true,sho
   if(!byTime.get(labels[index+1])?.complete||!byTime.get(labels[index+2])?.complete)continue;
   if(!confirmation||confirmation<labels[index+2]||!trigger||trigger<confirmation||!bars.some(b=>b.time>=trigger))continue;
   if(!Number.isFinite(+bar.close)||+bar.close<=0)continue;
-  seen.add(time);marks.push({coord:[time,+bar.close],value:time==='09:31'?'开盘量':'触'});
+  seen.add(time);marks.push({coord:[time,+bar.close],value:time==='09:31'?'开盘量':'高'});
  }
  return marks;
 }

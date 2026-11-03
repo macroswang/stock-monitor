@@ -4,7 +4,7 @@ export type AutoTradePoint={id:string;account_id:string;broker_name:string;accou
 export type AutoTradeChart={code:string;day:string;accounts:AutoTradeAccount[];points:AutoTradePoint[]};
 export const autoTradeStatus:Record<string,string>={pending:'等待核验，尚未下单',processing:'核验中，尚未下单',sending:'提交中，结果待核实',accepted:'已受理，尚未确认成交',unknown:'提交结果待核实',partial:'已核实部分成交',filled:'已核实成交',cancelled:'已核实撤销',rejected:'已拒绝',skipped:'已跳过，未下单',trial:'试运行，未下单',not_sent:'已核实未发出',unrecorded:'没有执行记录'};
 export const autoTradePrice=(n:unknown)=>n!==null&&n!==undefined&&Number.isFinite(Number(n))&&Number(n)>0?Number(n):null;
-export function autoTradeMarks(data:AutoTradeChart|undefined,shapes:ReadonlyArray<{key:string;kind:string;time:string;price:number}>,day:string){
+export function autoTradeRecords(data:AutoTradeChart|undefined,shapes:ReadonlyArray<{key:string;kind:string;time:string;price:number}>,day:string){
  if(!data||data.day!==day)return [];
  const points=[...data.points.filter(p=>p.day===day&&p.code===data.code)];
  // Legacy gaps are explicitly unknown; they must never look like submitted orders.
@@ -13,18 +13,21 @@ export function autoTradeMarks(data:AutoTradeChart|undefined,shapes:ReadonlyArra
   if(!a[side==='buy'?'buy_enabled':'sell_enabled']||points.some(p=>p.account_id===a.id&&p.signal_key===s.key))continue;
   points.push({id:`missing|${a.id}|${s.key}`,account_id:a.id,broker_name:a.broker_name,account_masked:a.account_masked,code:data.code,day,side,status:'unrecorded',mode:'live',signal_key:s.key,signal_time:s.time,reference_price:s.price,created_at:day+'T'+s.time+':00',message:'该信号没有对应执行记录，历史跳过原因未保存。',attempted:false});
  }
- const lanes=new Map<string,number>();
  return points.flatMap(p=>{
   const submitted=p.attempted&&['sending','accepted','unknown','partial','filled','cancelled','rejected'].includes(p.status)&&p.mode==='live';
   const orderPrice=autoTradePrice(p.order_price),fillPrice=submitted&&['filled','partial','cancelled'].includes(p.status)?autoTradePrice(p.fill_price):null;
   const price=(submitted?fillPrice||orderPrice:null)||autoTradePrice(p.reference_price);if(price===null)return [];
   const time=(submitted?p.ordered_at?.slice(11,16):null)||p.signal_time||p.created_at.slice(11,16);
   if(!/^\d{2}:\d{2}$/.test(time))return [];
-  const side=p.side==='buy'?'买':'卖',kind=p.mode==='trial'?'演练':p.status==='unrecorded'?'无记录':p.status==='skipped'||p.status==='not_sent'?'跳过':p.status==='rejected'?'拒绝':p.status==='cancelled'?'撤销':p.status==='filled'?'成':p.status==='partial'?'部成':p.status==='accepted'?'单':p.status==='unknown'?'?':p.status==='sending'?'…':'待';
-  const label=side+kind+(['单','成','部成','?','…'].includes(kind)?` ${price.toFixed(2)}${['成','部成'].includes(kind)&&fillPrice===null?'限':''}`:'');
-  const color=kind==='?'||kind==='…'?'#e8b85e':kind==='成'||kind==='部成'?'#63d2b7':kind==='单'?'#8bbcff':'#9baac0';
-  const key=time+'|'+p.side,lane=lanes.get(key)||0;lanes.set(key,lane+1);
-  return [{point:p,time,price,orderPrice,fillPrice,label,color,offset:(p.side==='buy'?-1:1)*(26+lane*20)}];
+  return [{point:p,time,price,orderPrice,fillPrice}];
+ });
+}
+/** B/S is only a successful live-order reminder; other states stay in details. */
+export function autoTradeMarks(data:AutoTradeChart|undefined,shapes:ReadonlyArray<{key:string;kind:string;time:string;price:number}>,day:string){
+ const lanes=new Map<string,number>();
+ return autoTradeRecords(data,shapes,day).filter(m=>m.point.mode==='live'&&m.point.attempted&&['accepted','partial','filled','cancelled'].includes(m.point.status)&&m.orderPrice!==null).map(m=>{
+  const key=m.time+'|'+m.point.side,lane=lanes.get(key)||0;lanes.set(key,lane+1);
+  return {...m,label:m.point.side==='buy'?'B':'S',color:m.point.side==='buy'?'#ed6d79':'#4c9fff',offset:(m.point.side==='buy'?-1:1)*(26+lane*20)};
  });
 }
 export function autoTradeDetails(p:AutoTradePoint){

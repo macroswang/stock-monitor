@@ -356,12 +356,12 @@ test('trigger comparison stays available without header or tooltip inputs',async
  const opening=page.getByRole('checkbox',{name:'开盘量'});
  await expect(opening).toBeChecked();
  await opening.uncheck();
- await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value);})).toEqual(['触']);
+ await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value);})).toEqual(['高']);
  await page.mouse.move(box.x+xy[0]-1,box.y+80);await page.mouse.move(box.x+xy[0],box.y+80);
  await expect(chart.locator('.quote-tooltip')).toContainText('基准触发：09:34');
  expect(await page.evaluate(()=>localStorage.getItem('stock-monitor-show-opening'))).toBe('false');
  await opening.check();
- await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value).sort();})).toEqual(['开盘量','触'].sort());
+ await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value).sort();})).toEqual(['开盘量','高'].sort());
  await page.mouse.click(box.x+mark[0],box.y+mark[1]);
  await page.locator('.t-cost-settings summary').click();await page.getByLabel('试算股数',{exact:true}).fill('2000');await page.locator('.t-cost-settings summary').click();
  const updated=(await chart.boundingBox())!;await page.mouse.move(updated.x+xy[0],updated.y+80);
@@ -996,6 +996,7 @@ async function seedAutoChart(page:Page){
  const {readFileSync}=await import('node:fs');const c=JSON.parse(readFileSync('tests/ui/fixtures/turning-shapes.json','utf8'))[0];
  await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'test',bars:c.bars}});
  const bottom=c.expectedShapes[0],top=c.expectedShapes.find((m:any)=>m.kind==='top');
+ await rpc('__audit_event',{key:'2026-10-19|603002|10:01',symbol:'603002',trading_date:'2026-10-19',candidate_time:'10:01',confirmation_label:'10:03',event_label:'10:03',volumes:[300,100,100],kind:'TWO_MINUTE_CONFIRMATION'});
  await rpc('__audit_auto_runs',{code:'sh603002',day:'2026-10-19',rows:[
   {id:'accepted-a',account:'chart-a',time:bottom.time,signal_key:bottom.key,reference:bottom.price,limit:'32.75',status:'accepted'},
   {id:'unknown-b',account:'chart-b',time:bottom.time,signal_key:bottom.key,reference:bottom.price,limit:'32.74',status:'unknown',message:'券商结果待核实'},
@@ -1003,7 +1004,7 @@ async function seedAutoChart(page:Page){
   {id:'skip-a',account:'chart-a',time:'10:32',signal_key:c.expectedShapes[1].key,reference:32.4,limit:'32.4',status:'skipped',message:'账户可用资金不足'}]});
  await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
- await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托')?.data.length||0;})).toBeGreaterThan(3);
+ await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托')?.data.length||0;})).toBe(2);
  return chart;
 }
 
@@ -1011,29 +1012,31 @@ test('real automatic order annotations keep account, limit, fill and unknown sta
  const chart=await seedAutoChart(page);
  const show=async(id:string)=>chart.evaluate(async(el,id)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),si=o.series.findIndex((s:any)=>s.name==='自动委托');c.dispatchAction({type:'showTip',seriesIndex:si,dataIndex:o.series[si].data.findIndex((d:any)=>d.autoTrade.id===id)});},id);
  await show('accepted-a');const tip=chart.locator('.auto-trade-tooltip');await expect(tip).toContainText('111***001');await expect(tip).not.toContainText('222***002');await expect(tip).toContainText('委托限价：32.75 元 · 200 股');await expect(tip).toContainText('尚未确认成交');
- await show('unknown-b');await expect(tip).toContainText('222***002');await expect(tip).toContainText('结果待核实');await expect(tip).not.toContainText('已核实成交');
  await show('filled-a');await expect(tip).toContainText('委托限价：33.73');await expect(tip).toContainText('均价 33.80');
- await show('skip-a');await expect(tip).toContainText('未下单');await expect(tip).toContainText('可用资金不足');await expect(tip).toContainText('计划限价');
- await page.mouse.move(5,5);await page.locator('.chart-shell').screenshot({path:'outputs/auto-order-markers.png'});
+ const labels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托').data.map((d:any)=>({id:d.autoTrade.id,label:d.label.formatter}));});
+ expect(labels).toEqual([{id:'accepted-a',label:'B'},{id:'filled-a',label:'S'}]);
+ await page.mouse.move(5,5);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await expect(chart.locator('.auto-trade-tooltip')).toBeHidden();await page.locator('.chart-shell').screenshot({path:'outputs/auto-order-markers.png'});
  await page.locator('.info-note summary').filter({hasText:'自动委托详情'}).click();
- await expect(page.locator('.auto-trade-records')).toContainText('历史跳过原因未保存');
+ for(const text of ['历史跳过原因未保存','222***002','提交结果待核实','账户可用资金不足'])await expect(page.locator('.auto-trade-records')).toContainText(text);
 });
 
 test('signals and automatic markers use separate lanes and compact controls preserve chart space',async({page})=>{
  const chart=await seedAutoChart(page);
- for(const name of ['开盘量','显示触发量','底/顶'])await expect(page.getByRole('checkbox',{name,exact:true})).toHaveCount(1);
+ for(const name of ['开盘量','高量','底/顶'])await expect(page.getByRole('checkbox',{name,exact:true})).toHaveCount(1);
  await expect(page.getByRole('checkbox',{name:'显示Q1质量',exact:true})).toHaveCount(0);await expect(page.locator('.detail>.chart-caption')).toHaveCount(0);
- const geometry=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),orders=o.series.find((s:any)=>s.name==='自动委托').data,shapes=o.series[0].markPoint.data.filter((m:any)=>m.observationKey);return {shapeSizes:shapes.map((m:any)=>m.label.fontSize),orders:orders.filter((d:any)=>d.autoTrade.id==='accepted-a'||d.autoTrade.id==='unknown-b').map((d:any)=>d.symbolOffset[1]),rects:c.getZr().storage.getDisplayList().filter((d:any)=>d.type==='tspan'&&(d.style.text==='底'||String(d.style.text).startsWith('买单'))).map((d:any)=>{const r=d.getBoundingRect().clone();r.applyTransform(d.getComputedTransform());return {text:d.style.text,x:r.x,y:r.y,width:r.width,height:r.height};})};});
- expect(geometry.shapeSizes.every((n:number)=>n<=9)).toBe(true);expect(geometry.orders).toEqual([-26,-46]);
- for(const buy of geometry.rects.filter((r:any)=>r.text.startsWith('买单')))for(const bottom of geometry.rects.filter((r:any)=>r.text==='底')){const overlap=Math.min(buy.x+buy.width,bottom.x+bottom.width)>Math.max(buy.x,bottom.x)&&Math.min(buy.y+buy.height,bottom.y+bottom.height)>Math.max(buy.y,bottom.y);expect(overlap).toBe(false);}
+ const geometry=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),orders=o.series.find((s:any)=>s.name==='自动委托').data,shapes=o.series[0].markPoint.data.filter((m:any)=>m.observationKey);const grid=c.getModel().getComponent('grid',0).coordinateSystem.getRect();return {grid:{top:grid.y,bottom:grid.y+grid.height},shapeSizes:shapes.map((m:any)=>m.label.fontSize),shapeLabels:shapes.map((m:any)=>m.label),orders:orders.filter((d:any)=>d.autoTrade.id==='accepted-a'||d.autoTrade.id==='unknown-b').map((d:any)=>d.symbolOffset[1]),rects:c.getZr().storage.getDisplayList().filter((d:any)=>d.type==='tspan'&&(['底','顶','高','B'].includes(d.style.text))).map((d:any)=>{const r=d.getBoundingRect().clone();r.applyTransform(d.getComputedTransform());return {text:d.style.text,x:r.x,y:r.y,width:r.width,height:r.height};})};});
+ expect(geometry.shapeSizes.every((n:number)=>n<=9)).toBe(true);expect(geometry.shapeLabels.every((l:any)=>l.distance>=20&&l.color==='#fff'&&['#c92f53','#008660'].includes(l.backgroundColor))).toBe(true);expect(geometry.orders).toEqual([-26]);for(const tag of geometry.rects.filter((r:any)=>['底','顶','高'].includes(r.text))){expect(tag.y).toBeGreaterThanOrEqual(geometry.grid.top);expect(tag.y+tag.height).toBeLessThanOrEqual(geometry.grid.bottom);}
+ for(const buy of geometry.rects.filter((r:any)=>r.text==='B'))for(const bottom of geometry.rects.filter((r:any)=>['底','顶','高'].includes(r.text))){const overlap=Math.min(buy.x+buy.width,bottom.x+bottom.width)>Math.max(buy.x,bottom.x)&&Math.min(buy.y+buy.height,bottom.y+bottom.height)>Math.max(buy.y,bottom.y);expect(overlap).toBe(false);}
  for(const width of [1380,1000]){await page.setViewportSize({width,height:800});const summary=page.locator('.t-cost-settings summary');const before=await summary.evaluate(el=>el.getBoundingClientRect().top+window.scrollY);await summary.click();const direction=(await page.getByRole('group',{name:'做T方向'}).boundingBox())!;expect((await summary.boundingBox())!.y).toBeGreaterThanOrEqual(direction.y+direction.height);expect(await summary.evaluate(el=>el.getBoundingClientRect().top+window.scrollY)).toBeCloseTo(before,0);await summary.click();}
 });
 
 test('trigger volume visibility is independent from the opening marker and persists',async({page})=>{
  const chart=page.getByLabel('分时价格及分钟成交量');
  const day=await page.getByLabel('交易日期').inputValue();await rpc('__audit_event',{key:day+'|603002|09:50',symbol:'603002',trading_date:day,candidate_time:'09:50',confirmation_label:'09:52',event_label:'09:52',volumes:[300,100,100],kind:'TWO_MINUTE_CONFIRMATION'});await page.reload();
- const toggle=page.getByRole('checkbox',{name:'显示触发量',exact:true});
+ const toggle=page.getByRole('checkbox',{name:'高量',exact:true});
  const values=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.map((m:any)=>m.value);});
- await expect.poll(values).toContain('触');await toggle.uncheck();expect(await values()).not.toContain('触');expect(await values()).toContain('开盘量');
- await page.reload();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(values).toContain('触');
+ const tags=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const o=e.getInstanceByDom(el).getOption();return {high:o.series[0].markPoint.data.find((d:any)=>d.value==='高')?.label,lines:o.series.find((v:any)=>v.name==='高量标签连线')?.data};});
+ expect(tags.high).toMatchObject({formatter:'高',color:'#fff',backgroundColor:'#9b6b16',distance:24});expect(tags.lines.length).toBeGreaterThan(0);
+ await expect.poll(values).toContain('高');await toggle.uncheck();expect(await values()).not.toContain('高');expect(await values()).toContain('开盘量');
+ await page.reload();await expect(toggle).not.toBeChecked();await toggle.check();await expect.poll(values).toContain('高');
 });
