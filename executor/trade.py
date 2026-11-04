@@ -5,14 +5,17 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
-from .adb import Adb, Node, find_by_id, find_by_text, wait_until
+from .adb import Adb, AdbError, Node, find_by_id, find_by_text, wait_until
+from .runtime import budget, OperationInterrupted
 
 TRADE_ACTIVITY = "com.lphtsccft.zhangle.trading.normaltrade.HtscNormalTradeActivity"
 
 CODE_ID = "trade_editText"
+SEARCH_CODE_ID = "search_edit_text"
 FIELD_ID = "et_content"
 SUBMIT_ID = "tv_trade"
 MAX_VOLUME_ID = "tv_max_volume"
@@ -50,6 +53,17 @@ _SUCCESS_NEEDLES = ("已提交", "委托成功", "委托提交成功", "已受�
 
 class TradeError(RuntimeError):
     """Raised when the trade form is not in the expected state."""
+
+
+class TradePreparationError(TradeError):
+    """A pre-submit failure with an allowlisted, credential-free page trace."""
+    def __init__(self, message, diagnostics):
+        super().__init__(message)
+        self.diagnostics = diagnostics
+
+
+class _InputNotReady(TradeError):
+    pass
 
 
 @dataclass(frozen=True)
@@ -203,8 +217,9 @@ def read_form(nodes: list[Node]) -> TradeForm:
             side = key
             break
 
-    code_text = code_node.text.strip() if code_node else ""
-    code = code_text.split(" ", 1)[0] if code_text[:1].isdigit() else ""
+    code_text = _norm(code_node.text).strip() if code_node else ""
+    match = re.fullmatch(r"([0-9]{6})(?:\s*[^0-9].*)?", code_text)
+    code = match.group(1) if match else ""
     return TradeForm(
         side=side,
         code=code,
@@ -219,6 +234,8 @@ def read_form(nodes: list[Node]) -> TradeForm:
 class TradePage:
     def __init__(self, adb: Adb | None = None):
         self.adb = adb or Adb()
+        self.preparation = []
+        self.preparation_started = time.monotonic()
 
     def snapshot(self) -> tuple[str, list[Node]]:
         focus = self.adb.current_focus()
@@ -294,44 +311,133 @@ class TradePage:
             self.adb.tap_node(back)
 
     # ----- form editing ----------------------------------------------------
-    def set_code(self, code: str, timeout: float = 15.0, nodes=None) -> list[Node]:
-        if not code.isdigit() or len(code) != 6:
+    def _record_preparation(self, stage, attempt, focus, nodes, issue=""):
+        form = read_form([n for n in nodes if not n.password])
+        editor = next((n for n in nodes if n.focused and "EditText" in n.class_name), None)
+        numeric = lambda value: value if re.fullmatch(r"[0-9.,]{1,20}", value or "") else ""
+        activity=re.search(r"([A-Za-z_][\w.]+/[A-Za-z_][\w.$]+)",focus)
+        self.preparation.append(dict(stage=stage,attempt=attempt,side=form.side,code=form.code,
+            elapsed_ms=max(0,round((time.monotonic()-self.preparation_started)*1000)),
+            price=numeric(form.price),quantity=numeric(form.quantity),max_volume=numeric(form.max_volume),
+            activity=activity.group(1) if activity else "",
+            search_open=find_by_id(nodes, SEARCH_CODE_ID) is not None,
+            focused_id=editor.resource_id.rsplit('/',1)[-1] if editor else "",
+            editor_value=numeric(editor.text) if editor and not editor.password and editor.resource_id.rsplit('/',1)[-1] in (SEARCH_CODE_ID,CODE_ID,FIELD_ID) else "",
+            issue=issue))
+        self.preparation = self.preparation[-24:]
+
+    def _preparation_guard(self, focus, nodes, side, code=None):
+        form = read_form(nodes)
+        if (side not in _SIDE_LABEL or TRADE_ACTIVITY not in focus or form.side != side
+                or find_by_id(nodes, CODE_ID) is None or len(_fields(nodes)) != 2
+                or find_by_id(nodes, DIALOG_MESSAGE_ID) is not None
+                or any(n.password for n in nodes)):
+            raise TradeError("预填时交易页面或买卖方向发生变化，已停止")
+        if code is not None and form.code != code:
+            raise TradeError("预填时股票代码发生变化，已停止")
+
+    @staticmethod
+    def _empty_editor(node):
+        text = _norm(node.text).strip()
+        return not text or text.startswith("请输入") or text in ("买入价格","卖出价格","买入数量","卖出数量")
+
+    @staticmethod
+    def _quote_ready(nodes, side, code):
+        form = read_form(nodes)
+        try:
+            value = Decimal(form.price)
+            valid_price = value.is_finite() and value > 0
+        except InvalidOperation:
+            valid_price = False
+        return (form.code == code and form.side == side and valid_price
+                and form.max_label == ("可买" if side == "buy" else "可卖")
+                and re.fullmatch(r"[0-9]+", form.max_volume.replace(',','')) is not None)
+
+    def _prepare_input(self, kind, value, side, code, timeout, nodes=None):
+        """Recover edits only before the submit boundary, under one total deadline.
+
+        涨乐通点击表面代码框后，会弹出独立 search_edit_text；必须等该输入框
+        获得焦点才清空、输入。只重新编辑同一交易页，绝不重新点击委托按钮。
+        """
+        label = {"code":"股票代码","price":"委托价格","quantity":"委托数量"}[kind]
+        started = time.monotonic()
+        latest = [self.adb.current_focus(), nodes] if nodes is not None else list(self.snapshot())
+        attempt = 0
+        edited = False
+        def read(stage):
+            latest[:] = self.snapshot()
+            self._record_preparation(stage,attempt,*latest)
+            self._preparation_guard(*latest,side,None if kind == "code" else code)
+            return latest[1]
+        def target(ns):
+            if kind == "code":
+                return find_by_id(ns, SEARCH_CODE_ID) or find_by_id(ns, CODE_ID)
+            fields = _fields(ns)
+            return fields[0 if kind == "price" else 1] if len(fields) == 2 else None
+        def matches(ns):
+            form = read_form(ns)
+            if kind == "code":return self._quote_ready(ns,side,code) and find_by_id(ns,SEARCH_CODE_ID) is None
+            current = form.price if kind == "price" else form.quantity
+            try:return Decimal(current) == Decimal(value) if kind == "price" else current == value
+            except InvalidOperation:return False
+        try:
+            with budget(timeout):
+                for attempt in (1,2):
+                    try:
+                        if attempt > 1:read(kind+"_recover")
+                        self._preparation_guard(*latest,side,None if kind == "code" else code)
+                        if matches(latest[1]):
+                            self._record_preparation(kind+"_ready",attempt,*latest)
+                            return latest[1], edited
+                        field = target(latest[1])
+                        if field is None or not field.enabled or field.password or "EditText" not in field.class_name:
+                            raise TradeError("交易页缺少可编辑的"+label)
+                        self.adb.tap_node(field)
+                        edited = True
+                        def focused():
+                            ns=read(kind+"_focus");editor=target(ns)
+                            return ns if editor is not None and editor.focused and editor.enabled and not editor.password else None
+                        focused_nodes=wait_until(focused,timeout=5,interval=.25)
+                        if not focused_nodes:raise _InputNotReady(label+"输入框未就绪")
+                        editor=target(focused_nodes)
+                        if not self._empty_editor(editor):
+                            self.adb.clear_text(min(64,len(editor.text)+8))
+                            cleared=read(kind+"_clear");editor=target(cleared)
+                            if editor is None or not editor.focused or not self._empty_editor(editor):
+                                raise _InputNotReady(label+"没有清空，未追加输入")
+                        self.adb.input_text(value)
+                        def entered():
+                            ns=read(kind+"_readback")
+                            return ns if matches(ns) else None
+                        ready=wait_until(entered,timeout=6,interval=.3)
+                        if ready:return ready, True
+                        raise _InputNotReady(label+"输入或行情加载未完成")
+                    except (_InputNotReady,AdbError,TimeoutError) as exc:
+                        self._record_preparation(kind+"_retry",attempt,*latest,issue=type(exc).__name__)
+                        if attempt == 2 or time.monotonic()-started >= timeout-2:raise
+        except OperationInterrupted:
+            raise
+        except (TradeError,AdbError,TimeoutError) as exc:
+            self._record_preparation(kind+"_failed",attempt,*latest,issue=type(exc).__name__)
+            reason=str(exc) if isinstance(exc,TradeError) else "设备读取超时或连接中断"
+            raise TradePreparationError(label+"预填失败："+reason,
+                dict(stage=kind,attempts=attempt,elapsed_ms=round((time.monotonic()-started)*1000),steps=list(self.preparation))) from None
+
+    def set_code(self, code: str, timeout: float = 24.0, nodes=None) -> list[Node]:
+        if not re.fullmatch(r"[0-9]{6}", code):
             raise ValueError("股票代码必须是 6 位数字")
         if nodes is None:
             _, nodes = self.snapshot()
-        field = find_by_id(nodes, CODE_ID)
-        if field is None:
-            raise TradeError("找不到股票代码输入框")
-        if read_form(nodes).code == code:
-            return nodes
-
-        self.adb.tap_node(field)
-        self.adb.clear_text(len(field.text) + 8)
-        self.adb.input_text(code)
-
-        def loaded():
-            _, current = self.snapshot()
-            form = read_form(current)
-            return current if form.code == code and bool(form.submit_text) else None
-
-        result = wait_until(loaded, timeout=timeout, interval=0.8)
-        if not result:
-            raise TradeError(f"输入代码 {code} 后行情没有加载")
-        return result
+        side=read_form(nodes).side
+        return self._prepare_input("code",code,side,code,timeout,nodes)[0]
 
     def _fill(self, index: int, value: str, nodes=None) -> bool:
         if nodes is None:
             _, nodes = self.snapshot()
-        fields = _fields(nodes)
-        if len(fields) <= index:
-            raise TradeError("交易表单缺少价格或数量输入框")
-        node = fields[index]
-        if node.text == value:
-            return False
-        self.adb.tap_node(node)
-        self.adb.clear_text(len(node.text) + 8)
-        self.adb.input_text(value)
-        return True
+        form=read_form(nodes)
+        if index not in (0,1) or not form.code or form.side not in _SIDE_LABEL:
+            raise TradeError("交易表单缺少代码、价格或数量输入框")
+        return self._prepare_input("price" if index == 0 else "quantity",value,form.side,form.code,18,nodes)[1]
 
     def set_price(self, price: str) -> None:
         self._fill(0, price)
@@ -358,6 +464,8 @@ class TradePage:
 
         Nothing is submitted: the caller gets the parsed form for review.
         """
+        self.preparation=[]
+        self.preparation_started=time.monotonic()
         _, nodes = self.open(side=side)
         nodes = self.switch(side, nodes=nodes)
         nodes = self.set_code(code, nodes=nodes)
@@ -473,7 +581,7 @@ class TradePage:
 
         if dry_run:
             self._cancel_dialog()
-            return {"submitted": False, "status": "preview", "confirm": confirm.as_dict()}
+            return {"submitted": False, "status": "preview", "confirm": confirm.as_dict(),"preparation":list(self.preparation)}
 
         # 确认内容和按钮取自同一份新快照，不能校验一份弹窗后盲点下一份。
         _, final_nodes = self.snapshot()
@@ -501,6 +609,7 @@ class TradePage:
             "status": status,
             "confirm": confirm.as_dict(),
             "result": result.as_dict() if result else None,
+            "preparation": list(self.preparation),
         }
 
     def _cancel_dialog(self) -> None:

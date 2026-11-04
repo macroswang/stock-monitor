@@ -51,6 +51,10 @@ class NodeParsingTests(unittest.TestCase):
         self.assertTrue(tab.selected)
         self.assertEqual(find_selected(nodes, ("今日委托",)).text, "今日委托")
 
+    def test_focused_flag_distinguishes_popup_editor_from_the_surface_field(self):
+        nodes=parse_nodes(self.XML.replace('selected="true"','selected="true" focused="true"',1))
+        self.assertTrue(nodes[0].focused);self.assertFalse(nodes[1].focused)
+
 
 if __name__ == "__main__":
     unittest.main()

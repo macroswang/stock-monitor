@@ -81,6 +81,23 @@ class ExecutionJournalTests(unittest.TestCase):
         self.assertEqual(self.submit()["status"], "failed")
         self.client.submit_order.assert_not_called()
 
+    def test_preparation_evidence_is_journaled_without_replaying_the_request(self):
+        from executor.trade import TradePreparationError
+        evidence=dict(stage='code',attempts=2,steps=[dict(stage='code_readback',code='',editor_value='00098')])
+        self.client.submit_order.side_effect=TradePreparationError('股票代码预填失败',evidence)
+        result=self.submit();self.assertEqual(result['status'],'failed');self.assertFalse(result['submitted'])
+        self.assertEqual(result['preparation'],evidence);self.assertEqual(self.submit(),result)
+        self.client.submit_order.assert_called_once()
+
+    def test_preparation_recovery_never_replays_any_post_submit_failure(self):
+        from executor.trade import TradePreparationError
+        def crossed(**kwargs):
+            kwargs['before_confirm']()
+            raise TradePreparationError('模拟提交边界后的异常',dict(stage='code',attempts=1,steps=[]))
+        self.client.submit_order.side_effect=crossed
+        result=self.submit();self.assertEqual(result['status'],'unknown');self.assertEqual(self.submit(),result)
+        self.client.submit_order.assert_called_once()
+
     def test_manual_resolution_requires_evidence(self):
         self.client.submit_order.return_value = {"status": "unknown", "submitted": False}
         self.submit()

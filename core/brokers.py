@@ -429,6 +429,8 @@ def submit_order(
     except Exception as exc:
         result = {"submitted": False, "status": "unknown" if dispatched else "failed",
                   "message": "未收到明确回执；本请求不自动重发" if dispatched else str(exc)}
+        from executor.trade import TradePreparationError
+        if isinstance(exc, TradePreparationError):result['preparation']=exc.diagnostics
     result["request_id"] = request_id
     store.execute("UPDATE broker_requests SET status=?,result=?,updated_at=? WHERE request_id=?",
                   (result["status"], json.dumps(result, ensure_ascii=False), now_cn().isoformat(), request_id))

@@ -75,6 +75,7 @@ class Node:
     checked: bool
     selected: bool = False
     description: str = ""
+    focused: bool = False
 
     @property
     def center(self) -> tuple[int, int]:
@@ -106,6 +107,7 @@ def parse_nodes(xml: str) -> list[Node]:
                 checked=_bool(attrs.get("checked")),
                 selected=_bool(attrs.get("selected")),
                 description=attrs.get("content-desc", ""),
+                focused=_bool(attrs.get("focused")),
             )
         )
     return nodes
