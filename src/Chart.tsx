@@ -1,5 +1,5 @@
 import InfoNote from './InfoNote';
-import {autoTradeMarks,autoTradeRecords,autoTradeDetails,autoTradeState,type AutoTradeChart} from './autoTradeMarks';
+import {autoTradeMarks,autoTradeDetails,type AutoTradeChart} from './autoTradeMarks';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import * as echarts from 'echarts';
 import type {Bar,Daily,Event,IndexMinute,VolumeFlow} from './models';
@@ -25,6 +25,15 @@ import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
 import {benchmarkForStock,minuteMacd,minuteSlots,macdBound,macdNumber} from './minuteMacd';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
+// Keep reference panes readable; give additional window height to the price chart.
+function minutePanelLayout(height:number){
+ const basis=Math.min(height,560),volume=Math.max(24,Math.round(basis*.06)),macd=Math.max(35,Math.round(basis*.10)),indexVolume=Math.max(18,Math.round(basis*.045));
+ const price=height-22-4*22-volume-2*macd-indexVolume-32;
+ const heights=[price,volume,macd,indexVolume,macd],grids:{top:number;height:number}[]=[],headers:number[]=[];
+ let top=22;
+ for(const [i,h] of heights.entries()){grids.push({top,height:h});top+=h;if(i<4){headers.push(top+6);top+=22;}}
+ return {grids,headers};
+}
 const tradeLabelOffsets=new Map<string,[number,number]>();
 // Font-box centering leaves small capital letters slightly high. Measure the
 // visible glyph once per letter, using the exact font painted by the chart.
@@ -72,6 +81,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
  const showQuality=true;
  const [plotHeight,setPlotHeight]=useState(0);
+ const minutePanels=minutePanelLayout(plotHeight||350);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
  const [showDailyPatterns,setShowDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
  const dayPatterns=useMemo(()=>view==='daily'?selectDailyPatterns(dailyPatterns(daily)):[],[daily,view]);
@@ -118,7 +128,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const fit=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
    if(!node.getClientRects().length)return;
    const top=node.getBoundingClientRect().top+window.scrollY;
-   const height=Math.round(Math.max(350,Math.min(560,document.documentElement.clientHeight-top-22)));
+   const height=Math.round(Math.max(350,document.documentElement.clientHeight-top-22));
    const value=height+'px';if(node.style.getPropertyValue('--minute-chart-height')!==value)node.style.setProperty('--minute-chart-height',value);
   });};
   const observer=new ResizeObserver(fit),shell=node.parentElement;
@@ -222,7 +232,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const timeTick=(_index:number,label:string)=>{const [h,m]=label.split(':').map(Number);return label===labels[0]||label===labels.at(-1)||(h*60+m)%gridStep===0;};
   const timeGrid=isDay?{}:{axisTick:{interval:timeTick},splitLine:{show:true,interval:timeTick,lineStyle:{color:'#69343f',opacity:.65,width:1}}};
   const axisLow=showPercent?Number(priceScale.min):Math.min(...priceValues),axisHigh=showPercent?Number(priceScale.max):Math.max(...priceValues);
-  const priceHeight=chart.getHeight()*(hasMacd?.30:.55);
+  const priceHeight=hasMacd?minutePanels.grids[0].height:chart.getHeight()*.55;
   const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
    const room=(direction>0?value-axisLow:axisHigh-value)/Math.max(.000001,axisHigh-axisLow)*priceHeight;
    const flipped=room<41,dir=flipped?-direction:direction;
@@ -282,10 +292,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
      }
      if(comparison.childElementCount)root.append(comparison);
      refreshTrade.current=null;if(!isDay&&chosen&&aligned[idx])refreshTrade.current=appendTradeTooltip(root,chosen.price,+aligned[idx].close,()=>costsRef.current,aligned[idx].time<chosen.time,aligned[idx].time===chosen.time);return root;}
-   },axisPointer:{link:[{xAxisIndex:'all'}]},grid:[
-    {left:65,right:showPercent?72:35,top:hasMacd?22:30,height:hasMacd?'30%':'55%'},
-    {left:65,right:showPercent?72:35,top:hasMacd?'42%':'72%',height:hasMacd?'6%':'17%'},
-    ...(hasMacd?[{left:65,right:showPercent?72:35,top:'54%',height:'10%'},{left:65,right:showPercent?72:35,top:'70%',height:'4.5%'},{left:65,right:showPercent?72:35,top:'80.5%',height:'10%'}]:[])],
+   },axisPointer:{link:[{xAxisIndex:'all'}]},grid:(hasMacd?minutePanels.grids:[{top:30,height:'55%'},{top:'72%',height:'17%'}]).map(grid=>({left:65,right:showPercent?72:35,...grid})),
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,...timeGrid,axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}},axisPointer:{label:{show:!hasMacd}},axisLabel:{show:!hasMacd,hideOverlap:true,...(!isDay?{interval:timeTick,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t}:{})}},{type:'category',gridIndex:1,data:labels,boundaryGap:isDay,...timeGrid,axisLabel:{show:false},axisPointer:{label:{show:false}},axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}}},...(hasMacd?[2,3,4].map(gridIndex=>({type:'category',gridIndex,data:labels,boundaryGap:false,...timeGrid,axisLabel:{show:gridIndex===4,hideOverlap:true,interval:timeTick,fontSize:10,margin:5,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t},axisPointer:{label:{show:gridIndex===4}},axisLine:{lineStyle:{color:'#3b485b'}}})):[])],
    yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,splitNumber:hasMacd?1:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:{rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}}}}]:[]),...(hasMacd?[
     {type:'value',gridIndex:2,min:-macdBound(stockMacd),max:macdBound(stockMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}},
@@ -342,13 +349,13 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   <label className="opening-volume-toggle"><input aria-label="底/顶" type="checkbox" checked={showShapes} onChange={e=>{setShowShapes(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-shapes-v1',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>底/顶</label>
 
  </div>}/>}{tradeHint?.scope===scope&&<div className="chart-trade-hint" role="status">{tradeHint.text}</div>}<div className="chart-shell"><div className={'chart'+(compact?' compact-chart':'')+(hasMacd?' macd-chart':'')} ref={ref} onContextMenu={contextTrade} tabIndex={isCandleView(view)?0:undefined} onClick={()=>{if(isCandleView(view))ref.current?.focus();}} onKeyDown={e=>{if(isCandleView(view)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(isCandleView(view)&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();zoomCandles(e.key==='ArrowUp'?-1:1);}else if(isCandleView(view)&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedCandle||selectedDay);}} aria-label={view==='weekly'?'周K线及成交量':view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>
- <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?'37%':'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>
+ <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?minutePanels.headers[0]:'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>
  {hasMacd&&<>
- <div className="volume-panel-header" data-volume-grid="3" style={{top:'65%'}} ref={el=>{volumeHeaders.current[1]=el;}}><span>{macdIndex!.name}成交量（手） · 总量</span><span className="volume-value"/><time/></div>
- {[stockName||'个股',macdIndex!.name].map((label,i)=><div key={i} className={'macd-panel-header'+(compact?' compact':'')} style={{top:i?'75.5%':'49%'}} ref={el=>{macdHeaders.current[i]=el;}} role="group" aria-label={i?'指数MACD':'个股MACD'}>
+ <div className="volume-panel-header" data-volume-grid="3" style={{top:minutePanels.headers[2]}} ref={el=>{volumeHeaders.current[1]=el;}}><span>{macdIndex!.name}成交量（手） · 总量</span><span className="volume-value"/><time/></div>
+ {[stockName||'个股',macdIndex!.name].map((label,i)=><div key={i} className={'macd-panel-header'+(compact?' compact':'')} style={{top:minutePanels.headers[i?3:1]}} ref={el=>{macdHeaders.current[i]=el;}} role="group" aria-label={i?'指数MACD':'个股MACD'}>
   <div className="macd-panel-heading"><strong>{label} MACD(12,26,9)</strong><span>1分钟</span><time data-macd="time"/></div>
   <div className="macd-panel-values"><span data-macd="histogram">MACD —</span><span className="macd-dif" data-macd="dif">DIF —</span><span className="macd-dea" data-macd="dea">DEA —</span></div>
  </div>)}
- {!macdDataReady&&<div className="macd-unavailable">该日{macdIndex!.name}暂无可用分钟数据</div>}
- </>}</div>{!isCandleView(view)&&autoTrading&&!!autoTrading.accounts.length&&<InfoNote label="自动委托详情"><div className="auto-trade-records">{autoTradeRecords(autoTrading,turningShapes(minute),selectedDay||'').map(m=><div key={m.point.id}><strong>{m.time} · {m.point.side==='buy'?'买':'卖'} · {m.point.account_masked} · {autoTradeState(m.point)}</strong>{autoTradeDetails(m.point).slice(1).map((line,i)=><span key={i}>{line}</span>)}</div>)}</div></InfoNote>}{hasMacd&&<InfoNote label="MACD计算口径">当日1分钟收盘价，EMA(12,26,9)，柱值＝2×(DIF−DEA)；两图独立刻度，比较走势。首个观测值初始化，午休连续，缺失分钟不补值并重新起算；实时未结束分钟会随行情变化。</InfoNote>}{isCandleView(view)&&<InfoNote label="图表操作">{Math.min(daily.length,candleSizes[view])}根{view==='weekly'?'周':'日'}K视窗 · ↑ 放大 / ↓ 缩小 · ← / → 移动 · 拖动浏览，边界按需加载</InfoNote>}</>;
+ {!macdDataReady&&<div className="macd-unavailable" style={{top:minutePanels.grids[4].top+minutePanels.grids[4].height/2}}>该日{macdIndex!.name}暂无可用分钟数据</div>}
+ </>}</div>{isCandleView(view)&&<InfoNote label="图表操作">{Math.min(daily.length,candleSizes[view])}根{view==='weekly'?'周':'日'}K视窗 · ↑ 放大 / ↓ 缩小 · ← / → 移动 · 拖动浏览，边界按需加载</InfoNote>}</>;
 }

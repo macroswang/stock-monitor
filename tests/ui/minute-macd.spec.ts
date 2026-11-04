@@ -79,6 +79,27 @@ test('comparison is always on despite an old hidden preference, including the li
  await expect(page.getByRole('checkbox',{name:'显示MACD对照',exact:true})).toHaveCount(0);
 });
 
+test('daily and weekly linked minutes collapse without affecting K candles and remember the choice',async({page})=>{
+ await setup(page);
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const linked=page.getByRole('region',{name:'K线关联分时'}),minute=linked.getByLabel('分时价格及分钟成交量',{exact:true});
+ await expect(minute).toBeVisible();
+ const dailyCount=await page.getByLabel('日K线及成交量',{exact:true}).locator('canvas').count();
+ await linked.getByRole('button',{name:'收起当日分时',exact:true}).click();
+ await expect(minute).toHaveCount(0);await expect(linked.getByRole('button',{name:'展开当日分时',exact:true})).toHaveAttribute('aria-expanded','false');
+ await expect(page.getByLabel('日K线及成交量',{exact:true}).locator('canvas')).toHaveCount(dailyCount);
+ await page.getByRole('button',{name:'周K',exact:true}).click();
+ await expect(page.getByLabel('周K线及成交量',{exact:true})).toBeVisible();await expect(minute).toHaveCount(0);
+ await page.reload();await page.getByRole('button',{name:'周K',exact:true}).click();
+ await expect(minute).toHaveCount(0);await linked.getByRole('button',{name:'展开当日分时',exact:true}).click();
+ await expect(minute).toBeVisible();await expect.poll(async()=> (await option(page)).grids).toBe(5);
+ await expect(linked.getByRole('group',{name:'指数MACD',exact:true})).toContainText('上证指数');
+ await page.getByRole('button',{name:'日K',exact:true}).click();await expect(minute).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:'日K',exact:true}).click();await expect(minute).toBeVisible();
+ await linked.getByRole('button',{name:'收起当日分时',exact:true}).click();await page.getByRole('button',{name:'分时',exact:true}).click();
+ await expect(page.getByLabel('分时价格及分钟成交量',{exact:true})).toBeVisible();expect((await option(page)).grids).toBe(5);
+});
+
 test('MACD panels are passive references and zoom shares all five time axes',async({page})=>{
  await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});await chart.scrollIntoViewIfNeeded();
@@ -106,10 +127,10 @@ test('comparison panes fit common desktop windows and reflow after the market ov
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
  await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
- const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),pairs:[...[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({h,grid:i?4:2})),...[...el.parentElement!.querySelectorAll('[data-volume-grid]')].map(h=>({h,grid:Number((h as HTMLElement).dataset.volumeGrid)}))].map(({h,grid})=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',grid).coordinateSystem.getRect().y}))};});
- for(const [width,height] of [[1380,900],[1280,800],[1100,768],[1000,680]]){
+ const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),price:c.getModel().getComponent('grid',0).coordinateSystem.getRect().height,pairs:[...[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({h,grid:i?4:2})),...[...el.parentElement!.querySelectorAll('[data-volume-grid]')].map(h=>({h,grid:Number((h as HTMLElement).dataset.volumeGrid)}))].map(({h,grid})=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',grid).coordinateSystem.getRect().y}))};});
+ for(const [width,height] of [[1380,1200],[1380,900],[1280,800],[1100,768],[1000,680]]){
   await page.setViewportSize({width,height});
-  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeLessThanOrEqual(height-10);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);}).toPass();
+  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeCloseTo(height-22,0);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);if(height===1200){expect(box.height).toBeGreaterThan(700);expect(d.price).toBeGreaterThan(380);}}).toPass();
   for(const name of ['个股MACD','指数MACD']){
    const header=page.getByRole('group',{name,exact:true});await expect(header).toBeInViewport({ratio:1});
    expect(await header.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);

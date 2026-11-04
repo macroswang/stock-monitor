@@ -181,7 +181,7 @@
 
 /* Shared timeline keeps the price, volume and both MACD panes in one comparison stack. */
 .chart-shell{position:relative;min-width:0}
-.chart.macd-chart{height:var(--minute-chart-height,clamp(350px,calc(100dvh - 280px),560px))}
+.chart.macd-chart{height:var(--minute-chart-height,max(350px,calc(100dvh - 280px)))}
 .chart.compact-chart.macd-chart{height:420px}
 .macd-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;pointer-events:none;font-size:10px;line-height:14px;color:#aabbd3;white-space:nowrap;font-variant-numeric:tabular-nums}
 .macd-panel-heading{display:contents}.macd-panel-heading strong{color:#d6e2f3;font-size:10px;font-weight:600}.macd-panel-heading>span{display:none}.macd-panel-heading time{order:3;margin-left:auto;color:#9cafc8}
@@ -196,6 +196,13 @@
 @media(max-height:720px){.chart.compact-chart.macd-chart{height:360px}}
 
 .detail-top>div:first-child{min-width:0;flex:1}
+.linked-minute h3{margin:0}
+.linked-minute-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:10px 20px;border:0;border-radius:0;background:transparent;text-align:left;color:#c7d8ef;font-size:12px}
+.linked-minute-toggle:hover{background:#17283e}
+.linked-minute-toggle:focus-visible{outline:2px solid #76aaff;outline-offset:-3px}
+.linked-minute-toggle svg{flex:none;transition:transform .15s}
+.linked-minute-toggle[aria-expanded=false] svg{transform:rotate(-90deg)}
+.linked-minute-state{margin-left:auto;color:#8ca7cb;font-size:11px;white-space:nowrap}
 
 .volume-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;line-height:14px;font-size:10px;color:#9dacc5;pointer-events:none;white-space:nowrap}.volume-panel-header time{margin-left:auto;font-variant-numeric:tabular-nums}.volume-panel-header .volume-value{color:#c5d4e9;font-variant-numeric:tabular-nums}
 

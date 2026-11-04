@@ -170,9 +170,10 @@ test('daily keyboard navigation and double click open selected intraday without 
  await chart.press('ArrowLeft');await expect(page.locator('.linked-minute h3')).toContainText('2026-10-15');
  await expect(chart.locator('.quote-tooltip')).toContainText('开盘：');
  await chart.press('ArrowRight');await expect(page.locator('.linked-minute h3')).toContainText('2026-10-16');
- const box=(await chart.boundingBox())!;
- // Last visible daily volume bar, which shares the candle's trading date.
- await page.mouse.dblclick(box.x+box.width-40,box.y+box.height*.86);
+ await chart.scrollIntoViewIfNeeded();
+ // Target the actual last volume bar rather than a fixed point near the edge.
+ const point=await chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();return c.convertToPixel({xAxisIndex:1,yAxisIndex:1},[o.xAxis[1].data.at(-1),o.series[1].data.at(-1).value/2]);});
+ const box=(await chart.boundingBox())!;await page.mouse.dblclick(box.x+point[0],box.y+point[1]);
  await expect(page.getByRole('button',{name:'分时',exact:true})).toHaveClass('chosen');
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  await expect(page.locator('.day-signals')).toHaveCount(0);
@@ -1017,8 +1018,8 @@ test('real automatic order annotations keep account, limit, fill and unknown sta
  const labels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托').data.map((d:any)=>({id:d.autoTrade.id,label:d.label.formatter}));});
  expect(labels).toEqual([{id:'accepted-a',label:'B'},{id:'filled-a',label:'S'}]);
  await page.mouse.move(5,5);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await expect(chart.locator('.auto-trade-tooltip')).toBeHidden();await page.locator('.chart-shell').screenshot({path:'outputs/auto-order-markers.png'});
- await page.locator('.info-note summary').filter({hasText:'自动委托详情'}).click();
- for(const text of ['历史跳过原因未保存','222***002','未收到明确回执','账户可用资金不足'])await expect(page.locator('.auto-trade-records')).toContainText(text);
+ for(const text of ['自动委托详情','MACD计算口径','数据来源：','提醒规则'])await expect(page.locator('.detail .info-note summary').filter({hasText:text})).toHaveCount(0);
+ await expect(page.locator('.auto-trade-records')).toHaveCount(0);
 });
 
 test('historical native success receipts draw B without upgrading unknown settlement records',async({page})=>{
