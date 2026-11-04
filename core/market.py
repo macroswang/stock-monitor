@@ -3,6 +3,7 @@ import json,threading,concurrent.futures
 from decimal import Decimal,InvalidOperation
 from datetime import datetime
 from .provider import get,now_cn,CN
+from .index_volume import normalize_index_minute
 
 CODES=('sh000001','sz399001','sz399006')
 NAMES={'sh000001':'上证指数','sz399001':'深证成指','sz399006':'创业板指'}
@@ -88,7 +89,7 @@ class Market:
   quote=quotes[-1]['data'] if quotes else None
   if day is None:day=quote['timestamp'][:10] if quote else None
   rows=self.app.store.getcache(code,'market_minute',day) if day else []
-  minute=dict(rows[0]['data'],code=code,name=NAMES[code]) if rows else None
+  minute=dict(normalize_index_minute(rows[0]['data'],code),name=NAMES[code]) if rows else None
   return dict(quotes=[quote] if quote else [],minute=minute,error=self.index_errors.get(code,''))
  def view(self,day):
   items=[]
@@ -96,4 +97,4 @@ class Market:
    rows=self.app.store.getcache(code,'market_quote')
    if rows:items.append(rows[-1]['data'])
   rows=self.app.store.getcache('sh000001','market_minute',day) if day else []
-  return dict(quotes=items,minute=rows[0]['data'] if rows else None,error=self.error)
+  return dict(quotes=items,minute=normalize_index_minute(rows[0]['data'],'sh000001') if rows else None,error=self.error)

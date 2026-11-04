@@ -205,5 +205,7 @@
 .linked-minute-state{margin-left:auto;color:#8ca7cb;font-size:11px;white-space:nowrap}
 
 .volume-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;line-height:14px;font-size:10px;color:#9dacc5;pointer-events:none;white-space:nowrap}.volume-panel-header time{margin-left:auto;font-variant-numeric:tabular-nums}.volume-panel-header .volume-value{color:#c5d4e9;font-variant-numeric:tabular-nums}
+.index-volume-legend{display:inline-flex;gap:7px;font-size:9px}.index-volume-legend>span{display:inline-flex;align-items:center;gap:3px}.index-volume-legend i{width:7px;height:7px;border:1px solid #526178;border-radius:1px}
+@media(max-width:1150px){.index-volume-legend{gap:4px}.volume-panel-header:has(.index-volume-legend){gap:5px;font-size:9px}}
 
 .auto-trade-tooltip{max-width:350px;font-size:11px;line-height:1.7;white-space:normal}.auto-trade-tooltip>div:first-child{font-weight:600;color:#dbe8fb;margin-bottom:4px}.auto-trade-records{display:grid;gap:8px;max-height:240px;overflow:auto}.auto-trade-records>div{padding:5px 0;border-bottom:1px solid #2d3d55}.auto-trade-records strong,.auto-trade-records span{display:block;font-size:11px;line-height:1.7}.auto-trade-records span{color:#9db1cc}
