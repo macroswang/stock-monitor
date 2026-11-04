@@ -13,7 +13,8 @@ def legacy_receipt_id(row, payload, ack):
     try:
         expected, day = request_plan(dict(payload=row['request_payload'], account_id=row['account_id'], created_at=row['request_at']))
         plan = payload.get('plan', {})
-        confirm = ack.get('confirm', {})
+        confirm = ack.get('confirm') or {}
+        if not isinstance(confirm,dict):return ''
         if (day != row['day'] or expected['code'] != row['code'][2:] or expected['side'] != row['side'] or
             plan.get('account_id') != row['account_id'] or plan.get('code') != row['code'] or plan.get('side') != row['side'] or
             shares(plan.get('quantity')) != expected['quantity'] or amount(plan.get('price')) != amount(expected['price']) or
@@ -21,7 +22,8 @@ def legacy_receipt_id(row, payload, ack):
             confirm.get('code') != expected['code'] or shares(confirm.get('quantity')) != expected['quantity'] or
             amount(confirm.get('price')) != amount(expected['price'])):
             return ''
-        receipt = ack.get('result', {})
+        receipt = ack.get('result') or {}
+        if not isinstance(receipt,dict):return ''
         if receipt.get('kind') not in ('unknown', 'success') or not isinstance(receipt.get('message'), str):return ''
         parsed = parse_result_message(receipt.get('message', ''), receipt.get('title', ''))
         ident = parsed.as_dict().get('order_id', '') if parsed and parsed.kind == 'success' else ''
@@ -51,6 +53,8 @@ def chart(store,code,day):
         try:order_id=known_id(ack)
         except ValueError:order_id=''
         receipt_id=legacy_receipt_id(r,p,ack)
+        receipt=ack.get('result')
+        if not isinstance(receipt,dict):receipt={}
         # Only the broker-validated execution average is an actual fill price.
         fill_price=v.get('average') if v.get('origin')=='broker_auto' and v.get('status') in ('partial','filled','cancelled') and v.get('filled',0)>0 else None
         sent=p.get('price_checks',{}).get('before_submit',{}).get('checked_at') or r['request_at']
@@ -59,5 +63,5 @@ def chart(store,code,day):
             signal_key=signal.get('key'),signal_time=signal.get('time'),reference_price=p.get('reference_price',signal.get('price')),
             created_at=r['created_at'],ordered_at=sent,order_price=plan.get('price'),quantity=plan.get('quantity'),order_id=order_id or receipt_id,
             filled=v.get('filled'),fill_price=fill_price,message=p.get('message',''),reconciliation=p.get('reconciliation'),
-            attempted=bool(r['request_at']),receipt_accepted=bool(receipt_id),receipt_message=ack.get('result',{}).get('message',''),admission=p.get('admission')))
+            attempted=bool(r['request_at']),receipt_accepted=bool(receipt_id),receipt_message=receipt.get('message',''),admission=p.get('admission')))
     return dict(code=code,day=day,accounts=accounts,points=points)

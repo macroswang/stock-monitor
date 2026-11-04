@@ -32,12 +32,19 @@ def shares(value):
 
 
 def known_id(result):
-    ids = {str(x) for x in (result.get('order_id'), result.get('result', {}).get('order_id'),
-                           result.get('verification', {}).get('order_id'), result.get('order_binding', {}).get('order_id')) if x}
+    if not isinstance(result, dict):raise ValueError('委托回执格式无效')
+    nested=[]
+    for key in ('result','verification','order_binding'):
+        value=result.get(key)
+        if value is None:value={}
+        if not isinstance(value,dict):raise ValueError('委托回执格式无效')
+        nested.append(value)
+    receipt,verification,binding=nested
+    ids = {str(x) for x in (result.get('order_id'), receipt.get('order_id'),
+                           verification.get('order_id'), binding.get('order_id')) if x}
     # Recover explicit native receipt numbers from older clients. A lookup ID
     # proves no fill by itself; the report still must match the full request.
     from executor.trade import parse_result_message
-    receipt=result.get('result',{})
     if isinstance(receipt.get('message'),str):
         parsed=parse_result_message(receipt['message'])
         if parsed and parsed.kind=='success':

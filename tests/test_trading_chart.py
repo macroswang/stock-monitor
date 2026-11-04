@@ -49,6 +49,14 @@ class TradingChartTests(unittest.TestCase):
  def test_conflicting_receipt_ids_stay_unknown(self):
   self.seed(status='unknown');self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(order_id='1',result=dict(order_id='2'))),))
   point=chart(self.store,'sz000981','2026-11-03')['points'][0];self.assertEqual(point['order_id'],'');self.assertEqual(point['status'],'unknown')
+ def test_native_missing_result_keeps_chart_and_execution_records_readable(self):
+  self.seed(status='unknown')
+  for receipt in (None,[], 'invalid'):
+   with self.subTest(receipt=receipt):
+    self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(result=receipt)),))
+    point=chart(self.store,'sz000981','2026-11-03')['points'][0]
+    self.assertEqual(point['order_id'],'');self.assertEqual(point['receipt_message'],'');self.assertIsNone(point['fill_price'])
+    run=self.service.view()['runs'][0];self.assertEqual(run['status'],'unknown');self.assertFalse(run['receipt_accepted'])
  def test_legacy_native_success_is_displayed_without_rewriting_status_or_inferring_a_fill(self):
   self.legacy()
   before=self.store.query('SELECT * FROM trading_runs'),self.store.query('SELECT * FROM broker_requests')
