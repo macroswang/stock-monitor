@@ -75,16 +75,18 @@ class AutomationRecoveryTests(unittest.TestCase):
   a=json.loads(self.store.query("SELECT payload FROM trading_positions WHERE account_id='a'")[0]['payload'])
   b=json.loads(self.store.query("SELECT payload FROM trading_positions WHERE account_id='b'")[0]['payload'])
   self.assertEqual(a['quantity'],200);self.assertEqual(b['quantity'],300)
- def test_known_pending_order_blocks_its_stock_but_unknown_blocks_entire_account(self):
-  from core.broker_reconciliation import known_id
-  self.arm();self.observe('one');run=self.store.query('SELECT * FROM trading_runs')[0]
-  self.store.execute("UPDATE trading_runs SET status='accepted' WHERE id=?",(run['id'],))
-  self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+run['id'],'a','{}','accepted',json.dumps(dict(order_id='native-unique')),self.now.isoformat(),self.now.isoformat()))
-  other=dict(run,id='other',code='sz000981')
-  self.service.check_open_orders(other)
-  with self.assertRaisesRegex(ValueError,'未完成'):self.service.check_open_orders(dict(other,code=run['code']))
-  self.store.execute("UPDATE trading_runs SET status='unknown' WHERE id=?",(run['id'],))
-  with self.assertRaisesRegex(ValueError,'未完成'):self.service.check_open_orders(other)
+ def test_existing_outcomes_never_block_an_independent_signal_and_sync_is_fresh(self):
+  self.service.configure(dict(mode='live',confirm_live=True));self.arm()
+  with patch('core.live_trading.brokers.holdings',return_value=self.snapshot) as holdings,patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+   self.observe('one');self.service.drain(reports=False)
+   original=self.store.query('SELECT * FROM trading_runs')[0]
+   for status in ['accepted','unknown','partial']:
+    self.store.execute('UPDATE trading_runs SET status=? WHERE id=?',(status,original['id']))
+    self.observe('independent-'+status);self.service.drain(reports=False)
+    self.assertEqual(self.store.query('SELECT status FROM trading_runs ORDER BY rowid DESC LIMIT 1')[0]['status'],'accepted')
+   self.observe('independent-unknown');self.service.drain(reports=False)
+   self.assertEqual(submit.call_count,4);self.assertEqual(holdings.call_count,4)
+   self.assertTrue(all(call.args[1]=='a' for call in submit.call_args_list))
  def test_fresh_quote_after_long_native_preparation_is_allowed_within_original_deadline(self):
   self.arm();self.observe('one');self.now+=timedelta(seconds=50)
   self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
@@ -96,11 +98,14 @@ class AutomationRecoveryTests(unittest.TestCase):
   with patch('core.live_trading.brokers.holdings') as holdings,patch('core.live_trading.brokers.submit_order') as submit:
    self.service.drain();holdings.assert_not_called();submit.assert_not_called()
   self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'skipped')
- def test_live_start_refuses_platform_without_report_reader(self):
+ def test_live_start_requires_order_support_but_not_a_report_reader(self):
   self.arm();self.service.configure(dict(mode='live',confirm_live=True))
-  with patch('core.live_trading.brokers.list_accounts',return_value=[dict(id='a',supports_order=True,supports_order_report=False)]),self.assertRaisesRegex(ValueError,'完整回报'):
+  with patch('core.live_trading.brokers.list_accounts',return_value=[dict(id='a',supports_order=True,supports_order_report=False)]),patch.object(self.service,'view',return_value={}):
    self.service.configure(dict(paused=False))
-  self.assertTrue(self.service.settings()['paused'])
+  self.assertFalse(self.service.settings()['paused'])
+  self.service.configure(dict(paused=True))
+  with patch('core.live_trading.brokers.list_accounts',return_value=[dict(id='a',supports_order=False,supports_order_report=False)]),self.assertRaisesRegex(ValueError,'本机下单'):
+   self.service.configure(dict(paused=False))
  def test_restart_closes_proven_unsubmitted_preparation_without_replaying_it(self):
   from core.live_trading import LiveTrading
   self.arm();self.observe('one');run=self.store.query('SELECT * FROM trading_runs')[0]

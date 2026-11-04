@@ -87,6 +87,19 @@ class ReconciliationTests(unittest.TestCase):
         self.store.execute("UPDATE broker_requests SET result='{}' WHERE request_id='auto_one'")
         self.assertFalse(self.reconcile()['ok']);self.reader.assert_not_called()
 
+    def test_native_success_number_is_recovered_without_assuming_a_fill(self):
+        original=dict(status='unknown',submitted=False,result=dict(kind='unknown',message='委托提交成功,合同号:142783'))
+        self.assertEqual(known_id(original),'142783');self.assertEqual(original['status'],'unknown')
+        for text in ['合同号:142783','委托提交成功,合同号:142783，失败','委托提交成功,合同号:142783，网络超时']:
+            self.assertEqual(known_id(dict(result=dict(message=text))),'')
+        with self.assertRaises(ValueError):known_id(dict(original,order_id='conflict'))
+
+    def test_automatic_report_poll_skips_yesterday_and_records_without_an_id(self):
+        self.store.execute('UPDATE broker_requests SET created_at=?',((self.now-timedelta(days=1)).isoformat(),))
+        self.rec.poll();self.reader.assert_not_called()
+        self.store.execute("UPDATE broker_requests SET created_at=?,result='{}'",(self.stamp,))
+        self.rec.poll();self.reader.assert_not_called()
+
     def test_conflicting_response_id_rejected(self):
         self.store.execute("UPDATE broker_requests SET result=? WHERE request_id='auto_one'",(json.dumps(dict(order_id='a',result=dict(order_id='b'))),))
         self.assertFalse(self.reconcile()['ok']);self.reader.assert_not_called()

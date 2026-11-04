@@ -1012,13 +1012,13 @@ async function seedAutoChart(page:Page){
 test('real automatic order annotations keep account, limit, fill and unknown states distinct',async({page})=>{
  const chart=await seedAutoChart(page);
  const show=async(id:string)=>chart.evaluate(async(el,id)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),si=o.series.findIndex((s:any)=>s.name==='自动委托');c.dispatchAction({type:'showTip',seriesIndex:si,dataIndex:o.series[si].data.findIndex((d:any)=>d.autoTrade.id===id)});},id);
- await show('accepted-a');const tip=chart.locator('.auto-trade-tooltip');await expect(tip).toContainText('111***001');await expect(tip).not.toContainText('222***002');await expect(tip).toContainText('委托限价：32.75 元 · 200 股');await expect(tip).toContainText('尚未确认成交');
+ await show('accepted-a');const tip=chart.locator('.auto-trade-tooltip');await expect(tip).toContainText('111***001');await expect(tip).not.toContainText('222***002');await expect(tip).toContainText('委托限价：32.75 元 · 200 股');await expect(tip).toContainText('成交尚未回报');
  await show('filled-a');await expect(tip).toContainText('委托限价：33.73');await expect(tip).toContainText('均价 33.80');
  const labels=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托').data.map((d:any)=>({id:d.autoTrade.id,label:d.label.formatter}));});
  expect(labels).toEqual([{id:'accepted-a',label:'B'},{id:'filled-a',label:'S'}]);
  await page.mouse.move(5,5);await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);e.getInstanceByDom(el).dispatchAction({type:'hideTip'});});await expect(chart.locator('.auto-trade-tooltip')).toBeHidden();await page.locator('.chart-shell').screenshot({path:'outputs/auto-order-markers.png'});
  await page.locator('.info-note summary').filter({hasText:'自动委托详情'}).click();
- for(const text of ['历史跳过原因未保存','222***002','提交结果待核实','账户可用资金不足'])await expect(page.locator('.auto-trade-records')).toContainText(text);
+ for(const text of ['历史跳过原因未保存','222***002','未收到明确回执','账户可用资金不足'])await expect(page.locator('.auto-trade-records')).toContainText(text);
 });
 
 test('historical native success receipts draw B without upgrading unknown settlement records',async({page})=>{
@@ -1027,7 +1027,7 @@ test('historical native success receipts draw B without upgrading unknown settle
  await page.reload();
  await expect.poll(()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);return e.getInstanceByDom(el).getOption().series.find((s:any)=>s.name==='自动委托')?.data.map((d:any)=>({id:d.autoTrade.id,label:d.label.formatter}));})).toContainEqual({id:'legacy-success',label:'B'});
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),si=o.series.findIndex((s:any)=>s.name==='自动委托');c.dispatchAction({type:'showTip',seriesIndex:si,dataIndex:o.series[si].data.findIndex((d:any)=>d.autoTrade.id==='legacy-success')});});
- const tip=chart.locator('.auto-trade-tooltip');for(const text of ['111***001','33.18 元','142783','券商回执已受理，成交待核实'])await expect(tip).toContainText(text);
+ const tip=chart.locator('.auto-trade-tooltip');for(const text of ['111***001','33.18 元','142783','券商回执已受理，成交尚未回报'])await expect(tip).toContainText(text);
  await expect(tip).not.toContainText('已核实成交：');
  const view=await rpc('trading_chart',{code:'sh603002',day:'2026-10-19'});expect(view.points.find((p:any)=>p.id==='legacy-success').status).toBe('unknown');
 });

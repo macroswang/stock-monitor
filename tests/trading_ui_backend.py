@@ -95,7 +95,10 @@ for line in sys.stdin:
         elif request['method']=='test_seed_notice':
             app.store.setconfig('trading_signal_notice','测试：原买卖开关已保留，自动执行已暂停。')
             result=True
-        else:result=seed_reports() if request['method']=='test_seed_reports' else app.call(request['method'],request.get('args',{}))
+        else:result=seed_reports() if request['method'] in ('test_seed_reports','test_seed_unknown') else app.call(request['method'],request.get('args',{}))
+        if request['method']=='test_seed_unknown':
+            app.store.execute("UPDATE trading_runs SET status='unknown' WHERE account_id='test-b'")
+            app.store.execute("UPDATE broker_requests SET status='unknown' WHERE account_id='test-b'")
         print(json.dumps(dict(result=result),ensure_ascii=False),flush=True)
     except Exception as exc:
         print(json.dumps(dict(error=str(exc)),ensure_ascii=False),flush=True)

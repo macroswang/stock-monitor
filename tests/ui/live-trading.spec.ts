@@ -114,18 +114,16 @@ test('broker report refresh settles only its bound account and distinguishes aut
  await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
 });
 
-test('adding an order number performs a lookup without declaring a fill; typo can be corrected',async({page})=>{
+test('execution records expose receipts without manual verification tasks or missing-number prompts',async({page})=>{
  await setup(page);
- await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_reports',{}));
+ await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_unknown',{}));
  await page.getByRole('tab',{name:'执行记录',exact:true}).click();await page.getByRole('button',{name:'刷新',exact:true}).click();
  const b=page.getByRole('row').filter({hasText:'987***002'});
- await b.getByRole('button',{name:'补充编号并核实'}).click();
- let dialog=page.getByRole('dialog');await expect(dialog).toContainText('987***002');await expect(dialog).not.toContainText('123***001');
- await dialog.getByLabel('券商唯一委托号').fill('typo');await dialog.getByRole('button',{name:'查询并核实'}).click();
- await expect(dialog).not.toBeVisible();await expect(b).toContainText('仍待核实');await expect(b).not.toContainText('券商回报自动核实');
- await b.getByRole('button',{name:'更正查询编号'}).click();dialog=page.getByRole('dialog');
- await dialog.getByLabel('券商唯一委托号').fill('fixture-test-b');await dialog.getByRole('button',{name:'查询并核实'}).click();
- await expect(dialog).not.toBeVisible();await expect(b).toContainText('券商回报自动核实');
+ await expect(b).toContainText('未收到明确回执');await expect(b).toContainText('不影响后续新信号');
+ await expect(b.getByRole('button',{name:'补充编号并核实'})).toHaveCount(0);
+ await expect(b.getByRole('button',{name:'核实结果',exact:true})).toHaveCount(0);
+ await expect(b.getByRole('button',{name:'刷新券商回报'})).toHaveCount(0);
+ await expect(page.getByText('待核实',{exact:false})).toHaveCount(0);
 });
 
 test('automation follows the labelled chart top/bottom signals rather than Q1 filtering',async({page})=>{
@@ -306,17 +304,15 @@ test('managing one account preserves its identity and checks only that account',
  await expect(page.getByRole('region',{name:/同花顺（银河证券） · 987/})).toBeVisible();
 });
 
-test('blocked unbinding keeps the account visible until existing orders are resolved',async({page})=>{
+test('historical receipts do not require manual resolution before unbinding',async({page})=>{
  await setup(page);
  await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_reports',{}));
  await page.getByRole('tab',{name:'证券账户',exact:true}).click();
  const b=page.getByRole('article').filter({hasText:'987***002'});
  await b.getByRole('button',{name:'管理',exact:true}).click();const dialog=page.getByRole('dialog');
  await dialog.getByRole('button',{name:'解除绑定',exact:true}).click();
- await expect(page.locator('.broker-account-card')).toHaveCount(2);
  await dialog.getByRole('button',{name:'确认解除绑定',exact:true}).click();
- await expect(dialog.getByRole('alert')).toContainText('待核实委托');
- await expect(page.locator('.broker-account-card')).toHaveCount(2);
+ await expect(dialog).not.toBeVisible();await expect(page.locator('.broker-account-card')).toHaveCount(1);
 });
 
 test('confirmed unbinding removes only the chosen local binding',async({page})=>{

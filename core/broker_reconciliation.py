@@ -34,7 +34,16 @@ def shares(value):
 def known_id(result):
     ids = {str(x) for x in (result.get('order_id'), result.get('result', {}).get('order_id'),
                            result.get('verification', {}).get('order_id'), result.get('order_binding', {}).get('order_id')) if x}
-    if len(ids) > 1:raise ValueError('记录中的委托编号冲突，需人工核对')
+    # Recover explicit native receipt numbers from older clients. A lookup ID
+    # proves no fill by itself; the report still must match the full request.
+    from executor.trade import parse_result_message
+    receipt=result.get('result',{})
+    if isinstance(receipt.get('message'),str):
+        parsed=parse_result_message(receipt['message'])
+        if parsed and parsed.kind=='success':
+            ident=parsed.as_dict().get('order_id')
+            if ident:ids.add(ident)
+    if len(ids) > 1:raise ValueError('记录中的委托编号冲突')
     return next(iter(ids), '')
 
 
@@ -205,9 +214,12 @@ class Reconciler:
         for row in rows:
             result = json.loads(row['result'] or '{}')
             try:
-                # Missing IDs still get an explicit persisted reason in the UI;
-                # they never trigger guessed bindings or duplicate submissions.
+                # Only today's identifiable orders use the device. Yesterday's
+                # rows remain history, with no manual task or account gate.
+                _,day=request_plan(row)
+                if day!=now.date().isoformat():continue
                 ident = known_id(result)
+                if not ident:continue
                 last = datetime.fromisoformat(result.get('reconciliation', {}).get('at', row['created_at']))
                 if (now-last).total_seconds() < 60:continue
             except (ValueError, TypeError):continue

@@ -45,7 +45,7 @@ class ExecutionJournalTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.submit(price="2.14")
 
-    def test_disconnect_after_click_survives_restart_and_blocks_new_order(self):
+    def test_disconnect_never_replays_same_request_but_independent_request_can_submit(self):
         def lost(**kwargs):
             kwargs["before_confirm"]()
             raise RuntimeError("读取结果时断连")
@@ -56,9 +56,10 @@ class ExecutionJournalTests(unittest.TestCase):
         self.store = Store(self.path)
         self.addCleanup(self.store.db.close)
         self.assertEqual(self.submit(), result)
-        with self.assertRaises(brokers.BrokerError):
-            self.submit("test-order-00000002")
-        self.assertEqual(self.client.submit_order.call_count, 1)
+        self.client.submit_order.side_effect=lambda **kw: {"status":"accepted","submitted":True}
+        self.assertEqual(self.submit("test-order-00000002")["status"],"accepted")
+        self.assertEqual(self.submit(),result)
+        self.assertEqual(self.client.submit_order.call_count, 2)
 
     def test_crash_before_final_result_never_automatically_replays(self):
         def crash(**kwargs):

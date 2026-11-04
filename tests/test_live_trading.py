@@ -256,19 +256,43 @@ class TradingTests(unittest.TestCase):
         self.assertIn('资金不足',json.loads(self.runs()[1]['payload'])['message'])
         self.submit.assert_not_called()
 
-    def test_unknown_previous_day_blocks_new_real_dispatch(self):
-        self.arm();self.observe();self.drain()
-        self.store.execute("UPDATE trading_runs SET status='unknown',day='2026-10-30'")
-        self.observe(key='new');self.drain()
-        self.assertEqual(self.runs()[1]['status'],'skipped');self.submit.assert_not_called()
+    def test_unknown_previous_day_does_not_block_new_real_dispatch_or_consume_todays_quota(self):
+        self.arm(daily_orders=1);self.store.setconfig('trading_mode','live')
+        self.submit.return_value=dict(status='unknown',submitted=False)
+        self.observe();self.drain()
+        old=self.runs()[0];self.now+=timedelta(days=1)
+        self.quote['timestamp']=self.now.isoformat()
+        self.submit.return_value=dict(status='accepted',submitted=True)
+        with patch('core.live_trading.now_cn',return_value=self.now):
+            self.observe();self.drain();self.observe();self.drain()
+        self.assertEqual([r['status'] for r in self.runs()],['unknown','accepted'])
+        self.assertNotEqual(old['id'],self.runs()[1]['id']);self.assertEqual(self.submit.call_count,2)
+        self.assertEqual(self.submit.call_args.args[1],'a')
 
-    def test_account_cannot_be_deleted_with_unresolved_auto_order(self):
+    def test_historical_order_outcomes_do_not_require_manual_resolution_before_unbinding(self):
         from core import brokers
         self.arm();self.observe();self.drain()
-        self.store.execute("UPDATE trading_runs SET status='accepted'")
-        with self.assertRaisesRegex(ValueError,'核实'):
+        self.store.execute("UPDATE trading_runs SET status='unknown'")
+        result=brokers.delete_account(self.store,'a',secrets=Mock())
+        self.assertTrue(result['deleted']);self.assertEqual(self.runs()[0]['status'],'unknown')
+
+    def test_active_execution_still_prevents_unbinding_in_the_middle_of_a_submission(self):
+        from core import brokers
+        self.arm();self.observe()
+        with self.assertRaisesRegex(ValueError,'交易任务'):
             brokers.delete_account(self.store,'a',secrets=Mock())
-        self.assertEqual(len(self.store.query("SELECT * FROM broker_accounts WHERE id='a'")),1)
+
+    def test_only_recent_manual_submission_holds_binding_not_stale_journals(self):
+        from core import brokers
+        self.seed()
+        stamp=self.now.isoformat()
+        self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('manual-active','a','{}','sending',None,stamp,stamp))
+        with patch('core.brokers.now_cn',return_value=self.now),self.assertRaisesRegex(ValueError,'正在提交'):
+            brokers.delete_account(self.store,'a',secrets=Mock())
+        old=(self.now-timedelta(days=1)).isoformat()
+        self.store.execute('UPDATE broker_requests SET updated_at=?',(old,))
+        with patch('core.brokers.now_cn',return_value=self.now):
+            self.assertTrue(brokers.delete_account(self.store,'a',secrets=Mock())['deleted'])
 
     def test_restart_does_not_replay_pending_or_sending(self):
         self.arm();self.observe()

@@ -66,14 +66,15 @@ class AutomaticFlowTests(unittest.TestCase):
  def test_both_journals_and_plan_are_durable_before_native_confirmation(self):
   def lost(*,before_confirm,**kwargs):
    before_confirm()
-   run=self.store.query('SELECT * FROM trading_runs')[0]
+   run=self.store.query('SELECT * FROM trading_runs ORDER BY rowid DESC')[0]
    self.assertEqual(run['status'],'sending');self.assertEqual(json.loads(run['payload'])['plan']['account_id'],'a')
-   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'sending')
+   self.assertEqual(self.store.query('SELECT status FROM broker_requests ORDER BY rowid DESC')[0]['status'],'sending')
    raise RuntimeError('模拟点击后断连')
   self.clients['a'].submit_order.side_effect=lost
   self.signal();self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'unknown')
   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'unknown')
-  self.signal('another');self.assertEqual(self.clients['a'].submit_order.call_count,1)
+  self.signal('another');self.signal();self.assertEqual(self.clients['a'].submit_order.call_count,2)
+  self.assertEqual([r['status'] for r in self.store.query('SELECT status FROM broker_requests')],['unknown','unknown'])
 
  def test_sell_price_becomes_adverse_before_native_confirm_and_both_journals_fail_without_sending(self):
   clicked=[]

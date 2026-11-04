@@ -131,8 +131,8 @@ class LiveTrading:
                     raise ValueError('暂停状态必须为开或关')
                 if not args['paused'] and self.settings()['mode']=='live':
                     enabled={r['account_id'] for r in self.store.query("SELECT account_id FROM trading_rules WHERE json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1")}
-                    if any(not a['supports_order'] or not a['supports_order_report'] for a in brokers.list_accounts(self.store) if a['id'] in enabled):
-                        raise ValueError('已开启规则的账户尚不支持本机下单及完整回报查询，请使用试运行')
+                    if any(not a['supports_order'] for a in brokers.list_accounts(self.store) if a['id'] in enabled):
+                        raise ValueError('已开启规则的账户尚不支持本机下单，请使用试运行')
                 self.store.setconfig('trading_paused', args['paused'])
                 if not args['paused']:self.store.setconfig('trading_signal_notice','')
                 self.started_at = now_cn().isoformat()
@@ -404,7 +404,19 @@ class LiveTrading:
         positions = []
         for p in self.store.query('SELECT p.* FROM trading_positions p JOIN broker_accounts a ON a.id=p.account_id ORDER BY a.created_at,p.active DESC,p.name'):
             positions.append(dict(account_id=p['account_id'], code=p['code'], name=p['name'], active=bool(p['active']), updated_at=p['updated_at'], **{k:v for k,v in json.loads(p['payload']).items() if k not in ('code','name')}, rule=self.rule(p['account_id'],p['code'])))
-        runs = [dict(r, payload=json.loads(r['payload'])) for r in self.store.query('SELECT * FROM trading_runs ORDER BY created_at DESC,rowid DESC LIMIT 200')]
+        from .trading_chart import legacy_receipt_id
+        from .broker_reconciliation import known_id
+        runs=[]
+        for row in self.store.query('''SELECT r.*,b.result AS broker_result,b.payload AS request_payload,
+            b.status AS request_status,b.created_at AS request_at FROM trading_runs r
+            LEFT JOIN broker_requests b ON b.request_id='auto_'||r.id AND b.account_id=r.account_id
+            ORDER BY r.created_at DESC,r.rowid DESC LIMIT 200'''):
+            payload=json.loads(row['payload']);ack=json.loads(row['broker_result'] or '{}')
+            try:ident=known_id(ack)
+            except ValueError:ident=''
+            receipt_id=legacy_receipt_id(row,payload,ack)
+            runs.append(dict(**{k:v for k,v in row.items() if k not in ('payload','broker_result','request_payload','request_status','request_at')},
+                             payload=payload,order_id=ident or receipt_id,receipt_accepted=bool(receipt_id)))
         return dict(settings=self.settings(), accounts=accounts, positions=positions, runs=runs,
                     cash_reserve=dict(rate=BUY_CASH_RESERVE_RATE,fixed=BUY_CASH_RESERVE_FIXED))
 
@@ -510,18 +522,6 @@ class LiveTrading:
         payload.setdefault('timings',{})['elapsed_ms']=milliseconds(self.execution_age(run,now_cn()))
         self.store.execute('UPDATE trading_runs SET status=?,payload=?,updated_at=? WHERE id=?', (status,json.dumps(payload),now_cn().isoformat(),run['id']))
 
-    def check_open_orders(self,run):
-        """Known pending orders block their stock; uncertain sends block account."""
-        from .broker_reconciliation import known_id
-        for other in self.store.query("SELECT * FROM trading_runs WHERE account_id=? AND id<>? AND status IN ('sending','accepted','unknown','partial')",(run['account_id'],run['id'])):
-            requests=self.store.query('SELECT result FROM broker_requests WHERE request_id=? AND account_id=?',('auto_'+other['id'],run['account_id']))
-            try:ident=known_id(json.loads(requests[0]['result'] or '{}')) if len(requests)==1 else ''
-            except ValueError:ident=''
-            if other['status'] in ('sending','unknown') or not ident or other['code']==run['code']:
-                raise ValueError('该账户有未完成或待核实委托，请先核对执行记录')
-            # The broker's latest AVAILABLE cash/sellable shares include freezes.
-            self.verified_sync.pop(run['account_id'],None)
-
     def process(self, run):
         with budget(max(0,EXECUTION_SECONDS-self.execution_age(run,now_cn()))):
             self._process(run)
@@ -546,7 +546,9 @@ class LiveTrading:
                 raise ValueError('自选监控已停止')
             quote = self.app.quotes.get(run['code'],payload['quote'])
             # Re-read and verify account identity before every plan, including trial mode.
-            self.check_open_orders(run)
+            # Each distinct signal gets fresh broker funds/positions. Old
+            # acknowledgement/fill states never block today's new requests.
+            self.verified_sync.pop(run['account_id'],None)
             self.check_price(run,payload,quote,rule,'before_holdings')
             sync_started=time.monotonic()
             try:
@@ -577,7 +579,6 @@ class LiveTrading:
                 same = [r for r in previous if r['code']==run['code']]
                 if len(same) >= rule['daily_orders']:
                     raise ValueError('已达到该股每日执行次数上限')
-                self.check_open_orders(run)
                 if run['side']=='buy':
                     available = number(json.loads(state['payload']).get('funds',{}).get('available'))
                     reserved = sum(buy_cash_required(json.loads(r['payload']).get('plan',{}).get('value',0)) for r in previous if r['side']=='buy' and r['status']=='trial')
@@ -615,7 +616,7 @@ class LiveTrading:
                 payload['timings']['gateway_ms']=round((time.monotonic()-gateway_started)*1000,1)
             self.verified_sync.pop(run['account_id'],None)
             payload['result'] = result
-            payload['message'] = result.get('message') or '请核对券商委托和成交；受理不代表成交'
+            payload['message'] = result.get('message') or result.get('result',{}).get('message') or {'accepted':'券商已受理','rejected':'券商已拒绝','unknown':'未收到明确回执；本请求不自动重发'}.get(result['status'],'委托结果已记录')
             self.finish(run,result['status'],payload)
         except DeviceBusy as exc:
             payload['message'] = str(exc)+'；信号有效期内等待设备，不重复发送委托'

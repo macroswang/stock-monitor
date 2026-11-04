@@ -9,7 +9,7 @@ type Account={id:string;broker:string;broker_name:string;package:string;account:
 type OrderRow={kind:string;name:string;code:string;direction:string;side:'buy'|'sell'|null;date:string;time:string;price:number|null;quantity:number|null;filled:number|null;state:string;cancellable:boolean};
 type OrderList={kind:string;date_range:string;cycle:string;count:number;cancellable_count:number;rows:OrderRow[]};
 type Snapshot={funds:Record<string,string>;positions:Record<string,string|number>[]};
-type Execution={request_id:string;status:string;created_at:string;order_id?:string;verification?:{origin:string;filled:number};reconciliation?:{message:string;at:string}};
+type Execution={request_id:string;status:string;created_at:string;order_id?:string;verification?:{origin:string;filled:number};reconciliation?:{message:string;at:string;ok?:boolean}};
 type Api=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 
 const SIDES=[['sell','卖出'],['buy','买入']] as const;
@@ -144,7 +144,7 @@ export default function BrokerAccounts({api,onRestartCore,onManagePositions}:{ap
   if(!submitIntent.current||submitIntent.current.payload!==payload)submitIntent.current={payload,id:crypto.randomUUID()};
   try{
    const r=await waitJob<Record<string,unknown>>('broker_submit',{...args,request_id:submitIntent.current.id});
-   const names:Record<string,string>={accepted:'券商已受理',rejected:'券商已拒绝',unknown:'结果待核实，未重复提交',failed:'提交前已停止'};
+   const names:Record<string,string>={accepted:'券商已受理',rejected:'券商已拒绝',unknown:'未收到明确回执，本请求不重复提交',failed:'提交前已停止'};
    const detail=r.message||(r.result as {message?:string}|undefined)?.message;
    setNote(`委托结果：${names[String(r.status)]||String(r.status)}${detail?` · ${detail}`:''}`);
    if(['accepted','rejected','failed'].includes(String(r.status)))submitIntent.current=null;
@@ -154,21 +154,12 @@ export default function BrokerAccounts({api,onRestartCore,onManagePositions}:{ap
   }
  },'');
  const reconcile=(item:Execution)=>run(async()=>{
-  const id=item.order_id||window.prompt('请输入这笔委托的券商唯一编号。将按所选账户核对已有记录，不发出交易。');
+  const id=item.order_id;
   if(!id)return;
   const result=await waitJob<{message:string}>('broker_reconcile',{account_id:selected,request_id:item.request_id,order_id:id});
   setNote(result.message);setExecutions(await api<Execution[]>('broker_requests',{id:selected}));
  },'');
- const resolve=(item:Execution)=>run(async()=>{
-  const orderId=window.prompt('核对券商今日委托后，输入券商委托号；确认未发出则输入“未发出”。');
-  if(!orderId)return;
-  const explanation=window.prompt('请填写核对依据（至少4字）。');
-  if(!explanation)return;
-  if(!window.confirm('确认已经在券商核实该请求？此操作仅更新观量执行记录，不会下单或撤单。'))return;
-  await waitJob('broker_request_resolve',{request_id:item.request_id,outcome:orderId==='未发出'?'not_sent':'accepted',order_id:orderId==='未发出'?'':orderId,note:explanation,confirm:true});
-  submitIntent.current=null;
-  setExecutions(await api<Execution[]>('broker_requests',{id:selected}));
- },'核实结果已保存');
+
 
  async function fetchOrders():Promise<OrderList>{
   const method=query.endsWith('trades')?'broker_trades':'broker_orders';
@@ -249,7 +240,7 @@ export default function BrokerAccounts({api,onRestartCore,onManagePositions}:{ap
   <label className="setting"><span>我确认这是真实委托<small>提交前核对账号、方向、价格、数量及金额上限；结果不明时停止重复提交</small></span>
    <input type="checkbox" checked={realOrder} onChange={e=>setRealOrder(e.target.checked)}/></label>
   <button className="primary" disabled={busy||!realOrder||!orderAccount?.supports_order||!code||!quantity||executions.some(e=>['prepared','sending','unknown'].includes(e.status))} onClick={submit}>真实提交</button>
-  {executions.length>0&&<div className="table-scroll"><table><thead><tr><th>执行时间</th><th>请求号</th><th>状态</th><th>核实</th></tr></thead><tbody>{executions.map(e=><tr key={e.request_id}><td>{e.created_at}</td><td>{e.request_id}</td><td>{({prepared:'已登记，需核实',sending:'已开始提交，待核实',unknown:'结果未知',accepted:'已受理',rejected:'已拒绝',failed:'提交前停止',not_sent:'人工确认未发出',preview:'仅预览',filled:'已成交',partial:'部分成交',cancelled:'已撤销'} as Record<string,string>)[e.status]||e.status}{e.order_id&&<small>委托号 {e.order_id}</small>}{e.verification&&<small>{e.verification.origin==='broker_auto'?'券商自动核实':'人工核实'} · 成交 {e.verification.filled} 股</small>}{e.reconciliation&&<small>{e.reconciliation.message}</small>}</td><td>{orderAccount?.supports_order_report!==false&&['accepted','unknown','partial'].includes(e.status)&&<button disabled={busy} onClick={()=>reconcile(e)}>刷新券商回报</button>}{['prepared','sending','unknown'].includes(e.status)&&<button disabled={busy} onClick={()=>resolve(e)}>人工核实</button>}</td></tr>)}</tbody></table></div>}
+  {executions.length>0&&<div className="table-scroll"><table><thead><tr><th>执行时间</th><th>请求号</th><th>状态</th><th>回报</th></tr></thead><tbody>{executions.map(e=><tr key={e.request_id}><td>{e.created_at}</td><td>{e.request_id}</td><td>{({prepared:'已准备',sending:'提交中',unknown:'未收到明确回执',accepted:'已受理',rejected:'已拒绝',failed:'提交前停止',not_sent:'未发出',preview:'仅预览',filled:'已成交',partial:'部分成交',cancelled:'已撤销'} as Record<string,string>)[e.status]||e.status}{e.order_id&&<small>委托号 {e.order_id}</small>}{e.verification&&<small>{e.verification.origin==='broker_auto'?'券商自动核实':'人工核实'} · 成交 {e.verification.filled} 股</small>}{e.reconciliation?.ok&&<small>{e.reconciliation.message}</small>}</td><td>{!!e.order_id&&orderAccount?.supports_order_report!==false&&['accepted','unknown','partial'].includes(e.status)&&<button disabled={busy} onClick={()=>reconcile(e)}>刷新券商回报</button>}</td></tr>)}</tbody></table></div>}
 
   <h3>委托 / 成交 / 持仓</h3>
   <p>查询读取交易主页当前可见列表。自动撤单暂不可用，请在券商 App 内选择具体委托撤销。</p>

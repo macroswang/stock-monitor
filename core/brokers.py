@@ -17,6 +17,7 @@ import tempfile
 import sys
 from functools import wraps
 from pathlib import Path
+from datetime import timedelta
 
 from .provider import now_cn
 from executor.adb import Adb
@@ -221,8 +222,7 @@ def list_accounts(store, secrets: SecretStore | None = None) -> list[dict]:
                 "supports_query": spec.supports_query,
                 "supports_cancel": spec.supports_cancel,
                 "supports_order_report": spec.supports_order_report and (spec.id=='ths' or sys.platform=='darwin'),
-                "order_report_note": ('按原生合同编号自动核对当日成交；跨日及尚无成交时继续保留待核实' if spec.id=='ths' else '按唯一合同编号自动核实；仅查询已有委托' if spec.supports_order_report and sys.platform=='darwin' else
-                                      '当前查询页未提供可核验的唯一委托编号，须人工核实' if not spec.supports_order_report else '当前系统的回报识别器尚未验证，须人工核实'),
+                "order_report_note": ('自动读取当日委托回报；历史记录不影响新信号' if spec.supports_order_report and (spec.id=='ths' or sys.platform=='darwin') else '记录券商提交回执'),
             }
         )
     return items
@@ -273,10 +273,13 @@ def delete_account(store, account_id: str, secrets: SecretStore | None = None) -
     rows = store.query("SELECT * FROM broker_accounts WHERE id=?", (account_id,))
     if not rows:
         raise ValueError("账号不存在")
-    if store.query("SELECT request_id FROM broker_requests WHERE account_id=? AND status IN ('prepared','sending','unknown','accepted','partial')", (account_id,)):
-        raise ValueError("账号有待核实委托，处理执行记录后才能删除")
-    if store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_runs'") and store.query("SELECT id FROM trading_runs WHERE account_id=? AND status IN ('pending','processing','sending','accepted','unknown','partial')",(account_id,)):
-        raise ValueError('账号有自动执行任务或未核实委托，请先暂停并处理执行记录后再删除')
+    # Only a submission still inside the device-operation budget can hold a
+    # binding briefly; stale journals and missing receipts never need a user task.
+    since=(now_cn()-timedelta(seconds=120)).isoformat()
+    if store.query("SELECT request_id FROM broker_requests WHERE account_id=? AND status IN ('prepared','sending') AND updated_at>=?",(account_id,since)):
+        raise ValueError('该账户当前有委托正在提交，请等待提交结束后再解绑')
+    if store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_runs'") and store.query("SELECT id FROM trading_runs WHERE account_id=? AND status IN ('pending','processing','sending')",(account_id,)):
+        raise ValueError('该账户当前有交易任务正在执行，请暂停并等待任务结束后再解绑')
     row = rows[0]
     spec = _spec(row["broker"])
     for field in spec.fields:
@@ -397,10 +400,9 @@ def submit_order(
         if old:
             if old["payload"] != payload:
                 raise ValueError("同一请求号不能修改委托参数")
-            return json.loads(old["result"]) if old["result"] else {"request_id": request_id, "submitted": False, "status": "unknown", "message": "该请求已登记，需先核对券商委托，不会重复提交"}
-        unresolved = store.db.execute("SELECT request_id FROM broker_requests WHERE account_id=? AND status IN ('prepared','sending','unknown')", (account_id,)).fetchone()
-        if unresolved:
-            raise BrokerError("此账号有未核实的委托，请先核对并处理执行记录：" + unresolved[0])
+            return json.loads(old["result"]) if old["result"] else {"request_id": request_id, "submitted": False, "status": "unknown", "message": "该请求已登记，不会重复提交"}
+        # Device/OS locks serialize active submissions. Historical outcomes do
+        # not lock an account; only this immutable request ID prevents replay.
         store.db.execute("INSERT INTO broker_requests VALUES(?,?,?,'prepared',NULL,?,?)", (request_id, account_id, payload, stamp, stamp))
     dispatched = False
     def before_confirm():
@@ -426,7 +428,7 @@ def submit_order(
             result = {"submitted": False, "status": "unknown", "message": "券商返回结果无法确认"}
     except Exception as exc:
         result = {"submitted": False, "status": "unknown" if dispatched else "failed",
-                  "message": "提交结果未知，请核对券商委托，禁止直接重试" if dispatched else str(exc)}
+                  "message": "未收到明确回执；本请求不自动重发" if dispatched else str(exc)}
     result["request_id"] = request_id
     store.execute("UPDATE broker_requests SET status=?,result=?,updated_at=? WHERE request_id=?",
                   (result["status"], json.dumps(result, ensure_ascii=False), now_cn().isoformat(), request_id))
