@@ -23,7 +23,8 @@ import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
 import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
-import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber} from './minuteMacd';
+import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber,readMacdParameters,macdParametersKey,type MacdParameters} from './minuteMacd';
+import MacdSettings from './MacdSettings';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
 // Enlarge the reference panes as space permits while keeping the full stack visible.
 function minutePanelLayout(height:number){
@@ -68,6 +69,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
  const selectedCandle=candleDate(daily,selectedDay,view==='weekly');
  const [ma,setMa]=useState(readMovingAverages);
+ const [macdParameters,setMacdParameters]=useState(readMacdParameters),[editMacd,setEditMacd]=useState(false);
+ useEffect(()=>{const sync=()=>setMacdParameters(readMacdParameters());window.addEventListener('storage',sync);window.addEventListener('macd-parameters-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('macd-parameters-change',sync);};},[]);
+ const updateMacd=(next:MacdParameters)=>{setMacdParameters(next);try{localStorage.setItem(macdParametersKey,JSON.stringify(next));window.dispatchEvent(new window.Event('macd-parameters-change'));}catch{}};
  const maValues=useMemo(()=>new Map(ma.periods.map(n=>[n,movingAverage(daily,n)])),[daily,ma.periods]);
  const [candleSizes,setCandleSizes]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:DAILY_WINDOW});
  const candleWindows=useRef(new Map<string,{dates:string[];lastDate:string}>());
@@ -118,7 +122,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  };
  const scopeRef=useRef(scope);scopeRef.current=scope;
  const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef('');
- const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Fit the comparison stack to the remaining viewport without reacting to scroll.
@@ -195,13 +199,13 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const indexLine=aligned.map(b=>b&&canOverlay&&indexByTime.has(b.time)?indexByTime.get(b.time)!/+benchmark!.previous_close*previousClose!:null);
   const averages=aligned.map(b=>b?.average&&Number.isFinite(+b.average)&&+b.average>0?+b.average:null);
   const showPercent=!isDay&&Number.isFinite(previousClose)&&Number(previousClose)>0&&minute.length>0;
-  const stockMacd=hasMacd?minuteMacd(minute):[],stockTimes=minute.filter(b=>minuteSlots.includes(b.time)&&Number(b.close)>0).map(b=>b.time).sort(),firstStockTime=stockTimes[0]||'',lastStockTime=stockTimes.at(-1)||'';
+  const stockMacd=hasMacd?minuteMacd(minute,macdParameters):[],stockTimes=minute.filter(b=>minuteSlots.includes(b.time)&&Number(b.close)>0).map(b=>b.time).sort(),firstStockTime=stockTimes[0]||'',lastStockTime=stockTimes.at(-1)||'';
   const matchingMacdIndex=!!macdIndex&&macdBenchmark?.code===macdIndex.code&&macdBenchmark.date===selectedDay;
   const indexBars=matchingMacdIndex?macdBenchmark!.bars.filter(b=>b.time>=firstStockTime&&b.time<=lastStockTime):[];
-  const indexMacd=hasMacd?minuteMacd(indexBars):[];
+  const indexMacd=hasMacd?minuteMacd(indexBars,macdParameters):[];
   const indexVolumeByTime=new Map<string,number|null>();
   for(const b of indexBars)indexVolumeByTime.set(b.time,indexVolumeByTime.has(b.time)?null:Number.isSafeInteger(b.volume_lots)&&b.volume_lots!>=0?b.volume_lots!:null);
-  const indexVolume=labels.map(t=>indexVolumeByTime.get(t)??null);
+  const indexVolume=labels.map(t=>{const lots=indexVolumeByTime.get(t);return lots===undefined||lots===null?null:lots/10000;});
   const indexPrices=new Map<string,number>();for(const b of indexBars)indexPrices.set(b.time,indexPrices.has(b.time)?NaN:Number(b.close));
   let indexPrevious=Number(macdBenchmark?.previous_close),indexColor='#ef6568',indexStarted=false;
   const indexVolumeColors=labels.map(time=>{const close=indexPrices.get(time);if(!Number.isFinite(close)||!close||close<=0){if(indexStarted)indexPrevious=NaN;return '#8c9db6';}const color=Number.isFinite(indexPrevious)?close>indexPrevious?'#ef6568':close<indexPrevious?'#36b898':indexColor:'#8c9db6';indexPrevious=close;indexStarted=true;if(color!=='#8c9db6')indexColor=color;return color;});
@@ -212,7 +216,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
    for(const [i,values] of [volume,indexVolume].entries()){
     const header=volumeHeaders.current[i],value=values[idx];if(!header)continue;
     const time=header.querySelector('time'),number=header.querySelector('.volume-value');
-    if(time)time.textContent=labels[idx]||'';if(number)number.textContent=value===null||value===undefined?'—':wan(value)+' 手';
+    if(time)time.textContent=labels[idx]||'';if(number)number.textContent=value===null||value===undefined?'—':wan(value)+(i?' 万手':' 手');
    }
    for(const [i,points] of [stockMacd,indexMacd].entries()){
     const header=macdHeaders.current[i],p=points[idx];if(!header)continue;
@@ -261,7 +265,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
    tooltip:{trigger:'axis',confine:false,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
     extraCssText:'padding:7px 9px;pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
      const canvas=chart.getDom(),bounds=canvas.getBoundingClientRect(),host=canvas.closest('.detail');
-     const top=Math.max(8,(host?.getBoundingClientRect().top??bounds.top)+8);
+     const top=Math.max(8,(isDay?bounds.top:host?.getBoundingClientRect().top??bounds.top)+8);
      const [width,height]=size.contentSize,gap=16,left=8,right=Math.max(left,size.viewSize[0]-width-12);
      const x=point[0]>size.viewSize[0]/2?left:right;
      let y=top-bounds.top;
@@ -270,7 +274,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
      if(point[0]>=x-gap&&point[0]<=x+width+gap&&point[1]>=y-gap&&point[1]<=y+height+gap){
       y=point[1]+gap+height<=window.innerHeight-bounds.top-8?point[1]+gap:point[1]-height-gap;
      }
-     y=Math.max(8-bounds.top,Math.min(y,window.innerHeight-bounds.top-height-8));
+     const minY=isDay?Math.max(8,8-bounds.top):8-bounds.top;
+     const maxY=Math.min(window.innerHeight-bounds.top-height-8,isDay?size.viewSize[1]-height-8:Infinity);
+     y=Math.max(minY,Math.min(y,maxY));
      return [x,y];
     },
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;if(idx>=0)refreshMacd.current?.(idx);const root=document.createElement('div');root.className='quote-tooltip docked-tooltip '+(isDay?'daily-tooltip':'minute-tooltip');
@@ -308,7 +314,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,...timeGrid,axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}},axisPointer:{label:{show:!hasMacd}},axisLabel:{show:!hasMacd,hideOverlap:true,...(!isDay?{interval:timeTick,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t}:{})}},{type:'category',gridIndex:1,data:labels,boundaryGap:isDay,...timeGrid,axisLabel:{show:false},axisPointer:{label:{show:false}},axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}}},...(hasMacd?[2,3,4].map(gridIndex=>({type:'category',gridIndex,data:labels,boundaryGap:false,...timeGrid,axisLabel:{show:gridIndex===4,hideOverlap:true,interval:timeTick,fontSize:10,margin:5,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t},axisPointer:{label:{show:gridIndex===4}},axisLine:{lineStyle:{color:'#3b485b'}}})):[])],
    yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,splitNumber:hasMacd?1:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:{rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}}}}]:[]),...(hasMacd?[
     {type:'value',gridIndex:2,...macdRange(stockMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}},
-    {type:'value',gridIndex:3,min:0,splitNumber:1,axisLabel:{fontSize:10,formatter:volumeTick},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}}},
+    {type:'value',gridIndex:3,min:0,splitNumber:1,axisLabel:{fontSize:10,formatter:wan},axisPointer:{label:{formatter:(p:{value:number})=>wan(p.value)+' 万手'}},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}}},
     {type:'value',gridIndex:4,...macdRange(indexMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}}
    ]:[])],
    dataZoom:[{type:'inside',xAxisIndex:axisIndices,...zoom,...(isDay?{filterMode:'weakFilter',zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:axisIndices,...zoom,bottom:1,height:hasMacd?10:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{filterMode:'weakFilter',zoomLock:true,handleSize:0,brushSelect:false}: {})}],
@@ -363,11 +369,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  </div>}/>}{tradeHint?.scope===scope&&<div className="chart-trade-hint" role="status">{tradeHint.text}</div>}<div className="chart-shell"><div className={'chart'+(compact?' compact-chart':'')+(hasMacd?' macd-chart':'')} ref={ref} onContextMenu={contextTrade} tabIndex={isCandleView(view)?0:undefined} onClick={()=>{if(isCandleView(view))ref.current?.focus();}} onKeyDown={e=>{if(isCandleView(view)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(isCandleView(view)&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();zoomCandles(e.key==='ArrowUp'?-1:1);}else if(isCandleView(view)&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedCandle||selectedDay);}} aria-label={view==='weekly'?'周K线及成交量':view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>
  <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?minutePanels.headers[0]:'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>
  {hasMacd&&<>
- <div className="volume-panel-header" data-volume-grid="3" style={{top:minutePanels.headers[2]}} ref={el=>{volumeHeaders.current[1]=el;}}><span>{macdIndex!.name}成交量（手） · 总量</span><span className="volume-value"/><time/></div>
+ <div className="volume-panel-header" data-volume-grid="3" style={{top:minutePanels.headers[2]}} ref={el=>{volumeHeaders.current[1]=el;}}><span>{macdIndex!.name}成交量（万手） · 总量</span><span className="volume-value"/><time/></div>
  {[stockName||'个股',macdIndex!.name].map((label,i)=><div key={i} className={'macd-panel-header'+(compact?' compact':'')} style={{top:minutePanels.headers[i?3:1]}} ref={el=>{macdHeaders.current[i]=el;}} role="group" aria-label={i?'指数MACD':'个股MACD'}>
-  <div className="macd-panel-heading"><strong>{label} MACD(12,26,9)</strong><span>1分钟</span><time data-macd="time"/></div>
+  <div className="macd-panel-heading"><strong>{label} MACD<button type="button" className="macd-period-button" aria-label={label+' MACD周期设置'} title="修改MACD周期" onClick={()=>{instance.current?.dispatchAction({type:'hideTip'});setEditMacd(true);}}>({macdParameters.fast},{macdParameters.slow},{macdParameters.signal})</button></strong><span>1分钟</span><time data-macd="time"/></div>
   <div className="macd-panel-values"><span data-macd="histogram">MACD —</span><span className="macd-dif" data-macd="dif">DIF —</span><span className="macd-dea" data-macd="dea">DEA —</span></div>
  </div>)}
  {!macdDataReady&&<div className="macd-unavailable" style={{top:minutePanels.grids[4].top+minutePanels.grids[4].height/2}}>该日{macdIndex!.name}暂无可用分钟数据</div>}
- </>}</div>{isCandleView(view)&&<InfoNote label="图表操作">{Math.min(daily.length,candleSizes[view])}根{view==='weekly'?'周':'日'}K视窗 · ↑ 放大 / ↓ 缩小 · ← / → 移动 · 拖动浏览，边界按需加载</InfoNote>}</>;
+ </>}</div>{editMacd&&<MacdSettings value={macdParameters} onChange={updateMacd} onClose={()=>setEditMacd(false)}/>} {isCandleView(view)&&<InfoNote label="图表操作">{Math.min(daily.length,candleSizes[view])}根{view==='weekly'?'周':'日'}K视窗 · ↑ 放大 / ↓ 缩小 · ← / → 移动 · 拖动浏览，边界按需加载</InfoNote>}</>;
 }

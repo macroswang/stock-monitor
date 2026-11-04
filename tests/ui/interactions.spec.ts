@@ -419,19 +419,21 @@ test('intraday tooltip switches sides to keep the crosshair visible without movi
  }
 });
 
-test('daily tooltip stays compact and switches away from the inspected candle',async({page})=>{
+test('daily and weekly tooltips stay inside the chart and switch away from the inspected candle',async({page})=>{
  await page.addStyleTag({content:'.rail,.workspace{transition:none!important}'});
- await page.getByRole('button',{name:'日K',exact:true}).click();
- const chart=page.getByLabel('日K线及成交量'),tooltip=chart.locator('.daily-tooltip');
+ for(const [view,label] of [['日K','日K线及成交量'],['周K','周K线及成交量']]){
+ await page.getByRole('button',{name:view,exact:true}).click();
+ const chart=page.getByLabel(label),tooltip=chart.locator('.daily-tooltip');
  for(const width of [1380,1000]){
   await page.setViewportSize({width,height:980});await page.evaluate(()=>new Promise<void>(resolve=>{window.scrollTo(0,0);requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));}));
   const box=(await chart.boundingBox())!,card=(await page.locator('.detail').boundingBox())!;
   const hover=async(fraction:number)=>{
    const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data.filter((d:string)=>{const x=c.convertToPixel({xAxisIndex:0},d);return x>=65&&x<=c.getWidth()-35;}),i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({xAxisIndex:0},labels[i]),date:labels[i]};},fraction);
-   await page.mouse.move(box.x+target.xy,box.y+150);await expect(tooltip.locator('..')).toBeVisible();await expect(tooltip.locator(':scope>div').first()).toHaveText(target.date);
+   const cursor={x:box.x+target.xy,y:box.y+150};await page.mouse.move(cursor.x,cursor.y);await expect(tooltip.locator('..')).toBeVisible();await expect(tooltip.locator(':scope>div').first()).toContainText(target.date);
+   const rect=(await tooltip.locator('..').boundingBox())!;expect(cursor.x<rect.x||cursor.x>rect.x+rect.width||cursor.y<rect.y||cursor.y>rect.y+rect.height).toBe(true);
   };
   await hover(.35);const first=(await tooltip.locator('..').boundingBox())!;
-  expect(first.y).toBeGreaterThanOrEqual(card.y);expect(first.y+first.height).toBeLessThanOrEqual(box.y+30);
+  expect(first.y).toBeGreaterThanOrEqual(box.y+7);expect(first.y+first.height).toBeLessThanOrEqual(box.y+box.height);
   expect(Math.abs(first.x+first.width-(card.x+card.width-13))).toBeLessThan(3);
   expect(first.width).toBeLessThanOrEqual(325);expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(10);
   await expect(tooltip).toContainText('开盘：');await expect(tooltip).toContainText('成交量：');
@@ -440,9 +442,10 @@ test('daily tooltip stays compact and switches away from the inspected candle',a
   await hover(.75);const second=(await tooltip.locator('..').boundingBox())!;
   expect(second.x).toBeLessThan(first.x);expect(Math.abs(second.y-first.y)).toBeLessThan(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.screenshot({path:test.info().outputPath(`daily-overlay-${width}.png`)});
+  await page.screenshot({path:test.info().outputPath(`${view==='周K'?'weekly':'daily'}-overlay-${width}.png`)});
   await page.mouse.move(0,0);await expect(tooltip.locator('..')).toBeHidden();
   await page.getByRole('button',{name:'暂停',exact:true}).click();await expect(page.getByRole('button',{name:'恢复',exact:true})).toBeVisible();await page.getByRole('button',{name:'恢复',exact:true}).click();
+ }
  }
 });
 
