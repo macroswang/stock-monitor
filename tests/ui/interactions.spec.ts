@@ -382,7 +382,7 @@ test('watch list shows quote change percent and amplitude, with missing fields e
  await expect(stock.getByLabel('涨跌额').locator('strong')).toHaveText('—');await expect(stock.getByLabel('振幅').locator('strong')).toHaveText('—');
 });
 
-test('intraday header uses full width and tooltip overlays controls without moving the plot',async({page})=>{
+test('intraday tooltip switches sides to keep the crosshair visible without moving the plot',async({page})=>{
  await page.addStyleTag({content:'.rail,.workspace{transition:none!important}'});
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  const chart=page.getByLabel('分时价格及分钟成交量'),tooltip=chart.locator('.quote-tooltip');
@@ -391,11 +391,12 @@ test('intraday header uses full width and tooltip overlays controls without movi
   await page.mouse.move(0,0);await expect(tooltip.locator('..')).toBeHidden();
   const box=(await chart.boundingBox())!,card=(await page.locator('.detail').boundingBox())!;
   expect(box.y-card.y).toBeLessThan(245);
-  for(const selector of ['.detail-actions','.chart-toolbar>div:last-child']){const r=(await page.locator(selector).boundingBox())!;expect(Math.abs(r.x+r.width-(card.x+card.width-21))).toBeLessThan(4);}
+  for(const selector of ['.detail-actions','.chart-toolbar>div:last-child']){const r=(await page.locator(selector).boundingBox())!;expect(r.x).toBeGreaterThanOrEqual(card.x+8);expect(r.x+r.width).toBeLessThanOrEqual(card.x+card.width-8);}
   await page.screenshot({path:`docs/header-overlay-idle-${width}.png`});
   const hover=async(fraction:number)=>{
    const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data,i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({seriesIndex:0},[labels[i],10]),time:labels[i]};},fraction);
-   await page.mouse.move(box.x+target.xy[0],box.y+150);await expect(tooltip.locator(':scope>div').first()).toHaveText(target.time,{timeout:1000});
+   const cursor={x:box.x+target.xy[0],y:box.y+50};await page.mouse.move(cursor.x,cursor.y);await expect(tooltip.locator(':scope>div').first()).toHaveText(target.time,{timeout:1000});
+   const rect=(await tooltip.locator('..').boundingBox())!;expect(cursor.x<rect.x-8||cursor.x>rect.x+rect.width+8||cursor.y<rect.y-8||cursor.y>rect.y+rect.height+8).toBe(true);return cursor;
   };
   await hover(.35);const first=(await tooltip.locator('..').boundingBox())!,detail=(await page.locator('.detail').boundingBox())!;
   expect(first.y).toBeGreaterThanOrEqual(detail.y);expect(first.y+first.height).toBeLessThanOrEqual(box.y+30);
@@ -410,7 +411,7 @@ test('intraday header uses full width and tooltip overlays controls without movi
    covered+=Math.max(0,Math.min(r.x+r.width,first.x+first.width)-Math.max(r.x,first.x))*Math.max(0,Math.min(r.y+r.height,first.y+first.height)-Math.max(r.y,first.y));
   }
   expect(covered).toBeGreaterThan(0);
-  for(const fraction of [.2,.55,.85,.4,.75,.25]){await hover(fraction);const rect=(await tooltip.locator('..').boundingBox())!;expect(Math.abs(rect.x-first.x)).toBeLessThan(1);expect(Math.abs(rect.y-first.y)).toBeLessThan(1);}
+  for(const fraction of [.2,.55,.85,.4,.5,.75,.25]){const cursor=await hover(fraction),rect=(await tooltip.locator('..').boundingBox())!;if(fraction>.5)expect(rect.x+rect.width).toBeLessThan(cursor.x);else if(fraction<.5)expect(rect.x).toBeGreaterThan(cursor.x);expect((await chart.boundingBox())!.y).toBeCloseTo(box.y,1);}
   await expect(chart.locator('input')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`docs/header-overlay-hover-${width}.png`});
   await page.getByRole('button',{name:'暂停',exact:true}).click();await expect(page.getByRole('button',{name:'恢复',exact:true})).toBeVisible();
@@ -418,7 +419,7 @@ test('intraday header uses full width and tooltip overlays controls without movi
  }
 });
 
-test('daily tooltip stays compact at the header right and leaves controls clickable',async({page})=>{
+test('daily tooltip stays compact and switches away from the inspected candle',async({page})=>{
  await page.addStyleTag({content:'.rail,.workspace{transition:none!important}'});
  await page.getByRole('button',{name:'日K',exact:true}).click();
  const chart=page.getByLabel('日K线及成交量'),tooltip=chart.locator('.daily-tooltip');
@@ -437,7 +438,7 @@ test('daily tooltip stays compact at the header right and leaves controls clicka
   expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
   await hover(.75);const second=(await tooltip.locator('..').boundingBox())!;
-  expect(Math.abs(second.x-first.x)).toBeLessThan(1);expect(Math.abs(second.y-first.y)).toBeLessThan(1);
+  expect(second.x).toBeLessThan(first.x);expect(Math.abs(second.y-first.y)).toBeLessThan(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:test.info().outputPath(`daily-overlay-${width}.png`)});
   await page.mouse.move(0,0);await expect(tooltip.locator('..')).toBeHidden();

@@ -35,7 +35,10 @@ export function macdNumber(value:number){
  if(Math.abs(value)<1e-10)return '0.0000';
  return value.toFixed(Math.abs(value)>=1?2:Math.abs(value)<.0001?6:4);
 }
-export function macdBound(points:Array<MacdPoint|null>){
- const max=points.reduce((n,p)=>p?Math.max(n,Math.abs(p.dif),Math.abs(p.dea),Math.abs(p.histogram)):n,0);
- return max>0?max*1.12:.001;
+export function macdRange(points:Array<MacdPoint|null>){
+ let min=0,max=0;
+ for(const point of points)if(point)for(const value of [point.dif,point.dea,point.histogram])if(Number.isFinite(value)){min=Math.min(min,value);max=Math.max(max,value);}
+ if(min===max)return {min:-.001,max:.001};
+ const padding=(max-min)*.08;
+ return {min:min-padding,max:max+padding};
 }

@@ -1,6 +1,6 @@
 import {test,expect,Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
-import {benchmarkForStock,minuteMacd,minuteSlots} from '../../src/minuteMacd';
+import {benchmarkForStock,minuteMacd,minuteSlots,macdRange} from '../../src/minuteMacd';
 
 const at=(time:string)=>minuteSlots.indexOf(time);
 test('market mapping distinguishes Shanghai, Shenzhen and ChiNext without guessing',()=>{
@@ -26,6 +26,13 @@ test('lunch stays continuous; invalid, duplicate or missing minutes break and re
   const points=minuteMacd(broken);expect(points[at('10:00')]).toBeNull();expect(points[at('10:01')]).toEqual({dif:0,dea:0,histogram:0});
  }
  expect(minuteMacd(bars.slice(0,20))[20]).toBeNull();
+});
+
+test('MACD scales include both curves and histogram without mirroring unused space',()=>{
+ const points=[{dif:.3,dea:.25,histogram:.1},{dif:.2,dea:.25,histogram:-.1}],range=macdRange(points);
+ expect(range.min).toBeCloseTo(-.132);expect(range.max).toBeCloseTo(.332);
+ for(const p of points)for(const value of Object.values(p)){expect(value).toBeGreaterThan(range.min);expect(value).toBeLessThan(range.max);}
+ expect(macdRange([null,{dif:0,dea:0,histogram:0}])).toEqual({min:-.001,max:.001});
 });
 
 const fixture=JSON.parse(readFileSync('public/preview.json','utf8'));
@@ -127,10 +134,10 @@ test('comparison panes fit common desktop windows and reflow after the market ov
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
  await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
- const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),price:c.getModel().getComponent('grid',0).coordinateSystem.getRect().height,pairs:[...[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({h,grid:i?4:2})),...[...el.parentElement!.querySelectorAll('[data-volume-grid]')].map(h=>({h,grid:Number((h as HTMLElement).dataset.volumeGrid)}))].map(({h,grid})=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',grid).coordinateSystem.getRect().y}))};});
+ const aligned=async()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),box=el.getBoundingClientRect();return {height:box.height,canvas:c.getHeight(),panes:[0,1,2,3,4].map(i=>c.getModel().getComponent('grid',i).coordinateSystem.getRect().height),price:c.getModel().getComponent('grid',0).coordinateSystem.getRect().height,pairs:[...[...el.parentElement!.querySelectorAll('.macd-panel-header')].map((h,i)=>({h,grid:i?4:2})),...[...el.parentElement!.querySelectorAll('[data-volume-grid]')].map(h=>({h,grid:Number((h as HTMLElement).dataset.volumeGrid)}))].map(({h,grid})=>({header:h.getBoundingClientRect().bottom-box.top,grid:c.getModel().getComponent('grid',grid).coordinateSystem.getRect().y}))};});
  for(const [width,height] of [[1380,1200],[1380,900],[1280,800],[1100,768],[1000,680]]){
   await page.setViewportSize({width,height});
-  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeCloseTo(height-22,0);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);if(height===1200){expect(box.height).toBeGreaterThan(700);expect(d.price).toBeGreaterThan(380);}}).toPass();
+  await expect(async()=>{const box=(await chart.boundingBox())!;expect(box.y).toBeGreaterThan(0);expect(box.y+box.height).toBeCloseTo(height-22,0);expect(box.height).toBeGreaterThanOrEqual(350);const d=await aligned();expect(d.canvas).toBe(d.height);for(const p of d.pairs)expect(p.header).toBeLessThan(p.grid);if(height>=900){expect(d.panes[1]).toBeGreaterThanOrEqual(54);expect(d.panes[2]).toBeGreaterThanOrEqual(80);expect(d.panes[3]).toBe(d.panes[1]);expect(d.panes[4]).toBe(d.panes[2]);}if(height===1200){expect(box.height).toBeGreaterThan(700);expect(d.price).toBeGreaterThan(380);}}).toPass();
   for(const name of ['个股MACD','指数MACD']){
    const header=page.getByRole('group',{name,exact:true});await expect(header).toBeInViewport({ratio:1});
    expect(await header.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
@@ -153,6 +160,8 @@ test('index volume uses actual minute lots in its own pane and follows the linke
  await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption();c.dispatchAction({type:'showTip',seriesIndex:o.series.findIndex((v:any)=>v.name==='指数成交量'),dataIndex:o.xAxis[3].data.indexOf('10:30')});});
  const header=page.locator('[data-volume-grid="3"]');await expect(header).toContainText('上证指数成交量（手） · 总量');await expect(header.locator('time')).toHaveText('10:30');await expect(header.locator('.volume-value')).toHaveText('2,020.00 手');
  await expect(page.getByRole('group',{name:'指数MACD',exact:true}).locator('time')).toHaveText('10:30');
+ const rendered=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),models=c.getModel().getSeries(),series=models.find((s:any)=>s.name==='指数成交量'),data=series.getData();return {colors:[0,1,30,50].map(i=>data.getItemVisual(i,'style').fill),width:data.getItemLayout(50).width};});
+ expect(v.data[0]).toBeNull();expect(rendered.colors.slice(1)).toEqual(['#ef6568','#36b898','#36b898']);expect(rendered.width).toBeGreaterThan(2);
 });
 
 test('old index caches with prices but no volume keep MACD and leave volume unavailable',async({page})=>{

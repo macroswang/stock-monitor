@@ -23,11 +23,11 @@ import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
 import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
-import {benchmarkForStock,minuteMacd,minuteSlots,macdBound,macdNumber} from './minuteMacd';
+import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber} from './minuteMacd';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
-// Keep reference panes readable; give additional window height to the price chart.
+// Enlarge the reference panes as space permits while keeping the full stack visible.
 function minutePanelLayout(height:number){
- const basis=Math.min(height,560),volume=Math.max(24,Math.round(basis*.06)),macd=Math.max(35,Math.round(basis*.10)),indexVolume=Math.max(18,Math.round(basis*.045));
+ const auxiliary=Math.min(320,118+Math.max(0,height-350)*.7),volume=Math.round(auxiliary*.2),macd=Math.round(auxiliary*.3),indexVolume=volume;
  const price=height-22-4*22-volume-2*macd-indexVolume-32;
  const heights=[price,volume,macd,indexVolume,macd],grids:{top:number;height:number}[]=[],headers:number[]=[];
  let top=22;
@@ -202,6 +202,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const indexVolumeByTime=new Map<string,number|null>();
   for(const b of indexBars)indexVolumeByTime.set(b.time,indexVolumeByTime.has(b.time)?null:Number.isSafeInteger(b.volume_lots)&&b.volume_lots!>=0?b.volume_lots!:null);
   const indexVolume=labels.map(t=>indexVolumeByTime.get(t)??null);
+  const indexPrices=new Map<string,number>();for(const b of indexBars)indexPrices.set(b.time,indexPrices.has(b.time)?NaN:Number(b.close));
+  let indexPrevious=Number(macdBenchmark?.previous_close),indexColor='#ef6568',indexStarted=false;
+  const indexVolumeColors=labels.map(time=>{const close=indexPrices.get(time);if(!Number.isFinite(close)||!close||close<=0){if(indexStarted)indexPrevious=NaN;return '#8c9db6';}const color=Number.isFinite(indexPrevious)?close>indexPrevious?'#ef6568':close<indexPrevious?'#36b898':indexColor:'#8c9db6';indexPrevious=close;indexStarted=true;if(color!=='#8c9db6')indexColor=color;return color;});
   const macdYAxis=2+Number(showPercent),axisIndices=hasMacd?[0,1,2,3,4]:[0,1];
   let lastHeaderIndex=-2;
   refreshMacd.current=hasMacd?(index)=>{
@@ -256,10 +259,19 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
    legend:{show:!isDay,data:['价格','均价',...(canOverlay?['上证走势']:[])],top:0,textStyle:{color:'#9dacc5',...(hasMacd?{fontSize:10}: {})},...(hasMacd?{itemWidth:16,itemHeight:8,itemGap:14}: {})},
    tooltip:{trigger:'axis',confine:false,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
-    extraCssText:'padding:7px 9px;pointer-events:none;',position:(_point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
+    extraCssText:'padding:7px 9px;pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
      const canvas=chart.getDom(),bounds=canvas.getBoundingClientRect(),host=canvas.closest('.detail');
      const top=Math.max(8,(host?.getBoundingClientRect().top??bounds.top)+8);
-     return [Math.max(5,size.viewSize[0]-size.contentSize[0]-12),top-bounds.top];
+     const [width,height]=size.contentSize,gap=16,left=8,right=Math.max(left,size.viewSize[0]-width-12);
+     const x=point[0]>size.viewSize[0]/2?left:right;
+     let y=top-bounds.top;
+     // Very narrow panes may not have room beside the crosshair. Move vertically
+     // as well in that case, always keeping the pointer outside the popup.
+     if(point[0]>=x-gap&&point[0]<=x+width+gap&&point[1]>=y-gap&&point[1]<=y+height+gap){
+      y=point[1]+gap+height<=window.innerHeight-bounds.top-8?point[1]+gap:point[1]-height-gap;
+     }
+     y=Math.max(8-bounds.top,Math.min(y,window.innerHeight-bounds.top-height-8));
+     return [x,y];
     },
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;if(idx>=0)refreshMacd.current?.(idx);const root=document.createElement('div');root.className='quote-tooltip docked-tooltip '+(isDay?'daily-tooltip':'minute-tooltip');
      if(observations.some(m=>m.time===aligned[idx]?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
@@ -295,9 +307,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
    },axisPointer:{link:[{xAxisIndex:'all'}]},grid:(hasMacd?minutePanels.grids:[{top:30,height:'55%'},{top:'72%',height:'17%'}]).map(grid=>({left:65,right:showPercent?72:35,...grid})),
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,...timeGrid,axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}},axisPointer:{label:{show:!hasMacd}},axisLabel:{show:!hasMacd,hideOverlap:true,...(!isDay?{interval:timeTick,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t}:{})}},{type:'category',gridIndex:1,data:labels,boundaryGap:isDay,...timeGrid,axisLabel:{show:false},axisPointer:{label:{show:false}},axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}}},...(hasMacd?[2,3,4].map(gridIndex=>({type:'category',gridIndex,data:labels,boundaryGap:false,...timeGrid,axisLabel:{show:gridIndex===4,hideOverlap:true,interval:timeTick,fontSize:10,margin:5,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t},axisPointer:{label:{show:gridIndex===4}},axisLine:{lineStyle:{color:'#3b485b'}}})):[])],
    yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,splitNumber:hasMacd?1:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:{rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}}}}]:[]),...(hasMacd?[
-    {type:'value',gridIndex:2,min:-macdBound(stockMacd),max:macdBound(stockMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}},
+    {type:'value',gridIndex:2,...macdRange(stockMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}},
     {type:'value',gridIndex:3,min:0,splitNumber:1,axisLabel:{fontSize:10,formatter:volumeTick},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}}},
-    {type:'value',gridIndex:4,min:-macdBound(indexMacd),max:macdBound(indexMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}}
+    {type:'value',gridIndex:4,...macdRange(indexMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}}
    ]:[])],
    dataZoom:[{type:'inside',xAxisIndex:axisIndices,...zoom,...(isDay?{filterMode:'weakFilter',zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:axisIndices,...zoom,bottom:1,height:hasMacd?10:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{filterMode:'weakFilter',zoomLock:true,handleSize:0,brushSelect:false}: {})}],
    series:[isDay?{name:view==='weekly'?'周K':'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#91a2bb',position:'insideTopRight',align:'right',padding:[2,4]},data:visibleGaps.map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:g.direction==='up'?'rgba(239,101,104,.035)':'rgba(54,184,152,.035)',borderColor:g.direction==='up'?'rgba(239,101,104,.24)':'rgba(54,184,152,.24)',borderWidth:.7,borderType:'solid'}},{xAxis:daily.at(-1)!.date,yAxis:g.high}])},markPoint:{data:tradeMarks},markLine:{data:[]}}:
@@ -306,7 +318,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
     ...(canOverlay?[{name:'上证走势',type:'line',data:indexLine,showSymbol:false,connectNulls:false,z:2,lineStyle:{color:'#929aa9',width:1.2,type:'dashed',opacity:0.8},itemStyle:{color:'#929aa9'}}]:[]),
     ...(!isDay?[{name:'均价',type:'line',data:averages,showSymbol:false,connectNulls:false,lineStyle:{color:'#e9b949',width:1.5},itemStyle:{color:'#e9b949'}}]:[]),
     ...(isDay?[{name:'成交量（万股）',type:'bar',xAxisIndex:1,yAxisIndex:1,data:volume.map((v,i)=>({value:v,itemStyle:{color:colors[i]}}))}]:[
-     {name:'买盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{color:'#ef6568'},data:splits.map(b=>b?b.buy/100:null)},
+     {name:'买盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,barWidth:'85%',barMaxWidth:9,itemStyle:{color:'#ef6568'},data:splits.map(b=>b?b.buy/100:null)},
      {name:'卖盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{color:'#36b898'},data:splits.map(b=>b?b.sell/100:null)},
      {name:'中性 / 未分类量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{color:'#718096'},data:splits.map(b=>b?b.verified?(b.neutral+b.unknown)/100:0:null)},
      {name:'总成交量（回退）',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{opacity:hasSplitVolume?.65:1,color:(params:{dataIndex:number})=>colors[params.dataIndex]},data:splits.map(b=>b?b.verified?0:b.total/100:null)}]),
@@ -318,9 +330,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       data:automatic.map(m=>({value:[m.time,m.price],autoTrade:m.point,symbolOffset:[0,m.offset],itemStyle:{color:m.color,borderColor:'#edf4ff',borderWidth:.6},label:{show:true,formatter:m.label,position:'inside',align:'center',verticalAlign:'middle',offset:tradeLabelOffset(m.label),color:'#fff',fontFamily:'Arial, sans-serif',fontSize:8,fontWeight:'bold',lineHeight:13,padding:0}})),
       tooltip:{trigger:'item',formatter:(params:unknown)=>{const p=(params as {data:{autoTrade:typeof automatic[number]['point']}}).data.autoTrade,root=document.createElement('div');root.className='auto-trade-tooltip';for(const line of autoTradeDetails(p)){const row=document.createElement('div');row.textContent=line;root.append(row);}return root;}}}
     ]:[]),
-    ...(hasMacd?[{name:'指数成交量',type:'bar',xAxisIndex:3,yAxisIndex:macdYAxis+1,barMaxWidth:5,data:indexVolume,itemStyle:{color:'#8c9db6'}}]:[]),
+    ...(hasMacd?[{name:'指数成交量',type:'bar',xAxisIndex:3,yAxisIndex:macdYAxis+1,barWidth:'85%',barMaxWidth:9,data:indexVolume,itemStyle:{color:(p:{dataIndex:number})=>indexVolumeColors[p.dataIndex]}}]:[]),
     ...(hasMacd?[stockMacd,indexMacd].flatMap((points,i)=>[
-     {name:(i?'指数':'个股')+' MACD',type:'bar',xAxisIndex:i?4:2,yAxisIndex:macdYAxis+(i?2:0),barMaxWidth:4,data:points.map(p=>p?.histogram??null),itemStyle:{color:(p:{value:number})=>p.value>=0?'#ef6568':'#36b898'},markLine:{silent:true,symbol:'none',label:{show:false},lineStyle:{color:'#748197',width:1,type:'solid'},data:[{yAxis:0}]}},
+     {name:(i?'指数':'个股')+' MACD',type:'bar',xAxisIndex:i?4:2,yAxisIndex:macdYAxis+(i?2:0),barWidth:'85%',barMaxWidth:9,data:points.map(p=>p?.histogram??null),itemStyle:{color:(p:{value:number})=>p.value>=0?'#ef6568':'#36b898'},markLine:{silent:true,symbol:'none',label:{show:false},lineStyle:{color:'#748197',width:1,type:'solid'},data:[{yAxis:0}]}},
      {name:(i?'指数':'个股')+' DIF',type:'line',xAxisIndex:i?4:2,yAxisIndex:macdYAxis+(i?2:0),data:points.map(p=>p?.dif??null),showSymbol:false,connectNulls:false,lineStyle:{color:'#ff9f43',width:1.3},itemStyle:{color:'#ff9f43'}},
      {name:(i?'指数':'个股')+' DEA',type:'line',xAxisIndex:i?4:2,yAxisIndex:macdYAxis+(i?2:0),data:points.map(p=>p?.dea??null),showSymbol:false,connectNulls:false,lineStyle:{color:'#57a6ff',width:1.3},itemStyle:{color:'#57a6ff'}}
     ]):[]),
