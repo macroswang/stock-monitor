@@ -24,7 +24,7 @@ class AutomationRecoveryTests(unittest.TestCase):
   with patch('core.live_trading.brokers.holdings',return_value=self.snapshot),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
    self.service.drain()
    self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'accepted');self.assertEqual(submit.call_count,1)
- def test_sync_busy_is_deferred_but_expired_signal_is_not_replayed(self):
+ def test_busy_signal_waits_for_fresh_quote_instead_of_expiring(self):
   self.arm()
   with patch('core.live_trading.brokers.holdings',side_effect=runtime.DeviceBusy('device busy')):
    self.observe('one');self.service.drain()
@@ -32,7 +32,7 @@ class AutomationRecoveryTests(unittest.TestCase):
   self.now+=timedelta(seconds=46)
   with patch('core.live_trading.brokers.submit_order') as submit:
    self.service.drain();submit.assert_not_called()
-  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'skipped')
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'pending')
  def test_verified_sync_cache_is_account_scoped_and_short_lived(self):
   with patch('core.live_trading.brokers.holdings',side_effect=lambda _,ident:{**self.snapshot,'account_id':ident,'observed_at':self.now.isoformat()}) as read:
    self.service.sync('a');self.service.sync('a',reuse_seconds=15);self.service.sync('b',reuse_seconds=15)
@@ -58,10 +58,16 @@ class AutomationRecoveryTests(unittest.TestCase):
   self.assertTrue(self.service.settings()['paused'])
   with patch('core.live_trading.brokers.holdings',return_value=self.snapshot):self.service.prepare()
   self.assertFalse(self.service.settings()['paused'])
- def test_partial_sync_never_starts_execution(self):
+ def test_partial_sync_with_verified_configured_target_can_start(self):
   self.arm();self.service.configure(dict(paused=True))
-  with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot,'complete':False}),self.assertRaisesRegex(ValueError,'同步不完整'):self.service.prepare()
+  with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot,'complete':False}):self.service.prepare()
+  self.assertFalse(self.service.settings()['paused'])
+ def test_partial_sync_without_valid_configured_target_cannot_start(self):
+  self.arm();self.service.configure(dict(paused=True))
+  invalid={**self.snapshot,'complete':False,'positions':[{**self.snapshot['positions'][0],'quantity':'--'}]}
+  with patch('core.live_trading.brokers.holdings',return_value=invalid),self.assertRaisesRegex(ValueError,'无法核验'):self.service.prepare()
   self.assertTrue(self.service.settings()['paused'])
+
  def test_execution_refresh_updates_only_selected_stock_and_preserves_full_sync_time(self):
   with patch('core.live_trading.brokers.holdings',return_value=self.snapshot):self.service.sync('a')
   full=self.store.query("SELECT * FROM trading_sync WHERE account_id='a'")[0]
@@ -92,12 +98,13 @@ class AutomationRecoveryTests(unittest.TestCase):
   self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
   with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot,'observed_at':self.now.isoformat()}):self.service.drain()
   self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'trial')
- def test_original_signal_deadline_is_not_extended_by_retry_or_fresh_quotes(self):
+ def test_waiting_past_old_deadline_uses_fresh_account_and_quote(self):
   self.arm();self.observe('one');self.now+=timedelta(seconds=91)
   self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
-  with patch('core.live_trading.brokers.holdings') as holdings,patch('core.live_trading.brokers.submit_order') as submit:
-   self.service.drain();holdings.assert_not_called();submit.assert_not_called()
-  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'skipped')
+  with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot,'observed_at':self.now.isoformat()}) as holdings,patch('core.live_trading.brokers.submit_order') as submit:
+   self.service.drain();holdings.assert_called_once();submit.assert_not_called()
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'trial')
+
  def test_live_start_requires_order_support_but_not_a_report_reader(self):
   self.arm();self.service.configure(dict(mode='live',confirm_live=True))
   with patch('core.live_trading.brokers.list_accounts',return_value=[dict(id='a',supports_order=True,supports_order_report=False)]),patch.object(self.service,'view',return_value={}):

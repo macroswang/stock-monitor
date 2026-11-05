@@ -35,9 +35,10 @@ class TradingTests(unittest.TestCase):
         self.service.apply_snapshot(account,self.snapshot(account))
 
     def arm(self,account='a',**changes):
+        changes.pop('daily_orders',None)
         self.seed(account)
         rule=self.service.rule(account,'sz000981')
-        self.service.save_rule(account,'sz000981',dict(buy_enabled=True,sell_enabled=True,**{'buy_mode':'position','sell_mode':'position','buy_percent':50,'sell_percent':50,'daily_orders':10,**changes}),rule['revision'])
+        self.service.save_rule(account,'sz000981',dict(buy_enabled=True,sell_enabled=True,**{'buy_mode':'position','sell_mode':'position','buy_percent':50,'sell_percent':50,**changes}),rule['revision'])
         self.store.execute('UPDATE trading_rules SET armed_at=? WHERE account_id=?',((self.now-timedelta(minutes=5)).isoformat(),account))
         self.store.setconfig('trading_paused',False)
         self.service.started_at=(self.now-timedelta(minutes=5)).isoformat()
@@ -152,8 +153,7 @@ class TradingTests(unittest.TestCase):
 
     def test_noncontinuous_old_or_pre_enable_events_never_replayed(self):
         self.arm();self.observe(continuous=False)
-        self.assertEqual([r['status'] for r in self.runs()],['skipped'])
-        self.assertIn('采样不连续',json.loads(self.runs()[0]['payload'])['message'])
+        self.assertEqual([r['status'] for r in self.runs()],['pending'])
         self.store.execute('DELETE FROM trading_runs')
         self.service.started_at=self.now.isoformat();self.observe()
         self.assertEqual(self.runs(),[])
@@ -171,7 +171,7 @@ class TradingTests(unittest.TestCase):
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
         self.assertEqual([r['status'] for r in self.runs()],['skipped'])
-        self.assertIn('数据修订',json.loads(self.runs()[0]['payload'])['message'])
+        self.assertIn('历史信号',json.loads(self.runs()[0]['payload'])['message'])
         self.submit.assert_not_called()
 
     def test_live_ingestion_only_dispatches_new_confirmations_after_baseline(self):
@@ -184,12 +184,16 @@ class TradingTests(unittest.TestCase):
             self.service.ingest('sz000981',bars+[dict(bars[0],time='10:01')],self.quote,self.now,True)
         self.assertEqual(len(self.runs()),1)
 
-    def test_expired_signal_is_logged_once_without_gateway_or_pending_task(self):
-        self.arm();self.now+=timedelta(seconds=45)
-        self.observe();self.observe();self.drain()
-        self.assertEqual([r['status'] for r in self.runs()],['skipped'])
-        payload=json.loads(self.runs()[0]['payload']);self.assertIn('45秒',payload['message'])
-        self.assertFalse(payload['admission']['allowed']);self.submit.assert_not_called()
+    def test_delayed_discovery_with_fresh_quote_is_admitted_once(self):
+        self.arm();later=self.now+timedelta(seconds=45)
+        with patch('core.live_trading.now_cn',return_value=later):
+            self.quote['timestamp']=later.isoformat()
+            self.service.observe('sz000981',[self.event()],self.quote,later,True)
+            self.service.observe('sz000981',[self.event()],self.quote,later,True)
+            with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot(),'observed_at':later.isoformat()}):self.service.drain()
+        self.assertEqual([r['status'] for r in self.runs()],['trial'])
+        self.assertTrue(json.loads(self.runs()[0]['payload'])['admission']['allowed'])
+        self.submit.assert_not_called()
 
     def test_repeated_signal_trial_is_durable_and_never_calls_broker_submit(self):
         self.arm();self.observe();self.observe();self.drain();self.observe();self.drain()
@@ -202,10 +206,10 @@ class TradingTests(unittest.TestCase):
         self.arm();self.observe();self.service.pause_account('a',True);self.drain()
         self.assertEqual(self.runs()[0]['status'],'skipped');self.submit.assert_not_called()
 
-    def test_partial_sync_blocks_even_trial(self):
+    def test_partial_sync_of_other_stocks_does_not_block_verified_target(self):
         self.arm();self.observe()
         with patch('core.live_trading.brokers.holdings',return_value=self.snapshot(complete=False)):self.service.drain()
-        self.assertEqual(self.runs()[0]['status'],'skipped');self.submit.assert_not_called()
+        self.assertEqual(self.runs()[0]['status'],'trial');self.submit.assert_not_called()
 
     def test_two_accounts_receive_correct_separate_trial_intents(self):
         self.arm('a');self.arm('b');self.observe();self.drain()
@@ -213,13 +217,13 @@ class TradingTests(unittest.TestCase):
         for r in self.runs():self.assertEqual(json.loads(r['payload'])['plan']['account_id'],r['account_id'])
         self.submit.assert_not_called()
 
-    def test_daily_count_prevents_repeat_signals(self):
+    def test_distinct_signals_have_no_daily_count_cap(self):
         self.arm(daily_orders=1);self.observe(key='one');self.drain();self.observe(key='two');self.drain()
-        self.assertEqual([r['status'] for r in self.runs()],['trial','skipped'])
+        self.assertEqual([r['status'] for r in self.runs()],['trial','trial'])
 
-    def test_price_deviation_blocks(self):
+    def test_price_deviation_no_longer_blocks(self):
         self.arm();self.observe();self.app.quotes['sz000981']={**self.quote,'price':'2.50'};self.drain()
-        self.assertEqual(self.runs()[0]['status'],'skipped');self.submit.assert_not_called()
+        self.assertEqual(self.runs()[0]['status'],'trial');self.submit.assert_not_called()
 
     def test_removed_money_quotas_do_not_block_affordable_orders(self):
         self.arm()

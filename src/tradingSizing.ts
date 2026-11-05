@@ -1,7 +1,7 @@
 import {plannedQuantity, type QuantityRule} from './tradingQuantity';
 
 export type CashReserve = {rate:number; fixed:number};
-export const defaultCashReserve:CashReserve = {rate:0.003, fixed:5};
+export const defaultCashReserve:CashReserve = {rate:0, fixed:0};
 
 export function amount(value:unknown):number|null {
  if ((typeof value!=='number' && typeof value!=='string') || String(value).trim()==='') return null;

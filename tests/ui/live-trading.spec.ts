@@ -141,6 +141,9 @@ test('fixed-hand drafts persist without money limits and changing mode shows the
  await setup(page);
  const a=page.getByRole('region',{name:/华泰涨乐通 · 123/});
  await a.getByRole('button',{name:'配置规则'}).click();let dialog=page.getByRole('dialog');
+ await expect(a).not.toContainText('每日最多');
+ await expect(dialog.getByLabel('最大不利价格偏离（%）')).toHaveCount(0);
+ await expect(dialog).not.toContainText('含预留');
  await dialog.getByLabel('每次买入手数（手）').fill('20');
  await expect(dialog.getByRole('region',{name:'买入结果试算'})).toContainText('每次买入 2,000 股');
  await expect(dialog.getByLabel('该股每日最多执行次数')).not.toBeVisible();
@@ -160,7 +163,7 @@ test('sizing explains the screenshot rounding, cash needs and position impact',(
  const rule:QuantityRule={buy_mode:'lots',sell_mode:'position',buy_lots:1,sell_lots:1,buy_percent:50,sell_percent:50};
  const buy=sizingEstimate('sh603938',300,300,'buy',rule,29.36,'13,361.69','22,170.69');
  expect(buy.quantity).toBe(100);expect(buy.value).toBeCloseTo(2936);
- expect(buy.required).toBeCloseTo(2949.808);expect(buy.cashAfter).toBeCloseTo(10411.882);
+ expect(buy.required).toBeCloseTo(2936);expect(buy.cashAfter).toBeCloseTo(10425.69);
  expect(buy.maxBuyQuantity).toBe(400);expect(buy.positionAfter).toBe(400);
  const sell=sizingEstimate('sh603938',300,300,'sell',rule,29.36,'13,361.69','22,170.69');
  expect(sell.requested).toBe(150);expect(sell.quantity).toBe(100);
@@ -170,7 +173,7 @@ test('sizing explains the screenshot rounding, cash needs and position impact',(
  expect(capped.quantity).toBe(50);expect(capped.positionAfter).toBe(250);
  const tooMany=sizingEstimate('sh603938',300,300,'sell',{...rule,sell_mode:'lots',sell_lots:4},29.36,0,0);
  expect(tooMany.quantity).toBe(0);expect(tooMany.blockedReason).toContain('超过可卖');
- expect(sizingEstimate('sh603938',300,300,'buy',rule,29.36,'2,940',undefined).blockedReason).toContain('资金不足');
+ expect(sizingEstimate('sh603938',300,300,'buy',rule,29.36,'2,935',undefined).blockedReason).toContain('资金不足');
  for(const missing of [undefined,null,'','--','not-a-number']){
   expect(amount(missing)).toBeNull();
   const s=sizingEstimate('sh603938',300,300,'buy',rule,29.36,missing,undefined);
@@ -181,9 +184,9 @@ test('sizing explains the screenshot rounding, cash needs and position impact',(
  const small=sizingEstimate('sh603938',300,300,'sell',{...rule,sell_percent:25},29.36,0,0);
  expect(small.quantity).toBe(0);expect(small.blockedReason).toContain('最低 100 股');
  expect(sizingEstimate('sh688001',499,499,'buy',{...rule,buy_mode:'position'},10,'1,800',undefined).maxBuyQuantity).toBe(0);
- expect(sizingEstimate('sh688001',499,499,'buy',{...rule,buy_mode:'position'},10,'2,502.47',undefined).maxBuyQuantity).toBe(249);
+ expect(sizingEstimate('sh688001',499,499,'buy',{...rule,buy_mode:'position'},10,'2,502.47',undefined).maxBuyQuantity).toBe(250);
  for(const price of [1.01,2.13,5.02,10.3,20.59,29.36]){
-  const cash=Math.ceil((price*700*1.003+5)*100)/100;
+  const cash=Math.ceil((price*700)*100)/100;
   const maximum=sizingEstimate('sh603938',300,300,'buy',rule,price,cash,undefined).maxBuyQuantity!;
   expect(maximum).toBe(700);
   const maxPlan=sizingEstimate('sh603938',300,300,'buy',{...rule,buy_lots:maximum/100},price,cash,undefined);
@@ -376,9 +379,9 @@ test('cancelling startup prevents its delayed sync from starting execution later
 test('stock detail has no execution notice while exact evidence remains in execution records',async({page})=>{
  await setup(page);
  await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();
- const dialog=page.getByRole('dialog');await dialog.getByText('更多设置',{exact:true}).click();
- await expect(dialog.getByLabel('最大不利价格偏离（%）',{exact:true})).toHaveValue('0.5');
- await expect(dialog).toContainText('买入只限制高于信号价，卖出只限制低于信号价');
+ const dialog=page.getByRole('dialog');
+ await expect(dialog.getByText('更多设置',{exact:true})).toHaveCount(0);
+ await expect(dialog.getByLabel('最大不利价格偏离（%）',{exact:true})).toHaveCount(0);
  await dialog.getByRole('button',{name:'取消',exact:true}).click();
  await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_price_checks',{}));
  await page.getByRole('button',{name:'自选监控',exact:true}).click();

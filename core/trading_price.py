@@ -1,14 +1,14 @@
 """Deterministic limit-price protection; no account/device access."""
 from decimal import Decimal, InvalidOperation, ROUND_CEILING, ROUND_FLOOR
 
-PRICE_POLICY = 'adverse-v1'
+PRICE_POLICY = 'current-limit-v2'
 
 
-def price_guard(side, reference, price, maximum):
+def price_guard(side, reference, price, maximum=None):
     if side not in ('buy', 'sell'):
         raise ValueError('买卖方向无效')
     values = []
-    for value, label in ((reference, '信号参考价'), (price, '校验价格'), (maximum, '不利价格偏离上限')):
+    for value, label in ((reference, '信号参考价'), (price, '校验价格')) + (((maximum, '不利价格偏离上限'),) if maximum is not None else ()):
         try:
             number = Decimal(str(value))
         except (InvalidOperation, ValueError):
@@ -16,11 +16,15 @@ def price_guard(side, reference, price, maximum):
         if not number.is_finite() or number <= 0:
             raise ValueError(label+'无效')
         values.append(number)
-    base, current, limit = values
-    if limit > 10:
-        raise ValueError('不利价格偏离上限须不超过10%')
+    base, current = values[:2]
     signed = (current/base-1)*100
     adverse = max(Decimal(0), signed if side == 'buy' else -signed)
+    if maximum is None:
+        return dict(policy=PRICE_POLICY,side=side,reference_price=str(base),quote_price=str(current),
+                    signed_deviation_pct=float(signed),adverse_deviation_pct=float(adverse),allowed=True)
+    limit = values[2]
+    if limit > 10:
+        raise ValueError('不利价格偏离上限须不超过10%')
     boundary = base*(1+limit/100 if side == 'buy' else 1-limit/100)
     boundary = boundary.quantize(Decimal('.01'), rounding=ROUND_FLOOR if side == 'buy' else ROUND_CEILING)
     return dict(policy=PRICE_POLICY, side=side, reference_price=str(base), quote_price=str(current),

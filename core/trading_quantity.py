@@ -1,8 +1,8 @@
 """Account-stock order sizing. No monetary quota is applied here."""
 from fractions import Fraction
 
-BUY_CASH_RESERVE_RATE = .003
-BUY_CASH_RESERVE_FIXED = 5
+BUY_CASH_RESERVE_RATE = 0
+BUY_CASH_RESERVE_FIXED = 0
 
 
 def buy_cash_required(value):

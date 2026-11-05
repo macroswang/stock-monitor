@@ -36,6 +36,7 @@ class PriceGuardTests(unittest.TestCase):
         for bad in (None,0,-1,'nan','Infinity',True,'text'):
             for field in range(3):
                 values=['29.04','29.04','.5'];values[field]=bad
+                if field==2 and bad is None:continue
                 with self.subTest(field=field,value=bad),self.assertRaises(ValueError):price_guard('sell',*values)
         with self.assertRaises(ValueError):price_guard('unknown',29,29,.5)
         with self.assertRaises(ValueError):price_guard('sell',29,29,11)
@@ -94,20 +95,20 @@ class IncidentExecutionTests(unittest.TestCase):
         self.assertEqual(self.run_payload()[0]['status'],'accepted');holdings.assert_called_once_with(self.store,'a',target_code=self.code)
         self.assertEqual(self.submit.call_args.args[1:6],('a','buy','603938',200,'28.89'))
 
-    def test_adverse_price_fails_before_expensive_device_read(self):
+    def test_adverse_price_still_reaches_verified_account(self):
         self.app.quotes[self.code]=dict(price='28.89',timestamp=self.now.isoformat());self.observe()
-        with patch('core.live_trading.brokers.holdings') as holdings:self.service.drain(reports=False)
-        row,payload=self.run_payload();self.assertEqual(row['status'],'skipped');holdings.assert_not_called();self.submit.assert_not_called()
-        self.assertFalse(payload['price_checks']['before_holdings']['allowed']);self.assertIn('28.89',payload['message']);self.assertIn('29.04',payload['message'])
+        with patch('core.live_trading.brokers.holdings',return_value=self.snapshot()) as holdings:self.service.drain(reports=False)
+        row,payload=self.run_payload();self.assertEqual(row['status'],'accepted');holdings.assert_called_once();self.submit.assert_called_once()
+        self.assertTrue(payload['price_checks']['before_holdings']['allowed']);self.assertNotIn('maximum_pct',payload['price_checks']['before_holdings'])
 
     def test_final_confirmation_rechecks_market_and_original_order_limit(self):
         self.observe()
         with patch('core.live_trading.brokers.holdings',return_value=self.snapshot()):self.service.drain(reports=False)
         guard=self.submit.call_args.kwargs['authorize']
         self.app.quotes[self.code]=dict(price='28.89',timestamp=self.now.isoformat())
-        with self.assertRaisesRegex(ValueError,'卖出价低于'):guard()
+        guard()
         _,payload=self.run_payload();self.assertEqual(payload['price_checks']['before_submit']['quote_price'],'28.89')
-        self.assertFalse(payload['price_checks']['before_submit']['allowed'])
+        self.assertTrue(payload['price_checks']['before_submit']['allowed'])
         self.app.quotes[self.code]=dict(price='29.30',timestamp=self.now.isoformat());guard()
         _,payload=self.run_payload();self.assertTrue(payload['price_checks']['before_submit']['allowed']);self.assertEqual(payload['price_checks']['before_submit']['order_price'],'29.08')
 
@@ -119,16 +120,15 @@ class IncidentExecutionTests(unittest.TestCase):
             with patch('core.live_trading.brokers.holdings') as holdings:self.service.drain(reports=False)
             self.assertEqual(self.run_payload()[0]['status'],'skipped');holdings.assert_not_called();self.submit.assert_not_called()
 
-    def test_expiry_after_holdings_preserves_actual_recheck_quote_and_timing(self):
+    def test_holdings_past_old_deadline_can_use_fresh_quote(self):
         self.observe()
         def late(*_args,**_kwargs):
             self.now+=timedelta(seconds=91)
             self.app.quotes[self.code]=dict(price='29.20',timestamp=self.now.isoformat())
             return self.snapshot()
         with patch('core.live_trading.brokers.holdings',side_effect=late):self.service.drain(reports=False)
-        run,payload=self.run_payload();self.assertEqual(run['status'],'skipped');self.submit.assert_not_called()
-        check=payload['price_checks']['after_holdings'];self.assertEqual(check['quote_price'],'29.20');self.assertFalse(check['allowed']);self.assertEqual(check['signal_age_ms'],94000)
-        self.assertIn('过期',payload['message'])
+        run,payload=self.run_payload();self.assertEqual(run['status'],'accepted');self.submit.assert_called_once()
+        check=payload['price_checks']['after_holdings'];self.assertEqual(check['quote_price'],'29.20');self.assertTrue(check['allowed']);self.assertEqual(check['signal_age_ms'],94000)
 
     def test_restart_uses_persisted_baseline_for_native_target_check_only(self):
         restarted=LiveTrading(self.app)
@@ -155,13 +155,13 @@ class IncidentExecutionTests(unittest.TestCase):
         self.service.apply_snapshot('a',{**self.snapshot(),'complete':False})
         with patch('core.live_trading.brokers.holdings',return_value=self.snapshot()) as holdings:
             self.service.execution_sync('a',self.code)
-        holdings.assert_called_once_with(self.store,'a')
+        holdings.assert_called_once_with(self.store,'a',target_code=self.code)
 
-    def test_price_policy_upgrade_pauses_once_preserves_rules_and_discards_old_intents(self):
+    def test_removing_price_cap_preserves_running_state_and_discards_restart_intents(self):
         before=self.service.rule('a',self.code);self.observe()
         self.store.execute("DELETE FROM config WHERE key='trading_price_policy'")
         upgraded=LiveTrading(self.app)
-        self.assertTrue(upgraded.settings()['paused']);self.assertEqual(upgraded.rule('a',self.code),before)
-        self.assertEqual(self.run_payload()[0]['status'],'skipped');self.assertIn('重新启动',upgraded.settings()['signal_notice'])
+        self.assertFalse(upgraded.settings()['paused']);self.assertEqual(upgraded.rule('a',self.code),before)
+        self.assertEqual(self.run_payload()[0]['status'],'skipped')
         upgraded.configure(dict(paused=False));self.assertFalse(LiveTrading(self.app).settings()['paused'])
         self.assertEqual(self.store.config()['trading_price_policy'],PRICE_POLICY)

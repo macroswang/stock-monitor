@@ -50,7 +50,7 @@ class QuantityServiceTests(unittest.TestCase):
    self.store.execute('INSERT INTO broker_accounts(id,broker,account) VALUES(?,?,?)',(ident,'ths','12345678'+ident))
    self.service.apply_snapshot(ident,{**self.snapshot,'account_id':ident})
  def arm(self):
-  r=self.service.rule('a','sh603938');self.service.save_rule('a','sh603938',dict(buy_enabled=True,sell_enabled=True,daily_orders=10),r['revision'])
+  r=self.service.rule('a','sh603938');self.service.save_rule('a','sh603938',dict(buy_enabled=True,sell_enabled=True),r['revision'])
   self.service.configure(dict(paused=False));self.service.started_at=(self.now-timedelta(minutes=3)).isoformat()
   self.store.execute('UPDATE trading_rules SET armed_at=?',((self.now-timedelta(minutes=3)).isoformat(),))
  def observe(self,key):

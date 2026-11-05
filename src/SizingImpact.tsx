@@ -31,12 +31,11 @@ export function SizingOutcome({code,position,sellable,side,rule,price,funds,rese
    <dl>
     <div><dt>成交后持仓</dt><dd>{formatted(position)} → {formatted(s.positionAfter)} 股</dd></div>
     {s.weight!==null&&<div><dt>该股占账户总资产</dt><dd>{formatted(s.weight)}% → {formatted(s.weightAfter)}%</dd></div>}
-    {side==='buy'&&s.required!==null&&<div><dt>预计占用资金</dt><dd>{formatted(s.required)} 元<small>含预留 {formatted(s.fee)}</small></dd></div>}
+    {side==='buy'&&s.required!==null&&<div><dt>预计占用资金</dt><dd>{formatted(s.required)} 元<small>未扣费</small></dd></div>}
     {s.cashAfter!==null&&(side==='sell'||!s.blockedReason)&&<div><dt>成交后可用资金</dt><dd>{formatted(s.cashAfter)} 元{side==='sell'&&<small>未扣费</small>}</dd></div>}
    </dl>
   </>}
   {side==='buy'&&<p className="trading-affordable">按本账户可用资金，估算最多可买 {code.startsWith('sh688')?<>{formatted(s.maxBuyQuantity)} 股</>:<>{s.maxBuyQuantity===null?'—':formatted(s.maxBuyQuantity/100)} 手{s.maxBuyQuantity!==null&&<>（{formatted(s.maxBuyQuantity)} 股）</>}</>}。</p>}
-  {side==='sell'&&s.quantity>0&&s.positionAfter===0&&<p>清仓后，下次同步会关闭该股的自动买卖开关。</p>}
   {s.blockedReason&&<p className="trading-sizing-warning" role="status">{s.blockedReason}</p>}
  </section>;
 }

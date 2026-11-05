@@ -152,7 +152,7 @@ class Harness:
             brokers.SecretStore().set(broker,account,'password','TEST_ONLY')
             self.app.live_trading.sync(ident)
             rule=self.app.live_trading.rule(ident,'sz000981')
-            self.app.live_trading.save_rule(ident,'sz000981',dict(buy_enabled=True,sell_enabled=True,buy_lots=lots,sell_lots=lots,daily_orders=10),rule['revision'])
+            self.app.live_trading.save_rule(ident,'sz000981',dict(buy_enabled=True,sell_enabled=True,buy_lots=lots,sell_lots=lots),rule['revision'])
         self.app.store.setconfig('monitor',True);self.app.live_trading.configure(dict(mode='live',confirm_live=True))
         self.bars=json.loads((Path(__file__).parent/'ui/fixtures/turning-shapes.json').read_text())[2]['bars']
     def tick(self,stamp):

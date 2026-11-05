@@ -22,13 +22,20 @@ from executor.runtime import DeviceBusy, OperationInterrupted, budget
 
 
 DEFAULT_RULE = dict(buy_enabled=False,sell_enabled=False,buy_mode='lots',sell_mode='lots',
-                    buy_lots=1,sell_lots=1,buy_percent=50,sell_percent=50,daily_orders=2,
-                    max_deviation_pct=.5,signal=SIGNAL)
+                    buy_lots=1,sell_lots=1,buy_percent=50,sell_percent=50,signal=SIGNAL)
 
-# Native confirmation rehearsals take 37-46s even without holdings traversal.
-# Admit only newly discovered signals (45s); expire execution from the signal's
-# original minute after 90s, never restart that clock on retries or syncs.
-EXECUTION_SECONDS=90
+# Bound each native operation so one broker cannot hang the app. Queue waiting
+# is not measured against the chart's minute label; latest-signal checks own it.
+DEVICE_OPERATION_SECONDS=90
+
+
+class QuoteNotReady(ValueError):
+    pass
+
+
+def signal_identity(signal):
+    candidate=signal.get('candidateTime')
+    return f"{SIGNAL}|{signal['kind']}|{candidate}" if candidate else signal['key']
 
 
 def number(value):
@@ -86,6 +93,10 @@ class LiveTrading:
             for row in self.store.db.execute('SELECT r.*,p.payload AS position FROM trading_rules r LEFT JOIN trading_positions p ON p.account_id=r.account_id AND p.code=r.code').fetchall():
                 old=json.loads(row['payload'])
                 if set(old)==set(DEFAULT_RULE) and old.get('signal')==SIGNAL:continue
+                if set(old)-{'daily_orders','max_deviation_pct'}==set(DEFAULT_RULE) and old.get('signal')==SIGNAL:
+                    self.store.db.execute('UPDATE trading_rules SET payload=?,revision=revision+1 WHERE account_id=? AND code=?',
+                                          (json.dumps({k:old[k] for k in DEFAULT_RULE}),row['account_id'],row['code']))
+                    continue
                 new=migrate_rule(row['code'],old,json.loads(row['position'] or '{}'),DEFAULT_RULE)
                 new['signal']=SIGNAL
                 self.store.db.execute('UPDATE trading_rules SET payload=?,revision=revision+1,armed_at=? WHERE account_id=? AND code=?',
@@ -94,14 +105,7 @@ class LiveTrading:
             if changed:
                 self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_paused','true')")
                 self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('数量规则已简化为固定手数或当前持仓百分比；金额上限已移除，原买卖开关已保留，自动执行已暂停。'),))
-            # A protection-semantics upgrade requires a new user start; never
-            # run old armed intents under a different price policy silently.
-            config=self.store.config()
-            if config.get('trading_price_policy') != PRICE_POLICY:
-                self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_price_policy',?)",(json.dumps(PRICE_POLICY),))
-                if config.get('trading_paused',True) is False:
-                    self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_paused','true')")
-                    self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('价格保护已更新为买入不追高、卖出不低卖；原买卖规则和阈值已保留，请核对后重新启动，仅处理之后的新信号。'),))
+            self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_price_policy',?)",(json.dumps(PRICE_POLICY),))
             self.store.db.commit()
 
     def account(self, ident):
@@ -130,7 +134,7 @@ class LiveTrading:
                 if type(args['paused']) is not bool:
                     raise ValueError('暂停状态必须为开或关')
                 if not args['paused'] and self.settings()['mode']=='live':
-                    enabled={r['account_id'] for r in self.store.query("SELECT account_id FROM trading_rules WHERE json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1")}
+                    enabled=self.enabled_accounts()
                     if any(not a['supports_order'] for a in brokers.list_accounts(self.store) if a['id'] in enabled):
                         raise ValueError('已开启规则的账户尚不支持本机下单，请使用试运行')
                 self.store.setconfig('trading_paused', args['paused'])
@@ -154,15 +158,21 @@ class LiveTrading:
         with self.lock:
             epoch=self.control_revision
             if not self.settings()['paused']:raise ValueError('自动执行已在运行')
-            accounts={r['account_id'] for r in self.store.query("SELECT account_id FROM trading_rules WHERE json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1")}
+            accounts=self.enabled_accounts()
             if not accounts:raise ValueError('请先开启股票的自动买卖规则')
         for ident in sorted(accounts):
-            if self.sync(ident)['status']!='complete':raise ValueError('账户同步不完整，自动执行保持暂停，请检查账户提示')
+            if self.sync(ident)['status']!='complete':
+                codes=self.store.query("SELECT code FROM trading_rules WHERE account_id=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1)",(ident,))
+                if any(self.execution_sync(ident,r['code'])['status']!='complete' for r in codes):
+                    raise ValueError('配置股票的持仓无法核验，自动执行保持暂停')
             with self.lock:
                 if epoch!=self.control_revision:raise ValueError('启动已取消，自动执行保持暂停')
         with self.lock:
             if epoch!=self.control_revision:raise ValueError('启动已取消，自动执行保持暂停')
             return self.configure(dict(paused=False))
+
+    def enabled_accounts(self):
+        return {r['account_id'] for r in self.store.query("SELECT DISTINCT r.account_id FROM trading_rules r LEFT JOIN trading_accounts a ON a.account_id=r.account_id WHERE COALESCE(a.paused,0)=0 AND (json_extract(r.payload,'$.buy_enabled')=1 OR json_extract(r.payload,'$.sell_enabled')=1)")}
 
     def rule(self, ident, code):
         rows = self.store.query('SELECT * FROM trading_rules WHERE account_id=? AND code=?', (ident, code))
@@ -194,11 +204,6 @@ class LiveTrading:
                 new[side+'_percent']=float(percent)
                 if code.startswith('sh688') and new[side+'_enabled'] and new[side+'_mode']=='lots' and lots<2:
                     raise ValueError('该股票固定手数至少为2手')
-            if type(new['daily_orders']) is not int or not 1<=new['daily_orders']<=100:
-                raise ValueError('每日执行次数须为1至100的整数')
-            if isinstance(new['max_deviation_pct'],bool) or number(new['max_deviation_pct']) is None or not 0<float(new['max_deviation_pct'])<=10:
-                raise ValueError('价格偏离须大于0且不超过10%')
-            new['max_deviation_pct']=float(new['max_deviation_pct'])
             if new['signal'] != SIGNAL:
                 raise ValueError('自动交易使用图中已确认的顶／底信号')
             self.store.execute('INSERT OR REPLACE INTO trading_rules VALUES(?,?,?,?,?)',
@@ -229,18 +234,28 @@ class LiveTrading:
     def execution_sync(self,ident,code):
         if 0 <= stamp_age(self.verified_sync.get(ident),now_cn()) <= 30:return self.sync(ident,reuse_seconds=30)
         states=self.store.query('SELECT * FROM trading_sync WHERE account_id=?',(ident,))
-        if not states or states[0]['status']!='complete':return self.sync(ident)
+        if not states or states[0]['status'] not in ('complete','partial'):return self.sync(ident)
         baseline=states[0]
-        # A persisted complete baseline can route a targeted recheck even after
+        # A persisted account-verified baseline can route a targeted recheck after
         # restart. The native gateway still verifies the account before/after
         # reading, and both actual target quantities are reread, never inferred.
         data=json.loads(baseline['payload'])
         known=self.store.query('SELECT 1 FROM trading_positions WHERE account_id=? AND code=?',(ident,code))
-        if not known or data.get('account_id')!=ident or data.get('account_verified') is not True or data.get('complete') is not True or data.get('unresolved'):
+        if not known or data.get('account_id')!=ident or data.get('account_verified') is not True:
             return self.sync(ident)
         snapshot=brokers.holdings(self.store,ident,target_code=code)
         if snapshot.get('position_only') is not True:
-            with self.lock:return self.apply_snapshot(ident,snapshot)
+            with self.lock:
+                result=self.apply_snapshot(ident,snapshot)
+                # Unresolved OTHER stocks do not invalidate a freshly verified
+                # explicit target code in this account's native snapshot.
+                targets=[p for p in snapshot.get('positions',[]) if p.get('code') in (code,code[2:])]
+                qty=number(targets[0].get('quantity')) if len(targets)==1 else None
+                sellable=number(targets[0].get('sellable')) if len(targets)==1 else None
+                if result['status']=='partial' and qty is not None and sellable is not None and 0<=sellable<=qty and qty==int(qty) and sellable==int(sellable):
+                    fresh=self.store.query('SELECT updated_at FROM trading_positions WHERE account_id=? AND code=?',(ident,code))
+                    if fresh and fresh[0]['updated_at']==snapshot['observed_at']:return dict(status='complete',position_only=True)
+                return result
         if snapshot.get('account_id')!=ident or snapshot.get('account_verified') is not True or not 0<=stamp_age(snapshot.get('observed_at'),now_cn())<=30:
             raise ValueError('目标持仓的账户或时间无法核验')
         positions=snapshot.get('positions',[])
@@ -250,7 +265,7 @@ class LiveTrading:
         row.update(code=code,quantity=int(qty),sellable=int(sellable))
         with self.lock,self.store.lock,self.store.db:
             current=self.store.db.execute('SELECT token,status FROM trading_sync WHERE account_id=?',(ident,)).fetchone()
-            if not current or current['token']!=baseline['token'] or current['status']!='complete':raise ValueError('完整持仓快照已改变，请重新核验')
+            if not current or current['token']!=baseline['token'] or current['status']!=baseline['status']:raise ValueError('持仓快照已改变，请重新核验')
             data=json.loads(baseline['payload']);data.update(funds=snapshot.get('funds',{}),observed_at=snapshot['observed_at'])
             data['positions']=[row if p.get('code') in (code,code[2:]) or (not p.get('code') and p.get('name')==row.get('name')) else p for p in data.get('positions',[])]
             self.store.db.execute('UPDATE trading_positions SET payload=?,active=?,updated_at=? WHERE account_id=? AND code=?',(json.dumps(row),int(qty>0),snapshot['observed_at'],ident,code))
@@ -316,7 +331,7 @@ class LiveTrading:
             status = 'complete' if complete else 'partial'
             payload = dict(snapshot, unresolved=unresolved)
             self.store.db.execute('INSERT INTO trading_sync VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET token=excluded.token,payload=excluded.payload,status=excluded.status,error=excluded.error,updated_at=excluded.updated_at,last_success=COALESCE(excluded.last_success,trading_sync.last_success)',
-                                 (ident, token, json.dumps(payload), status, '' if complete else snapshot.get('warning') or '部分持仓待确认，保留上次数据，暂停该账户自动执行', stamp, stamp if complete else None))
+                                 (ident, token, json.dumps(payload), status, '' if complete else snapshot.get('warning') or '部分持仓代码待确认；已核验股票可独立执行', stamp, stamp if complete else None))
         return dict(status=status, added=added, updated=updated, unresolved=len(unresolved), token=token)
 
     def map_position(self, ident, token, name, code):
@@ -452,14 +467,21 @@ class LiveTrading:
             same_day=previous is not None and previous['day']==day
             seen=previous['seen'] if same_day else set()
             fresh=[m for m in observations if m['key'] not in seen]
-            revised=bool(same_day and signature[:len(previous['signature'])]!=previous['signature'])
-            # Baseline every recovered/revised observation so it cannot turn into a
-            # "new" signal one poll later. Includes VWAP revisions affecting labelled chart shapes.
-            self.frames[code]=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations})
-            self.observe(code,fresh,quote,now,continuous and same_day and not revised,
-                         admission_reason='分钟数据修订，未补下旧信号' if revised else admission_reason or ('启动采样基线，未补下历史信号' if not same_day else ''))
+            tail=max((b['time'] for b in bars),default='')
+            prior_tail=max((b[0] for b in previous['signature']),default='') if same_day else ''
+            if same_day and (tail<prior_tail or len(signature)<len(previous['signature'])):
+                previous['ready']=False
+                return
+            latest=max(observations,key=lambda m:m['time'],default=None)
+            live_minute=str(quote.get('timestamp') or now.isoformat())[11:16]
+            self.frames[code]=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations},
+                                   latest=signal_identity(latest) if latest else None,ready=tail==live_minute,observed_at=now.isoformat())
+            for m in fresh:
+                historical=(not same_day and m['time']<=self.started_at[11:16]) or m['time']<prior_tail or m['time']!=tail or m['time']!=live_minute or m is not latest
+                self.observe(code,[m],quote,now,continuous,admission_reason='历史信号或启动采样基线，未补单' if historical else '',
+                             baseline_at=previous.get('observed_at') if same_day else None)
 
-    def observe(self, code, observations, quote, now, continuous, admission_reason=''):
+    def observe(self, code, observations, quote, now, continuous, admission_reason='',baseline_at=None):
         # Called only by live quote ingestion, never by chart rendering or replay.
         if self.settings()['paused']:
             return
@@ -467,17 +489,20 @@ class LiveTrading:
             for m in observations:
                 event_at = datetime.fromisoformat(now.date().isoformat()+'T'+m['time']+':00').replace(tzinfo=now.tzinfo)
                 age=(now-event_at).total_seconds()
-                if age<0 or event_at.isoformat() <= self.started_at:continue
-                reason=(admission_reason or '采样不连续，未补下旧信号') if not continuous else '信号发现已超过45秒，未追单' if age>45 else ''
+                if age<0 or (event_at.isoformat()<=self.started_at and (not baseline_at or baseline_at<self.started_at)):continue
+                reason=admission_reason
                 side = 'buy' if m['kind'] == 'bottom' else 'sell'
                 for row in self.store.query('SELECT * FROM trading_rules WHERE code=?', (code,)):
                     rule = json.loads(row['payload'])
-                    if not rule[side+'_enabled'] or event_at.isoformat() <= row['armed_at']:
+                    if not rule[side+'_enabled'] or (event_at.isoformat()<=row['armed_at'] and (not baseline_at or baseline_at<row['armed_at'])):
+                        continue
+                    if m.get('candidateTime') and self.store.query("SELECT 1 FROM trading_runs WHERE account_id=? AND code=? AND side=? AND day=? AND json_extract(payload,'$.signal.candidateTime')=? AND status NOT IN ('skipped','failed','not_sent') LIMIT 1",
+                            (row['account_id'],code,side,now.date().isoformat(),m['candidateTime'])):
                         continue
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
                     payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])
-                    payload['admission']=dict(allowed=not bool(reason),continuous=continuous,observed_at=now.isoformat(),signal_age_ms=milliseconds(age),reason=reason)
+                    payload['admission']=dict(allowed=not bool(reason),continuous=continuous,observed_at=now.isoformat(),baseline_at=baseline_at,signal_age_ms=milliseconds(age),reason=reason)
                     if reason:payload['message']=reason
                     self.store.execute('INSERT OR IGNORE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)', (ident,row['account_id'],code,side,key,now.date().isoformat(),'skipped' if reason else 'pending',json.dumps(payload),now.isoformat(),now.isoformat()))
 
@@ -488,7 +513,7 @@ class LiveTrading:
         stamp=now_cn()
         checks=payload.setdefault('price_checks',{})
         try:
-            check=price_guard(run['side'],payload['reference_price'],quote.get('price'),rule['max_deviation_pct'])
+            check=price_guard(run['side'],payload['reference_price'],quote.get('price'))
             plan=payload.get('plan')
             if quote.get('code') not in (None,run['code']):
                 check.update(allowed=False,error='行情代码与委托股票不一致')
@@ -501,7 +526,7 @@ class LiveTrading:
                 if bound is None or bound<=0 or any(v is None or (v>bound if upper else v<bound) for v in prices):
                     check.update(allowed=False,error='价格超出有效'+label+'范围，已阻止提交')
             if plan:
-                ordered=price_guard(run['side'],payload['reference_price'],plan['price'],rule['max_deviation_pct'])
+                ordered=price_guard(run['side'],payload['reference_price'],plan['price'])
                 check.update(order_price=plan['price'],order_allowed=ordered['allowed'],order_adverse_deviation_pct=ordered['adverse_deviation_pct'])
                 if not ordered['allowed']:
                     check['allowed']=False
@@ -510,12 +535,13 @@ class LiveTrading:
             check=dict(policy=PRICE_POLICY,allowed=False,error=str(exc),reference_price=payload.get('reference_price'),quote_price=quote.get('price'))
         quote_age=stamp_age(quote.get('timestamp'),stamp);signal_age=self.execution_age(run,stamp)
         check.update(checked_at=stamp.isoformat(),quote_at=quote.get('timestamp'),stage=stage,quote_age_ms=milliseconds(quote_age),signal_age_ms=milliseconds(signal_age))
-        if not 0<=quote_age<=30 or not 0<=signal_age<=EXECUTION_SECONDS:
-            check.update(allowed=False,error='信号或行情已过期，已阻止提交')
+        if not 0<=quote_age<=30:
+            check.update(allowed=False,error='行情尚未更新，等待新报价')
         checks[stage]=check
         payload.setdefault('timings',{})['elapsed_ms']=milliseconds(signal_age)
         self.persist_progress(run,payload)
         if not check['allowed']:
+            if check.get('error')=='行情尚未更新，等待新报价':raise QuoteNotReady(check['error'])
             raise ValueError(check.get('error') or rejection_message(check))
 
     def finish(self, run, status, payload):
@@ -523,8 +549,21 @@ class LiveTrading:
         self.store.execute('UPDATE trading_runs SET status=?,payload=?,updated_at=? WHERE id=?', (status,json.dumps(payload),now_cn().isoformat(),run['id']))
 
     def process(self, run):
-        with budget(max(0,EXECUTION_SECONDS-self.execution_age(run,now_cn()))):
+        with budget(DEVICE_OPERATION_SECONDS):
             self._process(run)
+
+    def check_current(self,run,payload):
+        now=now_cn()
+        if run['day']!=now.date().isoformat() or now.strftime('%H:%M:%S')>'15:00:00':
+            raise ValueError('交易日或交易时段已结束，未补发旧委托')
+        frame=self.frames.get(run['code'])
+        if frame and frame['day']==run['day'] and not frame.get('ready',True):
+            raise QuoteNotReady('分钟数据尚未更新，等待实时信号核验')
+        if frame and frame['day']==run['day'] and frame.get('latest')!=signal_identity(payload['signal']):
+            raise ValueError('信号已变化，原委托已取消')
+        newer=self.store.query("SELECT id FROM trading_runs WHERE account_id=? AND code=? AND day=? AND COALESCE(json_extract(payload,'$.admission.allowed'),1)=1 ORDER BY created_at DESC,rowid DESC LIMIT 1",
+                               (run['account_id'],run['code'],run['day']))
+        if newer and newer[0]['id']!=run['id']:raise ValueError('已有更新信号，原委托已取消')
 
     def execution_age(self,run,now):
         return stamp_age(json.loads(run['payload']).get('signal_at',run['created_at']),now)
@@ -533,6 +572,7 @@ class LiveTrading:
         payload = json.loads(run['payload'])
         payload.setdefault('timings',{})['queue_ms']=milliseconds(stamp_age(run['created_at'],now_cn()))
         try:
+            self.check_current(run,payload)
             if self.settings()['paused'] or self.settings()['mode'] != payload['mode'] or payload.get('run_epoch') != self.started_at:
                 raise ValueError('自动交易已暂停或模式已改变')
             paused = self.store.query('SELECT paused FROM trading_accounts WHERE account_id=?', (run['account_id'],))
@@ -558,7 +598,7 @@ class LiveTrading:
                 payload['timings']['holdings_ms']=round((time.monotonic()-sync_started)*1000,1)
                 self.persist_progress(run,payload)
             state = self.store.query('SELECT * FROM trading_sync WHERE account_id=?', (run['account_id'],))[0]
-            if state['status'] != 'complete':
+            if synced['status'] != 'complete':
                 raise ValueError('持仓同步不完整或代码待确认，暂停执行')
             # Sync may disable a rule after a confirmed clearance.
             current = self.rule(run['account_id'],run['code'])
@@ -577,13 +617,11 @@ class LiveTrading:
                 payload['plan'] = plan
                 previous = self.store.query("SELECT * FROM trading_runs WHERE account_id=? AND day=? AND json_extract(payload,'$.mode')=? AND status IN ('trial','sending','accepted','unknown','partial','filled','cancelled','rejected') AND id<>?",(run['account_id'],run['day'],payload['mode'],run['id']))
                 same = [r for r in previous if r['code']==run['code']]
-                if len(same) >= rule['daily_orders']:
-                    raise ValueError('已达到该股每日执行次数上限')
                 if run['side']=='buy':
                     available = number(json.loads(state['payload']).get('funds',{}).get('available'))
                     reserved = sum(buy_cash_required(json.loads(r['payload']).get('plan',{}).get('value',0)) for r in previous if r['side']=='buy' and r['status']=='trial')
                     if available is None or buy_cash_required(plan['value']) > available-reserved:
-                        raise ValueError('账户可用资金不足或无法读取（已预留费用及试运行占用）')
+                        raise ValueError('账户可用资金不足或无法读取')
                 elif payload['mode']=='trial':
                     sold = sum(json.loads(r['payload']).get('plan',{}).get('quantity',0) for r in same if r['side']=='sell' and r['status']=='trial')
                     held = self.store.query('SELECT payload FROM trading_positions WHERE account_id=? AND code=?',(run['account_id'],run['code']))[0]
@@ -597,6 +635,7 @@ class LiveTrading:
             # Recheck AFTER device login/preview and immediately before final confirmation.
             def authorize():
                 with self.lock:
+                    self.check_current(run,payload)
                     self.account(run['account_id'])
                     current = self.rule(run['account_id'],run['code'])
                     paused = self.store.query('SELECT paused FROM trading_accounts WHERE account_id=?',(run['account_id'],))
@@ -615,12 +654,13 @@ class LiveTrading:
                 payload['timings']['gateway_ms']=round((time.monotonic()-gateway_started)*1000,1)
             self.verified_sync.pop(run['account_id'],None)
             payload['result'] = result
-            payload['message'] = result.get('message') or result.get('result',{}).get('message') or {'accepted':'券商已受理','rejected':'券商已拒绝','unknown':'未收到明确回执；本请求不自动重发'}.get(result['status'],'委托结果已记录')
+            payload['message'] = result.get('message') or (result.get('result') or {}).get('message') or {'accepted':'券商已受理','rejected':'券商已拒绝','unknown':'未收到明确回执；本请求不自动重发'}.get(result['status'],'委托结果已记录')
             self.finish(run,result['status'],payload)
-        except DeviceBusy as exc:
-            payload['message'] = str(exc)+'；信号有效期内等待设备，不重复发送委托'
+        except (DeviceBusy,QuoteNotReady,TimeoutError) as exc:
+            payload['message'] = str(exc)+'；等待后重新核验最新信号，不重复发送委托'
             state=self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))
-            status='unknown' if state and state[0]['status']=='sending' else 'pending' if 0 <= self.execution_age(run,now_cn()) < EXECUTION_SECONDS else 'skipped'
+            status='unknown' if state and state[0]['status']=='sending' else 'pending'
+            if isinstance(exc,QuoteNotReady):payload['retry_after']=time.time()+3
             self.finish(run,status,payload)
         except Exception as exc:
             payload['message'] = str(exc)
@@ -630,6 +670,7 @@ class LiveTrading:
     def drain(self, reports=True):
         # Single worker, no device or broker IO on the monitoring/UI threads.
         for run in self.store.query("SELECT * FROM trading_runs WHERE status='pending' ORDER BY created_at LIMIT 20"):
+            if json.loads(run['payload']).get('retry_after',0)>time.time():continue
             changed = self.store.execute("UPDATE trading_runs SET status='processing' WHERE id=? AND status='pending'",(run['id'],))
             if changed:
                 self.process(run)
