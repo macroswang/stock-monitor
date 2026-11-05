@@ -571,10 +571,10 @@ class LiveTrading:
                 quote = self.app.quotes.get(run['code'],payload['quote'])
                 self.check_price(run,payload,quote,rule,'after_holdings')
                 plan = self.plan(run['account_id'],run['code'],run['side'],quote)
-                liquidity=payload.get('signal',{}).get('liquidity',{})
-                volumes=[number(liquidity.get(k)) for k in ('meanShares','currentShares')]
-                if any(v is None or v<=0 or plan['quantity']/v>.01+1e-12 for v in volumes):
-                    raise ValueError('实际委托数量超过量能参与上限，或缺少量能依据')
+                # Quantity comes from the account's explicit lots/position rule.
+                # Minute liquidity is diagnostic evidence, not a hidden order cap;
+                # a live minute's partial volume must not veto that configured size.
+                payload['plan'] = plan
                 previous = self.store.query("SELECT * FROM trading_runs WHERE account_id=? AND day=? AND json_extract(payload,'$.mode')=? AND status IN ('trial','sending','accepted','unknown','partial','filled','cancelled','rejected') AND id<>?",(run['account_id'],run['day'],payload['mode'],run['id']))
                 same = [r for r in previous if r['code']==run['code']]
                 if len(same) >= rule['daily_orders']:
@@ -589,7 +589,6 @@ class LiveTrading:
                     held = self.store.query('SELECT payload FROM trading_positions WHERE account_id=? AND code=?',(run['account_id'],run['code']))[0]
                     if sold+plan['quantity'] > json.loads(held['payload'])['sellable']:
                         raise ValueError('试运行累计卖出已超过可卖股数')
-                payload['plan'] = plan
                 if payload['mode']=='trial':
                     payload['message'] = '试运行计划已生成，未发送券商委托'
                     self.finish(run,'trial',payload)

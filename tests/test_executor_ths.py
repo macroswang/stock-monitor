@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 
 from executor.adb import parse_nodes
 from executor.ths import (
@@ -166,6 +167,53 @@ class ReadStatusTests(unittest.TestCase):
 
 
 class EnsureLoginTests(unittest.TestCase):
+    def test_incomplete_signed_in_identity_is_reread_without_actions(self):
+        for missing in ('qs_name_text', 'account_text'):
+            initial = '\n'.join(line for line in LOGGED_IN_XML.splitlines() if f'id/{missing}"' not in line)
+            adb = Mock()
+            adb.current_focus.return_value = FOCUS
+            adb.nodes.side_effect = [parse_nodes(initial), parse_nodes(LOGGED_IN_XML)]
+            with self.subTest(missing=missing), patch('executor.ths.time.sleep'):
+                result = ThsTrade(adb).ensure_logged_in(account='4004000000000162', password=None)
+                self.assertTrue(result['account_verified'])
+                self.assertEqual(adb.nodes.call_count, 2)
+                adb.input_text.assert_not_called()
+                adb.tap_node.assert_not_called()
+                adb.keyevent.assert_not_called()
+
+    def test_incomplete_signed_in_identity_stops_after_bounded_reads(self):
+        initial = '\n'.join(line for line in LOGGED_IN_XML.splitlines() if 'id/account_text"' not in line)
+        adb = Mock()
+        adb.current_focus.return_value = FOCUS
+        adb.nodes.return_value = parse_nodes(initial)
+        with patch('executor.ths.time.sleep'), self.assertRaisesRegex(ThsError, '未加载完整'):
+            ThsTrade(adb).ensure_logged_in(account='4004000000000162', password=None)
+        self.assertEqual(adb.nodes.call_count, 3)
+        adb.input_text.assert_not_called()
+        adb.tap_node.assert_not_called()
+
+    def test_explicit_wrong_signed_in_identity_is_never_retried(self):
+        for xml in (LOGGED_IN_XML.replace('4004****0162', '4004****9999'), LOGGED_IN_XML.replace('中国银河证券', '其他证券')):
+            adb = Mock()
+            adb.current_focus.return_value = FOCUS
+            adb.nodes.return_value = parse_nodes(xml)
+            with self.subTest(xml=xml), self.assertRaisesRegex(ThsError, '不一致'):
+                ThsTrade(adb).ensure_logged_in(account='4004000000000162', password=None)
+            self.assertEqual(adb.nodes.call_count, 1)
+            adb.input_text.assert_not_called()
+            adb.tap_node.assert_not_called()
+
+    def test_identity_reread_that_reveals_wrong_account_stops(self):
+        initial = '\n'.join(line for line in LOGGED_IN_XML.splitlines() if 'id/account_text"' not in line)
+        adb = Mock()
+        adb.current_focus.return_value = FOCUS
+        adb.nodes.side_effect = [parse_nodes(initial), parse_nodes(LOGGED_IN_XML.replace('4004****0162', '4004****9999'))]
+        with patch('executor.ths.time.sleep'), self.assertRaisesRegex(ThsError, '不一致'):
+            ThsTrade(adb).ensure_logged_in(account='4004000000000162', password=None)
+        self.assertEqual(adb.nodes.call_count, 2)
+        adb.input_text.assert_not_called()
+        adb.tap_node.assert_not_called()
+
     def test_already_logged_in_is_a_noop(self):
         adb = FakeAdb(LOGGED_IN_XML)
         result = ThsTrade(adb).ensure_logged_in(account="4004000000000162", password="123456")

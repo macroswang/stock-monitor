@@ -59,6 +59,41 @@ class AutomaticFlowTests(unittest.TestCase):
   self.signal();self.signal()
   self.clients['a'].submit_order.assert_called_once();self.assertEqual(len(self.store.query('SELECT * FROM broker_requests')),1)
 
+ def test_sanfu_1316_two_lots_reach_bound_gateway_despite_small_minute_volume(self):
+  # Recorded 2026-11-05 incident, with synthetic accounts and a fake broker.
+  # The old hidden 1% cap rejected 200 shares against 16,700 minute shares.
+  self.now=datetime(2026,11,5,13,16,11,tzinfo=CN)
+  code='sh603938'
+  self.app.quotes[code]=dict(code=code,price='30.55',timestamp=self.now.isoformat())
+  self.clients['a'].holdings.return_value=dict(complete=True,funds=dict(available='16639.06'),positions=[dict(code=code,name='三孚股份',quantity=200,sellable=200,price='30.57')])
+  self.service.sync('a')
+  r=self.service.rule('a',code)
+  self.service.save_rule('a',code,dict(buy_enabled=True,buy_lots=2),r['revision'])
+  armed=(self.now-timedelta(minutes=5)).isoformat()
+  self.store.execute('UPDATE trading_rules SET armed_at=? WHERE account_id=? AND code=?',(armed,'a',code))
+  self.service.started_at=armed
+  event=dict(kind='bottom',time='13:16',key='confirmed-shape-v1|bottom|13:11|13:16',price=30.5,liquidity=dict(meanShares=32400,currentShares=16700))
+  self.service.observe(code,[event],self.app.quotes[code],self.now,True)
+  def refreshed(*args,**kwargs):
+   self.now+=timedelta(seconds=19)
+   self.app.quotes[code].update(price='30.56',timestamp=self.now.isoformat())
+   return self.service.sync('a')
+  with patch.object(self.service,'execution_sync',side_effect=refreshed):
+   self.service.drain(reports=False)
+  run=self.store.query('SELECT * FROM trading_runs')[0]
+  self.assertEqual(run['status'],'accepted',json.loads(run['payload']).get('message'))
+  request=self.store.query('SELECT * FROM broker_requests')[0]
+  self.assertEqual((run['account_id'],run['code'],run['status']),('a',code,'accepted'))
+  self.assertEqual((request['account_id'],request['status']),('a','accepted'))
+  plan=json.loads(run['payload'])['plan']
+  self.assertEqual((plan['quantity'],plan['price']),(200,'30.56'))
+  self.assertTrue(json.loads(run['payload'])['price_checks']['before_submit']['allowed'])
+  self.clients['a'].submit_order.assert_called_once()
+  self.clients['b'].submit_order.assert_not_called()
+  self.service.observe(code,[event],self.app.quotes[code],self.now,True)
+  self.service.drain(reports=False)
+  self.clients['a'].submit_order.assert_called_once()
+
  def test_rule_off_or_account_pause_blocks_before_gateway(self):
   self.service.pause_account('a',True);self.signal()
   self.clients['a'].submit_order.assert_not_called();self.assertFalse(self.store.query('SELECT * FROM broker_requests'))

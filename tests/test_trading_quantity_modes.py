@@ -70,6 +70,23 @@ class QuantityServiceTests(unittest.TestCase):
    self.observe('one');self.service.drain()
   run=self.store.query('SELECT * FROM trading_runs')[0]
   self.assertEqual(run['status'],'skipped');self.assertIn('可用资金不足',json.loads(run['payload'])['message']);submit.assert_not_called()
+ def test_configured_buy_and_sell_size_is_independent_of_minute_liquidity(self):
+  self.arm()
+  r=self.service.rule('a','sh603938')
+  self.service.save_rule('a','sh603938',dict(buy_lots=2,sell_lots=2),r['revision'])
+  self.store.execute('UPDATE trading_rules SET armed_at=?',((self.now-timedelta(minutes=3)).isoformat(),))
+  with patch('core.live_trading.brokers.holdings',return_value=self.snapshot),patch('core.live_trading.brokers.submit_order') as submit:
+   for side,kind in [('buy','bottom'),('sell','top')]:
+    for liquidity in [dict(meanShares=32400,currentShares=16700),dict(meanShares=0,currentShares=0),{}]:
+     self.store.execute('DELETE FROM trading_runs')
+     event=dict(kind=kind,key=side+str(liquidity),time='10:01',price=30,liquidity=liquidity)
+     self.service.observe('sh603938',[event],self.app.quotes['sh603938'],self.now,True)
+     self.service.drain(reports=False)
+     run=self.store.query('SELECT * FROM trading_runs')[0]
+     with self.subTest(side=side,liquidity=liquidity):
+      self.assertEqual(run['status'],'trial')
+      self.assertEqual(json.loads(run['payload'])['plan']['quantity'],200)
+  submit.assert_not_called()
  def test_input_validation_and_obsolete_money_fields(self):
   r=self.service.rule('a','sh603938')
   for changes in [dict(buy_mode='bad'),dict(buy_lots=0),dict(buy_lots=1.5),dict(buy_lots=True),dict(buy_percent=0),dict(buy_percent=101),dict(buy_percent=float('nan')),dict(max_order_value=1000),dict(daily_buy_value=3000)]:

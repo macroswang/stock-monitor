@@ -313,9 +313,20 @@ class ThsTrade:
         if not panel_open(nodes):
             status = read_status(nodes, self.adb.current_focus())
             if status.logged_in:
-                if not account_matches(status.account_masked, account) or "银河" not in status.broker_name:
-                    raise ThsError("交易主页券商或资金账号无法核验，已停止")
-                return {"logged_in": True, "already": True, **status.as_dict(), "account_verified": True, "account_display": status.account_masked}
+                # Balances/menu may render before the broker/account labels.
+                # Only reread incomplete identity, without tapping or retyping.
+                # An explicit mismatch is never retried or accepted from cache.
+                for attempt in range(3):
+                    if ((status.broker_name and "银河" not in status.broker_name)
+                            or (status.account_masked and not account_matches(status.account_masked, account))):
+                        raise ThsError("交易主页券商或资金账号与绑定账户不一致，已停止")
+                    if status.logged_in and status.broker_name and status.account_masked:
+                        return {"logged_in": True, "already": True, **status.as_dict(), "account_verified": True, "account_display": status.account_masked}
+                    if attempt == 2 or not status.app_foreground or status.login_panel_open:
+                        raise ThsError("交易主页身份信息未加载完整或登录状态已改变，已停止")
+                    time.sleep(0.2)
+                    focus, nodes = self._snapshot(retries=1)
+                    status = read_status(nodes, focus)
             nodes = self.open_login_panel(nodes, timeout=timeout)
         if not password:
             raise ThsError("需要交易密码")
