@@ -486,10 +486,18 @@ class LiveTrading:
         from .trading_chart import legacy_receipt_id,receipt_status
         from .broker_reconciliation import known_id
         runs=[]
-        for row in self.store.query('''SELECT r.*,b.result AS broker_result,b.payload AS request_payload,
+        for row in self.store.query('''WITH active_cycles AS (
+            SELECT first_run_id,second_run_id FROM trading_cycles
+            WHERE state IN ('sell_pending','waiting_buy','buy_pending','needs_review')
+            ), visible_runs AS (
+            SELECT id FROM (SELECT id FROM trading_runs ORDER BY created_at DESC,rowid DESC LIMIT 200)
+            UNION SELECT first_run_id FROM active_cycles
+            UNION SELECT second_run_id FROM active_cycles
+            ) SELECT r.*,b.result AS broker_result,b.payload AS request_payload,
             b.status AS request_status,b.created_at AS request_at FROM trading_runs r
             LEFT JOIN broker_requests b ON b.request_id='auto_'||r.id AND b.account_id=r.account_id
-            ORDER BY r.created_at DESC,r.rowid DESC LIMIT 200'''):
+            WHERE r.id IN (SELECT id FROM visible_runs)
+            ORDER BY r.created_at DESC,r.rowid DESC'''):
             payload=json.loads(row['payload']);ack=json.loads(row['broker_result'] or '{}')
             try:ident=known_id(ack)
             except ValueError:ident=''
@@ -498,7 +506,10 @@ class LiveTrading:
                              payload=payload,order_id=ident or receipt_id,receipt_accepted=bool(receipt_id)))
             runs[-1]['status']=receipt_status(row,payload,ack)
         cycles=[]
-        for row in self.store.query('SELECT * FROM trading_cycles ORDER BY created_at DESC LIMIT 100'):
+        for row in self.store.query("""SELECT * FROM trading_cycles
+            WHERE state IN ('sell_pending','waiting_buy','buy_pending','needs_review')
+            OR id IN (SELECT id FROM trading_cycles ORDER BY created_at DESC,rowid DESC LIMIT 100)
+            ORDER BY created_at DESC,rowid DESC"""):
             payload=json.loads(row['payload'] or '{}');payload.setdefault('mode',self.cycle_mode(row))
             cycles.append(dict(**{k:v for k,v in row.items() if k!='payload'},payload=payload))
         return dict(settings=self.settings(), accounts=accounts, positions=positions, runs=runs,cycles=cycles,

@@ -162,6 +162,26 @@ class PairedTTests(unittest.TestCase):
         self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
         self.assertEqual(self.service.cycle_mode(self.cycles()[0]),'live')
 
+    def test_history_limits_keep_open_cycle_and_both_legs_available(self):
+        first=self.open_real_request('ths')
+        self.service.resolve(first['id'],'filled','contract-1',1000,'已核对券商全部成交','2.20')
+        self.now+=timedelta(minutes=1);self.signal('bottom','old-buy',2.15)
+        cycle=self.cycles()[0]
+        for n in range(220):
+            stamp=(self.now+timedelta(minutes=1,seconds=n)).isoformat()
+            payload=json.dumps(dict(mode='live',signal=dict(kind='top',time='10:03')))
+            self.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',
+                (f'new-{n}','a','sh603938','sell',f'signal-{n}',stamp[:10],'skipped',payload,stamp,stamp))
+        for n in range(120):
+            stamp=(self.now+timedelta(minutes=1,seconds=n)).isoformat()
+            self.store.execute('INSERT INTO trading_cycles VALUES(?,?,?,?,?,?,?,?,?,?)',
+                (f'other-{n}','a','sh603938','completed',100,'unrelated',None,json.dumps(dict(mode='live')),stamp,stamp))
+        view=self.service.view();runs={r['id'] for r in view['runs']};cycles={c['id'] for c in view['cycles']}
+        self.assertTrue({cycle['first_run_id'],cycle['second_run_id']}<=runs)
+        self.assertIn(cycle['id'],cycles)
+        self.assertEqual(len(runs),202);self.assertEqual(len(cycles),101)
+        self.assertNotIn('new-0',runs);self.assertNotIn('other-0',cycles)
+
     def test_fee_gate_includes_both_minimum_commissions_and_tax(self):
         rule=self.service.rule('a','sz000981')
         result=paired_profit('2.20','2.15',1000,rule)
