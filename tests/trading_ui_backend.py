@@ -92,6 +92,13 @@ for line in sys.stdin:
         elif request['method']=='test_release_sync':sync_gate.set();result=True
         elif request['method']=='test_broker_checks':result=broker_checks
         elif request['method']=='test_seed_price_checks':result=seed_price_checks()
+        elif request['method']=='test_seed_paired_review':
+            stamp=now_cn().isoformat();rule=app.live_trading.rule('test-a','sz000981')
+            app.live_trading.save_rule('test-a','sz000981',dict(strategy_mode='paired_t',paired_enabled=True),rule['revision'])
+            payload=dict(mode='live',signal=dict(time='10:01',kind='top'),verification=dict(status='cancelled',filled=50),reconciliation=dict(ok=False,message='历史回报读取失败'))
+            app.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',('cycle-leg','test-a','sz000981','sell','cycle-signal',stamp[:10],'cancelled',json.dumps(payload),stamp,stamp))
+            app.store.execute('INSERT INTO trading_cycles VALUES(?,?,?,?,?,?,?,?,?,?)',('cycle-review','test-a','sz000981','needs_review',100,'cycle-leg',None,json.dumps(dict(mode='live',message='首腿部分成交后结束，需人工处理')),stamp,stamp))
+            result=True
         elif request['method']=='test_seed_notice':
             app.store.setconfig('trading_signal_notice','测试：原买卖开关已保留，自动执行已暂停。')
             result=True

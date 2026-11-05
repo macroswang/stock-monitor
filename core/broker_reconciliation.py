@@ -282,15 +282,21 @@ class Reconciler:
         for row in rows:
             result = json.loads(row['result'] or '{}')
             try:
-                # Only today's identifiable orders use the device. Yesterday's
-                # rows remain history, with no manual task or account gate.
                 _,day=request_plan(row)
-                if day!=now.date().isoformat():continue
+                historical=day!=now.date().isoformat()
+                if historical:
+                    # Only unfinished real paired-T legs need historical
+                    # reads. Independent historical orders keep their policy.
+                    if not self.store.query("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_cycles'"):continue
+                    if not self.store.query("""SELECT 1 FROM trading_cycles c JOIN trading_runs t ON t.id=c.first_run_id
+                        WHERE c.account_id=? AND c.state IN ('sell_pending','waiting_buy','buy_pending','needs_review')
+                        AND (?='auto_'||c.first_run_id OR ?='auto_'||c.second_run_id)
+                        AND json_extract(t.payload,'$.mode')='live' LIMIT 1""",(row['account_id'],row['request_id'],row['request_id'])):continue
                 ident = known_id(result)
                 if not ident:
                     accounts=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(row['account_id'],))
                     if not accounts or accounts[0]['broker']!='ths' or not row['request_id'].startswith('auto_'):continue
                 last = datetime.fromisoformat(result.get('reconciliation', {}).get('at', row['created_at']))
-                if (now-last).total_seconds() < 60:continue
+                if (now-last).total_seconds() < (300 if historical else 60):continue
             except (ValueError, TypeError):continue
             return self.reconcile(row['account_id'], row['request_id'])

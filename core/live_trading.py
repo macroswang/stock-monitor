@@ -143,6 +143,14 @@ class LiveTrading:
                     raise ValueError('请选择试运行或实盘模式')
                 if args['mode'] == 'live' and args.get('confirm_live') is not True:
                     raise ValueError('切换实盘前需要核对交易规则并明确确认')
+                if args['mode']!=self.settings()['mode']:
+                    # Trial cycles own no real position. Discard their plans
+                    # when leaving trial mode; live cycles remain recoverable.
+                    for cycle in self.store.query("SELECT * FROM trading_cycles WHERE state IN ('sell_pending','waiting_buy','buy_pending','needs_review')"):
+                        if self.cycle_mode(cycle)!='trial':continue
+                        with self.store.lock,self.store.db:
+                            self.store.db.execute("UPDATE trading_runs SET status='skipped' WHERE id IN (?,?) AND status IN ('pending','processing')",(cycle['first_run_id'],cycle['second_run_id']))
+                            self.store.db.execute("UPDATE trading_cycles SET state='aborted',updated_at=? WHERE id=?",(now_cn().isoformat(),cycle['id']))
                 self.store.setconfig('trading_mode', args['mode'])
                 self.store.setconfig('trading_paused', True)
                 self.started_at = now_cn().isoformat()
@@ -230,7 +238,7 @@ class LiveTrading:
                 if value is None or value<0 or value>upper:raise ValueError(label+'设置无效')
                 new[key]=float(value)
             active=self.active_cycle(ident,code)
-            if active and any(new[k]!=old[k] for k in DEFAULT_RULE):
+            if active and any(new[k]!=old[k] for k in DEFAULT_RULE if k!='paired_enabled'):
                 raise ValueError('该股票有尚未结束的成对T，请先完成回补或人工处理')
             for side in ('buy','sell'):
                 if new[side+'_mode'] not in ('lots','position'):
@@ -477,7 +485,8 @@ class LiveTrading:
             runs[-1]['status']=receipt_status(row,payload,ack)
         cycles=[]
         for row in self.store.query('SELECT * FROM trading_cycles ORDER BY created_at DESC LIMIT 100'):
-            cycles.append(dict(**{k:v for k,v in row.items() if k!='payload'},payload=json.loads(row['payload'] or '{}')))
+            payload=json.loads(row['payload'] or '{}');payload.setdefault('mode',self.cycle_mode(row))
+            cycles.append(dict(**{k:v for k,v in row.items() if k!='payload'},payload=payload))
         return dict(settings=self.settings(), accounts=accounts, positions=positions, runs=runs,cycles=cycles,
                     cash_reserve=dict(rate=BUY_CASH_RESERVE_RATE,fixed=BUY_CASH_RESERVE_FIXED))
 
@@ -583,6 +592,8 @@ class LiveTrading:
         key=now.date().isoformat()+'|'+m['key']
         ident=hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
         active=self.active_cycle(row['account_id'],code)
+        if active and self.cycle_mode(active)!=self.settings()['mode']:
+            return  # A trial leg can never consume or close a live cycle.
         if side=='sell':
             cycle_id=hashlib.sha256(f"paired|{row['account_id']}|{code}|{key}".encode()).hexdigest()
             payload=self.paired_run_payload(row,m,quote,now,event_at,continuous,reason,baseline_at,cycle_id,'sell')
@@ -592,7 +603,7 @@ class LiveTrading:
                     (ident,row['account_id'],code,side,key,now.date().isoformat(),'skipped',json.dumps(payload),now.isoformat(),now.isoformat()))
                 return
             quantity=rule['t_lots']*100
-            cycle_payload=dict(direction='sell_buy',rule_revision=row['revision'],minimum_net_profit=rule['minimum_net_profit'],
+            cycle_payload=dict(direction='sell_buy',mode=self.settings()['mode'],rule_revision=row['revision'],minimum_net_profit=rule['minimum_net_profit'],
                                fee_snapshot={k:rule[k] for k in ('commission_wan','minimum_commission','stamp_per_mille','transfer_per_mille','slippage_per_mille')})
             with self.store.lock,self.store.db:
                 cycle=self.store.db.execute('INSERT OR IGNORE INTO trading_cycles VALUES(?,?,?,?,?,?,?,?,?,?)',
@@ -674,6 +685,32 @@ class LiveTrading:
             self.sync_cycles(run['account_id'],run['code'])
 
     def sync_cycles(self, ident=None, code=None):
+        # Reconciliation and monitoring can arrive on different threads.
+        with self.lock:
+            self._sync_cycles(ident,code)
+
+    def cycle_mode(self, cycle):
+        first=self.store.query('SELECT payload FROM trading_runs WHERE id=?',(cycle['first_run_id'],))
+        return json.loads(first[0]['payload']).get('mode') if first else None
+
+    def close_cycle(self, ident, note, confirm=False):
+        """Record the user's broker-side settlement; never sends an order."""
+        if confirm is not True or not isinstance(note,str) or len(note.strip())<4:
+            raise ValueError('请确认已在券商处理剩余仓位，并填写具体结案依据（至少4字）')
+        with self.lock,self.store.lock,self.store.db:
+            rows=self.store.query("SELECT * FROM trading_cycles WHERE id=? AND state IN ('sell_pending','waiting_buy','buy_pending','needs_review')",(ident,))
+            if len(rows)!=1:raise ValueError('该成对T周期不存在或已经结束')
+            cycle=rows[0]
+            runs=self.store.query('SELECT status FROM trading_runs WHERE id IN (?,?)',(cycle['first_run_id'],cycle['second_run_id']))
+            if any(r['status'] in ('pending','processing','sending','unknown','accepted','partial') for r in runs):
+                raise ValueError('仍有未结束或未知委托，请先核实券商回报后再结案')
+            if self.store.query("SELECT 1 FROM broker_requests WHERE request_id IN (?,?) AND status IN ('prepared','sending','unknown','accepted','partial')",('auto_'+cycle['first_run_id'],'auto_'+(cycle['second_run_id'] or ''))):
+                raise ValueError('券商请求仍有未结束或未知状态，请先核实后再结案')
+            payload=json.loads(cycle['payload']);payload['manual_close']=dict(note=note.strip(),at=now_cn().isoformat(),remaining_position_handled=True)
+            self.store.db.execute("UPDATE trading_cycles SET state='closed_manual',payload=?,updated_at=? WHERE id=?",(json.dumps(payload),now_cn().isoformat(),ident))
+        return self.view()
+
+    def _sync_cycles(self, ident=None, code=None):
         where=" WHERE state IN ('sell_pending','waiting_buy','buy_pending','needs_review')"
         args=[]
         if ident is not None:where+=' AND account_id=?';args.append(ident)
@@ -684,7 +721,8 @@ class LiveTrading:
             if not first:continue
             first=first[0];fp=json.loads(first['payload']);fv=fp.get('verification',{})
             first_status=fv.get('status') or first['status']
-            if cycle['state']=='sell_pending':
+            first_phase=cycle['state']=='sell_pending' or (cycle['state']=='needs_review' and not cycle['second_run_id'])
+            if first_phase:
                 if first_status in ('filled','trial'):
                     average=fv.get('average') or (fp.get('plan',{}).get('price') if first_status=='trial' else None)
                     filled=fv.get('filled',cycle['quantity'] if first_status=='trial' else 0)
@@ -698,25 +736,30 @@ class LiveTrading:
                         payload['message']='首腿成交数量或成交均价不完整，需人工处理后才能继续回补'
                         self.store.execute("UPDATE trading_cycles SET state='needs_review',payload=?,updated_at=? WHERE id=?",(json.dumps(payload),stamp,cycle['id']))
                     else:
+                        payload.pop('message',None)
                         payload.update(sell_price=str(average),sell_filled=filled,first_status=first_status)
-                        self.store.execute("UPDATE trading_cycles SET state='waiting_buy',payload=?,updated_at=? WHERE id=? AND state='sell_pending'",(json.dumps(payload),stamp,cycle['id']))
+                        self.store.execute("UPDATE trading_cycles SET state='waiting_buy',payload=?,updated_at=? WHERE id=? AND state IN ('sell_pending','needs_review')",(json.dumps(payload),stamp,cycle['id']))
                 elif first_status in ('cancelled','rejected','not_sent','skipped','failed','failed_order'):
                     filled=fv.get('filled',0)
                     state='aborted' if filled==0 else 'needs_review'
                     payload['message']='首腿未成交，已结束本轮' if state=='aborted' else '首腿部分成交后结束，需人工处理'
                     self.store.execute('UPDATE trading_cycles SET state=?,payload=?,updated_at=? WHERE id=?',(state,json.dumps(payload),stamp,cycle['id']))
                 continue
-            if cycle['state']!='buy_pending':continue
+            if cycle['state'] not in ('buy_pending','needs_review'):continue
             second=self.store.query('SELECT * FROM trading_runs WHERE id=?',(cycle['second_run_id'],))
             if not second:continue
             second=second[0];sp=json.loads(second['payload']);sv=sp.get('verification',{})
+            if sp.get('mode')!=fp.get('mode'):
+                payload['message']='两腿执行模式不一致，请核实真实仓位后人工结案'
+                self.store.execute("UPDATE trading_cycles SET state='needs_review',payload=?,updated_at=? WHERE id=?",(json.dumps(payload),stamp,cycle['id']))
+                continue
             second_status=sv.get('status') or second['status']
             if second_status in ('filled','trial'):
                 filled=sv.get('filled',cycle['quantity'] if second_status=='trial' else 0)
                 if filled==cycle['quantity']:
                     payload.update(buy_price=str(sv.get('average') or sp.get('plan',{}).get('price')),second_status=second_status,
                                    profit_gate=sp.get('profit_gate'))
-                    self.store.execute("UPDATE trading_cycles SET state='completed',payload=?,updated_at=? WHERE id=? AND state='buy_pending'",(json.dumps(payload),stamp,cycle['id']))
+                    self.store.execute("UPDATE trading_cycles SET state='completed',payload=?,updated_at=? WHERE id=? AND state IN ('buy_pending','needs_review')",(json.dumps(payload),stamp,cycle['id']))
                 else:
                     payload['message']='回补成交数量不完整，需人工处理'
                     self.store.execute("UPDATE trading_cycles SET state='needs_review',payload=?,updated_at=? WHERE id=?",(json.dumps(payload),stamp,cycle['id']))
@@ -769,6 +812,8 @@ class LiveTrading:
                 found=self.store.query('SELECT * FROM trading_cycles WHERE id=? AND account_id=? AND code=?',(paired['cycle_id'],run['account_id'],run['code']))
                 if len(found)!=1:raise ValueError('成对T状态不存在，已阻止提交')
                 cycle=found[0]
+                if self.cycle_mode(cycle)!=payload['mode'] or self.cycle_mode(cycle)!=self.settings()['mode']:
+                    raise ValueError('成对T执行模式不一致，已阻止提交')
                 expected_state='sell_pending' if paired['leg']=='sell' else 'buy_pending'
                 expected_run=cycle['first_run_id'] if paired['leg']=='sell' else cycle['second_run_id']
                 if cycle['state']!=expected_state or expected_run!=run['id']:
@@ -848,6 +893,8 @@ class LiveTrading:
                     if not watch or not watch[0]['enabled'] or not self.store.config().get('monitor',False):
                         raise ValueError('自选监控已停止，已阻止提交')
                     self.check_price(run,payload,quote,rule,'before_submit')
+                    if paired and self.cycle_mode(cycle)!=payload['mode']:
+                        raise ValueError('成对T执行模式已改变，已阻止提交')
                     if paired and paired['leg']=='buy':
                         latest=self.paired_gate(current,json.loads(cycle['payload'] or '{}').get('sell_price'),quote.get('price'),plan['quantity'])
                         payload['profit_gate']=latest;self.persist_progress(run,payload)

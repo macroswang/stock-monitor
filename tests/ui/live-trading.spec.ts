@@ -180,6 +180,23 @@ test('paired T rule exposes one shared lot size and a fee-aware net-profit gate'
  await expect(a).toContainText('不会独立买入');
 });
 
+test('paired cycle can be disabled and manually closed with an explicit settlement note',async({page})=>{
+ await setup(page);
+ await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_paired_review',{}));
+ await page.getByRole('button',{name:'刷新',exact:true}).click();
+ const a=page.getByRole('region',{name:/华泰涨乐通 · 123/});
+ await a.getByRole('checkbox',{name:'123***001 山子高科 成对T'}).uncheck();
+ await expect(a.getByRole('checkbox',{name:'123***001 山子高科 成对T'})).not.toBeChecked();
+ const cycle=page.getByRole('region',{name:'sz000981 成对T周期'});
+ await expect(cycle).toContainText('历史回报读取失败');
+ await cycle.getByText('人工结案',{exact:true}).click();
+ const close=cycle.getByRole('button',{name:'确认结案'});await expect(close).toBeDisabled();
+ await cycle.getByLabel('sz000981 结案依据').fill('已在券商核对并处理剩余仓位');
+ await cycle.getByRole('checkbox').check();await close.click();
+ await expect(cycle).toHaveCount(0);
+ await expect(page.getByRole('status')).toContainText('已记录人工结案');
+});
+
 test('sizing explains the screenshot rounding, cash needs and position impact',()=>{
  const rule:QuantityRule={buy_mode:'lots',sell_mode:'position',buy_lots:1,sell_lots:1,buy_percent:50,sell_percent:50};
  const buy=sizingEstimate('sh603938',300,300,'buy',rule,29.36,'13,361.69','22,170.69');

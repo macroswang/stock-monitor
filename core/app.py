@@ -568,6 +568,7 @@ class App:
         if method=='trading_start':return self.broker_job(self.live_trading.prepare)
         if method=='trading_pause_account':return self.live_trading.pause_account(args['account_id'],args['paused'])
         if method=='trading_rule_save':return self.live_trading.save_rule(args['account_id'],args['code'],args['changes'],args['revision'])
+        if method=='trading_cycle_close':return self.live_trading.close_cycle(args['id'],args.get('note',''),args.get('confirm',False))
         if method=='trading_sync':return self.broker_job(lambda:self.live_trading.sync(args['account_id']))
         if method=='trading_sync_all':return self.broker_job(self.live_trading.sync_all)
         if method=='trading_map':return self.broker_job(lambda:self.live_trading.map_position(args['account_id'],args['token'],args['name'],args['code']))

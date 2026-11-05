@@ -32,7 +32,7 @@ class PairedTTests(unittest.TestCase):
 
     def signal(self,kind,key,price):
         self.app.quotes['sz000981']=dict(code='sz000981',price=str(price),timestamp=self.now.isoformat())
-        event=dict(kind=kind,time='10:01',key=key,price=price,liquidity=dict(meanShares=100000,currentShares=100000))
+        event=dict(kind=kind,time=self.now.strftime('%H:%M'),key=key,price=price,liquidity=dict(meanShares=100000,currentShares=100000))
         self.service.observe('sz000981',[event],self.app.quotes['sz000981'],self.now,True)
 
     def drain(self):
@@ -40,6 +40,104 @@ class PairedTTests(unittest.TestCase):
         with patch('core.live_trading.brokers.holdings',side_effect=snapshot):self.service.drain(reports=False)
 
     def cycles(self):return self.store.query('SELECT * FROM trading_cycles ORDER BY created_at,rowid')
+
+    def filled_sell(self):
+        self.store.setconfig('trading_mode','live')
+        self.signal('top','real-sell',2.20)
+        run=self.store.query('SELECT * FROM trading_runs')[0]
+        payload=json.loads(run['payload']);payload.update(mode='live',plan=dict(quantity=1000,price='2.20'))
+        payload['verification']=dict(origin='broker_auto',status='filled',filled=1000,average='2.20',order_id='contract-1')
+        self.store.execute("UPDATE trading_runs SET status='filled',payload=? WHERE id=?",(json.dumps(payload),run['id']))
+        self.service.sync_cycles();return run
+
+    def test_trial_sell_cannot_trigger_real_buy_after_switch(self):
+        self.signal('top','trial-sell',2.20);self.drain()
+        self.service.configure(dict(mode='live',confirm_live=True));self.service.configure(dict(paused=False))
+        self.now+=timedelta(minutes=1);self.signal('bottom','real-bottom',2.15)
+        with patch('core.live_trading.brokers.submit_order') as submit:self.drain();submit.assert_not_called()
+        self.assertEqual(self.cycles()[0]['state'],'aborted')
+
+    def test_live_cycle_survives_trial_switch_and_resumes_only_in_live(self):
+        self.filled_sell()
+        self.service.configure(dict(mode='trial'));self.service.configure(dict(paused=False))
+        self.now+=timedelta(minutes=1);self.signal('bottom','trial-bottom',2.15);self.drain()
+        self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+        self.assertFalse(self.store.query("SELECT * FROM trading_runs WHERE side='buy'"))
+        self.service.configure(dict(mode='live',confirm_live=True));self.service.configure(dict(paused=False))
+        self.now+=timedelta(minutes=1);self.signal('bottom','real-bottom',2.15)
+        def submit(*args,**kwargs):kwargs['authorize']();return dict(status='accepted',submitted=True)
+        with patch('core.live_trading.brokers.submit_order',side_effect=submit) as gateway:
+            self.drain();gateway.assert_called_once()
+            self.assertEqual(gateway.call_args.args[2:5],('buy','000981',1000))
+        self.assertEqual(self.cycles()[0]['state'],'buy_pending')
+
+    def test_mixed_legacy_cycle_cannot_complete(self):
+        self.filled_sell();self.signal('bottom','buy',2.15)
+        run=self.store.query("SELECT * FROM trading_runs WHERE side='buy'")[0]
+        payload=json.loads(run['payload']);payload.update(mode='trial',plan=dict(quantity=1000,price='2.15'))
+        self.store.execute("UPDATE trading_runs SET status='trial',payload=? WHERE id=?",(json.dumps(payload),run['id']))
+        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'needs_review')
+
+    def test_disable_and_resume_preserves_waiting_cycle_and_sizes(self):
+        self.filled_sell();rule=self.service.rule('a','sz000981')
+        saved=self.service.save_rule('a','sz000981',dict(paired_enabled=False),rule['revision'])
+        self.now+=timedelta(minutes=1);self.signal('bottom','disabled',2.15)
+        self.assertFalse(self.store.query("SELECT * FROM trading_runs WHERE side='buy'"))
+        self.assertEqual(self.cycles()[0]['state'],'waiting_buy');self.assertEqual(saved['t_lots'],10)
+        self.service.save_rule('a','sz000981',dict(paired_enabled=True),saved['revision'])
+        self.now+=timedelta(minutes=1);self.signal('bottom','resumed',2.15)
+        self.assertEqual(self.cycles()[0]['state'],'buy_pending')
+
+    def test_needs_review_recovers_when_broker_evidence_is_completed(self):
+        run=self.filled_sell();payload=json.loads(self.store.query('SELECT payload FROM trading_runs')[0]['payload'])
+        payload['verification'].update(origin='manual');payload['verification'].pop('average')
+        self.store.execute("UPDATE trading_cycles SET state='sell_pending'")
+        self.store.execute('UPDATE trading_runs SET payload=? WHERE id=?',(json.dumps(payload),run['id']))
+        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'needs_review')
+        payload['verification'].update(origin='broker_auto',average='2.20')
+        self.store.execute('UPDATE trading_runs SET payload=? WHERE id=?',(json.dumps(payload),run['id']))
+        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+
+    def test_manual_close_requires_settled_orders_and_preserves_audit(self):
+        self.signal('top','pending',2.20);cycle=self.cycles()[0]
+        with self.assertRaisesRegex(ValueError,'未结束'):self.service.close_cycle(cycle['id'],'券商已处理剩余仓位',True)
+        run=self.store.query('SELECT * FROM trading_runs')[0]
+        payload=json.loads(run['payload']);payload['verification']=dict(status='cancelled',filled=500)
+        self.store.execute("UPDATE trading_runs SET status='cancelled',payload=? WHERE id=?",(json.dumps(payload),run['id']))
+        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'needs_review')
+        with self.assertRaises(ValueError):self.service.close_cycle(cycle['id'],'已核对',False)
+        with patch('core.live_trading.brokers.submit_order') as submit:
+            self.service.close_cycle(cycle['id'],'已在券商核对并处理剩余仓位',True);submit.assert_not_called()
+        closed=self.cycles()[0];self.assertEqual(closed['state'],'closed_manual')
+        self.assertIn('manual_close',json.loads(closed['payload']))
+        self.signal('top','next',2.20);self.assertEqual(len(self.cycles()),2)
+
+    def test_only_open_live_paired_requests_poll_across_days(self):
+        run=self.filled_sell();stamp=self.now.isoformat()
+        request=dict(account_id='a',code='000981',side='sell',quantity=1000,price='2.20',dry_run=False)
+        self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+run['id'],'a',json.dumps(request),'unknown',json.dumps(dict(order_id='contract-1')),stamp,stamp))
+        self.now+=timedelta(days=1)
+        with patch('core.broker_reconciliation.now_cn',return_value=self.now),patch.object(self.service.reconciler,'reconcile') as reconcile:
+            self.service.reconciler.poll();reconcile.assert_called_once_with('a','auto_'+run['id'])
+            reconcile.reset_mock();self.store.execute("UPDATE trading_cycles SET state='completed'")
+            self.service.reconciler.poll();reconcile.assert_not_called()
+
+    def test_disable_during_preparation_blocks_final_buy_and_keeps_cycle(self):
+        self.filled_sell();self.signal('bottom','buy-preparation',2.15);clicked=[]
+        def submit(*args,**kwargs):
+            rule=self.service.rule('a','sz000981')
+            self.service.save_rule('a','sz000981',dict(paired_enabled=False),rule['revision'])
+            kwargs['authorize']();clicked.append(True)
+            return dict(status='accepted',submitted=True)
+        with patch('core.live_trading.brokers.submit_order',side_effect=submit):self.drain()
+        self.assertEqual(clicked,[]);self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+
+    def test_restart_preserves_live_waiting_cycle_without_new_submission(self):
+        self.filled_sell()
+        with patch('core.live_trading.brokers.submit_order') as submit:
+            self.service=LiveTrading(self.app);self.service.sync_cycles();submit.assert_not_called()
+        self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+        self.assertEqual(self.service.cycle_mode(self.cycles()[0]),'live')
 
     def test_fee_gate_includes_both_minimum_commissions_and_tax(self):
         rule=self.service.rule('a','sz000981')
