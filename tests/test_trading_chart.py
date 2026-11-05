@@ -90,3 +90,45 @@ class TradingChartTests(unittest.TestCase):
   self.assertFalse(chart(self.store,'sz000981','2026-11-03')['points'][0]['receipt_accepted'])
   self.store.execute("UPDATE trading_runs SET status='unknown',payload=json_set(payload,'$.mode','trial')")
   self.assertFalse(chart(self.store,'sz000981','2026-11-03')['points'][0]['receipt_accepted'])
+
+ def test_durable_accepted_receipt_survives_interrupted_run_without_waiting_for_fills(self):
+  self.seed(status='unknown')
+  ack=dict(status='accepted',submitted=True,confirm=dict(side='buy',code='000981',quantity=2300,price='2.16'))
+  self.store.execute("UPDATE broker_requests SET status='accepted',result=?",(json.dumps(ack),))
+  before=self.store.db.total_changes
+  p=chart(self.store,'sz000981','2026-11-03')['points'][0]
+  self.assertEqual(p['status'],'accepted');self.assertIsNone(p['fill_price']);self.assertIsNone(p['filled'])
+  self.assertEqual(self.service.view()['runs'][0]['status'],'accepted')
+  self.assertEqual(self.store.db.total_changes,before)
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'unknown')
+
+ def test_interrupted_sell_uses_its_accepted_native_receipt_for_both_sending_and_unknown(self):
+  self.seed(status='sending')
+  self.store.execute("UPDATE trading_runs SET side='sell',payload=json_set(payload,'$.plan.side','sell')")
+  ack=dict(status='accepted',submitted=True,confirm=dict(title='委托卖出',code='000981',quantity='2300',price='2.16'))
+  self.store.execute("UPDATE broker_requests SET status='accepted',payload=json_set(payload,'$.side','sell'),result=?",(json.dumps(ack),))
+  for status in ('sending','unknown'):
+   self.store.execute('UPDATE trading_runs SET status=?',(status,))
+   p=chart(self.store,'sz000981','2026-11-03')['points'][0]
+   self.assertEqual(p['status'],'accepted');self.assertEqual(p['side'],'sell');self.assertIsNone(p['filled'])
+
+ def test_accepted_receipt_projection_never_crosses_account_plan_or_trial(self):
+  self.seed(status='unknown')
+  good=dict(status='accepted',submitted=True,confirm=dict(side='buy',code='000981',quantity=2300,price='2.16'))
+  for change in [dict(submitted=False),dict(confirm=dict(good['confirm'],code='603938')),
+                 dict(confirm=dict(good['confirm'],side='sell')),dict(confirm=dict(good['confirm'],price='2.15')),
+                 dict(confirm=dict(good['confirm'],quantity=2200)),dict(order_id='A',result=dict(order_id='B'))]:
+   with self.subTest(change=change):
+    self.store.execute("UPDATE broker_requests SET status='accepted',result=?",(json.dumps(dict(good,**change)),))
+    self.assertEqual(chart(self.store,'sz000981','2026-11-03')['points'][0]['status'],'unknown')
+  self.store.execute("UPDATE broker_requests SET result=?",(json.dumps(good),))
+  request=json.loads(self.store.query('SELECT payload FROM broker_requests')[0]['payload'])
+  for field,value in [('account_id','b'),('code','000982'),('side','sell'),('price','2.15'),('quantity',2200),('dry_run',True)]:
+   with self.subTest(field=field):
+    self.store.execute('UPDATE broker_requests SET payload=?',(json.dumps(dict(request,**{field:value})),))
+    self.assertEqual(chart(self.store,'sz000981','2026-11-03')['points'][0]['status'],'unknown')
+  self.store.execute('UPDATE broker_requests SET payload=?,created_at=?',(json.dumps(request),'2026-11-02T13:37:57+08:00'))
+  self.assertEqual(chart(self.store,'sz000981','2026-11-03')['points'][0]['status'],'unknown')
+  self.store.execute("UPDATE broker_requests SET created_at='2026-11-03T13:37:57+08:00'")
+  self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.mode','trial')")
+  self.assertEqual(chart(self.store,'sz000981','2026-11-03')['points'][0]['status'],'unknown')

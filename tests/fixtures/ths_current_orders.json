@@ -1,0 +1,449 @@
+[
+  {
+    "text": "中国银河证券",
+    "resource_id": "com.hexin.plat.android:id/page_title_view",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      438,
+      55,
+      642,
+      105
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "",
+    "resource_id": "com.hexin.plat.android:id/today_order_view",
+    "class_name": "android.widget.LinearLayout",
+    "bounds": [
+      0,
+      224,
+      1080,
+      1817
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "",
+    "resource_id": "com.hexin.plat.android:id/order_table_view",
+    "class_name": "android.widget.LinearLayout",
+    "bounds": [
+      0,
+      225,
+      1080,
+      1817
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "委托时间",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      33,
+      225,
+      145,
+      301
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "委托/均价",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      270,
+      225,
+      515,
+      301
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "委托/成交",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      540,
+      225,
+      785,
+      301
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "状态",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      810,
+      225,
+      1047,
+      301
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "",
+    "resource_id": "com.hexin.plat.android:id/recyclerview_id",
+    "class_name": "androidx.recyclerview.widget.RecyclerView",
+    "bounds": [
+      0,
+      302,
+      1080,
+      1817
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": false,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "三孚股份",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      33,
+      318,
+      270,
+      360
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "13:54:02",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      67,
+      360,
+      270,
+      402
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "30.260",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      270,
+      318,
+      515,
+      360
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "30.260",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      270,
+      360,
+      515,
+      402
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "200",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      540,
+      318,
+      785,
+      360
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "200",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      540,
+      360,
+      785,
+      402
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "买入",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      810,
+      318,
+      1047,
+      360
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "已成",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      810,
+      360,
+      1047,
+      402
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "三孚股份",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      33,
+      435,
+      270,
+      477
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "10:50:13",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      67,
+      477,
+      270,
+      519
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "30.980",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      270,
+      435,
+      515,
+      477
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "30.980",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      270,
+      477,
+      515,
+      519
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "200",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      540,
+      435,
+      785,
+      477
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "200",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      540,
+      477,
+      785,
+      519
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "卖出",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      810,
+      435,
+      1047,
+      477
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "已成",
+    "resource_id": "",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      810,
+      477,
+      1047,
+      519
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false,
+    "selected": true,
+    "description": "",
+    "focused": false
+  },
+  {
+    "text": "**0001",
+    "resource_id": "com.hexin.plat.android:id/account_info_view",
+    "class_name": "android.widget.TextView",
+    "bounds": [
+      0,
+      80,
+      120,
+      120
+    ],
+    "clickable": false,
+    "enabled": true,
+    "password": false,
+    "checked": false
+  }
+]

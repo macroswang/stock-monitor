@@ -134,7 +134,10 @@ class Adapter(BrokerAdapter):
         records=[dict(order_id=o['order_id'],code=o['code'],side=o['side'],name='山子高科',date=o['date'],time=o['time'],
                       filled=o['filled'],average=o['price'],amount=str(Decimal(o['price'])*o['filled']))
                  for o in self.owner.orders if o['filled']]
-        with patch('executor.ths_report.contract_pages',return_value=iter([records])):
+        native=[dict(name='山子高科',date=o['date'],time=o['time'],side=o['side'],quantity=o['quantity'],price=o['price'],
+                     filled=o['filled'],status='filled' if o['filled']==o['quantity'] else 'partial' if o['filled'] else 'accepted',average=o['price'])
+                for o in self.owner.orders] if not getattr(self.owner,'orders_unavailable',False) else []
+        with patch('executor.ths_report.contract_pages',return_value=iter([records])),patch('executor.ths_orders.current_pages',return_value=iter([native])):
             return discover(self.adb,self.owner.number,day,expected,submitted_at,self.owner.clock[0])
 
 class Harness:
@@ -184,6 +187,13 @@ class Harness:
         return dict(runs=view['runs'],orders={k:v.orders for k,v in self.owners.items()},
             chart=self.app.call('trading_chart',dict(code='sz000981',day='2026-11-04')),isolated=True,real_device_io=False)
     def call(self,method,args):
+        if method=='e2e_chart_fault':
+            self.chart_fault=args['enabled'];self.chart_failures=0;self.clock[0]+=timedelta(seconds=1)
+            return True
+        if method=='e2e_chart_failures':return getattr(self,'chart_failures',0)
+        if method=='trading_chart' and getattr(self,'chart_fault',False):
+            self.chart_failures+=1
+            raise ValueError('Test-only transient chart RPC failure')
         if method=='e2e_feed':return self.feed(args['kind'])
         if method=='e2e_feed_async':return self.app.start_job(lambda:self.feed(args['kind']))
         if method=='e2e_hold_native':

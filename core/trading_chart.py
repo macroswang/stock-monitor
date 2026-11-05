@@ -6,6 +6,28 @@ from .broker_reconciliation import known_id, request_plan, amount, shares
 from executor.trade import parse_result_message
 
 
+def receipt_status(row,payload,ack):
+    """Project an already durable acceptance after an interrupted run update."""
+    original=row['status']
+    if original not in ('sending','unknown') or row.get('request_status')!='accepted' or payload.get('mode')!='live':return original
+    try:
+        if not isinstance(ack,dict) or ack.get('status')!='accepted' or ack.get('submitted') is not True:return original
+        known_id(ack)  # Conflicting receipt numbers cannot prove acceptance.
+        expected,day=request_plan(dict(payload=row['request_payload'],account_id=row['account_id'],created_at=row['request_at']))
+        plan=payload.get('plan',{});confirm=ack.get('confirm') or {}
+        if not isinstance(confirm,dict):return original
+        title={'buy':'委托买入','sell':'委托卖出'}[row['side']]
+        side=confirm.get('side') or {'委托买入':'buy','委托卖出':'sell'}.get(confirm.get('title'))
+        if (day==row['day'] and expected['code']==row['code'][2:] and expected['side']==row['side']
+            and plan.get('account_id')==row['account_id'] and plan.get('code')==row['code'] and plan.get('side')==row['side']
+            and shares(plan.get('quantity'))==expected['quantity'] and amount(plan.get('price'))==amount(expected['price'])
+            and side==row['side'] and confirm.get('title',title)==title and confirm.get('code')==expected['code']
+            and shares(confirm.get('quantity'))==expected['quantity'] and amount(confirm.get('price'))==amount(expected['price'])):
+            return 'accepted'
+    except (ValueError,TypeError,KeyError):pass
+    return original
+
+
 def legacy_receipt_id(row, payload, ack):
     """Recover a display-only acknowledgement; never settle or rewrite a run."""
     if row['status'] != 'unknown' or row['request_status'] != 'unknown' or payload.get('mode') != 'live':
@@ -59,7 +81,7 @@ def chart(store,code,day):
         fill_price=v.get('average') if v.get('origin')=='broker_auto' and v.get('status') in ('partial','filled','cancelled') and v.get('filled',0)>0 else None
         sent=p.get('price_checks',{}).get('before_submit',{}).get('checked_at') or r['request_at']
         points.append(dict(id=r['id'],account_id=r['account_id'],broker_name=brokers._spec(r['broker']).name if r['broker'] else '已移除账户',
-            account_masked=brokers.mask_account(r['account'] or ''),code=code,day=day,side=r['side'],status=r['status'],mode=p.get('mode','trial'),
+            account_masked=brokers.mask_account(r['account'] or ''),code=code,day=day,side=r['side'],status=receipt_status(r,p,ack),mode=p.get('mode','trial'),
             signal_key=signal.get('key'),signal_time=signal.get('time'),reference_price=p.get('reference_price',signal.get('price')),
             created_at=r['created_at'],ordered_at=sent,order_price=plan.get('price'),quantity=plan.get('quantity'),order_id=order_id or receipt_id,
             filled=v.get('filled'),fill_price=fill_price,message=p.get('message',''),reconciliation=p.get('reconciliation'),

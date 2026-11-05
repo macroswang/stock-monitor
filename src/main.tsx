@@ -119,7 +119,7 @@ function App(){
  const paperMinuteOrders=paperChart.scope===paperScope?paperChart.minute_order_points:undefined;
  const [autoChart,setAutoChart]=useState<{scope:string;data:AutoTradeChart}>();
  const autoScope=code+'|'+day;
- useEffect(()=>{let active=true;if(panel==='market'&&code&&day)api<AutoTradeChart>('trading_chart',{code,day}).then(data=>{if(active)setAutoChart({scope:autoScope,data});}).catch(()=>{if(active)setAutoChart(undefined);});return()=>{active=false;};},[autoScope,panel,snapshot?.now]);
+ useEffect(()=>{let active=true;if(panel==='market'&&code&&day)api<AutoTradeChart>('trading_chart',{code,day}).then(data=>{if(active)setAutoChart({scope:autoScope,data});}).catch(()=>{/* Retain confirmed markers; scope checks prevent another stock/date leaking. */});return()=>{active=false;};},[autoScope,panel,snapshot?.now]);
  const selectedAutoChart=autoChart?.scope===autoScope?autoChart.data:undefined;
  const [flow,setFlow]=useState<VolumeFlow>();
  useEffect(()=>{

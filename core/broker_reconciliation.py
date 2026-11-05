@@ -87,7 +87,8 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         lag = (broker_at-created).total_seconds()
     except (KeyError, ValueError, TypeError):raise ValueError('券商委托时间无法核验') from None
     fills_report=report.get('kind')=='contract_fills'
-    if lag < -30 or (not fills_report and lag>180) or broker_at > observed:raise ValueError('券商委托时间与原始请求不一致')
+    native_order=report.get('kind')=='native_order'
+    if lag < -30 or (not (fills_report or native_order) and lag>180) or broker_at > observed:raise ValueError('券商委托时间与原始请求不一致')
     if report.get('date_source') == 'broker_today_query' and observed.astimezone(CN).date().isoformat() != day:
         raise ValueError('当日查询跨越交易日期，稍后重新核验')
     if fills_report:
@@ -116,6 +117,21 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         report=dict(report,status='filled' if executed==expected['quantity'] else 'partial')
     elif shares(report.get('quantity')) != expected['quantity'] or amount(report.get('price')) != amount(expected['price']):
         raise ValueError('回报的价格或委托股数不一致')
+    if native_order:
+        from executor.ths_orders import order_key
+        ack=previous.get('acknowledgement',previous);confirm=ack.get('confirm') or {}
+        recovery=report.get('receipt_recovery') or {}
+        try:submitted=datetime.fromisoformat(recovery['submitted_at'])
+        except (ValueError,TypeError,KeyError):raise ValueError('缺少当日委托关联的原始提交时间') from None
+        if (report.get('source')!='ths_native_today_order' or report.get('order_id') or
+            recovery.get('method')!='native_order_list' or recovery!=previous.get('receipt_recovery') or
+            submitted.tzinfo is None or submitted.date().isoformat()!=day or not created<=submitted<=observed or
+            not -2<=(broker_at-submitted).total_seconds()<=15 or not isinstance(confirm,dict) or
+            not confirm.get('name') or confirm.get('name')!=report.get('name') or
+            confirm.get('code')!=expected['code'] or confirm.get('side')!=expected['side'] or
+            shares(confirm.get('quantity'))!=expected['quantity'] or amount(confirm.get('price'))!=amount(expected['price']) or
+            report.get('native_order_key')!=order_key(report)):
+            raise ValueError('当日委托与原始券商确认无法唯一核对')
     filled = shares(report.get('filled'))
     old_filled = shares(previous.get('verification', {}).get('filled', 0))
     status = report.get('status')
@@ -130,9 +146,14 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         raise ValueError('缺少完整的券商回报证据')
     execution={}
     if fills_report:execution=dict(average=str(average),amount=str(money))
+    if native_order and filled:
+        average=amount(report.get('average'));limit=amount(expected['price'])
+        if average<=0 or (expected['side']=='buy' and average>limit) or (expected['side']=='sell' and average<limit):raise ValueError('当日委托成交均价与限价不一致')
+        execution['average']=str(average)
+    if native_order:execution['native_order_key']=report['native_order_key']
     return dict(**execution,origin='broker_auto', status=status, order_id=order_id, filled=filled,
                 at=now.isoformat(), observed_at=report['observed_at'], source=report['source'],
-                evidence_hash=report['evidence_hash'], note='已按账户、交易日及唯一委托号核对券商回报')
+                evidence_hash=report['evidence_hash'], note='已按账户、交易日、原始确认及唯一当日委托核对' if native_order else '已按账户、交易日及唯一委托号核对券商回报')
 
 
 class Reconciler:
@@ -183,20 +204,41 @@ class Reconciler:
                 if not accounts or accounts[0]['broker']!='ths':raise ValueError('该券商缺少委托号时暂不能自动关联')
                 submitted=json.loads(run['payload']).get('price_checks',{}).get('before_submit',{}).get('checked_at')
                 if not submitted:raise ValueError('缺少原始提交时间，不能自动关联成交')
+                confirm=result.get('acknowledgement',result).get('confirm') or {}
+                if isinstance(confirm,dict) and confirm.get('name'):
+                    if (confirm.get('code')!=expected['code'] or confirm.get('side')!=expected['side'] or
+                        shares(confirm.get('quantity'))!=expected['quantity'] or amount(confirm.get('price'))!=amount(expected['price'])):
+                        raise ValueError('原始券商确认与委托计划不一致')
+                    expected=dict(expected,name=confirm['name'])
                 recovered_report=brokers.discover_order_report(self.store,account_id,day,expected,submitted,secrets=secrets)
                 if recovered_report.get('receipt_recovery',{}).get('submitted_at')!=submitted:raise ValueError('成交关联的提交时间与原记录不一致')
                 ident=recovered_report.get('order_id','')
-                if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident):raise ValueError('成交回报缺少唯一合同编号')
+                if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident) and not (ident=='' and recovered_report.get('kind')=='native_order'):
+                    raise ValueError('回报缺少唯一委托依据')
                 result['receipt_recovery']=recovered_report.get('receipt_recovery')
             if binding:
                 # Binding is only a lookup target; it never proves acceptance/fill.
                 result['order_binding'] = dict(order_id=ident, origin='user', at=checked)
-            for other in self.store.query('SELECT * FROM broker_requests WHERE account_id=? AND request_id<>?', (account_id,request_id)):
+            for other in self.store.query('''SELECT b.*,t.payload AS run_payload FROM broker_requests b
+                LEFT JOIN trading_runs t ON b.request_id='auto_'||t.id AND b.account_id=t.account_id
+                WHERE b.account_id=? AND b.request_id<>?''', (account_id,request_id)):
                 try:
-                    _,other_day=request_plan(other)
+                    other_plan,other_day=request_plan(other)
                     other_id=known_id(json.loads(other['result'] or '{}'))
                 except ValueError:continue
-                if other_day==day and other_id==ident:raise ValueError('同一账户交易日的委托编号已属于另一请求，需人工核对')
+                native_key=(recovered_report or {}).get('native_order_key')
+                other_key=json.loads(other['result'] or '{}').get('verification',{}).get('native_order_key')
+                if other_day==day and ((ident and other_id==ident) or (native_key and native_key==other_key)):
+                    raise ValueError('同一账户交易日的券商委托已属于另一请求，需人工核对')
+                if (native_key and other_day==day and other['status'] in ('accepted','partial','filled','cancelled','unknown','sending') and
+                    all(other_plan[k]==expected[k] for k in ('code','side','quantity')) and amount(other_plan['price'])==amount(expected['price'])):
+                    other_submit=json.loads(other['run_payload'] or '{}').get('price_checks',{}).get('before_submit',{}).get('checked_at')
+                    broker_at=datetime.fromisoformat(day+'T'+recovered_report['time']).replace(tzinfo=CN)
+                    at=datetime.fromisoformat(other_submit or other['created_at'])
+                    # A second indistinguishable local submission cannot claim
+                    # this native row, even when that request already has an ID.
+                    if -2<=(broker_at-at).total_seconds()<=15:
+                        raise ValueError('该当日委托也可能属于另一原始请求，不能唯一关联')
             report = recovered_report if recovered_report is not None else brokers.order_report(self.store, account_id, ident, day, expected, secrets=secrets)
             verification = validate_report(report, original, ident, expected, day, result, now_cn())
             if run:

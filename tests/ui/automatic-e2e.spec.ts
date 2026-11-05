@@ -86,6 +86,40 @@ test('E2E: wrong account blocks only that account while the other account submit
  const rows=await records(page);await expect(rows.filter({hasText:'123***001'})).toContainText('账号不一致');
 });
 
+test('E2E: accepted unfilled buy and sell immediately show B/S for both accounts',async({page},info)=>{
+ await setup(page);
+ const buy=await rpc('e2e_feed',{kind:'bottom'});
+ expect(buy.runs.map((r:any)=>r.status)).toEqual(['accepted','accepted']);
+ expect([...buy.orders.zhangle,...buy.orders.ths].every((r:any)=>r.filled===0)).toBe(true);
+ const plot=await markers(page);
+ await expect.poll(async()=>(await plot.read()).map((p:any)=>p.label)).toEqual(['B','B']);
+ const sell=await rpc('e2e_feed',{kind:'top'});
+ expect(sell.runs.map((r:any)=>r.status)).toEqual(['accepted','accepted','accepted','accepted']);
+ expect([...sell.orders.zhangle,...sell.orders.ths].every((r:any)=>r.filled===0)).toBe(true);
+ await expect.poll(async()=>(await plot.read()).map((p:any)=>p.label).sort()).toEqual(['B','B','S','S']);
+ expect((await plot.read()).every((p:any)=>p.fill_price==null)).toBe(true);
+ expect((await rpc('e2e_repeat')).orders).toEqual(sell.orders);
+ writeFileSync(info.outputPath('accepted-unfilled-markers.json'),JSON.stringify({boundary:'SIMULATED_EXTERNAL_BROKERS_NO_REAL_ORDERS',state:sell,marks:await plot.read()},null,2));
+});
+
+test('E2E: a temporary chart refresh failure retains B/S within the same stock and date',async({page})=>{
+ await setup(page);await rpc('e2e_feed',{kind:'bottom'});
+ const plot=await markers(page);
+ await expect.poll(async()=>(await plot.read()).length).toBe(2);
+ const before=await plot.read();
+ await rpc('e2e_chart_fault',{enabled:true});
+ await expect.poll(()=>rpc('e2e_chart_failures'),{timeout:12000}).toBeGreaterThan(0);
+ expect(await plot.read()).toEqual(before);
+ await page.getByRole('button',{name:'自动交易',exact:true}).click();
+ await rpc('add',{code:'sh603938'});
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.locator('.stocks .stock').filter({hasText:'603938'}).click();
+ await expect.poll(async()=>(await plot.read()).length).toBe(0);
+ await page.locator('.stocks .stock').filter({hasText:'000981'}).click();
+ await expect(plot.chart).toBeVisible();
+ await expect.poll(()=>plot.read()).toEqual(before);
+});
+
 test('E2E: unknown receipt is not a B marker and does not block a different fresh signal',async({page})=>{
  await setup(page);await rpc('e2e_fault',{broker:'zhangle',kind:'lose_receipt'});
  const state=await rpc('e2e_feed',{kind:'bottom'});
@@ -111,6 +145,7 @@ test('E2E: UI and snapshot RPC stay responsive while a broker operation is waiti
 
 test('E2E: missing Galaxy receipt recovers a unique filled contract and displays B without resubmission',async({page},info)=>{
  await setup(page);await rpc('e2e_fault',{broker:'ths',kind:'lose_receipt'});
+ await rpc('e2e_fault',{broker:'ths',kind:'orders_unavailable'});
  const state=await rpc('e2e_feed',{kind:'bottom'});
  expect(state.orders.ths).toHaveLength(1);
  expect(state.runs.find((r:any)=>r.account_id==='e2e-b').status).toBe('unknown');
@@ -123,4 +158,24 @@ test('E2E: missing Galaxy receipt recovers a unique filled contract and displays
  await page.getByRole('button',{name:'自动交易',exact:true}).click();
  const rows=await records(page);await expect(rows.filter({hasText:'987***002'})).toContainText('已成交 200 股');
  await page.screenshot({path:info.outputPath('recovered-contract-record.png'),fullPage:true});
+});
+
+test('E2E: lost Galaxy receipts recover unfilled and partial B/S from today orders without broker IDs or resubmission',async({page},info)=>{
+ await setup(page);await rpc('e2e_fault',{broker:'ths',kind:'lose_receipt'});
+ const lost=await rpc('e2e_feed',{kind:'bottom'});
+ expect(lost.runs.find((r:any)=>r.account_id==='e2e-b').status).toBe('unknown');
+ const accepted=await rpc('e2e_reconcile',{fraction:0});
+ expect(accepted.chart.points.find((p:any)=>p.account_id==='e2e-b')).toMatchObject({status:'accepted',order_id:'',filled:0,order_price:'2.24',fill_price:null});
+ const plot=await markers(page);
+ await expect.poll(async()=>(await plot.read()).map((p:any)=>p.label)).toEqual(['B','B']);
+ await rpc('e2e_feed',{kind:'top'});
+ const acceptedSell=await rpc('e2e_reconcile',{fraction:0});
+ expect(acceptedSell.chart.points.filter((p:any)=>p.account_id==='e2e-b').map((p:any)=>p.status)).toEqual(['accepted','accepted']);
+ await expect.poll(async()=>(await plot.read()).map((p:any)=>p.label).sort()).toEqual(['B','B','S','S']);
+ const partial=await rpc('e2e_reconcile',{fraction:.5});
+ expect(partial.chart.points.filter((p:any)=>p.account_id==='e2e-b').map((p:any)=>[p.status,p.filled,p.order_id])).toEqual([['partial',100,''],['partial',100,'']]);
+ expect((await rpc('e2e_repeat')).orders.ths).toHaveLength(2);
+ expect((await plot.read()).filter((p:any)=>p.account_id==='e2e-b').map((p:any)=>p.label).sort()).toEqual(['B','S']);
+ writeFileSync(info.outputPath('lost-receipt-native-order.json'),JSON.stringify({boundary:'SIMULATED_EXTERNAL_BROKERS_NO_REAL_ORDERS',accepted:acceptedSell,partial,marks:await plot.read()},null,2));
+ await page.screenshot({path:info.outputPath('lost-receipt-native-bs.png'),fullPage:true});
 });

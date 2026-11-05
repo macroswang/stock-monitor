@@ -419,7 +419,7 @@ class LiveTrading:
         positions = []
         for p in self.store.query('SELECT p.* FROM trading_positions p JOIN broker_accounts a ON a.id=p.account_id ORDER BY a.created_at,p.active DESC,p.name'):
             positions.append(dict(account_id=p['account_id'], code=p['code'], name=p['name'], active=bool(p['active']), updated_at=p['updated_at'], **{k:v for k,v in json.loads(p['payload']).items() if k not in ('code','name')}, rule=self.rule(p['account_id'],p['code'])))
-        from .trading_chart import legacy_receipt_id
+        from .trading_chart import legacy_receipt_id,receipt_status
         from .broker_reconciliation import known_id
         runs=[]
         for row in self.store.query('''SELECT r.*,b.result AS broker_result,b.payload AS request_payload,
@@ -432,6 +432,7 @@ class LiveTrading:
             receipt_id=legacy_receipt_id(row,payload,ack)
             runs.append(dict(**{k:v for k,v in row.items() if k not in ('payload','broker_result','request_payload','request_status','request_at')},
                              payload=payload,order_id=ident or receipt_id,receipt_accepted=bool(receipt_id)))
+            runs[-1]['status']=receipt_status(row,payload,ack)
         return dict(settings=self.settings(), accounts=accounts, positions=positions, runs=runs,
                     cash_reserve=dict(rate=BUY_CASH_RESERVE_RATE,fixed=BUY_CASH_RESERVE_FIXED))
 
@@ -496,8 +497,8 @@ class LiveTrading:
                     rule = json.loads(row['payload'])
                     if not rule[side+'_enabled'] or (event_at.isoformat()<=row['armed_at'] and (not baseline_at or baseline_at<row['armed_at'])):
                         continue
-                    if m.get('candidateTime') and self.store.query("SELECT 1 FROM trading_runs WHERE account_id=? AND code=? AND side=? AND day=? AND json_extract(payload,'$.signal.candidateTime')=? AND status NOT IN ('skipped','failed','not_sent') LIMIT 1",
-                            (row['account_id'],code,side,now.date().isoformat(),m['candidateTime'])):
+                    if m.get('candidateTime') and self.store.query("SELECT 1 FROM trading_runs WHERE account_id=? AND code=? AND side=? AND day=? AND json_extract(payload,'$.signal.candidateTime')=? AND json_extract(payload,'$.mode')=? AND status NOT IN ('skipped','failed','not_sent') LIMIT 1",
+                            (row['account_id'],code,side,now.date().isoformat(),m['candidateTime'],self.settings()['mode'])):
                         continue
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()

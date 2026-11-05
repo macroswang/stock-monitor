@@ -153,11 +153,15 @@ def report(adb,account,order_id,day,expected,now):
 
 
 def discover(adb,account,day,expected,submitted_at,now):
-    """Recover ONLY a unique, fully filled contract near the captured submit.
+    """Recover a unique today order bound to the original native confirmation.
 
-    No name/holdings inference, no partial/late-fill guessing, and no submit IO.
-    Scan all pages before deciding uniqueness, including overlapping pages.
+    Older confirmations without a name retain the full-contract fallback.
+    Both paths scan all pages before deciding uniqueness, with no submit IO.
     """
+    if expected.get('name'):
+        from .ths_orders import discover_current,OrderNotFound,OrderUnavailable
+        try:return discover_current(adb,account,day,expected,submitted_at,now)
+        except (OrderNotFound,OrderUnavailable):pass  # Retain the existing full-contract fallback.
     if day!=now.date().isoformat():raise ValueError('不能从今日成交关联跨日委托')
     submitted=datetime.fromisoformat(submitted_at)
     if submitted.tzinfo is None or submitted.date().isoformat()!=day:raise ValueError('缺少明确的原始提交时间')

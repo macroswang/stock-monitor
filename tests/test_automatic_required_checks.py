@@ -199,3 +199,15 @@ class RequiredChecksTests(TestCase):
             self.now+=timedelta(seconds=5)
             self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,True)
         self.assertEqual(self.store.query('SELECT * FROM trading_runs'),[])
+
+    def test_trial_shape_does_not_block_new_live_confirmation_of_same_candidate(self):
+        self.arm()
+        event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='shape|09:59|10:01',price=30)
+        with patch('core.live_trading.brokers.holdings',side_effect=lambda *_a,**_k:self.snapshot_now()),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+            self.service.observe('sh603938',[event],self.app.quotes['sh603938'],self.now,True);self.service.drain(reports=False)
+            self.assertEqual(self.run_row()['status'],'trial');submit.assert_not_called()
+            self.service.configure(dict(mode='live',confirm_live=True));self.service.configure(dict(paused=False))
+            self.now+=timedelta(minutes=1);self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
+            event.update(time='10:02',key='shape|09:59|10:02')
+            self.service.observe('sh603938',[event],self.app.quotes['sh603938'],self.now,True);self.service.drain(reports=False)
+            self.assertEqual(self.run_row()['status'],'accepted');submit.assert_called_once()
