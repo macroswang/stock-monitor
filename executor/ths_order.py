@@ -66,9 +66,23 @@ def parse_confirmation(nodes):
 def parse_result(nodes):
     title=find_by_id(nodes,'dialog_title')
     if not title or parse_confirmation(nodes):return None
-    message=find_by_id(nodes,'dialog_message') or find_by_id(nodes,'message')
-    text=title.text+' '+(message.text if message else '')
-    success=any(t in text for t in ('委托成功','委托已受理','申报成功'))
+    messages=[n.text for n in nodes if n.resource_id.rsplit('/',1)[-1] in ('dialog_message','message') and n.text]
+    if not messages:
+        # Some Galaxy dialogs expose an unlabelled text body. Read only inside
+        # a bounded modal containing its title and acknowledgement button.
+        buttons=[n for n in nodes if n.text in ('确定','知道了','关闭','确认') and n.bounds[1]>=title.bounds[3]]
+        inside=lambda outer,inner:outer[0]<=inner[0] and outer[1]<=inner[1] and outer[2]>=inner[2] and outer[3]>=inner[3]
+        area=lambda b:(b[2]-b[0])*(b[3]-b[1])
+        screen=max((area(n.bounds) for n in nodes),default=0)
+        containers=[n for n in nodes if any(k in n.class_name for k in ('Layout','ViewGroup','Dialog')) and inside(n.bounds,title.bounds)
+                    and area(n.bounds)<screen*.8 and any(inside(n.bounds,b.bounds) for b in buttons)]
+        if containers:
+            box=min(containers,key=lambda n:area(n.bounds)).bounds
+            messages=[n.text for n in nodes if n.text and n is not title and inside(box,n.bounds)
+                      and not n.password and 'EditText' not in n.class_name and n.text not in ('确定','知道了','关闭','确认')]
+    if not messages and title.text.strip() in ('系统信息','系统提示','提示','信息'):return None
+    text=title.text+' '+' '.join(dict.fromkeys(messages))
+    success=any(t in text for t in ('委托成功','委托提交成功','委托已提交','委托已受理','申报成功'))
     error=any(t in text for t in ('失败','拒绝','不足','错误','无效','不允许'))
     if (success and error) or any(t in text for t in ('网络','超时','断开','连接异常','查询失败','读取失败','结果未知')):status='unknown'
     elif error:status='rejected'
@@ -76,6 +90,7 @@ def parse_result(nodes):
     else:status='unknown'
     result=dict(status=status,submitted=status=='accepted',message=text.strip())
     orders=set(re.findall(r'(?:委托编号|委托号|合同编号|合同号)\s*[:：]?\s*([A-Za-z0-9_-]+)',text))
+    if len(orders)>1:result.update(status='unknown',submitted=False)
     if status=='accepted' and len(orders)==1:result['order_id']=orders.pop()
     return result
 

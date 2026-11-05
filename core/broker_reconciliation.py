@@ -95,8 +95,15 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         # limit/quantity against the captured, account-checked submission receipt.
         ack=previous.get('acknowledgement',previous)
         confirm=ack.get('confirm',{})
-        if (report.get('source')!='ths_native_contract_group' or ack.get('status')!='accepted' or
-            ack.get('submitted') is not True or known_id(ack)!=order_id or
+        recovery=report.get('receipt_recovery')
+        recovered=False
+        if recovery and previous.get('receipt_recovery')==recovery:
+            submitted=datetime.fromisoformat(recovery['submitted_at'])
+            recovered=(submitted.tzinfo is not None and submitted.date().isoformat()==day and
+                       created<=submitted<=observed and -2<=(broker_at-submitted).total_seconds()<=15 and
+                       shares(report.get('filled'))==expected['quantity'])
+        acknowledged=ack.get('status')=='accepted' and ack.get('submitted') is True and known_id(ack)==order_id
+        if (report.get('source')!='ths_native_contract_group' or not (acknowledged or recovered) or
             confirm.get('code')!=expected['code'] or confirm.get('side')!=expected['side'] or
             shares(confirm.get('quantity'))!=expected['quantity'] or amount(confirm.get('price'))!=amount(expected['price'])):
             raise ValueError('合同成交回报缺少与原始委托一致的已核验受理凭据')
@@ -162,7 +169,6 @@ class Reconciler:
                         raise ValueError('不能更换已有的唯一委托编号')
                     result.setdefault('binding_history', []).append(old_binding)
                 ident = binding
-            if not ident:raise ValueError('券商受理结果未提供唯一委托号，请按券商记录补充编号后核实')
             if run:
                 p = json.loads(run['payload']).get('plan', {})
                 if (p.get('account_id') != account_id or p.get('code') != run['code'] or
@@ -170,6 +176,18 @@ class Reconciler:
                     run['side'] != expected['side'] or run['day'] != day or
                     shares(p.get('quantity')) != expected['quantity'] or amount(p.get('price')) != amount(expected['price'])):
                     raise ValueError('自动执行计划与原始券商请求不一致')
+            recovered_report=None
+            if not ident:
+                if not run:raise ValueError('缺少可核验的自动委托记录')
+                accounts=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(account_id,))
+                if not accounts or accounts[0]['broker']!='ths':raise ValueError('该券商缺少委托号时暂不能自动关联')
+                submitted=json.loads(run['payload']).get('price_checks',{}).get('before_submit',{}).get('checked_at')
+                if not submitted:raise ValueError('缺少原始提交时间，不能自动关联成交')
+                recovered_report=brokers.discover_order_report(self.store,account_id,day,expected,submitted,secrets=secrets)
+                if recovered_report.get('receipt_recovery',{}).get('submitted_at')!=submitted:raise ValueError('成交关联的提交时间与原记录不一致')
+                ident=recovered_report.get('order_id','')
+                if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident):raise ValueError('成交回报缺少唯一合同编号')
+                result['receipt_recovery']=recovered_report.get('receipt_recovery')
             if binding:
                 # Binding is only a lookup target; it never proves acceptance/fill.
                 result['order_binding'] = dict(order_id=ident, origin='user', at=checked)
@@ -179,12 +197,13 @@ class Reconciler:
                     other_id=known_id(json.loads(other['result'] or '{}'))
                 except ValueError:continue
                 if other_day==day and other_id==ident:raise ValueError('同一账户交易日的委托编号已属于另一请求，需人工核对')
-            report = brokers.order_report(self.store, account_id, ident, day, expected, secrets=secrets)
+            report = recovered_report if recovered_report is not None else brokers.order_report(self.store, account_id, ident, day, expected, secrets=secrets)
             verification = validate_report(report, original, ident, expected, day, result, now_cn())
             if run:
                 old = json.loads(run['payload']).get('verification', {})
                 if shares(old.get('filled', 0)) > verification['filled']:raise ValueError('累计成交股数不能回退')
             result['verification'] = verification
+            result['order_id']=ident
             result.setdefault('acknowledgement',json.loads(original['result'] or '{}'))
             result.update(status=verification['status'],submitted=True)
             message = '券商回报已自动核实：'+{'filled':'全部成交','partial':'部分成交，继续跟踪','accepted':'已受理，继续跟踪','cancelled':'委托已撤销','rejected':'已拒绝'}[verification['status']]
@@ -226,7 +245,9 @@ class Reconciler:
                 _,day=request_plan(row)
                 if day!=now.date().isoformat():continue
                 ident = known_id(result)
-                if not ident:continue
+                if not ident:
+                    accounts=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(row['account_id'],))
+                    if not accounts or accounts[0]['broker']!='ths' or not row['request_id'].startswith('auto_'):continue
                 last = datetime.fromisoformat(result.get('reconciliation', {}).get('at', row['created_at']))
                 if (now-last).total_seconds() < 60:continue
             except (ValueError, TypeError):continue

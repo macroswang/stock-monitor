@@ -73,7 +73,9 @@ class ThsDevice:
     def current_focus(self):return 'com.hexin.plat.android/trade.Form'
     def nodes(self,**_kwargs):
         if self.phase=='confirm':return ths_confirm(self.side,self.code,self.quantity,self.price)
-        if self.phase=='receipt':return [ths_node('委托成功','dialog_title'),ths_node('合同号:'+self.owner.orders[-1]['order_id'],'dialog_message')]
+        if self.phase=='receipt':
+            if self.owner.lose_receipt:return [ths_node('系统信息','dialog_title')]
+            return [ths_node('委托成功','dialog_title'),ths_node('合同号:'+self.owner.orders[-1]['order_id'],'dialog_message')]
         if self.phase=='settings':return ths_settings()+[ths_node('','iv_close')]
         nodes=ths_form(self.side)
         nodes[2]=replace(nodes[2],text=self.code);nodes[4]=replace(nodes[4],text=self.price);nodes[5]=replace(nodes[5],text=self.quantity)
@@ -127,6 +129,13 @@ class Adapter(BrokerAdapter):
         if self.owner.broker=='ths' and filled:
             report.update(kind='contract_fills',source='ths_native_contract_group')
         return report
+    def discover_order_report(self,day,expected,submitted_at):
+        from executor.ths_report import discover
+        records=[dict(order_id=o['order_id'],code=o['code'],side=o['side'],name='山子高科',date=o['date'],time=o['time'],
+                      filled=o['filled'],average=o['price'],amount=str(Decimal(o['price'])*o['filled']))
+                 for o in self.owner.orders if o['filled']]
+        with patch('executor.ths_report.contract_pages',return_value=iter([records])):
+            return discover(self.adb,self.owner.number,day,expected,submitted_at,self.owner.clock[0])
 
 class Harness:
     def __init__(self):
@@ -167,7 +176,7 @@ class Harness:
         self.clock[0]+=timedelta(seconds=5)
         for owner in self.owners.values():
             for row in owner.orders:row['filled']=max(row['filled'],int(row['quantity']*Decimal(str(fraction))))
-        for row in self.app.store.query("SELECT * FROM broker_requests WHERE status IN ('accepted','partial')"):
+        for row in self.app.store.query("SELECT * FROM broker_requests WHERE status IN ('accepted','partial','unknown')"):
             self.app.live_trading.reconciler.reconcile(row['account_id'],row['request_id'])
         return self.state()
     def state(self):

@@ -6,6 +6,7 @@ then swipe ON a populated row. Never open a row: that opens a cancellation UI.
 import hashlib
 import json
 import re
+from datetime import datetime
 from decimal import Decimal,InvalidOperation
 from .adb import find_by_id,find_by_text
 from .ths import read_status,PACKAGE
@@ -98,8 +99,7 @@ def merge_groups(left,right,second_right,second_left):
     return records
 
 
-def report(adb,account,order_id,day,expected,now):
-    if day!=now.date().isoformat():raise ValueError('当前银河合同汇总只支持当日回报；跨日委托保留待核实')
+def contract_pages(adb,account,day):
     nodes=open_contract_groups(adb,account)
     def snapshot():
         ns=adb.nodes();verify(ns,adb.current_focus(),account);return ns
@@ -127,13 +127,21 @@ def report(adb,account,order_id,day,expected,now):
     seen=set()
     for _ in range(12):
         left=parse_group(nodes,day)
-        key=tuple(anchor(r) for r in left)
-        if key in seen:break
-        seen.add(key)
         right_nodes=horizontal(nodes,True);right=parse_group(right_nodes,day,True)
         second_right=parse_group(snapshot(),day,True)
         nodes=horizontal(right_nodes,False);second_left=parse_group(nodes,day)
         records=merge_groups(left,right,second_right,second_left)
+        key=json.dumps(records,sort_keys=True)
+        if key in seen:break
+        seen.add(key)
+        yield records
+        nodes=vertical(nodes,False)
+    else:raise ValueError('合同列表扫描未完成，不能判断唯一性')
+
+
+def report(adb,account,order_id,day,expected,now):
+    if day!=now.date().isoformat():raise ValueError('当前银河合同汇总只支持当日回报；跨日委托保留待核实')
+    for records in contract_pages(adb,account,day):
         matches=[r for r in records if r['order_id']==order_id]
         if matches:
             row=matches[0]
@@ -141,5 +149,35 @@ def report(adb,account,order_id,day,expected,now):
             row.update(found=True,kind='contract_fills',source='ths_native_contract_group',date_source='broker_today_query')
             row['evidence_hash']=hashlib.sha256(json.dumps(row,sort_keys=True).encode()).hexdigest()
             return row
-        nodes=vertical(nodes,False)
     return dict(found=False,message='本次合同成交列表未找到该编号；不认定未提交或已撤单')
+
+
+def discover(adb,account,day,expected,submitted_at,now):
+    """Recover ONLY a unique, fully filled contract near the captured submit.
+
+    No name/holdings inference, no partial/late-fill guessing, and no submit IO.
+    Scan all pages before deciding uniqueness, including overlapping pages.
+    """
+    if day!=now.date().isoformat():raise ValueError('不能从今日成交关联跨日委托')
+    submitted=datetime.fromisoformat(submitted_at)
+    if submitted.tzinfo is None or submitted.date().isoformat()!=day:raise ValueError('缺少明确的原始提交时间')
+    records={}
+    for page in contract_pages(adb,account,day):
+        for row in page:
+            ident=row['order_id']
+            if ident in records and records[ident]!=row:raise ValueError('合同回报读取期间变化')
+            records[ident]=row
+    matches=[]
+    for row in records.values():
+        at=datetime.fromisoformat(day+'T'+row['time']).replace(tzinfo=submitted.tzinfo)
+        average,limit=number(row['average']),number(expected['price'])
+        if (row['code']==expected['code'] and row['side']==expected['side'] and row['filled']==expected['quantity']
+            and -2<=(at-submitted).total_seconds()<=15
+            and ((row['side']=='buy' and 0<average<=limit) or (row['side']=='sell' and average>=limit))
+            and abs(average*row['filled']-number(row['amount']))<=Decimal('.0005')*row['filled']+Decimal('.01')):
+            matches.append(row)
+    if len(matches)!=1:raise ValueError('未找到唯一且完整匹配的成交合同，原委托不重发')
+    row=dict(matches[0],found=True,kind='contract_fills',source='ths_native_contract_group',date_source='broker_today_query',
+             receipt_recovery=dict(submitted_at=submitted_at))
+    row['evidence_hash']=hashlib.sha256(json.dumps(row,sort_keys=True).encode()).hexdigest()
+    return row

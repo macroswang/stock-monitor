@@ -108,3 +108,19 @@ test('E2E: UI and snapshot RPC stay responsive while a broker operation is waiti
  await expect.poll(async()=>(await rpc('job',{job:job.job})).status).toBe('done');
  const done=await rpc('e2e_state');expect(done.orders.zhangle).toHaveLength(1);expect(done.orders.ths).toHaveLength(1);
 });
+
+test('E2E: missing Galaxy receipt recovers a unique filled contract and displays B without resubmission',async({page},info)=>{
+ await setup(page);await rpc('e2e_fault',{broker:'ths',kind:'lose_receipt'});
+ const state=await rpc('e2e_feed',{kind:'bottom'});
+ expect(state.orders.ths).toHaveLength(1);
+ expect(state.runs.find((r:any)=>r.account_id==='e2e-b').status).toBe('unknown');
+ const filled=await rpc('e2e_reconcile',{fraction:1});
+ expect(filled.runs.find((r:any)=>r.account_id==='e2e-b').status).toBe('filled');
+ expect(filled.chart.points.find((p:any)=>p.account_id==='e2e-b')).toMatchObject({order_id:'900001',filled:200,fill_price:'2.24'});
+ expect((await rpc('e2e_repeat')).orders.ths).toHaveLength(1);
+ const plot=await markers(page);
+ await expect.poll(async()=>(await plot.read()).filter((p:any)=>p.account_id==='e2e-b').map((p:any)=>p.label)).toEqual(['B']);
+ await page.getByRole('button',{name:'自动交易',exact:true}).click();
+ const rows=await records(page);await expect(rows.filter({hasText:'987***002'})).toContainText('已成交 200 股');
+ await page.screenshot({path:info.outputPath('recovered-contract-record.png'),fullPage:true});
+});

@@ -492,6 +492,17 @@ def order_report(store,account_id,order_id,day,expected,secrets=None):
 
 
 @_device_operation
+def discover_order_report(store,account_id,day,expected,submitted_at,secrets=None):
+    _,creds,client=_adapter(store,account_id,secrets)
+    _verify_account(client,creds,store)
+    reader=getattr(client,'discover_order_report',None)
+    if not callable(reader):raise BrokerError('该券商暂不支持缺失回执的自动关联')
+    result=reader(day,expected,submitted_at)
+    _verify_account(client,creds,store)
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
+
+
+@_device_operation
 def snapshot(store, account_id: str, secrets: SecretStore | None = None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)
     _verify_account(client, creds, store)

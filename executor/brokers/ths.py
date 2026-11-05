@@ -78,6 +78,11 @@ class ThsAdapter(BrokerAdapter):
         from core.provider import now_cn
         return report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
 
+    def discover_order_report(self,day,expected,submitted_at):
+        from ..ths_report import discover
+        from core.provider import now_cn
+        return discover(self.adb,getattr(self,'_verified_account',None),day,expected,submitted_at,now_cn())
+
     def holdings(self, account: str | None = None, known_codes: dict | None = None,target_code=None) -> dict:
         from ..holdings import collect
         from ..ths_trade import POSITION_LIST_ID, parse_positions, parse_funds
