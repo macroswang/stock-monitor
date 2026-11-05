@@ -317,12 +317,14 @@ def _adapter(store, account_id: str, secrets: SecretStore | None = None):
     return row, creds, adapter(row["broker"])
 
 
-def _device_operation(fn):
-    @wraps(fn)
-    def wrapped(*args, **kwargs):
-        with device_operation(Adb()):
-            return fn(*args, **kwargs)
-    return wrapped
+def _device_operation(fn=None, *, seconds=120):
+    def decorate(func):
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            with device_operation(Adb(), seconds=seconds):
+                return func(*args, **kwargs)
+        return wrapped
+    return decorate(fn) if fn is not None else decorate
 
 
 def _verify_account(client, creds, store=None):
@@ -482,7 +484,7 @@ def trades(store, account_id: str, kind: str = "today", secrets: SecretStore | N
     return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
 
 
-@_device_operation
+@_device_operation(seconds=300)
 def order_report(store,account_id,order_id,day,expected,secrets=None):
     _,creds,client=_adapter(store,account_id,secrets)
     _verify_account(client,creds,store)
@@ -491,7 +493,7 @@ def order_report(store,account_id,order_id,day,expected,secrets=None):
     return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
 
 
-@_device_operation
+@_device_operation(seconds=300)
 def discover_order_report(store,account_id,day,expected,submitted_at,secrets=None):
     _,creds,client=_adapter(store,account_id,secrets)
     _verify_account(client,creds,store)

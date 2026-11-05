@@ -159,6 +159,27 @@ test('fixed-hand drafts persist without money limits and changing mode shows the
  await expect(a).toContainText('当前持仓的 50%');
 });
 
+test('paired T rule exposes one shared lot size and a fee-aware net-profit gate',async({page})=>{
+ await setup(page);
+ const a=page.getByRole('region',{name:/华泰涨乐通 · 123/});
+ await a.getByRole('button',{name:'配置规则'}).click();
+ const dialog=page.getByRole('dialog');
+ await dialog.getByLabel('交易方式').selectOption('paired_t');
+ await dialog.getByLabel('启用成对T').check();
+ await dialog.getByLabel('成对T每轮手数（手）').fill('23');
+ await dialog.getByLabel('最低净收益（元）').fill('20');
+ await dialog.getByText('手续费与滑点参数').click();
+ await dialog.getByLabel('佣金（万分）').fill('2');
+ await dialog.getByLabel('单边最低佣金（元）').fill('5');
+ await expect(dialog).toContainText('一轮完成后可继续下一轮，不限制每日轮次');
+ await page.screenshot({path:'outputs/paired-t-rule-dialog.png',fullPage:false});
+ await dialog.getByRole('button',{name:'保存规则'}).click();
+ await expect(a.getByRole('checkbox',{name:'123***001 山子高科 成对T'})).toBeChecked();
+ await expect(a).toContainText('每轮 23 手');
+ await expect(a).toContainText('净收益至少 20 元');
+ await expect(a).toContainText('不会独立买入');
+});
+
 test('sizing explains the screenshot rounding, cash needs and position impact',()=>{
  const rule:QuantityRule={buy_mode:'lots',sell_mode:'position',buy_lots:1,sell_lots:1,buy_percent:50,sell_percent:50};
  const buy=sizingEstimate('sh603938',300,300,'buy',rule,29.36,'13,361.69','22,170.69');
