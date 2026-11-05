@@ -573,7 +573,7 @@ class App:
         if method=='trading_sync_all':return self.broker_job(self.live_trading.sync_all)
         if method=='trading_map':return self.broker_job(lambda:self.live_trading.map_position(args['account_id'],args['token'],args['name'],args['code']))
         if method=='trading_preview':return dict(self.live_trading.plan(args['account_id'],symbol(args['code']),args['side'],self.quotes.get(symbol(args['code']))),mode='trial',submitted=False)
-        if method=='trading_resolve':return self.live_trading.resolve(args['id'],args['status'],args.get('order_id',''),args['filled'],args['note'])
+        if method=='trading_resolve':return self.live_trading.resolve(args['id'],args['status'],args.get('order_id',''),args['filled'],args['note'],args.get('average'))
         if method=='trading_reconcile':return self.broker_job(lambda:self.live_trading.reconcile(args['id'],args.get('order_id','')))
         if method=='broker_reconcile':return self.broker_job(lambda:self.live_trading.reconciler.reconcile(args['account_id'],args['request_id'],args.get('order_id','')))
         if method=='broker_accounts': return brokers.list_accounts(self.store)

@@ -92,11 +92,15 @@ class RequiredChecksTests(TestCase):
     def test_old_limits_migrate_without_changing_sizes_or_stopping_execution(self):
         self.arm();before=self.service.rule('a','sh603938')
         stored={k:v for k,v in before.items() if k not in ('revision','armed_at')}
-        self.store.execute('UPDATE trading_rules SET payload=? WHERE account_id=?',(json.dumps(dict(stored,daily_orders=1,max_deviation_pct=.1)),'a'))
-        restored=LiveTrading(self.app);after=restored.rule('a','sh603938')
-        self.assertFalse(restored.settings()['paused'])
-        self.assertEqual(after['armed_at'],before['armed_at'])
-        self.assertEqual({k:v for k,v in after.items() if k not in ('revision','armed_at')},stored)
+        legacy_keys=('buy_enabled','sell_enabled','buy_mode','sell_mode','buy_lots','sell_lots','buy_percent','sell_percent','signal')
+        for original in (stored,{k:stored[k] for k in legacy_keys}):
+            with self.subTest(fields=list(original)):
+                self.store.execute('UPDATE trading_rules SET payload=? WHERE account_id=?',(json.dumps(dict(original,daily_orders=1,max_deviation_pct=.1)),'a'))
+                restored=LiveTrading(self.app);after=restored.rule('a','sh603938')
+                self.assertFalse(restored.settings()['paused'])
+                self.assertEqual(after['armed_at'],before['armed_at'])
+                self.assertEqual(after['revision'],before['revision'])
+                self.assertEqual({k:v for k,v in after.items() if k not in ('revision','armed_at')},stored)
 
     def test_revision_or_sampling_gap_does_not_veto_new_current_minute_signal(self):
         self.arm();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)

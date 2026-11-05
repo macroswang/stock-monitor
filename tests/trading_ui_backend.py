@@ -99,6 +99,17 @@ for line in sys.stdin:
             app.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',('cycle-leg','test-a','sz000981','sell','cycle-signal',stamp[:10],'cancelled',json.dumps(payload),stamp,stamp))
             app.store.execute('INSERT INTO trading_cycles VALUES(?,?,?,?,?,?,?,?,?,?)',('cycle-review','test-a','sz000981','needs_review',100,'cycle-leg',None,json.dumps(dict(mode='live',message='首腿部分成交后结束，需人工处理')),stamp,stamp))
             result=True
+        elif request['method']=='test_seed_paired_missing_average':
+            stamp=now_cn().isoformat();rule=app.live_trading.rule('test-a','sz000981')
+            app.live_trading.save_rule('test-a','sz000981',dict(strategy_mode='paired_t',paired_enabled=True),rule['revision'])
+            plan=dict(account_id='test-a',code='sz000981',side='sell',quantity=100,price='2.13')
+            payload=dict(mode='live',plan=plan,signal=dict(time='10:01',kind='top'),paired_t=dict(cycle_id='manual-cycle',leg='sell'))
+            app.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',('manual-leg','test-a','sz000981','sell','manual-signal',stamp[:10],'unknown',json.dumps(payload),stamp,stamp))
+            app.store.execute('INSERT INTO trading_cycles VALUES(?,?,?,?,?,?,?,?,?,?)',('manual-cycle','test-a','sz000981','sell_pending',100,'manual-leg',None,json.dumps(dict(mode='live')),stamp,stamp))
+            request_payload=dict(account_id='test-a',code='000981',side='sell',quantity=100,price='2.13',dry_run=False)
+            app.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_manual-leg','test-a',json.dumps(request_payload),'unknown',json.dumps(dict(order_id='manual-123')),stamp,stamp))
+            app.live_trading.resolve('manual-leg','filled','manual-123',100,'已核对券商全部成交')
+            result=True
         elif request['method']=='test_seed_notice':
             app.store.setconfig('trading_signal_notice','测试：原买卖开关已保留，自动执行已暂停。')
             result=True

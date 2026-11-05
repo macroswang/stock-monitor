@@ -104,14 +104,11 @@ class LiveTrading:
                 if set(old)==set(DEFAULT_RULE) and old.get('signal')==SIGNAL:continue
                 # New paired-T fields are opt-in. Extending an existing valid
                 # rule must not arm paired execution or pause independent rules.
-                if set(old).issubset(DEFAULT_RULE) and old.get('signal')==SIGNAL:
-                    extended=dict(DEFAULT_RULE,**old)
+                compatible={k:v for k,v in old.items() if k not in ('daily_orders','max_deviation_pct')}
+                if set(compatible).issubset(DEFAULT_RULE) and old.get('signal')==SIGNAL:
+                    extended=dict(DEFAULT_RULE,**compatible)
                     self.store.db.execute('UPDATE trading_rules SET payload=? WHERE account_id=? AND code=?',
                                           (json.dumps(extended),row['account_id'],row['code']))
-                    continue
-                if set(old)-{'daily_orders','max_deviation_pct'}==set(DEFAULT_RULE) and old.get('signal')==SIGNAL:
-                    self.store.db.execute('UPDATE trading_rules SET payload=?,revision=revision+1 WHERE account_id=? AND code=?',
-                                          (json.dumps({k:old[k] for k in DEFAULT_RULE}),row['account_id'],row['code']))
                     continue
                 new=migrate_rule(row['code'],old,json.loads(row['position'] or '{}'),DEFAULT_RULE)
                 new['signal']=SIGNAL
@@ -412,26 +409,43 @@ class LiveTrading:
                 self.store.execute('UPDATE trading_rules SET payload=?,revision=revision+1,armed_at=? WHERE account_id=? AND code=?',
                                    (json.dumps(payload),now_cn().isoformat(),row['account_id'],code))
 
-    def resolve(self, ident, status, order_id, filled, note):
+    def resolve(self, ident, status, order_id, filled, note, average=None):
         if status not in ('filled','cancelled','rejected','not_sent','partial') or not isinstance(note,str) or len(note.strip())<4:
             raise ValueError('请填写核对后的委托状态及具体依据（至少4字）')
         with self.lock,self.store.lock,self.store.db:
             rows=self.store.query('SELECT * FROM trading_runs WHERE id=?',(ident,))
-            if not rows or rows[0]['status'] not in ('unknown','accepted','partial'):
-                raise ValueError('该执行记录不需要核实，或仍在提交中')
+            if not rows:
+                raise ValueError('该执行记录不存在')
             run=rows[0];payload=json.loads(run['payload']);quantity=payload.get('plan',{}).get('quantity',0)
+            cycle=self.active_cycle(run['account_id'],run['code'])
+            paired=bool(cycle and ident in (cycle['first_run_id'],cycle['second_run_id']))
+            previous=payload.get('verification',{})
+            enrich=bool(paired and cycle['state']=='needs_review' and run['status']=='filled' and
+                        previous.get('origin')=='manual' and status=='filled' and
+                        order_id==previous.get('order_id') and filled==previous.get('filled') and average is not None)
+            if run['status'] not in ('unknown','accepted','partial') and not enrich:
+                raise ValueError('该执行记录不需要核实，或仍在提交中')
             if type(filled) is not int or not 0<=filled<=quantity or (status=='filled' and filled!=quantity) or (status in ('not_sent','rejected') and filled!=0):
                 raise ValueError('实际成交股数与核实状态不符')
             if (status=='partial' and not 0<filled<quantity) or (status=='cancelled' and filled>=quantity) or filled<payload.get('verification',{}).get('filled',0):
                 raise ValueError('实际成交股数不能回退，且须与委托状态一致')
             if status!='not_sent' and (not isinstance(order_id,str) or not order_id.strip() or len(order_id)>80):
                 raise ValueError('请填写券商的唯一委托号')
+            execution={}
+            if average is not None:
+                from .broker_reconciliation import amount
+                avg=amount(average);limit=amount(payload.get('plan',{}).get('price'))
+                if filled<=0 or avg<=0 or (run['side']=='buy' and avg>limit) or (run['side']=='sell' and avg<limit):
+                    raise ValueError('成交均价与原始委托限价或成交股数不符')
+                execution['average']=str(avg)
             payload['verification']=dict(origin='manual',status=status,order_id=order_id,filled=filled,note=note.strip(),at=now_cn().isoformat())
+            payload['verification'].update(execution)
             payload['message']='人工核实：'+note.strip()
             requests=self.store.query('SELECT * FROM broker_requests WHERE request_id=? AND account_id=?',('auto_'+ident,run['account_id']))
             if requests:
                 request=requests[0]
-                if request['status'] not in ('accepted','unknown','partial','sending','prepared'):raise ValueError('券商请求已更新，请刷新核对')
+                if request['status'] not in ('accepted','unknown','partial','sending','prepared') and not (enrich and request['status']=='filled'):
+                    raise ValueError('券商请求已更新，请刷新核对')
                 result=json.loads(request['result'] or '{}')
                 from .broker_reconciliation import known_id
                 old_id=known_id(result)

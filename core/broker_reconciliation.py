@@ -181,6 +181,10 @@ class Reconciler:
         checked = now_cn().isoformat()
         try:
             expected, day = request_plan(original)
+            if run and day!=now_cn().date().isoformat() and json.loads(run['payload']).get('paired_t'):
+                account=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(account_id,))
+                if account and account[0]['broker']=='ths':
+                    raise ValueError('银河暂不支持自动读取跨日回报，请在持仓页本轮成对T中人工核实委托状态、成交股数及均价')
             ident = known_id(result)
             if binding:
                 if not isinstance(binding, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', binding):raise ValueError('委托编号格式无效')

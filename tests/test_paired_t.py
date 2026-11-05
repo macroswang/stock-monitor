@@ -89,14 +89,37 @@ class PairedTTests(unittest.TestCase):
         self.assertEqual(self.cycles()[0]['state'],'buy_pending')
 
     def test_needs_review_recovers_when_broker_evidence_is_completed(self):
-        run=self.filled_sell();payload=json.loads(self.store.query('SELECT payload FROM trading_runs')[0]['payload'])
-        payload['verification'].update(origin='manual');payload['verification'].pop('average')
-        self.store.execute("UPDATE trading_cycles SET state='sell_pending'")
-        self.store.execute('UPDATE trading_runs SET payload=? WHERE id=?',(json.dumps(payload),run['id']))
-        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'needs_review')
-        payload['verification'].update(origin='broker_auto',average='2.20')
-        self.store.execute('UPDATE trading_runs SET payload=? WHERE id=?',(json.dumps(payload),run['id']))
-        self.service.sync_cycles();self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+        run=self.open_real_request()
+        self.service.resolve(run['id'],'filled','contract-1',1000,'已核对券商全部成交')
+        self.assertEqual(self.cycles()[0]['state'],'needs_review')
+        for order,qty,avg in [('wrong',1000,'2.21'),('contract-1',900,'2.21'),('contract-1',1000,'2.19')]:
+            with self.assertRaises(ValueError):self.service.resolve(run['id'],'filled',order,qty,'补充券商成交均价',avg)
+        with patch('core.live_trading.brokers.submit_order') as submit:
+            self.service.resolve(run['id'],'filled','contract-1',1000,'已核对券商成交均价','2.21');submit.assert_not_called()
+        self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+        request=json.loads(self.store.query('SELECT result FROM broker_requests')[0]['result'])
+        self.assertEqual(request['verification']['average'],'2.21')
+
+    def open_real_request(self,broker='zhangle'):
+        self.store.setconfig('trading_mode','live');self.store.execute('UPDATE broker_accounts SET broker=?',(broker,))
+        self.signal('top','open-sell',2.20);run=self.store.query('SELECT * FROM trading_runs')[0]
+        payload=json.loads(run['payload']);payload['plan']=dict(account_id='a',code='sz000981',side='sell',quantity=1000,price='2.20')
+        self.store.execute("UPDATE trading_runs SET status='unknown',payload=? WHERE id=?",(json.dumps(payload),run['id']))
+        request=dict(account_id='a',code='000981',side='sell',quantity=1000,price='2.20',dry_run=False)
+        stamp=self.now.isoformat()
+        self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+run['id'],'a',json.dumps(request),'unknown',json.dumps(dict(order_id='contract-1')),stamp,stamp))
+        return run
+
+    def test_galaxy_historical_report_has_manual_recovery_without_device_reads(self):
+        run=self.open_real_request('ths');self.now+=timedelta(days=1)
+        with patch('core.broker_reconciliation.now_cn',return_value=self.now),patch('core.broker_reconciliation.brokers.order_report') as reader:
+            result=self.service.reconcile(run['id']);reader.assert_not_called()
+        self.assertFalse(result['ok']);self.assertIn('人工核实',result['message'])
+        self.assertEqual(result['status'],'unknown')
+        with patch('core.live_trading.brokers.submit_order') as submit:
+            self.service.resolve(run['id'],'filled','contract-1',1000,'已核对银河历史成交明细','2.20');submit.assert_not_called()
+        self.assertEqual(self.cycles()[0]['state'],'waiting_buy')
+        self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'filled')
 
     def test_manual_close_requires_settled_orders_and_preserves_audit(self):
         self.signal('top','pending',2.20);cycle=self.cycles()[0]

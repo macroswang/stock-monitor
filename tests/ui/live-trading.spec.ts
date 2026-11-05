@@ -197,6 +197,23 @@ test('paired cycle can be disabled and manually closed with an explicit settleme
  await expect(page.getByRole('status')).toContainText('已记录人工结案');
 });
 
+test('missing execution average is enriched through the existing verification API',async({page})=>{
+ await setup(page);
+ await page.evaluate(()=> (window as unknown as {testTradingRpc:(m:string,a:unknown)=>Promise<unknown>}).testTradingRpc('test_seed_paired_missing_average',{}));
+ await page.getByRole('button',{name:'刷新',exact:true}).click();
+ const cycle=page.getByRole('region',{name:'sz000981 成对T周期'});
+ await expect(cycle).toContainText('需人工处理');
+ await cycle.getByText('首腿卖出 · 人工核实',{exact:true}).click();
+ await expect(cycle.getByLabel('券商委托号',{exact:true})).toBeDisabled();
+ await expect(cycle.getByLabel('累计成交股数',{exact:true})).toBeDisabled();
+ await cycle.getByLabel('成交均价',{exact:true}).fill('2.14');
+ await cycle.getByLabel('核实依据',{exact:true}).fill('已核对券商成交明细均价');
+ await cycle.getByRole('checkbox',{name:'已在券商逐项核对本笔委托和成交明细'}).check();
+ await cycle.getByRole('button',{name:'保存核实结果'}).click();
+ await expect(cycle).toContainText('等待回补');
+ await expect(cycle.getByText('首腿卖出 · 人工核实',{exact:true})).toHaveCount(0);
+});
+
 test('sizing explains the screenshot rounding, cash needs and position impact',()=>{
  const rule:QuantityRule={buy_mode:'lots',sell_mode:'position',buy_lots:1,sell_lots:1,buy_percent:50,sell_percent:50};
  const buy=sizingEstimate('sh603938',300,300,'buy',rule,29.36,'13,361.69','22,170.69');
