@@ -245,7 +245,10 @@ class LiveTrading:
         code = symbol(code)
         with self.lock:
             self.account(ident)
-            if not self.store.query('SELECT 1 FROM watch WHERE code=?',(code,)):
+            if not self.store.query('''SELECT 1 FROM watch WHERE code=?
+                UNION ALL SELECT 1 FROM trading_positions WHERE account_id=? AND code=?
+                UNION ALL SELECT 1 FROM trading_rules WHERE account_id=? AND code=? LIMIT 1''',
+                (code,ident,code,ident,code)):
                 raise ValueError('该股票不在自选股中')
             old = self.rule(ident, code)
             if type(revision) is not int or revision != old['revision']:
@@ -308,10 +311,26 @@ class LiveTrading:
                                (ident, str(exc), now_cn().isoformat()))
             raise
 
+    def _execution_sync_result(self,ident,code,result):
+        """A fresh verified target may execute while OTHER stocks remain unresolved."""
+        if result['status']!='partial':return result
+        with self.lock:
+            states=self.store.query('SELECT payload FROM trading_sync WHERE account_id=? AND token=?',(ident,result['token']))
+            if not states:return result
+            snapshot=json.loads(states[0]['payload'])
+            targets=[p for p in snapshot.get('positions',[]) if p.get('code') in (code,code[2:])]
+            qty=number(targets[0].get('quantity')) if len(targets)==1 else None
+            sellable=number(targets[0].get('sellable')) if len(targets)==1 else None
+            if qty is not None and sellable is not None and 0<=sellable<=qty and qty==int(qty) and sellable==int(sellable) and not self.target_unresolved(ident,code):
+                fresh=self.store.query('SELECT updated_at FROM trading_positions WHERE account_id=? AND code=?',(ident,code))
+                if fresh and fresh[0]['updated_at']==snapshot['observed_at']:return dict(status='complete',position_only=True)
+            return result
+
     def execution_sync(self,ident,code):
         if 0 <= stamp_age(self.verified_sync.get(ident),now_cn()) <= 30:return self.sync(ident,reuse_seconds=30)
         states=self.store.query('SELECT * FROM trading_sync WHERE account_id=?',(ident,))
-        if not states or states[0]['status'] not in ('complete','partial'):return self.sync(ident)
+        if not states or states[0]['status'] not in ('complete','partial'):
+            return self._execution_sync_result(ident,code,self.sync(ident))
         baseline=states[0]
         # A persisted account-verified baseline can route a targeted recheck after
         # restart. The native gateway still verifies the account before/after
@@ -319,20 +338,12 @@ class LiveTrading:
         data=json.loads(baseline['payload'])
         known=self.store.query('SELECT 1 FROM trading_positions WHERE account_id=? AND code=?',(ident,code))
         if not known or data.get('account_id')!=ident or data.get('account_verified') is not True:
-            return self.sync(ident)
+            return self._execution_sync_result(ident,code,self.sync(ident))
         snapshot=brokers.holdings(self.store,ident,target_code=code)
         if snapshot.get('position_only') is not True:
             with self.lock:
                 result=self.apply_snapshot(ident,snapshot)
-                # Unresolved OTHER stocks do not invalidate a freshly verified
-                # explicit target code in this account's native snapshot.
-                targets=[p for p in snapshot.get('positions',[]) if p.get('code') in (code,code[2:])]
-                qty=number(targets[0].get('quantity')) if len(targets)==1 else None
-                sellable=number(targets[0].get('sellable')) if len(targets)==1 else None
-                if result['status']=='partial' and qty is not None and sellable is not None and 0<=sellable<=qty and qty==int(qty) and sellable==int(sellable):
-                    fresh=self.store.query('SELECT updated_at FROM trading_positions WHERE account_id=? AND code=?',(ident,code))
-                    if fresh and fresh[0]['updated_at']==snapshot['observed_at']:return dict(status='complete',position_only=True)
-                return result
+                return self._execution_sync_result(ident,code,result)
         if snapshot.get('account_id')!=ident or snapshot.get('account_verified') is not True or not 0<=stamp_age(snapshot.get('observed_at'),now_cn())<=30:
             raise ValueError('目标持仓的账户或时间无法核验')
         positions=snapshot.get('positions',[])

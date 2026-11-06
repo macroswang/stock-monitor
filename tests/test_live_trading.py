@@ -112,6 +112,85 @@ class TradingTests(unittest.TestCase):
         self.assertEqual(self.runs()[0]['status'],'trial')
         self.assertEqual(json.loads(self.runs()[0]['payload'])['plan']['quantity'],100)
 
+    def test_first_target_sync_allows_sell_and_position_buy_with_other_unresolved(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        earlier=(self.now-timedelta(minutes=5)).isoformat()
+        self.store.setconfig('trading_paused',False);self.store.setconfig('trading_mode','live')
+        self.service.started_at=earlier
+        def submit(*args,**kwargs):
+            kwargs['authorize']()
+            return dict(status='accepted',submitted=True)
+        self.submit.side_effect=submit
+        for baseline in ('never','complete','failed'):
+            for side,kind,expected in (('sell','top',200),('buy','bottom',500)):
+                with self.subTest(baseline=baseline,side=side):
+                    for table in ('trading_runs','trading_sync','trading_positions'):
+                        self.store.execute('DELETE FROM '+table)
+                    self.service.verified_sync.clear();self.submit.reset_mock()
+                    if baseline=='complete':self.service.apply_snapshot('a',self.snapshot(positions=[]))
+                    elif baseline=='failed':self.store.execute("INSERT INTO trading_sync(account_id,status) VALUES('a','failed')")
+                    old=self.service.add_target('a','sz000981')
+                    self.service.save_rule('a','sz000981',dict(buy_enabled=True,sell_enabled=True,buy_mode='position',buy_percent=50,sell_lots=2),old['revision'])
+                    self.store.execute('UPDATE trading_rules SET armed_at=?',(earlier,))
+                    self.observe(kind=kind,key='first-target-'+baseline+'-'+side)
+                    partial=self.snapshot(complete=False,positions=[
+                        dict(code='sz000981',name='山子高科',quantity=1000,sellable=1000,price=2.13),
+                        dict(name='其他待确认股票',quantity=100,sellable=100)])
+                    with patch('core.live_trading.brokers.holdings',return_value=partial) as holdings:
+                        self.service.drain(reports=False)
+                    run=self.runs()[0];plan=json.loads(run['payload']).get('plan',{})
+                    self.assertEqual(run['status'],'accepted',json.loads(run['payload']).get('message'))
+                    self.assertEqual(plan['quantity'],expected)
+                    holdings.assert_called_once_with(self.store,'a')
+                    self.submit.assert_called_once()
+                    self.assertEqual(self.submit.call_args.args[1:5],('a',side,'000981',expected))
+                    state=self.store.query("SELECT payload,status FROM trading_sync WHERE account_id='a'")[0]
+                    self.assertEqual(state['status'],'partial')
+                    self.assertEqual(json.loads(state['payload'])['unresolved'][0]['name'],'其他待确认股票')
+
+    def test_first_target_sync_still_rejects_invalid_target_and_account(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        self.service.add_target('a','sz000981')
+        target=dict(code='sz000981',name='山子高科',quantity=1000,sellable=1000,price=2.13)
+        other=dict(name='其他待确认股票',quantity=100,sellable=100)
+        for positions in ([dict(target,quantity='--'),other],[target,target,other],[other]):
+            with self.subTest(positions=positions):
+                self.store.execute('DELETE FROM trading_sync');self.store.execute('DELETE FROM trading_positions')
+                with patch('core.live_trading.brokers.holdings',return_value=self.snapshot(complete=False,positions=positions)):
+                    self.assertEqual(self.service.execution_sync('a','sz000981')['status'],'partial')
+        self.store.execute('DELETE FROM trading_sync');self.store.execute('DELETE FROM trading_positions')
+        with patch('core.live_trading.brokers.holdings',return_value=self.snapshot('b',[target,other],False)):
+            with self.assertRaisesRegex(ValueError,'不一致'):self.service.execution_sync('a','sz000981')
+        self.submit.assert_not_called()
+
+    def test_existing_rules_remain_editable_after_watch_removal_without_resuming_monitor(self):
+        for source in ('holding','watchlist'):
+            with self.subTest(source=source):
+                if source=='holding':self.seed()
+                else:
+                    self.store.execute('DELETE FROM trading_positions')
+                    self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+                    self.service.add_target('a','sz000981')
+                self.store.execute('DELETE FROM watch WHERE code=?',('sz000981',))
+                self.service.disable_code('sz000981')
+                old=self.service.rule('a','sz000981')
+                saved=self.service.save_rule('a','sz000981',dict(buy_lots=2),old['revision'])
+                self.assertEqual(saved['buy_lots'],2)
+                self.assertFalse(saved['buy_enabled']);self.assertFalse(saved['sell_enabled'])
+                self.assertFalse(self.store.query('SELECT 1 FROM watch WHERE code=?',('sz000981',)))
+                self.service.save_rule('a','sz000981',dict(buy_enabled=True),saved['revision'])
+                earlier=(self.now-timedelta(minutes=5)).isoformat()
+                self.store.execute('UPDATE trading_rules SET armed_at=?',(earlier,))
+                self.store.setconfig('trading_paused',False);self.service.started_at=earlier
+                self.observe(key='removed-watch-'+source)
+                with patch('core.live_trading.brokers.holdings') as holdings:self.service.drain(reports=False)
+                self.assertEqual(self.runs()[-1]['status'],'skipped')
+                self.assertIn('自选监控已停止',json.loads(self.runs()[-1]['payload'])['message'])
+                holdings.assert_not_called()
+        with self.assertRaisesRegex(ValueError,'自选股'):
+            self.service.save_rule('a','sh603938',dict(buy_enabled=True),0)
+        self.submit.assert_not_called()
+
     def test_wrong_account_snapshot_cannot_write_positions(self):
         with self.assertRaisesRegex(ValueError,'不一致'):
             self.service.apply_snapshot('a',self.snapshot('b'))
