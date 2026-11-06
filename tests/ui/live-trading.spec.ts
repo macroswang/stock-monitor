@@ -20,7 +20,7 @@ async function setup(page:Page){
   w.isTauri=true;
  });
  await page.goto('/?panel=trading');
- await expect(page.getByRole('heading',{name:'账户持仓，统一管理'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'自动交易股票'})).toBeVisible();
  await expect(page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'})).toBeVisible();
 }
 test.afterEach(()=>{backend?.stdin.end();backend?.kill();for(const p of pending)p.reject(Error('Test ended'));pending=[];});
@@ -62,6 +62,25 @@ test('same stock in different accounts keeps switches, ratios and drafts separat
  await expect(page.getByText('自动执行已暂停',{exact:true})).toBeVisible();
 });
 
+test('a watchlist-only stock can be assigned to one account without inventing a holding',async({page})=>{
+ await setup(page);
+ await page.getByRole('combobox',{name:'管理证券账户'}).selectOption('test-a');
+ await page.getByRole('button',{name:'添加自选股'}).click();
+ const dialog=page.getByRole('dialog');
+ await expect(dialog.getByLabel('选择自选股证券账户')).toHaveValue('test-a');
+ await dialog.getByLabel('选择自动交易自选股').selectOption('sh603938');
+ await dialog.getByRole('button',{name:'添加',exact:true}).click();
+ await expect(dialog).not.toBeVisible();
+ const accountA=page.getByRole('region',{name:/华泰涨乐通 · 123/});
+ const row=accountA.getByRole('row').filter({hasText:'三孚股份'});
+ await expect(row).toContainText('自选股配置');await expect(row).toContainText('待持仓同步');
+ await row.getByRole('checkbox',{name:'123***001 三孚股份 自动买入'}).check();
+ await row.getByRole('button',{name:'试算买入'}).click();
+ await expect(page.getByRole('status')).toContainText('三孚股份');await expect(page.getByRole('status')).toContainText('100股');
+ await page.getByRole('combobox',{name:'管理证券账户'}).selectOption('test-b');
+ await expect(page.getByRole('region',{name:/同花顺（银河证券） · 987/}).getByRole('button',{name:'三孚股份',exact:true})).toHaveCount(0);
+});
+
 test('code confirmation is account-scoped and wrong code never creates association',async({page})=>{
  await setup(page);
  await page.getByRole('button',{name:'确认代码',exact:true}).click();
@@ -87,7 +106,7 @@ test('holdings provenance leads from watchlist to management; dialogs fit compac
  await page.getByRole('button',{name:'自选监控',exact:true}).click();
  await expect(page.getByRole('button',{name:'山子高科 账户同步来源'})).toContainText('2账户');
  await page.getByRole('button',{name:'山子高科 账户同步来源'}).click();
- await expect(page.getByRole('heading',{name:'账户持仓，统一管理'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'自动交易股票'})).toBeVisible();
  await page.setViewportSize({width:1100,height:800});
  await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();
  await expect(page.getByRole('dialog')).toBeVisible();

@@ -135,7 +135,7 @@ test('E2E: UI and snapshot RPC stay responsive while a broker operation is waiti
  await expect.poll(async()=>{const s=await rpc('e2e_state');return s.runs.some((r:any)=>r.status==='processing');}).toBe(true);
  const start=Date.now();const rows=await records(page);await expect(rows).toHaveCount(2);
  await page.getByRole('tab',{name:'持仓与策略',exact:true}).click();
- await page.getByRole('textbox',{name:'搜索持仓'}).fill('山子');
+ await page.getByRole('textbox',{name:'搜索股票'}).fill('山子');
  const elapsedMs=Date.now()-start;expect(elapsedMs).toBeLessThan(2000);
  writeFileSync(info.outputPath('ui-responsive.json'),JSON.stringify({scenario:'native broker wait; refresh, switch tabs and search',elapsedMs,limitMs:2000}));
  await rpc('e2e_release_native');

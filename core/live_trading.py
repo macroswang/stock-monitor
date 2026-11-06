@@ -183,8 +183,17 @@ class LiveTrading:
             if not accounts:raise ValueError('请先开启股票的自动买卖规则')
         for ident in sorted(accounts):
             if self.sync(ident)['status']!='complete':
-                codes=self.store.query("SELECT code FROM trading_rules WHERE account_id=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1 OR json_extract(payload,'$.paired_enabled')=1)",(ident,))
-                if any(self.execution_sync(ident,r['code'])['status']!='complete' for r in codes):
+                rules=self.store.query("SELECT code,payload FROM trading_rules WHERE account_id=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1 OR json_extract(payload,'$.paired_enabled')=1)",(ident,))
+                ready=True
+                for row in rules:
+                    rule=dict(DEFAULT_RULE,**json.loads(row['payload']))
+                    # A fixed-lot bottom buy needs verified account funds, not a
+                    # position in the target stock. Other sides are rechecked
+                    # again when their own signal is processed.
+                    if rule['strategy_mode']=='independent' and rule['buy_enabled'] and rule['buy_mode']=='lots' and not self.target_unresolved(ident,row['code']):
+                        continue
+                    if self.execution_sync(ident,row['code'])['status']!='complete':ready=False
+                if not ready:
                     raise ValueError('配置股票的持仓无法核验，自动执行保持暂停')
             with self.lock:
                 if epoch!=self.control_revision:raise ValueError('启动已取消，自动执行保持暂停')
@@ -194,6 +203,16 @@ class LiveTrading:
 
     def enabled_accounts(self):
         return {r['account_id'] for r in self.store.query("SELECT DISTINCT r.account_id FROM trading_rules r LEFT JOIN trading_accounts a ON a.account_id=r.account_id WHERE COALESCE(a.paused,0)=0 AND (json_extract(r.payload,'$.buy_enabled')=1 OR json_extract(r.payload,'$.sell_enabled')=1 OR json_extract(r.payload,'$.paired_enabled')=1)")}
+
+    def target_unresolved(self, ident, code):
+        states=self.store.query('SELECT payload FROM trading_sync WHERE account_id=?',(ident,))
+        if not states or not states[0].get('payload'):return False
+        rows=self.store.query('SELECT name FROM trading_positions WHERE account_id=? AND code=? UNION SELECT name FROM watch WHERE code=? UNION SELECT name FROM instruments WHERE code=?',(ident,code,code,code))
+        names={r['name'] for r in rows if r.get('name')}
+        for row in json.loads(states[0]['payload']).get('unresolved',[]):
+            raw=str(row.get('code') or '')
+            if (raw and raw[-6:]==code[-6:]) or row.get('name') in names:return True
+        return False
 
     def rule(self, ident, code):
         rows = self.store.query('SELECT * FROM trading_rules WHERE account_id=? AND code=?', (ident, code))
@@ -206,13 +225,28 @@ class LiveTrading:
     def paired_allowed(self, rule):
         return rule.get('strategy_mode')=='paired_t' and rule.get('paired_enabled') is True
 
+    def add_target(self, ident, code):
+        """Associate one watchlist stock with an account; all switches stay off."""
+        code=symbol(code)
+        with self.lock:
+            self.account(ident)
+            watch=self.store.query('SELECT name FROM watch WHERE code=?',(code,))
+            if not watch:raise ValueError('该股票不在自选股中')
+            exists=self.store.query('SELECT 1 FROM trading_rules WHERE account_id=? AND code=?',(ident,code))
+            if not exists:
+                initial=dict(DEFAULT_RULE,buy_lots=2 if code.startswith('sh688') else 1,
+                             sell_lots=2 if code.startswith('sh688') else 1)
+                self.store.execute('INSERT INTO trading_rules VALUES(?,?,?,1,?)',
+                                   (ident,code,json.dumps(initial),now_cn().isoformat()))
+                self.control_revision+=1
+            return self.rule(ident,code)
+
     def save_rule(self, ident, code, changes, revision):
         code = symbol(code)
         with self.lock:
             self.account(ident)
-            positions = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=?', (ident, code))
-            if not positions:
-                raise ValueError('请先同步并确认该账户的持仓')
+            if not self.store.query('SELECT 1 FROM watch WHERE code=?',(code,)):
+                raise ValueError('该股票不在自选股中')
             old = self.rule(ident, code)
             if type(revision) is not int or revision != old['revision']:
                 raise ValueError('规则已被更新，请刷新后再修改')
@@ -481,8 +515,26 @@ class LiveTrading:
                                  sync_status=sync.get('status', 'never'), sync_error=sync.get('error', ''), last_success=sync.get('last_success'), updated_at=sync.get('updated_at'), token=sync.get('token'),
                                  unresolved=payload.get('unresolved', []), funds=payload.get('funds', {}),funds_observed_at=payload.get('observed_at')))
         positions = []
-        for p in self.store.query('SELECT p.* FROM trading_positions p JOIN broker_accounts a ON a.id=p.account_id ORDER BY a.created_at,p.active DESC,p.name'):
-            positions.append(dict(account_id=p['account_id'], code=p['code'], name=p['name'], active=bool(p['active']), updated_at=p['updated_at'], **{k:v for k,v in json.loads(p['payload']).items() if k not in ('code','name')}, rule=self.rule(p['account_id'],p['code'])))
+        targets=self.store.query('''WITH keys AS (
+            SELECT account_id,code FROM trading_positions
+            UNION SELECT account_id,code FROM trading_rules
+            ) SELECT k.account_id,k.code,p.name AS position_name,p.payload AS position_payload,
+            p.active,p.updated_at,w.name AS watch_name,w.enabled AS watch_enabled,i.name AS instrument_name
+            FROM keys k JOIN broker_accounts a ON a.id=k.account_id AND a.enabled=1
+            LEFT JOIN trading_positions p ON p.account_id=k.account_id AND p.code=k.code
+            LEFT JOIN watch w ON w.code=k.code LEFT JOIN instruments i ON i.code=k.code
+            ORDER BY a.created_at,COALESCE(p.active,0) DESC,COALESCE(p.name,w.name,i.name,k.code)''')
+        for p in targets:
+            held=json.loads(p['position_payload']) if p.get('position_payload') else {}
+            quote=getattr(self.app,'quotes',{}).get(p['code'],{})
+            position_verified=bool(p.get('position_payload'))
+            positions.append(dict(account_id=p['account_id'],code=p['code'],
+                name=p.get('position_name') or p.get('watch_name') or p.get('instrument_name') or p['code'],
+                active=bool(p.get('active')),position_verified=position_verified,
+                source='holding' if position_verified else 'watchlist',watch_enabled=bool(p.get('watch_enabled')),
+                updated_at=p.get('updated_at'),quantity=held.get('quantity',0),sellable=held.get('sellable',0),
+                price=held.get('price') or quote.get('price'),cost=held.get('cost'),
+                rule=self.rule(p['account_id'],p['code'])))
         from .trading_chart import legacy_receipt_id,receipt_status
         from .broker_reconciliation import known_id
         runs=[]
@@ -512,17 +564,20 @@ class LiveTrading:
             ORDER BY created_at DESC,rowid DESC"""):
             payload=json.loads(row['payload'] or '{}');payload.setdefault('mode',self.cycle_mode(row))
             cycles.append(dict(**{k:v for k,v in row.items() if k!='payload'},payload=payload))
-        return dict(settings=self.settings(), accounts=accounts, positions=positions, runs=runs,cycles=cycles,
+        watchlist=[dict(code=w['code'],name=w['name'],enabled=bool(w['enabled'])) for w in self.store.query('SELECT * FROM watch ORDER BY rowid')]
+        return dict(settings=self.settings(), accounts=accounts, positions=positions,watchlist=watchlist,runs=runs,cycles=cycles,
                     cash_reserve=dict(rate=BUY_CASH_RESERVE_RATE,fixed=BUY_CASH_RESERVE_FIXED))
 
     def plan(self, ident, code, side, quote=None, now=None):
         now = now or now_cn()
         self.account(ident)
         rule = self.rule(ident, code)
+        if side not in ('buy','sell'):
+            raise ValueError('请选择买入或卖出')
         rows = self.store.query('SELECT * FROM trading_positions WHERE account_id=? AND code=?', (ident, code))
-        if side not in ('buy','sell') or not rows:
-            raise ValueError('该账户没有此股票的有效持仓')
-        p = json.loads(rows[0]['payload'])
+        # Fixed-lot buys can open a new position. Percentage sizing and sells
+        # naturally calculate to zero until the broker reports a position.
+        p = json.loads(rows[0]['payload']) if rows else dict(quantity=0,sellable=0)
         paired=rule.get('strategy_mode')=='paired_t'
         qty = rule['t_lots']*100 if paired else sized_quantity(code,p['quantity'],p['sellable'],side,rule)
         if paired and side=='sell' and qty>p['sellable']:qty=0
@@ -860,7 +915,10 @@ class LiveTrading:
                 payload['timings']['holdings_ms']=round((time.monotonic()-sync_started)*1000,1)
                 self.persist_progress(run,payload)
             state = self.store.query('SELECT * FROM trading_sync WHERE account_id=?', (run['account_id'],))[0]
-            if synced['status'] != 'complete':
+            position_free_buy=(run['side']=='buy' and
+                ((not paired and rule['buy_mode']=='lots') or (paired and paired.get('leg')=='buy')) and
+                not self.target_unresolved(run['account_id'],run['code']))
+            if synced['status'] != 'complete' and not position_free_buy:
                 raise ValueError('持仓同步不完整或代码待确认，暂停执行')
             # Sync may disable a rule after a confirmed clearance.
             current = self.rule(run['account_id'],run['code'])

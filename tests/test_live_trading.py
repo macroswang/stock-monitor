@@ -65,6 +65,53 @@ class TradingTests(unittest.TestCase):
         self.assertEqual(len(self.store.query('SELECT * FROM watch')),1)
         self.assertEqual({s['account_id'] for s in self.service.sources()['sz000981']},{'a','b'})
 
+    def test_watchlist_stock_can_be_associated_without_creating_a_fake_position(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        rule=self.service.add_target('a','sz000981')
+        self.assertFalse(rule['buy_enabled']);self.assertFalse(rule['sell_enabled'])
+        self.assertEqual(self.store.query('SELECT * FROM trading_positions'),[])
+        target=self.service.view()['positions'][0]
+        self.assertEqual((target['source'],target['position_verified'],target['quantity']),('watchlist',False,0))
+        with self.assertRaisesRegex(ValueError,'自选股'):
+            self.service.add_target('a','sh603938')
+
+    def test_new_watchlist_target_keeps_original_bottom_fixed_lot_buy_path(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        old=self.service.add_target('a','sz000981')
+        self.service.save_rule('a','sz000981',dict(buy_enabled=True,sell_enabled=True,buy_mode='lots',buy_lots=2),old['revision'])
+        self.store.execute('UPDATE trading_rules SET armed_at=?',((self.now-timedelta(minutes=5)).isoformat(),))
+        self.store.setconfig('trading_paused',False);self.service.started_at=(self.now-timedelta(minutes=5)).isoformat()
+        self.observe(kind='bottom',key='first-position')
+        empty=self.snapshot(positions=[])
+        with patch('core.live_trading.brokers.holdings',return_value=empty):self.service.drain(reports=False)
+        run=self.runs()[0];plan=json.loads(run['payload'])['plan']
+        self.assertEqual((run['status'],plan['side'],plan['quantity']),('trial','buy',200))
+        self.assertEqual(self.store.query('SELECT * FROM trading_positions'),[])
+        self.submit.assert_not_called()
+
+    def test_target_without_position_uses_zero_only_for_position_sizing_and_sells(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        old=self.service.add_target('a','sz000981')
+        self.service.save_rule('a','sz000981',dict(buy_mode='position',buy_percent=50,sell_enabled=True),old['revision'])
+        with self.assertRaisesRegex(ValueError,'最小申报'):
+            self.service.plan('a','sz000981','buy',self.quote)
+        with self.assertRaisesRegex(ValueError,'可卖'):
+            self.service.plan('a','sz000981','sell',self.quote)
+
+    def test_partial_other_holdings_do_not_block_fixed_lot_bottom_buy_or_start(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        old=self.service.add_target('a','sz000981')
+        self.service.save_rule('a','sz000981',dict(buy_enabled=True,buy_mode='lots'),old['revision'])
+        partial=self.snapshot(positions=[dict(name='代码待确认',quantity=500,sellable=500)],complete=False)
+        with patch('core.live_trading.brokers.holdings',return_value=partial):self.service.prepare()
+        self.assertFalse(self.service.settings()['paused'])
+        self.store.execute('UPDATE trading_rules SET armed_at=?',((self.now-timedelta(minutes=5)).isoformat(),))
+        self.service.started_at=(self.now-timedelta(minutes=5)).isoformat()
+        self.observe(kind='bottom',key='partial-other')
+        with patch('core.live_trading.brokers.holdings',return_value=partial):self.service.drain(reports=False)
+        self.assertEqual(self.runs()[0]['status'],'trial')
+        self.assertEqual(json.loads(self.runs()[0]['payload'])['plan']['quantity'],100)
+
     def test_wrong_account_snapshot_cannot_write_positions(self):
         with self.assertRaisesRegex(ValueError,'不一致'):
             self.service.apply_snapshot('a',self.snapshot('b'))

@@ -18,7 +18,7 @@ tmp=tempfile.TemporaryDirectory()
 os.environ['STOCK_MONITOR_DATA']=tmp.name
 app=App(tmp.name,start_worker=False)
 app.provider=Mock()
-app.provider.quote.side_effect=lambda code:dict(code=code,name={'sz000981':'山子高科','sh603002':'宏昌电子'}.get(code,'未知'),price='2.13',timestamp=now_cn().isoformat())
+app.provider.quote.side_effect=lambda code:dict(code=code,name={'sz000981':'山子高科','sh603002':'宏昌电子','sh603938':'三孚股份'}.get(code,'未知'),price='2.13',timestamp=now_cn().isoformat())
 app.quotes['sz000981']=app.provider.quote('sz000981')
 for ident,broker,number in [('test-a','zhangle','1234561001'),('test-b','ths','9876542002')]:
     app.store.execute('INSERT INTO broker_accounts(id,broker,account,label) VALUES(?,?,?,?)',(ident,broker,number,'隔离测试账户'))
@@ -85,6 +85,9 @@ def seed_price_checks():
     return dict(seeded=True)
 
 for ident in ('test-a','test-b'):app.live_trading.apply_snapshot(ident,holdings(app.store,ident))
+app.store.execute('INSERT OR IGNORE INTO watch(code,name) VALUES(?,?)',('sh603938','三孚股份'))
+app.store.execute('INSERT OR REPLACE INTO instruments VALUES(?,?)',('sh603938','三孚股份'))
+app.quotes['sh603938']=app.provider.quote('sh603938')
 for line in sys.stdin:
     try:
         request=json.loads(line)
