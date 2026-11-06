@@ -207,6 +207,11 @@ class Harness:
         if method=='e2e_fault':
             owner=self.owners[args['broker']];setattr(owner,args['kind'],True);return True
         if method=='e2e_repeat':self.tick(self.clock[0].strftime('%H:%M:%S'));return self.state()
+        if method=='e2e_keep_sources':
+            for row in self.app.store.query('SELECT account_id FROM trading_positions WHERE code=?',(args['code'],)):
+                if row['account_id'] not in args['accounts']:
+                    self.app.store.execute('DELETE FROM trading_positions WHERE code=? AND account_id=?',(args['code'],row['account_id']))
+            return True
         return self.app.call(method,args)
     def close(self):
         self.app.stop.set();self.app.store.db.close()

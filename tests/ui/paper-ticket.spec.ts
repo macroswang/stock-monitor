@@ -16,3 +16,11 @@ test('fractions preserve whole sellable odd lots only when selecting all',()=>{
  expect(fractionShares(155,1)).toBe(155);expect(fractionShares(155,2)).toBe(0);
  expect(maxBuyShares(NaN,1000,2,500)).toBe(0);expect(maxBuyShares(100000,0,2,500)).toBe(0);expect(maxBuyShares(100000,1000,NaN,500)).toBe(0);
 });
+test('optional STAR increments preserve minimum buy size while ordinary fractions keep board lots',()=>{
+ expect(maxBuyShares(250000,1000,2,500,1,200)).toBe(249);
+ expect(maxBuyShares(200000,1000,2,500,1,200)).toBe(0);
+ expect(fractionShares(499,2,1,200)).toBe(249);
+ expect(fractionShares(399,2,1,200)).toBe(0);
+ expect(fractionShares(155,1,1,200)).toBe(155);
+ expect(fractionShares(2600,3)).toBe(800);
+});

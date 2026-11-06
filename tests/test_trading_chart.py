@@ -61,6 +61,50 @@ class TradingChartTests(unittest.TestCase):
    dict(code='000981',side='buy',date='2026-11-03',time='13:38:00',order_id='contract-one',filled=2300,average='2.15')])
   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
   points=chart(self.store,'sz000981','2026-11-03')['points'];self.assertEqual(len(points),1);self.assertEqual(points[0]['source'],'automatic')
+ def native_sell(self):
+  from executor.ths_orders import order_key
+  self.store.execute("UPDATE broker_accounts SET broker='ths' WHERE id='a'")
+  native=dict(date='2026-11-03',time='13:44:21',name='山子高科',side='sell',price='2.16',quantity=2300)
+  verification=dict(origin='broker_auto',source='ths_native_today_order',status='filled',filled=2300,average='2.18',native_order_key=order_key(native))
+  self.seed(status='filled',verification=verification)
+  self.store.execute("UPDATE trading_runs SET side='sell',payload=json_set(payload,'$.plan.side','sell','$.price_checks.before_submit.checked_at','2026-11-03T13:44:20+08:00')")
+  self.store.execute("UPDATE broker_requests SET payload=json_set(payload,'$.side','sell'),result='{}'")
+  row=dict(code='000981',date=native['date'],time=native['time'],name=native['name'],side='sell',order_id='1199281',filled=2300,average='2.18')
+  payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:01:06+08:00',source='ths_native_contract_group',rows=[row])
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+  return row,payload
+ def test_native_order_without_contract_merges_its_cached_contract_only_in_chart(self):
+  self.native_sell();before=self.store.db.total_changes
+  for _ in range(2):
+   points=chart(self.store,'sz000981','2026-11-03')['points']
+   self.assertEqual(len(points),1);self.assertEqual(points[0]['source'],'automatic');self.assertEqual(points[0]['order_id'],'1199281')
+   self.assertEqual(points[0]['fill_price'],'2.18');self.assertEqual(points[0]['order_price'],'2.16')
+  self.assertEqual(self.store.db.total_changes,before)
+  self.assertEqual(json.loads(self.store.query('SELECT result FROM broker_requests')[0]['result']),{})
+ def test_native_merge_preserves_separate_same_minute_orders_and_conflicting_fill_evidence(self):
+  row,payload=self.native_sell()
+  for change in [dict(time='13:44:22'),dict(average='2.19'),dict(filled=2200),dict(quantity=2400),dict(name='其他股票')]:
+   with self.subTest(change=change):
+    self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[dict(row,**change)]))
+    points=chart(self.store,'sz000981','2026-11-03')['points'];self.assertEqual(len(points),2);self.assertEqual(points[0]['order_id'],'')
+ def test_native_merge_never_hides_two_ambiguous_broker_contracts(self):
+  row,payload=self.native_sell()
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row,dict(row,order_id='1199282')]))
+  points=chart(self.store,'sz000981','2026-11-03')['points'];self.assertEqual(len(points),3)
+  self.assertEqual({p['order_id'] for p in points},{'','1199281','1199282'})
+ def test_native_merge_is_account_scoped_and_rejects_missing_or_untrusted_identity(self):
+  row,payload=self.native_sell()
+  self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.verification.native_order_key',NULL)")
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+  self.store.execute("DELETE FROM trading_runs");self.store.execute("DELETE FROM broker_requests");self.native_sell()
+  self.store.execute("UPDATE broker_accounts SET broker='zhangle' WHERE id='a'")
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+  self.store.execute("UPDATE broker_accounts SET broker='ths' WHERE id='a'")
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,source='unverified'))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+  self.store.execute("DELETE FROM cache WHERE code='broker-account:a'")
+  self.store.cache('broker-account:b',CACHE_KIND,'2026-11-03',dict(payload,account_id='b'))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
  def test_incomplete_wrong_account_and_unverified_cache_never_projects(self):
   base=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',rows=[dict(code='000981',side='buy',time='10:01:02',filled=100,average='2.18')])
   for change in [dict(account_id='b'),dict(account_verified=False),dict(complete=False),dict(day='2026-11-02')]:

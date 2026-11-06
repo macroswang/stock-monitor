@@ -69,16 +69,21 @@ function QuantityEditor({code,side,rule,onChange}:{code:string;side:'buy'|'sell'
  </>;
 }
 
-export default function LiveTrading({api,onRestartCore,onOpenStock}:{api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void}){
+export default function LiveTrading({api,onRestartCore,onOpenStock,setupStock}:{api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void;setupStock?:{code:string;name:string}}){
  const [data,setData]=useState<View|null>(null),[tab,setTab]=useState('positions'),[selected,setSelected]=useState('');
  const [pauseBusy,setPauseBusy]=useState(false),[preparing,setPreparing]=useState(false);
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [filter,setFilter]=useState(''),[enabledOnly,setEnabledOnly]=useState(false);
  const [edit,setEdit]=useState<{position:Position;rule:TradingRule;account:Account}|null>(null);
  const [mapping,setMapping]=useState<{account:Account;name:string;code:string}|null>(null);
- const [target,setTarget]=useState<{account_id:string;code:string}|null>(null);
+ const [target,setTarget]=useState<{account_id:string;code:string;name?:string;configure?:boolean}|null>(null);
  const [liveConfirm,setLiveConfirm]=useState(false);
  const running=useRef(false),sequence=useRef(0),mounted=useRef(true);
+ useEffect(()=>{
+  if(!setupStock)return;
+  setTab('positions');setEdit(null);setMapping(null);setLiveConfirm(false);
+  setTarget({account_id:'',code:setupStock.code,name:setupStock.name,configure:true});
+ },[setupStock]);
  useEffect(()=>{
   if(!edit&&!mapping&&!target&&!liveConfirm)return;
   setError('');
@@ -125,6 +130,22 @@ export default function LiveTrading({api,onRestartCore,onOpenStock}:{api:Api;onR
  const preview=(p:Position,side:string)=>run(async()=>{const r=await api<Plan>('trading_preview',{account_id:p.account_id,code:p.code,side});setNotice(`${accountName(p.account_id)}｜${p.name} ${p.code.toUpperCase()}｜试算${side==='buy'?'买入':'卖出'} ${r.quantity}股 × ${r.price}元 ≈ ${money(r.value)}元。仅按当前数据试算，未发出委托；实时执行还会核验账户、资金及信号。`);});
  const availableTargets=(accountId:string)=>data?.watchlist.filter(w=>!data.positions.some(p=>p.account_id===accountId&&p.code===w.code))||[];
  const openTarget=()=>{const accountId=selected||data?.accounts[0]?.id||'';setTarget({account_id:accountId,code:availableTargets(accountId)[0]?.code||''});};
+ const submitTarget=async()=>{
+  if(!target)return;
+  const request=target;
+  await run(async()=>{
+   await api('trading_target_add',{account_id:request.account_id,code:request.code});
+   if(request.configure){
+    const latest=await api<View>('trading_view');
+    const position=latest.positions.find(p=>p.account_id===request.account_id&&p.code===request.code);
+    const selectedAccount=latest.accounts.find(a=>a.id===request.account_id);
+    if(!position||!selectedAccount)throw Error('账户或股票已变化，请重新选择。');
+    setSelected(request.account_id);setFilter('');setEnabledOnly(false);
+    setEdit({position,rule:{...position.rule},account:selectedAccount});
+   }
+   setTarget(null);
+  },request.configure?'':'自选股已关联到所选账户；规则默认关闭，请在列表中配置并开启。');
+ };
  const filtered=data?.positions.filter(p=>(!selected||p.account_id===selected)&&(!enabledOnly||p.rule.buy_enabled||p.rule.sell_enabled||p.rule.paired_enabled)&&(!filter||`${p.name} ${p.code}`.toLowerCase().includes(filter.toLowerCase())))||[];
  const visibleAccounts=data?.accounts.filter(a=>!selected||a.id===selected)||[];
  const runs=data?.runs.filter(r=>!selected||r.account_id===selected)||[];
@@ -162,7 +183,15 @@ export default function LiveTrading({api,onRestartCore,onOpenStock}:{api:Api;onR
    {edit.rule.strategy_mode==='independent'?<><div className="trading-form-grid">{(['buy','sell'] as const).map(side=><fieldset className="trading-sizing-panel" key={side}><label className="trading-switch"><input type="checkbox" checked={side==='buy'?edit.rule.buy_enabled:edit.rule.sell_enabled} onChange={e=>setEdit({...edit,rule:{...edit.rule,[side+'_enabled']:e.target.checked}})}/>自动{side==='buy'?'买入':'卖出'}</label><QuantityEditor code={edit.position.code} side={side} rule={edit.rule} onChange={changes=>setEdit({...edit,rule:{...edit.rule,...changes}})}/><SizingOutcome code={edit.position.code} position={edit.position.quantity} sellable={edit.position.sellable} side={side} rule={edit.rule} price={edit.position.price} funds={edit.account.funds} reserve={data?.cash_reserve}/></fieldset>)}</div><InfoNote label="计算说明">按执行时本账户持仓计算，买卖分别估算。费用及实际可买数量以券商为准。</InfoNote></>:<fieldset className="trading-paired-panel"><label className="trading-switch"><input aria-label="启用成对T" type="checkbox" checked={edit.rule.paired_enabled} onChange={e=>setEdit({...edit,rule:{...edit.rule,paired_enabled:e.target.checked}})}/>启用成对T</label><div className="trading-paired-grid"><label>每轮手数（手）<input aria-label="成对T每轮手数（手）" type="number" min={edit.position.code.startsWith('sh688')?2:1} max="1000000" step="1" required value={edit.rule.t_lots} onChange={e=>setEdit({...edit,rule:{...edit.rule,t_lots:Number(e.target.value)}})}/></label><label>最低净收益（元）<input aria-label="最低净收益（元）" type="number" min="0" step="0.01" required value={edit.rule.minimum_net_profit} onChange={e=>setEdit({...edit,rule:{...edit.rule,minimum_net_profit:Number(e.target.value)}})}/></label></div><InfoNote label="成对规则">顶信号先卖出；只有券商确认首腿全部成交，且底信号按下列费用估算后的净收益达到门槛，才按相同股数买回。未知、部分成交或待回补期间不会开始下一轮；一轮完成后可继续下一轮，不限制每日轮次。</InfoNote><details className="trading-more-settings"><summary>手续费与滑点参数</summary><div className="trading-fee-grid"><label>佣金（万分）<input aria-label="佣金（万分）" type="number" min="0" step="0.01" value={edit.rule.commission_wan} onChange={e=>setEdit({...edit,rule:{...edit.rule,commission_wan:Number(e.target.value)}})}/></label><label>单边最低佣金（元）<input aria-label="单边最低佣金（元）" type="number" min="0" step="0.01" value={edit.rule.minimum_commission} onChange={e=>setEdit({...edit,rule:{...edit.rule,minimum_commission:Number(e.target.value)}})}/></label><label>印花税（‰）<input aria-label="印花税（‰）" type="number" min="0" step="0.001" value={edit.rule.stamp_per_mille} onChange={e=>setEdit({...edit,rule:{...edit.rule,stamp_per_mille:Number(e.target.value)}})}/></label><label>过户费（‰）<input aria-label="过户费（‰）" type="number" min="0" step="0.001" value={edit.rule.transfer_per_mille} onChange={e=>setEdit({...edit,rule:{...edit.rule,transfer_per_mille:Number(e.target.value)}})}/></label><label>预估滑点（‰）<input aria-label="预估滑点（‰）" type="number" min="0" max="999" step="0.01" value={edit.rule.slippage_per_mille} onChange={e=>setEdit({...edit,rule:{...edit.rule,slippage_per_mille:Number(e.target.value)}})}/></label></div></details></fieldset>}
    {error&&<p role="alert" className="trading-inline-warning">{error}</p>}<div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setEdit(null)}>取消</button><button className="primary" disabled={busy}>保存规则</button></div>
   </form></div>}
-  {target&&<div className="modal-overlay"><form className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-target-title" onSubmit={e=>{e.preventDefault();void run(async()=>{await api('trading_target_add',target);setTarget(null);},'自选股已关联到所选账户；规则默认关闭，请在列表中配置并开启。');}}><h2 id="trading-target-title">添加自选股自动交易</h2><label>证券账户<select aria-label="选择自选股证券账户" value={target.account_id} onChange={e=>{const accountId=e.target.value;setTarget({account_id:accountId,code:availableTargets(accountId)[0]?.code||''});}}>{data?.accounts.map(a=><option key={a.id} value={a.id}>{accountName(a.id)}</option>)}</select></label><label>自选股<select aria-label="选择自动交易自选股" required value={target.code} onChange={e=>setTarget({...target,code:e.target.value})}><option value="" disabled>请选择</option>{availableTargets(target.account_id).map(w=><option key={w.code} value={w.code}>{w.name} · {w.code.toUpperCase()}{w.enabled?'':' · 监控已暂停'}</option>)}</select></label>{availableTargets(target.account_id).length===0&&<p>该账户已添加全部自选股。</p>}<p>关联后买卖开关保持关闭；配置规则并开启后，只处理之后新确认的顶／底信号。</p><div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setTarget(null)}>取消</button><button className="primary" disabled={busy||!target.code}>添加</button></div></form></div>}
+  {target&&<div className="modal-overlay"><form className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-target-title" onSubmit={e=>{e.preventDefault();void submitTarget();}}>
+   <h2 id="trading-target-title">{target.configure?'设置自动下单':'添加自选股自动交易'}</h2>
+   {target.configure&&<p className="trading-dialog-account">{target.name} · {target.code.toUpperCase()}</p>}
+   <label>证券账户<select aria-label="选择自选股证券账户" required disabled={busy} value={target.account_id} onChange={e=>{const accountId=e.target.value;setTarget({...target,account_id:accountId,code:target.configure?target.code:availableTargets(accountId)[0]?.code||''});}}><option value="" disabled>请选择证券账户</option>{data?.accounts.map(a=><option key={a.id} value={a.id}>{accountName(a.id)}</option>)}</select></label>
+   {!target.configure&&<><label>自选股<select aria-label="选择自动交易自选股" required value={target.code} onChange={e=>setTarget({...target,code:e.target.value})}><option value="" disabled>请选择</option>{availableTargets(target.account_id).map(w=><option key={w.code} value={w.code}>{w.name} · {w.code.toUpperCase()}{w.enabled?'':' · 监控已暂停'}</option>)}</select></label>{availableTargets(target.account_id).length===0&&<p>该账户已添加全部自选股。</p>}</>}
+   {data?.accounts.length===0?<p>请先<button type="button" onClick={()=>{setTarget(null);setTab('accounts');}}>添加证券账户</button>，再设置自动下单。</p>:<p>{target.configure?'选择账户后配置规则；已有规则会保留，新关联默认关闭买卖。':'关联后买卖开关保持关闭；配置规则并开启后，只处理之后新确认的顶／底信号。'}</p>}
+   {error&&<p role="alert" className="trading-inline-warning">{error}</p>}
+   <div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setTarget(null)}>取消</button><button className="primary" disabled={busy||!target.code||!target.account_id}>{target.configure?'配置规则':'添加'}</button></div>
+  </form></div>}
   {mapping&&<div className="modal-overlay"><form className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-map-title" onSubmit={e=>{e.preventDefault();void run(async()=>{await job('trading_map',{account_id:mapping.account.id,token:mapping.account.token,name:mapping.name,code:mapping.code});setMapping(null);},'股票代码已核对并关联到所选账户。');}}><h2 id="trading-map-title">确认 {mapping.name} 的股票代码</h2><p>{accountName(mapping.account.id)}</p><p>请输入券商中的6位股票代码。观量会核对代码对应名称，相符后仅关联到此账户。</p><input aria-label="持仓股票代码" required pattern="[0-9]{6}" placeholder="6位股票代码" value={mapping.code} onChange={e=>setMapping({...mapping,code:e.target.value.replace(/\D/g,'').slice(0,6)})}/>{error&&<p role="alert" className="trading-inline-warning">{error}</p>}<div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setMapping(null)}>取消</button><button className="primary" disabled={busy}>核对并关联</button></div></form></div>}
   {liveConfirm&&<div className="modal-overlay"><section className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-live-title"><h2 id="trading-live-title">切换到实盘执行</h2><p>之后启动执行时，已开启的单股规则会向对应证券账户发送真实委托。</p><p>切换后保持暂停。请核对每个账户的买卖开关和下单数量，再启动实盘。</p><div className="trading-dialog-actions"><button disabled={busy} onClick={()=>setLiveConfirm(false)}>保留试运行</button><button disabled={busy} onClick={()=>run(async()=>{await api('trading_config',{mode:'live',confirm_live:true});setLiveConfirm(false);},'已切换实盘模式，目前仍暂停。')}>确认切换，保持暂停</button></div></section></div>}
  </div>;

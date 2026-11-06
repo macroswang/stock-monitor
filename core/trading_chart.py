@@ -28,7 +28,25 @@ def sync_filled_orders(store,day):
                 message=f'已缓存 {saved} 条券商当日成交委托'+(f'；{len(errors)} 个账户未更新，已保留旧缓存' if errors else ''))
 
 
-def _cached_fills(store,code,day,automatic):
+def _native_cached_match(point,row,key,day):
+    """Match an ID-less verified order by its exact native identity, not minute."""
+    if (not isinstance(row,dict) or not isinstance(key,str) or not re.fullmatch(r'[a-f0-9]{64}',key) or
+        point.get('order_id') or point.get('mode')!='live' or not point.get('attempted') or
+        point.get('status') not in ('partial','filled','cancelled') or not row.get('order_id') or
+        row.get('date') not in (None,'',day) or row.get('side')!=point['side'] or
+        (row.get('code') and str(row['code'])[-6:]!=point['code'][2:])):return False
+    try:
+        filled=shares(row.get('filled'))
+        if (filled<=0 or filled!=shares(point.get('filled')) or filled>shares(point.get('quantity')) or
+            amount(row.get('average'))<=0 or amount(row['average'])!=amount(point.get('fill_price')) or
+            (row.get('quantity') is not None and shares(row['quantity'])!=shares(point.get('quantity')))):return False
+        from executor.ths_orders import order_key
+        return order_key(dict(date=day,time=row['time'],name=row['name'],side=row['side'],
+                              price=point['order_price'],quantity=point['quantity']))==key
+    except (KeyError,ValueError,TypeError):return False
+
+
+def _cached_fills(store,code,day,automatic,native_keys):
     raw_code=code[2:]
     named=store.query('SELECT name FROM instruments WHERE code=?',(code,))
     target_name=named[0]['name'] if len(named)==1 else ''
@@ -66,6 +84,16 @@ def _cached_fills(store,code,day,automatic):
                     (point.get('ordered_at') or '')[11:16]==time and order_price is not None and
                     point.get('order_price') is not None and amount(point['order_price'])==amount(order_price)):
                     duplicate=True;break
+            if not duplicate and account['broker']=='ths' and payload.get('source')=='ths_native_contract_group':
+                matches=[p for p in automatic if p['account_id']==account['id'] and
+                         _native_cached_match(p,row,native_keys.get(p['id']),day)]
+                if len(matches)==1:
+                    point=matches[0];key=native_keys[point['id']]
+                    if sum(_native_cached_match(point,other,key,day) for other in payload['rows'])==1:
+                        # Display-only enrichment. The execution journal and
+                        # broker reconciliation/bindings remain untouched.
+                        point['order_id']=order_id
+                        duplicate=True
             if duplicate:continue
             identity=json.dumps([account['id'],day,row_code or row.get('name'),side,clock,order_id,order_price,fill_price,quantity,filled],ensure_ascii=False)
             occurrence=occurrences.get(identity,0);occurrences[identity]=occurrence+1
@@ -137,7 +165,7 @@ def chart(store,code,day):
         rule=json.loads(r['payload'])
         accounts.append(dict(id=r['account_id'],broker_name=brokers._spec(r['broker']).name,account_masked=brokers.mask_account(r['account']),
                              buy_enabled=rule.get('buy_enabled',False),sell_enabled=rule.get('sell_enabled',False)))
-    points=[]
+    points=[];native_keys={}
     rows=store.query('''SELECT r.*,a.broker,a.account,b.result AS broker_result,b.created_at AS request_at,
         b.payload AS request_payload,b.status AS request_status
         FROM trading_runs r LEFT JOIN broker_accounts a ON a.id=r.account_id
@@ -145,6 +173,8 @@ def chart(store,code,day):
         WHERE r.code=? AND r.day=? ORDER BY r.created_at,r.id''',(code,day))
     for r in rows:
         p=json.loads(r['payload']);plan=p.get('plan',{});v=p.get('verification',{})
+        if v.get('origin')=='broker_auto' and v.get('source')=='ths_native_today_order':
+            native_keys[r['id']]=v.get('native_order_key')
         ack=json.loads(r['broker_result'] or '{}');signal=p.get('signal',{})
         try:order_id=known_id(ack)
         except ValueError:order_id=''
@@ -160,5 +190,5 @@ def chart(store,code,day):
             created_at=r['created_at'],ordered_at=sent,order_price=plan.get('price'),quantity=plan.get('quantity'),order_id=order_id or receipt_id,
             filled=v.get('filled'),fill_price=fill_price,message=p.get('message',''),reconciliation=p.get('reconciliation'),
             attempted=r['request_status'] in ('sending','accepted','unknown','partial','filled','cancelled','rejected'),receipt_accepted=bool(receipt_id),receipt_message=receipt.get('message',''),admission=p.get('admission'),source='automatic'))
-    points.extend(_cached_fills(store,code,day,points))
+    points.extend(_cached_fills(store,code,day,points,native_keys))
     return dict(code=code,day=day,accounts=accounts,points=points)

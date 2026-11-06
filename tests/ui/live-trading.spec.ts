@@ -6,7 +6,7 @@ import {amount,sizingEstimate} from '../../src/tradingSizing';
 
 let backend:ChildProcessWithoutNullStreams;
 let pending:Array<{resolve:(value:unknown)=>void;reject:(error:Error)=>void}>=[];
-async function setup(page:Page){
+async function setup(page:Page,panel:'trading'|'market'='trading'){
  backend=spawn('.venv/bin/python',['-u','tests/trading_ui_backend.py'],{cwd:process.cwd()});
  pending=[];
  createInterface({input:backend.stdout}).on('line',line=>{const next=pending.shift();if(!next)return;const data=JSON.parse(line);data.error?next.reject(Error(data.error)):next.resolve(data.result);});
@@ -19,9 +19,11 @@ async function setup(page:Page){
   w.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}};
   w.isTauri=true;
  });
- await page.goto('/?panel=trading');
- await expect(page.getByRole('heading',{name:'自动交易股票'})).toBeVisible();
- await expect(page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'})).toBeVisible();
+ await page.goto('/?panel='+panel);
+ if(panel==='trading'){
+  await expect(page.getByRole('heading',{name:'自动交易股票'})).toBeVisible();
+  await expect(page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'})).toBeVisible();
+ }else await expect(page.getByRole('heading',{name:'我的自选',exact:true})).toBeVisible();
 }
 test.afterEach(()=>{backend?.stdin.end();backend?.kill();for(const p of pending)p.reject(Error('Test ended'));pending=[];});
 
@@ -79,6 +81,109 @@ test('a watchlist-only stock can be assigned to one account without inventing a 
  await expect(page.getByRole('status')).toContainText('三孚股份');await expect(page.getByRole('status')).toContainText('100股');
  await page.getByRole('combobox',{name:'管理证券账户'}).selectOption('test-b');
  await expect(page.getByRole('region',{name:/同花顺（银河证券） · 987/}).getByRole('button',{name:'三孚股份',exact:true})).toHaveCount(0);
+});
+
+test('watchlist sources and automatic order entries are exclusive in the same left-hand position',async({page})=>{
+ await setup(page,'market');
+ const state=()=>page.evaluate(()=> (window as any).testTradingRpc('trading_view',{}));
+ const before=await state();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ const stocks=page.locator('.stocks .stock');
+ const synced=page.locator('.stocks').getByRole('button',{name:/账户同步来源$/});
+ await expect(synced).toHaveCount(1);
+ await expect(page.locator('.stocks').getByRole('button',{name:/ 自动下单$/})).toHaveCount((await stocks.count())-1);
+ for(const stock of await stocks.all()){
+  await expect(stock.locator('button.trading-source')).toHaveCount(1);
+  await expect(stock.locator('.stock-right button')).toHaveCount(0);
+  await expect(stock.locator('div').first().locator('button.trading-source')).toHaveCount(1);
+ }
+ await expect(page.getByRole('button',{name:'山子高科 自动下单',exact:true})).toHaveCount(0);
+ await page.setViewportSize({width:1280,height:800});
+ await page.screenshot({path:'outputs/watchlist-auto-order-entry.png'});
+ await page.getByRole('button',{name:'三孚股份 自动下单',exact:true}).click();
+ let dialog=page.getByRole('dialog');
+ await expect(dialog).toContainText('三孚股份 · SH603938');
+ await expect(dialog.getByLabel('选择自选股证券账户')).toHaveValue('');
+ await expect(dialog.getByRole('button',{name:'配置规则',exact:true})).toBeDisabled();
+ await dialog.getByLabel('选择自选股证券账户').selectOption('test-b');
+ await page.screenshot({path:'outputs/watchlist-auto-order-account.png'});
+ await dialog.getByRole('button',{name:'配置规则',exact:true}).click();
+ dialog=page.getByRole('dialog');
+ await expect(dialog).toContainText('三孚股份 · 自动交易');await expect(dialog).toContainText('987***002');
+ await expect(dialog).toContainText('待持仓同步');
+ await expect(dialog.getByLabel('自动买入',{exact:true})).not.toBeChecked();
+ await expect(dialog.getByLabel('交易方式')).toHaveValue('independent');
+ await dialog.getByLabel('自动买入',{exact:true}).check();
+ await dialog.getByLabel('每次买入手数（手）').fill('2');
+ await page.screenshot({path:'outputs/watchlist-auto-order-rule.png'});
+ await dialog.getByRole('button',{name:'保存规则'}).click();await expect(dialog).not.toBeVisible();
+ const after=await state(),target=after.positions.find((p:any)=>p.account_id==='test-b'&&p.code==='sh603938');
+ expect(target.rule.buy_enabled).toBe(true);expect(target.rule.buy_lots).toBe(2);expect(target.position_verified).toBe(false);
+ expect(after.positions.some((p:any)=>p.account_id==='test-a'&&p.code==='sh603938')).toBe(false);
+ expect(after.settings).toEqual(before.settings);expect(after.runs).toEqual(before.runs);
+ await expect(page.getByRole('combobox',{name:'管理证券账户'})).toHaveValue('test-b');
+});
+
+test('synced watchlist stocks retain their original management route and running rules',async({page})=>{
+ await setup(page);
+ const state=()=>page.evaluate(()=> (window as any).testTradingRpc('trading_view',{}));
+ await page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'}).check();
+ await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();
+ await page.getByRole('dialog').getByLabel('每次买入手数（手）').fill('7');
+ await page.getByRole('dialog').getByRole('button',{name:'保存规则'}).click();
+ await page.getByRole('button',{name:'启动试运行',exact:true}).click();
+ await expect(page.getByText('自动执行运行中',{exact:true})).toBeVisible();
+ const before=await state();
+ for(const accountId of ['test-a','test-b']){
+  await page.getByRole('button',{name:'自选监控',exact:true}).click();
+  await expect(page.getByRole('button',{name:'山子高科 自动下单',exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'山子高科 账户同步来源',exact:true}).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('combobox',{name:'管理证券账户'}).selectOption(accountId);
+  await page.getByRole('region',{name:accountId==='test-a'?/华泰涨乐通 · 123/:/同花顺（银河证券） · 987/}).getByRole('button',{name:'配置规则'}).click();
+  const dialog=page.getByRole('dialog');
+  await expect(dialog.getByLabel('每次买入手数（手）')).toHaveValue(accountId==='test-a'?'7':'1');
+  if(accountId==='test-a')await expect(dialog.getByLabel('自动买入',{exact:true})).toBeChecked();
+  else await expect(dialog.getByLabel('自动买入',{exact:true})).not.toBeChecked();
+  await dialog.getByRole('button',{name:'取消',exact:true}).click();
+ }
+ const after=await state();expect(after.settings).toEqual(before.settings);
+ expect(after.positions).toEqual(before.positions);expect(after.runs).toEqual(before.runs);
+ await expect(page.getByText('自动执行运行中',{exact:true})).toBeVisible();
+});
+
+test('cancelling watchlist setup never enables a rule or starts execution',async({page})=>{
+ await setup(page);
+ const state=()=>page.evaluate(()=> (window as any).testTradingRpc('trading_view',{}));
+ const before=await state();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.getByRole('button',{name:'三孚股份 自动下单',exact:true}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'取消',exact:true}).click();
+ expect((await state()).positions).toEqual(before.positions);
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.getByRole('button',{name:'三孚股份 自动下单',exact:true}).click();
+ await page.getByRole('dialog').getByLabel('选择自选股证券账户').selectOption('test-a');
+ await page.getByRole('dialog').getByRole('button',{name:'配置规则',exact:true}).click();
+ await expect(page.getByRole('dialog')).toContainText('三孚股份 · 自动交易');
+ await page.getByRole('dialog').getByRole('button',{name:'取消',exact:true}).click();
+ const after=await state(),target=after.positions.find((p:any)=>p.account_id==='test-a'&&p.code==='sh603938');
+ expect(target.rule.buy_enabled).toBe(false);expect(target.rule.sell_enabled).toBe(false);expect(target.rule.paired_enabled).toBe(false);
+ expect(after.settings).toEqual(before.settings);expect(after.runs).toEqual(before.runs);
+});
+
+test('watchlist setup without a bound account leads to the existing securities account page',async({page})=>{
+ await setup(page);
+ await page.evaluate(async()=>{for(const id of ['test-a','test-b'])await (window as any).testTradingRpc('broker_account_delete',{id});});
+ await page.getByRole('button',{name:'刷新',exact:true}).click();
+ await expect(page.getByText('先连接你的证券账户',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await page.getByRole('button',{name:'三孚股份 自动下单',exact:true}).click();
+ const dialog=page.getByRole('dialog');
+ await expect(dialog).toContainText('请先');
+ await expect(dialog.getByRole('button',{name:'配置规则',exact:true})).toBeDisabled();
+ await dialog.getByRole('button',{name:'添加证券账户',exact:true}).click();
+ await expect(dialog).not.toBeVisible();
+ await expect(page.getByRole('tab',{name:'证券账户',exact:true})).toHaveAttribute('aria-selected','true');
 });
 
 test('code confirmation is account-scoped and wrong code never creates association',async({page})=>{

@@ -1,7 +1,9 @@
 import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {maxBuyShares,fractionShares} from './paperTicket';
-export type PaperPoint={code:string;name:string;stamp:string;origin:string;price?:number;side:'buy'|'sell'};
+import BrokerOrderTicket from './BrokerOrderTicket';
+export type BrokerSource={account_id:string;broker_name:string;account_masked:string;active:boolean};
+export type PaperPoint={code:string;name:string;stamp:string;origin:string;price?:number;side:'buy'|'sell';brokerSources?:BrokerSource[]};
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 type Account={id:string;name:string;initial:number;cash:number;clock:string;realized:number;revision?:number;fees:{commission_wan:string;minimum:number;slippage_bps:string}};
 type Position={code:string;name:string;shares:number;available:number;frozen?:number;cost:number;market_value:number;price:number|null;price_time:string;unrealized:number;valuation:string};
@@ -40,7 +42,7 @@ function PaperReview({order,onSave,busy}:{order:Order;onSave:(value:string)=>voi
  useEffect(()=>setValue(order.review||''),[order.id,order.review]);
  return <details className="paper-record-details"><summary>复盘</summary><label>记录实际操作与计划的差异<textarea aria-label={`复盘 ${order.id}`} value={value} maxLength={500} onChange={e=>setValue(e.target.value)}/></label><button disabled={busy||value===(order.review||'')} onClick={()=>onSave(value)}>保存复盘</button></details>;
 }
-export default function PaperTrading({request,point,context,onClosePoint,onOpenStock,onAccountState,onManageAccount,onOrderResult}:{onManageAccount?:()=>void;onOrderResult?:(message:string)=>void;onAccountState?:(state:{id:string;revision:number}|null)=>void;request:Request;point:PaperPoint|null;context?:PaperPoint;onClosePoint:()=>void;onOpenStock:(code:string,day:string)=>void}){
+export default function PaperTrading({request,point,context,brokerSources,onClosePoint,onOpenStock,onAccountState,onManageAccount,onOrderResult}:{brokerSources?:Record<string,BrokerSource[]>;onManageAccount?:()=>void;onOrderResult?:(message:string)=>void;onAccountState?:(state:{id:string;revision:number}|null)=>void;request:Request;point:PaperPoint|null;context?:PaperPoint;onClosePoint:()=>void;onOpenStock:(code:string,day:string)=>void}){
  const [data,setData]=useState<Snapshot>({accounts:[],account:null,positions:[],orders:[]});
  const [historyLimit,setHistoryLimit]=useState(200);
  const [account,setAccount]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
@@ -48,10 +50,12 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  const [seed,setSeed]=useState(false),[seedCode,setSeedCode]=useState(''),[seedShares,setSeedShares]=useState('1000'),[seedCost,setSeedCost]=useState('');
  const [ticket,setTicket]=useState<PaperPoint|null>(null),[quote,setQuote]=useState<Quote|null>(null),[limitPrice,setLimitPrice]=useState(''),[shares,setShares]=useState('1000'),[tab,setTab]=useState('positions'),[filter,setFilter]=useState('');
  const [planReason,setPlanReason]=useState(''),[planInvalidation,setPlanInvalidation]=useState(''),[planBudget,setPlanBudget]=useState('');
+ const [ticketMode,setTicketMode]=useState<'paper'|'broker'>('broker');
+ const [brokerPoint,setBrokerPoint]=useState<PaperPoint|null>(null);
  const id=useRef(''),sequence=useRef(0),ticketSeq=useRef(0);
  const refresh=async(selected=account)=>{const seq=++sequence.current;const d=await request<Snapshot>('paper_sync',selected?{account:selected,history_limit:historyLimit}:{});if(seq!==sequence.current)return;setData(d);onAccountState?.(d.account?{id:d.account.id,revision:d.account.revision||0}:null);if(d.account&&d.account.id!==selected)setAccount(d.account.id);};
  useEffect(()=>{let active=true,running=false;const update=async()=>{if(running)return;running=true;try{await refresh();}catch(e){if(active)setError(String(e));}finally{running=false;}};void update();const timer=setInterval(()=>{void update();},3000);return()=>{active=false;sequence.current++;clearInterval(timer);};},[account,historyLimit]);
- const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current;setTicket(p);setQuote(null);setLimitPrice('');setPlanReason('');setPlanInvalidation('');setPlanBudget('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));}}catch(e){if(seq===ticketSeq.current)setError(String(e));}};
+ const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current,next={...p,brokerSources:brokerSources?.[p.code]||[]};setTicket(next);setTicketMode('broker');setBrokerPoint(p.price?next:null);setQuote(null);setLimitPrice(String(p.price||''));setPlanReason('');setPlanInvalidation('');setPlanBudget('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));setBrokerPoint(old=>old||next);}}catch(e){if(seq===ticketSeq.current){setError(String(e));setBrokerPoint(old=>old||next);}}};
  useEffect(()=>{if(point)void open(point);},[point]);
  const close=()=>{ticketSeq.current++;setTicket(null);setQuote(null);onClosePoint();};
  useEffect(()=>{if(!ticket)return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!busy){event.preventDefault();close();}};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[ticket,busy]);
@@ -117,12 +121,16 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  {a&&tab!=='positions'&&Math.max(data.order_count||0,data.fill_count||0)>historyLimit&&<div className="paper-history-more"><span>当前最多显示最近{historyLimit}条。</span><button disabled={busy||historyLimit>=5000} onClick={()=>setHistoryLimit(n=>Math.min(5000,n+200))}>加载更多</button></div>}
  <details className="paper-rules-details"><summary>交易口径</summary><p className="paper-footnote">独立模拟账户，不接实盘。任意已结束分钟可挂限价单；提交后下一分钟起按收盘价加滑点判断，单分钟最多参与该成交量1%，优先价格更优的委托。当日委托按实际确认时间生效，图表位置仅供参考；只使用提交后的完整分钟，在北京时间交易时段内自动撮合，窗口隐藏后仍在后台检查；没有新行情时等待，不额外请求行情。历史回放不随电脑时间自动推进。支持部分成交、撤单及当日到期；尾盘集合竞价不撮合，14:57—15:00不接受撤单。缺逐笔盘口，模拟成交不保证真实可成交。回放时间不可倒退，持仓仅用该时点之前的缓存估值；估值时间较早或缺失时请核对。所有记录保存在本机。</p></details>
  {ticket&&createPortal(<div className="modal-overlay paper-ticket-overlay" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)close();}}>
- <section className={'card paper-ticket '+(ticket.side==='buy'?'ticket-buy':'ticket-sell')} role="dialog" aria-modal="true" aria-label="模拟买卖确认" onKeyDown={event=>{
+ <section className={'card paper-ticket '+((ticketMode==='broker'?brokerPoint?.side:ticket.side)==='sell'?'ticket-sell':'ticket-buy')} role="dialog" aria-modal="true" aria-label={ticketMode==='paper'?'模拟买卖确认':'真实买卖确认'} onKeyDown={event=>{
   if(event.key!=='Tab')return;
-  const items=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),summary')).filter(el=>el.offsetParent!==null),first=items[0],last=items.at(-1);
+  const items=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary')).filter(el=>el.offsetParent!==null),first=items[0],last=items.at(-1);
   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
  }}>
- <div className="ticket-heading"><h2>模拟委托 <span>限价 · {quote?.order_mode==='live'?'当日模拟':'历史回放'}</span></h2><button className="ticket-close" aria-label="关闭模拟委托" title="关闭（Esc）" disabled={busy} onClick={close}>×</button></div>
+ <div className="ticket-heading"><h2>{ticketMode==='paper'?'模拟委托':'真实委托'} <span>限价{ticketMode==='paper'?` · ${quote?.order_mode==='live'?'当日模拟':'历史回放'}`:''}</span></h2><div className="ticket-mode"><span>模拟</span><button type="button" role="switch" aria-label="真实委托" aria-checked={ticketMode==='broker'} disabled={busy} onClick={()=>{if(ticketMode==='paper'){setBrokerPoint(old=>old||(limitPrice||ticket.price?{...ticket}:null));setTicketMode('broker');}else setTicketMode('paper');}}><i/></button><span>真实</span></div><button className="ticket-close" aria-label={ticketMode==='paper'?'关闭模拟委托':'关闭真实委托'} title="关闭（Esc）" disabled={busy} onClick={close}>×</button></div>
+ {ticketMode==='broker'&&!brokerPoint&&<div className="ticket-warning" role="status">读取价格…</div>}
+ {/* Keep the real request mounted across mode changes, including unknown outcomes. */}
+ {brokerPoint&&<div hidden={ticketMode!=='broker'}><BrokerOrderTicket request={request} point={brokerPoint} initialPrice={limitPrice||String(ticket.price||'')} visible={ticketMode==='broker'} onSide={side=>setBrokerPoint({...brokerPoint,side})} onBusy={setBusy} onAccepted={message=>{setNotice(message);onOrderResult?.(message);close();}}/></div>}
+ <div hidden={ticketMode!=='paper'}>
  <div className="ticket-row"><span className="ticket-label">方向</span><div className="ticket-direction"><button aria-pressed={ticket.side==='buy'} disabled={busy} onClick={()=>{setTicket({...ticket,side:'buy'});id.current=crypto.randomUUID();}}>买入</button><button aria-pressed={ticket.side==='sell'} disabled={busy} onClick={()=>{setTicket({...ticket,side:'sell'});id.current=crypto.randomUUID();}}>卖出</button></div></div>
  <div className="ticket-row"><span className="ticket-label">股票</span><div className="ticket-stock"><strong>{ticket.code.slice(2)}</strong><span>{ticket.name}</span></div></div>
  <div className="ticket-time">参考位置 {ticket.stamp}<span title={ticket.origin}>参考 {quote?money(quote.price):'读取中…'}</span></div>
@@ -141,6 +149,7 @@ export default function PaperTrading({request,point,context,onClosePoint,onOpenS
  {error&&<div role="alert" className="paper-error ticket-warning">{error}</div>}
  <div className="ticket-submit-row"><button className="ticket-reset" disabled={busy} onClick={()=>{setShares('');setLimitPrice(quote?String(ticket.price||quote.price/100):'');setError('');id.current=crypto.randomUUID();}}>重填</button><button className="ticket-submit" disabled={busy||!a||!quote||!validLimit||!Number.isSafeInteger(n)||n<=0} onClick={submit}>{busy?'提交中…':ticket.side==='buy'?'确认买入':'确认卖出'}</button></div>
  <details className="ticket-details"><summary>委托说明与费用</summary><div>账户：{a?.name||'未创建'} · {ticket.origin}<br/>仅当前北京时间处于交易时段时允许委托和成交。<br/>模拟{ticket.side==='buy'?'买入':'卖出'}，当日有效；{quote?.order_mode==='live'?'以点击确认时的北京时间生效；图上分钟仅供参考，等待提交后的完整分钟，不回填之前行情。':'历史回放从所选位置的下一完整分钟按限价撮合，不会立即成交。'}<br/>买入100股整数倍；零股只支持全部可卖数量一次卖出。<br/>佣金万{a?.fees.commission_wan||'—'}，最低{money(a?.fees.minimum)}元；上述费用按本次限价及股数估算，实际按成交记账。</div></details>
+ </div>
  </section></div>,document.body)}
  </section>;
 }

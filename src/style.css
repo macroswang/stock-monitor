@@ -46,7 +46,19 @@
 /* Share one toolbar row; wrap naturally when the detail column gets narrow. */
 .minute-chart-controls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding:4px 20px 2px}.minute-chart-controls>.t-direction{flex:0 0 auto;margin:0;min-height:26px}.minute-chart-controls>.chart-display-options{flex:1 1 280px;padding:0}.minute-chart-controls>.t-cost-settings{flex:0 0 100%;min-width:0;margin:0 0 2px}.minute-chart-controls>.t-cost-settings summary{padding:4px 0}.minute-chart-controls .t-direction button{padding:4px 10px}.chart-caption{padding-top:10px}
 /* Compact each watch row while keeping all quote fields and the full list. */
-.watchlist>.card-heading{padding:12px 14px}.watchlist>.add{padding:0 10px 9px}.watchlist>.add input{padding:7px 9px}.watchlist>.add button{padding:6px 9px}.watchlist .stock{padding:8px 12px;gap:0 6px}.watchlist .stock.selected{padding-left:9px}.watchlist .stock>div:first-child>strong{line-height:17px}.watchlist .stock small{margin-top:2px;font-size:10px;line-height:11px;letter-spacing:.2px}.watchlist .stock-right>strong{font-size:14px;font-weight:600;line-height:17px}.watchlist .watch-quote-details{gap:4px;margin-top:6px;padding-top:5px}.watchlist .watch-metric{gap:2px}.watchlist .stock .watch-metric strong{font-size:12px;line-height:15px}.watchlist .watch-metric>span{font-size:10px;line-height:11px}
+.watchlist>.card-heading{padding:12px 14px}.watchlist>.add{padding:0 10px 9px}.watchlist>.add input{padding:7px 9px}.watchlist>.add button{padding:6px 9px}
+.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;padding:6px 10px;gap:4px 8px}
+.watchlist .stock.selected{padding-left:7px}
+.watchlist .stock>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-width:0}
+.watchlist .stock>div:first-child>strong{width:100%;line-height:17px}
+.watchlist .stock small{margin-top:0;font-size:10px;line-height:11px;letter-spacing:.2px;white-space:nowrap}
+.watchlist .stock .trading-source{margin:0;padding:1px 4px;font-size:9px;line-height:12px;border-radius:3px;white-space:nowrap}
+.watchlist .stock-right>strong{font-size:14px;font-weight:600;line-height:17px}
+.watchlist .stock-right>small{margin-top:5px;line-height:14px}
+.watchlist .watch-quote-details{grid-column:1/-1;gap:4px;margin-top:0;padding-top:4px}
+.watchlist .watch-metric{gap:1px}
+.watchlist .stock .watch-metric strong{font-size:12px;line-height:15px}
+.watchlist .watch-metric>span{font-size:10px;line-height:11px}
 
 /* Compact market overview: value and change share a row when space permits. */
 .summary{gap:10px;margin-bottom:10px}.summary>div{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:baseline;column-gap:10px;row-gap:3px;padding:10px 12px;border-radius:8px}.summary>div>span{flex-basis:100%;font-size:11px;line-height:15px}.summary strong{font-size:23px;line-height:28px;margin-top:0}.summary small{font-size:12px}.summary .index-change{font-size:12px;line-height:18px;white-space:nowrap}.summary .index-time{flex-basis:100%;font-size:10px;line-height:14px;margin-top:1px;overflow-wrap:anywhere}.summary .status-text{font-size:14px;line-height:22px;padding:0}.summary .index-unavailable{font-size:12px;line-height:20px;margin:0}
@@ -142,6 +154,8 @@
 .paper-ticket{overflow-y:auto}
 .ticket-details label{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:6px;margin-top:5px}
 .paper-ticket .ticket-details input{min-width:0;width:100%;padding:4px 6px;font-size:11px}
+.paper-ticket .ticket-capacity-refresh{min-height:18px;padding:0 2px;font-size:13px;line-height:16px;border:0;background:transparent;color:#8fb6e2}
+.ticket-mode{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:10px;color:#a5b6cc}.paper-ticket .ticket-mode button{position:relative;width:30px;height:18px;min-height:18px;padding:0;border:1px solid #48617e;border-radius:12px;background:#243449}.ticket-mode button i{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#c6d5e9;transition:transform .12s}.ticket-mode button[aria-checked=true]{border-color:#6297ce;background:#315e91}.ticket-mode button[aria-checked=true] i{transform:translateX(12px);background:#fff}.paper-ticket .ticket-row select,.ticket-account{width:100%;min-width:0;font-size:12px;padding:6px}.ticket-account{display:block;border:1px solid #30445f;border-radius:4px;background:#0d192b;color:#dce7f5}
 .ticket-details small{display:block;margin-top:4px;color:#91a5c0}
 .paper-record-details textarea{display:block;min-width:200px;min-height:60px;margin:5px 0;resize:vertical;color:#dce7f5;background:#0d192b;border:1px solid #30455e;border-radius:4px}
 /* 同日宽度与成交占比同轴，TRIN 在下方使用对齐的时间轴。 */
