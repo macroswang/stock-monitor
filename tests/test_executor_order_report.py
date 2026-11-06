@@ -1,7 +1,7 @@
 import copy
 import unittest
 from unittest.mock import Mock,patch
-from executor.order_report import field,validate_frames,ContractMismatch
+from executor.order_report import field,validate_frames,ContractMismatch,zhangle_filled_orders
 from executor.trade import OrderResult
 from executor.ocr import OcrUnavailable,helper_binary
 
@@ -68,3 +68,28 @@ class OrderEvidenceTests(unittest.TestCase):
     def test_unsupported_platform_fails_closed(self):
         with patch('executor.ocr.platform.system',return_value='Windows'):
             with self.assertRaises(OcrUnavailable):helper_binary()
+
+    def test_complete_native_scan_keeps_every_filled_order_and_never_opens_a_row(self):
+        rows=[
+            dict(name='甲',code='000001',side='buy',date='2026-11-03',time='10:00:00',price=10,quantity=100,filled=100,state='已成'),
+            dict(name='乙',code='000002',side='sell',date='2026-11-03',time='10:01:00',price=20,quantity=200,filled=0,state='已报'),
+            dict(name='丙',code='000003',side='sell',date='2026-11-03',time='10:02:00',price=30,quantity=300,filled=100,state='部成')]
+        pages={'bottom':[rows[1],rows[2]],'top':[rows[0],rows[1]]}
+        class Box:bounds=(0,100,1000,1000)
+        class FakeAdb:
+            current='bottom'
+            def nodes(self):return self.current
+            def shell(self,*args):self.current='top' if int(args[3])<int(args[5]) else 'bottom'
+            def tap_node(self,*_args):raise AssertionError('不应打开委托行')
+        adb=FakeAdb()
+        with patch('executor.order_report.OrderBook') as book,patch('executor.order_report.Zhangle.verify_trade_account'),patch('executor.order_report.find_by_id',return_value=Box()),patch('executor.order_report.row_records',side_effect=lambda nodes,_day,_today:[(row,None) for row in pages[nodes]]):
+            book.return_value.select.return_value='bottom'
+            result=zhangle_filled_orders(adb,'123456','2026-11-03',__import__('datetime').datetime.fromisoformat('2026-11-03T15:10:00+08:00'))
+        self.assertTrue(result['complete']);self.assertEqual([(r['code'],r['status'],r['filled']) for r in result['rows']],[('000001','filled',100),('000003','partial',100)])
+
+    def test_unexplained_empty_native_page_is_not_accepted_as_a_complete_empty_cache(self):
+        adb=Mock();adb.nodes.return_value=[]
+        with patch('executor.order_report.OrderBook') as book,patch('executor.order_report.Zhangle.verify_trade_account'),patch('executor.order_report.row_records',return_value=[]),patch('executor.order_report.is_empty',return_value=False):
+            book.return_value.select.return_value=[]
+            with self.assertRaisesRegex(ValueError,'没有明确空记录'):
+                zhangle_filled_orders(adb,'123456','2026-11-03',__import__('datetime').datetime.fromisoformat('2026-11-03T15:10:00+08:00'))

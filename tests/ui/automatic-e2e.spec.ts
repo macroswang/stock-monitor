@@ -120,14 +120,14 @@ test('E2E: a temporary chart refresh failure retains B/S within the same stock a
  await expect.poll(()=>plot.read()).toEqual(before);
 });
 
-test('E2E: unknown receipt is not a B marker and does not block a different fresh signal',async({page})=>{
+test('E2E: unknown automatic attempts retain B/S and do not block a different fresh signal',async({page})=>{
  await setup(page);await rpc('e2e_fault',{broker:'zhangle',kind:'lose_receipt'});
  const state=await rpc('e2e_feed',{kind:'bottom'});
  expect(state.orders.zhangle).toHaveLength(1);expect(state.runs.find((r:any)=>r.account_id==='e2e-a').status).toBe('unknown');
  expect((await rpc('e2e_repeat')).orders.zhangle).toHaveLength(1);
  const top=await rpc('e2e_feed',{kind:'top'});expect(top.orders.zhangle).toHaveLength(2);
- const plot=await markers(page);await expect.poll(async()=>(await plot.read()).length).toBe(2);
- expect((await plot.read()).every((m:any)=>m.account_id==='e2e-b')).toBe(true);
+ const plot=await markers(page);await expect.poll(async()=>(await plot.read()).length).toBe(4);
+ const marks=await plot.read();expect(marks.filter((m:any)=>m.account_id==='e2e-a')).toHaveLength(2);expect(marks.filter((m:any)=>m.account_id==='e2e-a').every((m:any)=>m.status==='unknown')).toBe(true);expect(marks.filter((m:any)=>m.account_id==='e2e-b')).toHaveLength(2);
 });
 
 test('E2E: UI and snapshot RPC stay responsive while a broker operation is waiting',async({page},info)=>{

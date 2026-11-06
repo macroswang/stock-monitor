@@ -83,6 +83,14 @@ class ThsAdapter(BrokerAdapter):
         from core.provider import now_cn
         return discover(self.adb,getattr(self,'_verified_account',None),day,expected,submitted_at,now_cn())
 
+    def filled_orders(self,day):
+        from ..ths_report import contract_pages
+        records=[]
+        for page in contract_pages(self.adb,getattr(self,'_verified_account',None),day):
+            overlap=max((n for n in range(1,min(len(records),len(page))+1) if records[-n:]==page[:n]),default=0)
+            records.extend(page[overlap:])
+        return dict(kind='filled_orders',day=day,complete=True,rows=records,source='ths_native_contract_group')
+
     def holdings(self, account: str | None = None, known_codes: dict | None = None,target_code=None) -> dict:
         from ..holdings import collect
         from ..ths_trade import POSITION_LIST_ID, parse_positions, parse_funds

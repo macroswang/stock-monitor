@@ -85,6 +85,10 @@ class BrokerAdapter:
     def order_report(self,order_id,day,expected):
         raise ValueError('该券商当前查询页没有可核验的委托编号，保留待核实状态')
 
+    def filled_orders(self, day: str) -> dict:
+        """Return a complete, account-verified scan of today's filled orders."""
+        raise NotImplementedError("该券商尚未实现当日成交委托全量读取")
+
     def account(self) -> dict:
         """资金与持仓快照，用于对账。"""
         raise NotImplementedError("该券商尚未实现资金持仓查询")

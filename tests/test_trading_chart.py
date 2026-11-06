@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock,patch
 from core.store import Store
 from core.live_trading import LiveTrading
-from core.trading_chart import chart
+from core.trading_chart import chart,sync_filled_orders,CACHE_KIND
 
 class TradingChartTests(unittest.TestCase):
  def setUp(self):
@@ -46,6 +46,50 @@ class TradingChartTests(unittest.TestCase):
   self.seed()
   with patch('core.brokers.submit_order',side_effect=AssertionError('order IO')),patch('core.brokers.order_report',side_effect=AssertionError('device IO')):
    before=self.store.db.total_changes;chart(self.store,'sz000981','2026-11-03');self.assertEqual(self.store.db.total_changes,before)
+ def test_verified_broker_fill_cache_projects_manual_buy_and_sell_and_survives_read_only_chart(self):
+  payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[
+   dict(code='000981',name='山子高科',side='buy',date='2026-11-03',time='10:01:02',order_id='manual-1',filled=500,average='2.18',amount='1090'),
+   dict(code='000981',name='山子高科',side='sell',date='2026-11-03',time='13:22:03',order_id='manual-2',filled=300,average='2.25',amount='675')])
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+  before=self.store.db.total_changes;points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(self.store.db.total_changes,before);self.assertEqual([p['side'] for p in points],['buy','sell'])
+  self.assertTrue(all(p['source']=='broker_cache' and p['status']=='filled' and p['attempted'] for p in points))
+  self.assertEqual((points[0]['filled'],points[0]['fill_price'],points[0]['order_id']),(500,2.18,'manual-1'))
+ def test_cached_broker_fill_with_same_contract_as_automatic_order_is_not_duplicated(self):
+  self.seed(verification=dict(origin='broker_auto',status='filled',filled=2300,average='2.15'),status='filled')
+  payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[
+   dict(code='000981',side='buy',date='2026-11-03',time='13:38:00',order_id='contract-one',filled=2300,average='2.15')])
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+  points=chart(self.store,'sz000981','2026-11-03')['points'];self.assertEqual(len(points),1);self.assertEqual(points[0]['source'],'automatic')
+ def test_incomplete_wrong_account_and_unverified_cache_never_projects(self):
+  base=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',rows=[dict(code='000981',side='buy',time='10:01:02',filled=100,average='2.18')])
+  for change in [dict(account_id='b'),dict(account_verified=False),dict(complete=False),dict(day='2026-11-02')]:
+   with self.subTest(change=change):
+    self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(base,**change))
+    self.assertFalse(chart(self.store,'sz000981','2026-11-03')['points'])
+ def test_sync_replaces_only_successful_account_cache_and_retains_failed_account_cache(self):
+  old=dict(account_id='b',account_verified=True,complete=True,day='2026-11-03',observed_at='old',rows=[dict(code='000981',side='sell',time='10:00:00',filled=100,average='2.20')])
+  self.store.cache('broker-account:b',CACHE_KIND,'2026-11-03',old)
+  fresh=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='new',rows=[dict(code='000981',side='buy',time='11:00:00',filled=200,average='2.18')])
+  with patch('core.trading_chart.now_cn',return_value=__import__('datetime').datetime.fromisoformat('2026-11-03T15:10:00+08:00')),patch('core.trading_chart.brokers.filled_orders',side_effect=[fresh,ValueError('账户未登录')]):
+   result=sync_filled_orders(self.store,'2026-11-03')
+  self.assertEqual((result['saved'],len(result['errors'])),(1,1))
+  self.assertEqual(self.store.getcache('broker-account:a',CACHE_KIND,'2026-11-03')[0]['data']['observed_at'],'new')
+  self.assertEqual(self.store.getcache('broker-account:b',CACHE_KIND,'2026-11-03')[0]['data']['observed_at'],'old')
+ def test_prepared_request_is_not_mislabeled_as_an_automatic_order_attempt(self):
+  self.seed(status='pending');self.store.execute("UPDATE broker_requests SET status='prepared'")
+  self.assertFalse(chart(self.store,'sz000981','2026-11-03')['points'][0]['attempted'])
+ def test_chart_does_not_truncate_more_than_five_hundred_automatic_orders(self):
+  stamp='2026-11-03T10:00:00+08:00';runs=[];requests=[]
+  for n in range(501):
+   ident=f'many-{n}';payload=dict(mode='live',reference_price=2.2,plan=dict(account_id='a',code='sz000981',side='buy',price='2.20',quantity=100),price_checks=dict(before_submit=dict(checked_at=stamp)))
+   request=dict(account_id='a',code='000981',side='buy',price='2.20',quantity=100,dry_run=False)
+   runs.append((ident,'a','sz000981','buy','signal-'+ident,'2026-11-03','accepted',json.dumps(payload),stamp,stamp))
+   requests.append(('auto_'+ident,'a',json.dumps(request),'accepted','{}',stamp,stamp))
+  with self.store.lock,self.store.db:
+   self.store.db.executemany('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',runs)
+   self.store.db.executemany('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',requests)
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),501)
  def test_conflicting_receipt_ids_stay_unknown(self):
   self.seed(status='unknown');self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(order_id='1',result=dict(order_id='2'))),))
   point=chart(self.store,'sz000981','2026-11-03')['points'][0];self.assertEqual(point['order_id'],'');self.assertEqual(point['status'],'unknown')

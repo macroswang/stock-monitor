@@ -504,6 +504,18 @@ def discover_order_report(store,account_id,day,expected,submitted_at,secrets=Non
     return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
 
 
+@_device_operation(seconds=300)
+def filled_orders(store,account_id,day,secrets=None):
+    if day!=now_cn().date().isoformat():raise ValueError('券商当日成交只能同步今天')
+    _,creds,client=_adapter(store,account_id,secrets)
+    _verify_account(client,creds,store)
+    result=client.filled_orders(day)
+    _verify_account(client,creds,store)
+    if result.get('complete') is not True or result.get('day')!=day or not isinstance(result.get('rows'),list):
+        raise ValueError('券商成交委托未完整读取，不更新缓存')
+    return dict(result,account_id=account_id,account_verified=True,observed_at=now_cn().isoformat())
+
+
 @_device_operation
 def snapshot(store, account_id: str, secrets: SecretStore | None = None) -> dict:
     _, creds, client = _adapter(store, account_id, secrets)

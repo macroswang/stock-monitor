@@ -563,6 +563,11 @@ class App:
         if method=='trading_chart':
             from .trading_chart import chart
             return chart(self.store,symbol(args['code']),datetime.fromisoformat(args['day']).date().isoformat())
+        if method=='trading_chart_sync':
+            from .trading_chart import sync_filled_orders
+            if self.live_trading.settings()['mode']=='live' and not self.live_trading.settings()['paused'] and trading(now_cn()):
+                raise ValueError('交易时段正在自动实盘执行，为避免占用下单设备，请收盘后同步券商成交')
+            return self.broker_job(lambda:sync_filled_orders(self.store,datetime.fromisoformat(args['day']).date().isoformat()))
         if method=='trading_view':return self.live_trading.view()
         if method=='trading_config':return self.live_trading.configure(args)
         if method=='trading_start':return self.broker_job(self.live_trading.prepare)

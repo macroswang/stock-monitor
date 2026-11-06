@@ -108,6 +108,11 @@ class ZhangleAdapter(BrokerAdapter):
         from core.provider import now_cn
         return zhangle_report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
 
+    def filled_orders(self,day):
+        from ..order_report import zhangle_filled_orders
+        from core.provider import now_cn
+        return zhangle_filled_orders(self.adb,getattr(self,'_verified_account',None),day,now_cn())
+
     def account(self) -> dict:
         return OrderBook(self.adb).account()
 

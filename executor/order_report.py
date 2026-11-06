@@ -11,7 +11,7 @@ from dataclasses import replace
 from decimal import Decimal,InvalidOperation
 from .adb import find_by_id,wait_until
 from .ocr import recognize,helper_binary
-from .orderbook import OrderBook,_rows,_scoped,parse_rows,ROW_ID,NAME_ID,RECYCLER_ID
+from .orderbook import OrderBook,_rows,_scoped,parse_rows,is_empty,ROW_ID,NAME_ID,RECYCLER_ID
 from .zhangle import Zhangle,PACKAGE
 
 
@@ -105,6 +105,50 @@ def row_records(nodes,day,today):
 
 
 def signature(row):return tuple(row.get(k) for k in ('code','side','date','time','price','quantity','filled','state'))
+
+
+def zhangle_filled_orders(adb,account,day,now):
+    """Read every native row without opening order details or cancellation UI."""
+    if not account:raise ValueError('缺少已核验的资金账户')
+    if day!=now.date().isoformat():raise ValueError('华泰当日成交委托只能同步当前交易日')
+    book=OrderBook(adb);nodes=book.select('today_orders');previous=None
+    def read(current):
+        Zhangle.verify_trade_account(current,account)
+        rows=[row for row,_node in row_records(current,day,True)]
+        if rows!=[row for row,_node in row_records(adb.nodes(),day,True)]:
+            raise ValueError('委托列表读取期间变化，稍后重新同步')
+        return rows
+    def swipe(current,top):
+        container=find_by_id(current,RECYCLER_ID)
+        if not container:raise ValueError('委托列表已离开')
+        x1,y1,x2,y2=container.bounds
+        adb.shell('input','swipe',str((x1+x2)//2),str(y1+25 if top else y2-25),str((x1+x2)//2),str(y2-25 if top else y1+25),'500')
+        return adb.nodes()
+    for _ in range(15):
+        rows=read(nodes)
+        if rows==previous:break
+        previous=rows
+        if not rows:
+            if not is_empty(nodes):raise ValueError('委托列表为空但没有明确空记录提示，不更新成交缓存')
+            return dict(kind='filled_orders',day=day,complete=True,rows=[],source='zhangle_native_today_orders')
+        nodes=swipe(nodes,True)
+    else:raise ValueError('未能确认委托列表顶部，不更新成交缓存')
+    collected=[];previous=None
+    for _ in range(15):
+        rows=read(nodes)
+        if rows==previous:break
+        overlap=max((n for n in range(1,min(len(collected),len(rows))+1) if collected[-n:]==rows[:n]),default=0)
+        collected.extend(rows[overlap:]);previous=rows;nodes=swipe(nodes,False)
+    else:raise ValueError('委托列表超过读取上限，不更新成交缓存')
+    filled=[]
+    for row in collected:
+        status=state(row.get('state',''));quantity=integer(row.get('quantity'));done=integer(row.get('filled'))
+        if done<=0:continue
+        if (done>quantity or (status=='filled' and done!=quantity) or
+            (status in ('partial','cancelled') and done>=quantity) or status in ('accepted','rejected')):
+            raise ValueError('成交数量与委托状态不一致，不更新成交缓存')
+        filled.append(dict(row,status=status,quantity=quantity,filled=done))
+    return dict(kind='filled_orders',day=day,complete=True,rows=filled,source='zhangle_native_today_orders')
 
 
 def inspect_detail(adb,node,native,order_id,day,account):
