@@ -53,3 +53,17 @@ export function marketObservation(index:QuoteView|null,breadth:ReturnType<typeof
  if(change>0&&advance>decline)return '指数上涨、个股涨多跌少；结合个股信号制定计划。';
  return '指数与个股方向不明确，先观察。';
 }
+
+export function currentStamp(stamp:string|undefined,day:string,now:number){
+  if(!stamp||stamp.slice(0,10)!==day||!stamp.endsWith('+08:00'))return false;
+  const age=now-Date.parse(stamp),time=stamp.slice(11,16);
+  if(!Number.isFinite(age)||age< -5000)return false;
+  if(day===lastClosedSession(now))return time>='15:00';
+  if(day!==dateTime(now).date||!exchangeCalendar.tradingDay(day))return false;
+  const clock=dateTime(now).time;
+  if(clock>='11:30'&&clock<'13:00')return time>='11:27'&&time<='11:31';
+  const morning=clock>='09:30'&&clock<'11:30'&&time>='09:30';
+  const afternoon=clock>='13:00'&&clock<'15:00'&&time>='13:00';
+  return age<=180000&&(morning||afternoon);
+}
+

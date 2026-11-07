@@ -28,8 +28,8 @@ import MacdSettings from './MacdSettings';
 import {volumeDisplayMaximum} from './volumeScale';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
 // Give both volume panes a little more room while keeping the stack in view.
-function minutePanelLayout(height:number){
- const auxiliary=Math.min(320,118+Math.max(0,height-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3),indexVolume=volume;
+function minutePanelLayout(height:number,priceExpansion=0){
+ const auxiliaryHeight=Math.max(350,height-priceExpansion),auxiliary=Math.min(320,118+Math.max(0,auxiliaryHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3),indexVolume=volume;
  const price=height-22-4*22-volume-2*macd-indexVolume-32;
  const heights=[price,volume,macd,indexVolume,macd],grids:{top:number;height:number}[]=[],headers:number[]=[];
  let top=22;
@@ -86,7 +86,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
  const showQuality=true;
  const [plotHeight,setPlotHeight]=useState(0);
- const minutePanels=minutePanelLayout(plotHeight||350);
+ const minutePanels=minutePanelLayout(plotHeight||350,compact?0:30);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
  const [showDailyPatterns,setShowDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
  const dayPatterns=useMemo(()=>view==='daily'?selectDailyPatterns(dailyPatterns(daily)):[],[daily,view]);

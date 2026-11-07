@@ -159,6 +159,24 @@ test('comparison panes fit common desktop windows and reflow after the market ov
  await page.mouse.move(5,5);await page.screenshot({path:'outputs/macd-compact-1380x900.png'});
 });
 
+test('compact minute header gives its saved height only to the price pane',async({page},info)=>{
+ await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
+ await page.setViewportSize({width:2254,height:654});await setup(page);
+ await page.locator('.stock').filter({hasText:'三孚股份'}).click();await expect(page.locator('.minute-detail h2')).toContainText('三孚股份');
+ const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
+ const read=async()=>{
+  const top=(await page.locator('.minute-detail>.detail-top').boundingBox())!,toolbar=(await page.locator('.minute-detail>.chart-toolbar').boundingBox())!;
+  const panes=await chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el),m=c.getModel();return {height:c.getHeight(),grids:[0,1,2,3,4].map(i=>m.getComponent('grid',i).coordinateSystem.getRect().height)};});
+  return {...panes,top:top.height,toolbar:toolbar.height,header:top.height+toolbar.height};
+ };
+ await expect.poll(async()=> (await read()).height).toBeGreaterThan(350);const r=await read();
+ expect(r.top).toBeLessThanOrEqual(38);expect(r.toolbar).toBeLessThanOrEqual(37);expect(r.header).toBeLessThanOrEqual(75);
+ const oldHeight=r.height-30,auxiliary=Math.min(320,118+Math.max(0,oldHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3),oldPrice=oldHeight-22-4*22-2*volume-2*macd-32;
+ expect(r.grids).toEqual([oldPrice+30,volume,macd,volume,macd]);
+ await expect(page.getByRole('button',{name:'刷新行情',exact:true})).toBeVisible();await expect(page.getByLabel('交易日期')).toBeVisible();
+ await page.mouse.move(5,5);await page.locator('.minute-detail').screenshot({path:info.outputPath('compact-minute-header-price-pane.png')});
+});
+
 
 test('moderate volume pane heights preserve full-day values without persistent overflow text',async({page},info)=>{
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
@@ -172,7 +190,7 @@ test('moderate volume pane heights preserve full-day values without persistent o
  await expect.poll(async()=> (await read()).grids[1]).toBe((await read()).grids[3]);const r=await read();
  expect(r.times).toEqual(minuteSlots);expect(r.zoom.every(z=>z.start===0&&z.end===100)).toBe(true);
  expect(r.width).toBeCloseTo(r.band*.85,5);expect(r.width).toBeLessThan(r.band);expect(r.width).toBeLessThanOrEqual(9);
- const baseline=r.height,auxiliary=Math.min(320,118+Math.max(0,baseline-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3);
+ const baseline=r.height,auxiliaryHeight=Math.max(350,baseline-30),auxiliary=Math.min(320,118+Math.max(0,auxiliaryHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3);
  expect(r.grids[1]).toBe(volume);expect(r.grids[1]).toBeGreaterThan(Math.round(auxiliary*.2));expect(r.grids[1]).toBeLessThanOrEqual(80);expect(r.max).toBe(20000);expect(r.scale).toEqual([0,20000]);
  expect(r.marks).toEqual([]);await expect(page.locator('.volume-panel-header').filter({hasText:'超出刻度'})).toHaveCount(0);await expect(page.locator('.volume-scale-note')).toHaveCount(0);
  expect(r.grids[3]).toBe(volume);expect(r.grids[2]).toBe(macd);expect(r.grids[4]).toBe(macd);expect(r.grids[0]).toBe(baseline-22-4*22-2*volume-2*macd-32);

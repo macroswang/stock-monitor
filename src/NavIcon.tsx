@@ -2,6 +2,7 @@ import type {ReactNode} from 'react';
 /** Shared 24px line icons keep navigation legible at every sidebar width. */
 export default function NavIcon({name}:{name:string}) {
  const paths:Record<string,ReactNode>={
+  modes:<><path d="M5 4h14v16H5zM8 8h8M8 12h4m-4 4h6"/></>,
   market:<><path d="M3 3v18h18M6 15l4-5 4 3 6-8"/><path d="M16 5h4v4"/></>,
   breadth:<><path d="M4 20V10m5 10V4m5 16v-7m5 7V7M2 20h20"/></>,
   paper:<><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6m-6 5 2 2 4-4"/></>,

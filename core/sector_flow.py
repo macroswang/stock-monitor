@@ -62,7 +62,13 @@ def parse(payload,now):
             ts=datetime.fromtimestamp(stamp,CN)
             if ts.date().isoformat()!=expected or ts>now+timedelta(seconds=5):raise ValueError()
             seen.add(code);stamps.append(ts)
-            out.append(dict(code=code,name=name,net_yuan=net,change_percent=change,source_time=ts.isoformat()))
+            sector=dict(code=code,name=name,net_yuan=net,change_percent=change,source_time=ts.isoformat())
+            symbol,label,pct=row.get('f140'),row.get('f128'),row.get('f136')
+            if (isinstance(symbol,str) and re.fullmatch(r'\d{6}',symbol) and row.get('f141') in (0,1)
+                    and isinstance(label,str) and label.strip() and isinstance(pct,(int,float)) and math.isfinite(pct)):
+                sector['representative']=dict(code=('sh' if row['f141']==1 else 'sz')+symbol,name=label,
+                                              change_percent=pct,time=ts.isoformat())
+            out.append(sector)
         except (KeyError,TypeError,ValueError,OverflowError,OSError):
             raise ValueError('板块字段、日期或资金分项无法核对') from None
     if (max(stamps)-min(stamps)).total_seconds()>180:raise ValueError('板块数据时间不一致')
@@ -78,7 +84,7 @@ def parse(payload,now):
 def fetch_eastmoney(now):
     started=time.monotonic()
     params={'pn':1,'pz':1000,'po':1,'np':1,'fltt':2,'fid':'f62','fs':'m:90+t:2',
-            'fields':'f3,f12,f14,f62,f66,f72,f124'}
+            'fields':'f3,f12,f14,f62,f66,f72,f124,f128,f136,f140,f141'}
     req=Request(URL+'?'+urlencode(params),headers={'User-Agent':'Mozilla/5.0','Referer':'https://data.eastmoney.com/'})
     with urlopen(req,timeout=8) as response:
         raw=response.read(2_000_001)
@@ -128,13 +134,16 @@ def parse_sina(rows,extra,quotes,now,kind='industry'):
                     (session and (now-ts).total_seconds()>180)):continue
             except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError):continue
             verified.append(row);stamps.append(ts)
+            if isinstance(q.get('name'),str) and q['name'].strip():
+                row['representative']=dict(code=row['stock'],name=q['name'],time=ts.isoformat(),
+                                           change_percent=float((price/previous-1)*100))
             details[row['code']]=dict(code=row['stock'],sector_price=str(row['stock_price']),reference_price=str(price),reference_time=ts.isoformat())
         if len(verified)<math.ceil(len(output)*.8):raise ValueError()
         picked=verified[:3]+verified[-3:]
         if len({r['stock'] for r in picked})<3:raise ValueError()
     except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError,OverflowError):
         raise ValueError('新浪数据日期、金额或代表股价格未通过核对') from None
-    def simple(row):return {k:row[k] for k in ('code','name','net_yuan','change_percent')}
+    def simple(row):return {k:row[k] for k in ('code','name','net_yuan','change_percent','representative') if k in row}
     return dict(date=day,source=SINA_SOURCE if kind=='industry' else SINA_CONCEPT_SOURCE,source_url='https://finance.sina.com.cn/temp/guest4377.shtml',
                 quote_time=None,anchor_time=min(stamps).isoformat(),collected_at=now.isoformat(),total=len(output),
                 verified_count=len(verified),excluded_count=len(output)-len(verified),
@@ -152,7 +161,7 @@ def _reference_quotes(codes):
             if '="' not in line:continue
             code=line.split('=',1)[0].split('_')[-1];fields=line.split('="',1)[1].split('~')
             if code in group and len(fields)>30 and fields[2]==code[2:]:
-                found[code]=dict(price=fields[3],previous=fields[4],stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
+                found[code]=dict(name=fields[1],price=fields[3],previous=fields[4],stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
         return found
     groups=[codes[i:i+50] for i in range(0,len(codes),50)]
     result={}

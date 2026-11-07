@@ -15,3 +15,46 @@
 - 后续：实际盘中同步采集与作者原始口径仍需独立核验，不以视觉结果替代数据验收。
 
 final result: passed
+
+---
+
+# Design QA — 分时页顶部与价格主图空间分配
+
+- Source visual truth: `/var/folders/92/0tpdpsx10wz21wp30mfx6w7c0000gn/T/codex-clipboard-d9314550-6337-4919-be86-0b33263015bb.png`
+- Implementation screenshot: `/Users/macrwang/Documents/XReddot/Code/stock-monitor/outputs/compact-minute-header/minute-macd-compact-minute-eb466-ight-only-to-the-price-pane/compact-minute-header-price-pane.png`
+- Combined comparison: `/tmp/stock-monitor-design-qa/comparison.html`，已在 ChatGPT in-app Browser 中完整查看
+- Browser viewport: `2254 × 654` CSS px，device scale factor `1`
+- Source pixels: `2254 × 654`
+- Implementation capture: `1884 × 1111` pixels，股票详情卡元素截图；对照时顶部对齐，并重点检查与需求截图相同的标题、工具条和价格主图区
+- State: 深色主题、侧栏与市场趋势折叠、三孚股份、分时页
+
+## Findings
+
+没有待处理的 P0、P1 或 P2 问题。
+
+- Fonts and typography: 沿用现有系统字体、字重和状态色；股票名称保持 17px 主层级，状态和工具条使用 10–11px 辅助层级，未出现截断或重叠。
+- Spacing and layout rhythm: 标题/状态/操作区与视图工具条收紧为 73.5px；按钮、日期和页签对齐在稳定的两行网格中。详情卡宽屏和 1000px 桌面宽度均无横向溢出。
+- Colors and visual tokens: 继续使用现有深蓝背景、边框和选中态，没有引入新颜色或不一致的阴影。
+- Image quality and assets: 本区域没有图片或自定义图标资产；行情画布保持原始清晰度和完整全天范围。
+- Copy and content: 所有原操作名称、状态、日期和提示保持不变；测试数据与需求截图的行情内容不同，但信息结构一致。
+
+## Comparison history
+
+1. 初始需求截图：顶部标题/状态/操作与视图工具条占用明显垂直空间，用户要求压缩并把释放高度交给价格主图。
+2. 第一次实现：收紧两行信息密度，并将主图新增空间从辅助窗格计算中扣除。浏览器测量为顶部 73.5px、图表 393px、价格窗格 111px。
+3. 验证修正：旧成交量测试仍按新增总高度放大辅助窗格，已将基准改为压缩前高度；最终个股/大盘成交量及两组 MACD 高度保持原值，价格窗格精确增加 30px。
+4. Post-fix evidence: `compact minute header gives its saved height only to the price pane`、常用窗口适配及成交量高度测试均通过；日K/分时切换可用，浏览器控制台无错误。
+
+## Implementation checklist
+
+- [x] 标题、代码、状态与操作按钮紧凑对齐
+- [x] 分时/日K/周K、日期与历史操作形成统一工具条
+- [x] 释放的 30px 仅分配给价格主图
+- [x] 成交量、MACD、信号和交易逻辑保持不变
+- [x] 宽屏与常用桌面断点通过
+
+## Follow-up polish
+
+没有阻塞性后续项。
+
+final result: passed

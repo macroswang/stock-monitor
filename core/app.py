@@ -103,7 +103,12 @@ class App:
         self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
         from .live_trading import LiveTrading
         self.live_trading=LiveTrading(self)
+        from .outlook_scheduler import OutlookScheduler
+        from .disclosure_themes import LiveThemeFlow
+        self.live_theme_flow=LiveThemeFlow()
+        self.outlook_scheduler=OutlookScheduler(self)
         if start_worker:
+            threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
@@ -461,6 +466,17 @@ class App:
             return self.market.view(index['timestamp'][:10]) if index and isinstance(index.get('timestamp'),str) else head
         if method=='external_market':return self.external_market.view()
         if method=='breadth':return self.breadth.view()
+        if method=='daily_outlook':
+            from .daily_outlook import view
+            return dict(view(self,args.get('day'),args.get('batch')), schedule=self.outlook_scheduler.state, completed_slot=self.outlook_scheduler.done)
+        if method=='outlook_quotes':
+            day=args.get('day');codes=args.get('codes')
+            if not isinstance(day,str) or len(day)!=10 or not isinstance(codes,list) or len(codes)>30 or not all(isinstance(c,str) for c in codes):
+                raise ValueError('前瞻报价参数无效')
+            records=self.store.getcache(BREADTH_CODE,'breadth_raw_v1',day)
+            if not records:return None
+            raw=records[0]['data']
+            return dict(day=raw['date'],collected_at=raw['collected_at'],quotes=[q for q in raw['quotes'] if q['code'] in codes])
         if method=='csi300':return self.csi300.view(args.get('day'))
         if method=='sector_members':return self.sector_members.view(args.get('code'),self.sector_members_enabled)
         if method=='sector_constituents':
@@ -508,7 +524,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.37',rule='running_max_inclusive_v1')
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.38',rule='running_max_inclusive_v1')
         if method=='add_job': return self.start_job(lambda:self.call('add',args))
         if method=='refresh':
             code=symbol(args['code'])
