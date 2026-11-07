@@ -1,3 +1,4 @@
+import {openSimulation} from './fixtures/open-simulation';
 import {test,expect,Page} from '@playwright/test';
 import {spawn,ChildProcessWithoutNullStreams} from 'node:child_process';
 import {createInterface} from 'node:readline';
@@ -70,7 +71,7 @@ test('tickets default to real on every open without submitting or selecting simu
 test('a holding-entry real ticket initializes its price from the delayed quote when no point price was supplied',async({page})=>{
  await setup(page);await rpc('e2e_repeat');await markers(page);
  const account=await rpc('paper_create',{cash:10000});await rpc('paper_seed',{account:account.id,code:'sz000981',shares:100,cost:'2.00'});
- await page.getByRole('button',{name:'模拟交易',exact:true}).click();const row=page.locator('.paper-positions tbody tr').filter({hasText:'山子高科'});await expect(row).toBeVisible();
+ await openSimulation(page);const row=page.locator('.paper-positions tbody tr').filter({hasText:'山子高科'});await expect(row).toBeVisible();
  await page.evaluate(()=>{const w=window as any,original=w.testTradingRpc;w.testTradingRpc=async(method:string,args:any)=>{const result=await original(method,args);if(method==='paper_quote'){w.defaultRealQuote=result.price/100;await new Promise(r=>setTimeout(r,300));}return result;};});
  await row.getByRole('button',{name:'买入',exact:true}).click();const ticket=page.getByRole('dialog');await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
  await expect.poll(()=>page.evaluate(()=> (window as any).defaultRealQuote||0)).toBeGreaterThan(0);

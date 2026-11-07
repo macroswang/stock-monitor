@@ -13,7 +13,7 @@ from . import breadth, disclosure_themes, sector_flow, sector_members, theme_dis
 from .provider import CN, get, now_cn
 
 INTERVAL_MINUTES = 30
-SCREEN_VERSION = 7
+SCREEN_VERSION = 8
 NON_BUSINESS = re.compile('重仓|参股|解禁|ST|央企50|融资融券|整体上市|改革|持股|沪深300|次新|上证|深证|三板|举牌|增持|破净|送转|预盈|预增|低价股|高价股|资产注入|外资背景|地域|地区|股权|本月|B股|综合行业')
 CAUTION = re.compile('下滑|下降|下调|萎缩|回撤|收紧|下跌|走弱|亏损|立案|起火|冲突|预警|抵制|暴跌|出口限制|制裁')
 SUPPORT = re.compile('增长|上调|获批|投产|中标|扩产|签约|保供|订单增加|提高补贴|需求回升|增产|复产')
@@ -175,7 +175,11 @@ def produce(store, now):
             risk = ('板块仍在净流出，等资金回流。' if not positive else
                     '消息含有不利或不确定因素，先等后续确认。' if head and CAUTION.search(head['title']) else
                     '同行走势还不够一致，继续等。' if not allow else '若板块资金转为流出或候选跌破参考低点，继续等。')
-            ideas.append(dict(sector=row['name'],sector_code=row['code'],sector_kind=kinds[row['code']],reason=reason,risk=risk,
+            # Preserve the full screened active basket, separately from the candidate triplet.
+            # A member can be a market leader without being eligible for entry.
+            core_members = {c:n for c,n in constituents if re.fullmatch(r'(sh6|sz[03])\d{5}',c)}
+            ideas.append(dict(core_members=[dict(code=c,name=n) for c,n in core_members.items()],
+                              change=row['change_percent'],net=row['net_yuan'],sector=row['name'],sector_code=row['code'],sector_kind=kinds[row['code']],reason=reason,risk=risk,
                               news_title=head['title'] if head else None,news_region=head['region'] if head else None,
                               sources=[head] if head else [],allow_entry=allow,
                               stocks=[dict(code=c,name=n,low=l) for c,n,l,*_ in stocks]))

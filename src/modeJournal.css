@@ -1,6 +1,72 @@
 .mode-journal{display:grid;gap:16px}.mode-journal .card{padding:20px}.mode-journal form,.mode-journal article{border-top:1px solid #d8dfe5;margin-top:16px;padding-top:16px}.mode-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px}.mode-journal label{display:grid;gap:5px;font-size:13px}.mode-journal input,.mode-journal select{width:100%;min-width:0;padding:8px}.mode-hint{grid-column:1/-1;margin:0}.mode-journal small{font-size:13px;font-weight:normal}.mode-journal article button{margin:8px 8px 0 0}.mode-journal dd,.mode-journal li{overflow-wrap:anywhere}.mode-journal dt{font-weight:600}.mode-journal dd{margin:2px 0 8px}
-.market-brief h2{font-size:clamp(24px,3vw,36px);margin:12px 0}.market-brief strong{display:block;font-size:17px;line-height:1.6}.market-brief small{color:#526274}.market-brief details,.mode-advanced>.card{margin-top:18px}.mode-advanced>summary,.market-brief summary{cursor:pointer}.mode-advanced>summary{padding:10px 0}
-.decision-board{display:grid;gap:14px}.decision-board h2{font-size:clamp(21px,2.3vw,29px);margin:4px 0 10px}.decision-board p{line-height:1.65}.decision-bar{height:8px;background:#38725e;display:flex;overflow:hidden;border-radius:4px;margin:12px 0 5px}.decision-bar i:first-child{background:#bf574a}.decision-bar i+i{background:#c7cdd0}.decision-indexes,.decision-picks{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}.decision-indexes span{font-size:13px}.decision-indexes b{margin-left:3px}.decision-pick{border:1px solid #d3dde1;border-radius:8px;padding:14px;min-width:175px;flex:1}.decision-pick h3{margin:0 0 6px;font-size:17px}.decision-pick h3 span,.decision-stock em{color:#a03c32;font-style:normal}.decision-stock{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 8px;border-top:1px solid #dde4e7;margin-top:12px;padding-top:10px}.decision-stock small{grid-column:1/-1}
-.outlook-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:12px 0 16px}.outlook-candidates article{border:1px solid #8594a359;border-radius:8px;padding:14px}.outlook-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}.outlook-row span{font-size:13px;font-weight:600}.outlook-ready{color:#a13d33}.outlook-candidates article p{margin:5px 0}.outlook-candidates article>small,.outlook-schedule{display:block;margin-top:6px}.decision-board .outlook-candidates small,.decision-board .outlook-schedule{color:inherit;opacity:.82}
 
-.market-brief small.opportunity-kind{display:inline-block;margin-inline-start:.45em;padding:.06em .48em;border:1px solid currentColor;border-radius:4px;color:inherit;font-size:12px;font-weight:500;line-height:1.4;vertical-align:middle;white-space:nowrap}
+.opportunity-workspace{padding-top:12px}
+.opportunity-workspace>header{margin-bottom:10px}
+.opportunity-workspace>header h1{font-size:22px;margin:0}
+.opportunity-workspace>header .eyebrow{display:none}
+.mode-journal,.decision-board{display:grid;gap:8px}
+.mode-advanced>summary,.market-brief summary{cursor:pointer}
+.mode-advanced>summary{padding:5px 2px}
+.mode-advanced>.card{margin-top:6px}
+.decision-board .market-brief{padding:10px 14px;min-width:0}
+.brief-heading,.outlook-verdict{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:3px 12px}
+.brief-heading{margin-bottom:5px}
+.brief-heading h2{font-size:17px;line-height:1.45;margin:0}
+.market-brief small,.decision-note{font-size:12px;color:#b3c0d2}
+.market-brief p{margin:4px 0;line-height:1.45}
+.market-brief .opportunity-kind{display:inline-block;vertical-align:1px;border:1px solid #52657c;border-radius:3px;padding:0 4px;font-size:11px;white-space:nowrap}
+.decision-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px}
+.decision-pick{min-width:0;border-top:1px solid #324159;padding:6px 0 0;line-height:1.5}
+.decision-pick>div:first-child{margin-bottom:1px}
+.decision-note{line-height:1.45;margin-top:3px}
+.positive,.outlook-ready{color:#ffada4}
+.outlook-verdict{margin:2px 0 4px}
+.opportunity-quotes{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:8px;font-variant-numeric:tabular-nums;--pane-height:clamp(350px,calc(100vh - 260px),580px);margin-top:7px}
+.direction-pane,.riser-pane{box-sizing:border-box;height:var(--pane-height);padding:8px 10px;border:1px solid #304058;border-radius:7px;background:#101c2c}
+.direction-pane{overflow:auto;scrollbar-gutter:stable}
+.riser-pane{display:flex;flex-direction:column;overflow:auto}
+.opportunity-quotes :focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.outlook-item[aria-pressed=true]{box-shadow:inset 3px 0 #80beff}
+.opportunity-quotes .outlook-item{min-height:32px}
+.riser-heading{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.riser-heading strong{font-size:14px}
+.entry-status,.stock-role{border-radius:4px;font-weight:600;line-height:1.55;white-space:nowrap}
+.entry-status{background:#352c20;color:#f3ce88;padding:1px 7px;font-size:12px}
+.entry-status.is-ready{background:#1d3932;color:#9ee0c5}
+.riser-roles{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #304058;padding:7px 0 5px;gap:7px}
+.riser-roles>div{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.riser-roles b{font-size:14px}
+.riser-pane .role-explanation{font-size:12px;color:#c3d0e0;line-height:1.45;margin:5px 0;min-height:2.9em}
+.stock-role{display:inline-block;padding:0 4px;margin-left:3px;font-size:10px}
+.leader-role{color:#ffbbad;background:#432e30}
+.candidate-role{color:#aed5ff;background:#233c57}
+.stock-identity{display:inline-block}
+.riser-caption{flex:none;padding-top:3px}
+
+.direction-pane,.riser-pane{min-width:0}
+.kind-switch{display:flex;gap:2px;margin:4px 0}
+.kind-switch button{border:0;background:transparent;border-radius:4px;padding:3px 10px;color:#b3c0d2}
+.kind-switch button[aria-pressed=true],.outlook-item[aria-pressed=true]{background:#213f5d;color:#eef6ff}
+.direction-grid{display:grid;width:100%;grid-template-columns:1.1em minmax(85px,1.5fr) .8fr .85fr minmax(4em,1fr) 5.3em;align-items:center;gap:4px;text-align:left;padding:5px 4px;font-size:13px}
+.direction-grid>:nth-child(3),.direction-grid>:nth-child(4){text-align:right;white-space:nowrap}
+.direction-grid>:nth-child(5){padding-left:5px}
+.direction-grid>:last-child{text-align:right}
+.grid-heading{font-size:12px;color:#b3c0d2;background:#1b2b40}
+.outlook-item{background:transparent;border:0;border-bottom:1px solid #324159;border-radius:0;color:inherit}
+.outlook-item:hover{background:#26384c}
+.outlook-evidence{color:#b3c0d2;font-size:12px;margin:4px}
+.riser-scroll{flex:1 1 auto;min-height:54px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-gutter:stable}
+.riser-pane table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;white-space:nowrap}
+.riser-pane td:first-child{white-space:normal;overflow-wrap:anywhere}
+.riser-pane th,.riser-pane td{padding:4px 5px;border-bottom:1px solid #324159;text-align:right}
+.riser-pane th{background:#1b2b40;color:#b3c0d2;font-weight:500;position:sticky;top:0}
+.riser-pane :is(th,td):first-child{text-align:left}
+.riser-pane>small{display:block;margin-top:3px}
+@container opportunity (max-width:780px){.opportunity-quotes{grid-template-columns:minmax(0,1fr)}.direction-pane{height:auto;max-height:var(--pane-height)}}
+@media(max-width:740px){.opportunity-quotes{grid-template-columns:minmax(0,1fr)}.direction-pane{height:auto;max-height:var(--pane-height)}}
+@container opportunity (max-width:500px){.direction-grid{grid-template-columns:1em minmax(60px,1.2fr) 3.8em minmax(54px,1fr) 5.3em}.direction-grid>:nth-child(4){display:none}}
+.decision-board{container:opportunity / inline-size}
+.market-brief .theme-results,.market-brief .screen-coverage{display:inline-block;vertical-align:top;margin:4px 16px 0 0;font-size:12px;color:#b3c0d2}
+.market-brief .theme-results[open],.market-brief .screen-coverage[open]{display:block}
+.theme-results label{max-width:360px;margin-top:5px}
+.market-brief small:last-child:not(:first-child){overflow-wrap:anywhere}

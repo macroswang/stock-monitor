@@ -17,7 +17,7 @@ def view(app, day, batch):
                 stamp = datetime.fromisoformat(issue['published_at'])
                 if stamp.tzinfo is None or stamp > now or stamp.astimezone(CN).date().isoformat() != date:
                     continue
-                codes = {s['code'] for idea in issue['ideas'] for s in idea['stocks']}
+                codes = {s['code'] for idea in issue['ideas'] for s in (*idea['stocks'], *idea.get('core_members', []))}
             except (OSError, ValueError, KeyError, TypeError):
                 continue
             quotes = []

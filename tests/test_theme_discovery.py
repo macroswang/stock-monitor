@@ -44,7 +44,7 @@ class Discover(unittest.TestCase):
         codes=['sh600001','sz300002','sz300003','sz300004']
         members=[dict(code=c,name=c,basis='订单',source='https://example.org/one.pdf') for c in codes]
         theme=dict(code='topic_never_seen',name='新业务',members=members)
-        issue=dict(published_at=now.isoformat(),ideas=[dict(sector_code=theme['code'],stocks=members[:3])],themes=[theme])
+        issue=dict(published_at=now.isoformat(),ideas=[dict(sector_code=theme['code'],stocks=members[:3],core_members=members)],themes=[theme])
         with TemporaryDirectory() as folder,patch.object(daily_outlook,'now_cn',return_value=now):
             root=Path(folder);(root/'daily-outlook').mkdir()
             (root/'daily-outlook/2026-11-06_1030.json').write_text(json.dumps(issue))
@@ -54,6 +54,7 @@ class Discover(unittest.TestCase):
             app.store.getcache.return_value=records
             app.sector_flow.view.return_value={}
             report=daily_outlook.view(app,'2026-11-06','batch')
+            self.assertEqual({q['code'] for q in report['quotes']},set(codes))
             self.assertIn(theme['code'],report['sectors'])
             self.assertEqual(set(flow.view.call_args.args[-1]),set(codes))
 
