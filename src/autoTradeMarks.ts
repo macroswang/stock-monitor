@@ -42,7 +42,7 @@ export function autoTradeDetails(p:AutoTradePoint){
  return [`${p.broker_name} ${p.account_masked} · ${p.source==='broker_cache'?'券商成交':'自动'}${p.side==='buy'?'买入':'卖出'}`,
   `状态：${autoTradeState(p)}`,
   ...(order?[`${p.source==='broker_cache'?'委托价格':submitted?'委托限价':'计划限价'}：${order.toFixed(2)} 元${p.quantity?` · ${p.quantity} 股`:''}`]:p.quantity?[`委托数量：${p.quantity} 股`]:[]),
-  ...(p.signal_time?[`信号确认：${p.signal_time}${p.reference_price?` · ${Number(p.reference_price).toFixed(2)} 元`:''}`]:[]),
+  ...(p.signal_time?[`信号时间：${p.signal_time}${p.reference_price?` · ${Number(p.reference_price).toFixed(2)} 元`:''}`]:[]),
   ...(p.source==='broker_cache'?[`成交时间：${p.ordered_at?.slice(11,19)||'未记录'}`]:submitted?[`提交时间：${p.ordered_at?.slice(11,19)||'未记录'}`]:[]),
   ...(p.order_id?[`委托编号：${p.order_id}`]:[]),
   ...((submitted||p.source==='broker_cache')&&['filled','partial','cancelled'].includes(p.status)&&p.filled!==undefined&&p.filled>0?[`已核实成交：${p.filled} 股 · ${fill?'均价 '+fill.toFixed(2)+' 元':'成交均价未记录'}`]:[]),

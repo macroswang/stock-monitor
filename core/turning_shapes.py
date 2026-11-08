@@ -1,24 +1,47 @@
-"""The chart's labelled confirmed top/bottom shapes, equivalent to shape-v1.
+"""Candidate-time top/bottom signals, equivalent to the chart's shape-v1.
 
 Q1 is an independent display/research filter. It never gates these observations.
 """
-from .turning_q1 import TIMES,raw_signals
+import math
+from .turning_q1 import TIMES
 
+# Preserve account rules and the execution contract; candidate event keys are distinct.
 SIGNAL='shape-v1'
-LABEL='图中已确认的顶／底'
+LABEL='图中候选点顶／底'
 
 
 def signals(bars):
+    by={};duplicates=set()
+    for b in bars:
+        if b['time'] in by:duplicates.add(b['time'])
+        by[b['time']]=b
+    all_bars=[by.get(t) for t in TIMES]
+    def valid(b):
+        if not b or b['time'] in duplicates or b.get('complete') is not True:return False
+        try:
+            return all(math.isfinite(float(b[k])) and float(b[k])>0 for k in ('close','average')) and math.isfinite(float(b['volume'])) and float(b['volume'])>=0
+        except (KeyError,ValueError,TypeError):return False
     result=[];last={};eps=1e-9
-    for m in raw_signals(bars):
-        kind=m['kind'];previous=last.get(kind)
-        if (-m['deviationPct'] if kind=='bottom' else m['deviationPct'])+eps < (.8 if kind=='bottom' else 1.5):continue
+    # The current complete minute emits without waiting for future reversal bars.
+    # Keep the existing window, trading cutoff and spacing; Q1 is unchanged.
+    for i in range(19,236):
+        window=all_bars[i-19:i+1];bar=all_bars[i]
+        if not all(valid(b) for b in window) or float(bar['volume'])<=0:continue
+        p,vwap=float(bar['close']),float(bar['average'])
+        prices=[float(b['close']) for b in window];support,resistance=min(prices),max(prices)
+        deviation=p/vwap-1
+        kind='bottom' if p<=support+eps and -deviation*100+eps>=.8 else 'top' if p>=resistance-eps and deviation*100+eps>=1.5 else None
+        if kind is None:continue
+        before=sum(float(b['volume']) for b in all_bars[i-5:i])/5
+        m=dict(key=f"candidate-shape-v1|{kind}|{bar['time']}",kind=kind,time=bar['time'],price=p,
+               candidateTime=bar['time'],candidatePrice=p,vwap=vwap,deviationPct=deviation*100,
+               support=support,resistance=resistance,movePct=0,volumeRatio=float(bar['volume'])/before if before>0 else None)
+        previous=last.get(kind)
         if previous and TIMES.index(m['time'])-TIMES.index(previous['time'])<30:continue
         if previous and result[-1]['kind']==kind:
             advance=m['candidatePrice']-previous['candidatePrice'] if kind=='top' else previous['candidatePrice']-m['candidatePrice']
             if advance+eps<max(.02,previous['candidatePrice']*.008):continue
-        accepted=dict(m,key=f"confirmed-shape-v1|{kind}|{m['candidateTime']}|{m['time']}")
-        result.append(accepted);last[kind]=accepted
+        result.append(m);last[kind]=m
     return result
 
 

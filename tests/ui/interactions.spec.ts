@@ -242,11 +242,11 @@ test('Q1 is always enabled while shape visibility remains independent and signal
  await expect.poll(async()=>(await marks()).filter((m:any)=>m.qualityKey).map((m:any)=>m.qualityKey)).toEqual(c.expectedQ1.map((m:any)=>m.key));
  await shape.uncheck();expect((await marks()).some((m:any)=>m.observationKey)).toBe(false);expect((await marks()).some((m:any)=>m.qualityKey)).toBe(true);
  await page.reload();await expect(shape).not.toBeChecked();await shape.check();
- await expect.poll(async()=>(await marks()).filter((m:any)=>m.observationKey).map((m:any)=>m.observationKey)).toEqual(c.expectedShapes.map((m:any)=>m.key));
+ await expect.poll(async()=>(await marks()).filter((m:any)=>m.observationKey).map((m:any)=>m.observationKey)).toEqual(turningShapes(c.bars).map(m=>m.key));
  expect((await rpc('snapshot')).events).toEqual(before.events);expect(await rpc('messages')).toEqual(messages);
 });
 
-test('actual missing-side caches show confirmed bottom and top with concise independent Q1 markers',async({page})=>{
+test('actual missing-side caches show candidate bottom and top with concise independent Q1 markers',async({page})=>{
  const {readFileSync}=await import('node:fs');
  const cases=JSON.parse(readFileSync('tests/ui/fixtures/turning-shapes.json','utf8'));
  const before=await rpc('snapshot'),messages=await rpc('messages');
@@ -255,9 +255,9 @@ test('actual missing-side caches show confirmed bottom and top with concise inde
   await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
   const chart=page.getByLabel('分时价格及分钟成交量');
   const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey||m.qualityKey).map((m:any)=>({coord:m.coord,shape:m.observationKey||null,q1:m.qualityKey||null,label:m.label.show,symbol:m.symbol}));});
-  await expect.poll(async()=>{const all=await marks();return all.filter((m:any)=>m.shape).map((m:any)=>m.coord);}).toEqual(c.expectedShapes.map((m:any)=>[m.time,m.price]));
+  await expect.poll(async()=>{const all=await marks();return all.filter((m:any)=>m.shape).map((m:any)=>m.coord);}).toEqual(turningShapes(c.bars).map(m=>[m.time,m.price]));
   const all=await marks();expect(all.filter((m:any)=>m.q1).map((m:any)=>m.coord)).toEqual(c.expectedQ1.map((m:any)=>[m.time,m.price]));
-  expect(all.filter((m:any)=>m.label).length).toBe(c.expectedShapes.length);
+  expect(all.filter((m:any)=>m.label).length).toBe(turningShapes(c.bars).length);
   for(const m of all.filter((m:any)=>m.q1&&!m.shape)){expect(m.symbol).toBe('circle');expect(m.label).toBe(false);}
   expect(new Set(all.map((m:any)=>m.coord[0])).size).toBe(all.length);
   await expect(page.getByRole('checkbox',{name:'显示Q1质量',exact:true})).toHaveCount(0);

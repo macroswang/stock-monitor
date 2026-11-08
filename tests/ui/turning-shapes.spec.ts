@@ -5,14 +5,16 @@ import {turningShapes} from '../../src/turningShapes';
 import {turningQualityQ1} from '../../src/turningQualityQ1';
 import {turningDisplayPoints} from '../../src/turningDisplay';
 const fixtures=JSON.parse(readFileSync('tests/ui/fixtures/turning-shapes.json','utf8'));
+const candidates=JSON.parse(readFileSync('tests/ui/fixtures/turning-candidates.json','utf8'));
 const times=[...Array.from({length:120},(_,i)=>571+i),...Array.from({length:120},(_,i)=>781+i)]
  .map(m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
 const geometry=(marks:{kind:string;time:string;price:number;candidateTime:string;candidatePrice:number}[])=>marks.map(m=>[m.kind,m.time,m.price,m.candidateTime,m.candidatePrice]);
 
-test('confirmed shapes recover actual missing sides while frozen Q1 outputs stay exact',()=>{
+test('candidate-time shapes match the fixtures while frozen Q1 outputs stay exact',()=>{
  for(const c of fixtures){
   const shapes=turningShapes(c.bars),quality=turningQualityQ1(c.bars);
-  expect(shapes).toEqual(c.expectedShapes);expect(quality).toEqual(c.expectedQ1);
+  expect(shapes.map(m=>[m.kind,m.time,m.price])).toEqual(candidates[c.code]);expect(quality).toEqual(c.expectedQ1);
+  for(const m of shapes){expect(m.time).toBe(m.candidateTime);expect(m.price).toBe(m.candidatePrice);expect(m.key).toBe(`candidate-shape-v1|${m.kind}|${m.time}`);}
   expect(new Set(shapes.map(m=>m.kind))).toEqual(new Set(['bottom','top']));
  }
  const shanzi=fixtures.find((c:any)=>c.code==='sz000981');
@@ -62,11 +64,34 @@ test('shape confirmations stay fixed under prefixes and arbitrary future changes
  }
 });
 
-test('unfinished, missing and duplicate context cannot create a confirmed shape',()=>{
- const c=fixtures[0],bars=c.bars as Bar[],mark=c.expectedShapes[0];
+test('unfinished, missing and duplicate context cannot create a candidate signal',()=>{
+ const c=fixtures[0],bars=c.bars as Bar[],mark=turningShapes(bars)[0];
  for(const changed of [bars.map(b=>b.time===mark.time?{...b,complete:false}:b),bars.filter(b=>b.time!==mark.time),[...bars,bars.find(b=>b.time===mark.time)!]])
   expect(turningShapes(changed).some(m=>m.time===mark.time)).toBe(false);
  expect(turningShapes([])).toEqual([]);
+});
+
+test('bottom and top emit on the candidate even when the following price extends the move',()=>{
+ for(const kind of ['bottom','top']){
+  const p=kind==='bottom'?29.69:30.50;
+  const bars=times.filter(time=>time<='13:16').map(time=>({time,close:String(time==='13:16'?p:30),average:'29.95',volume:100000,complete:true}));
+  const first=turningShapes(bars);
+  expect(first).toHaveLength(1);expect(first[0]).toMatchObject({kind,time:'13:16',price:p,candidateTime:'13:16',candidatePrice:p});
+  const later=[...bars,{...bars.at(-1)!,time:'13:17',close:String(kind==='bottom'?29.60:30.60)},{...bars.at(-1)!,time:'13:18',close:String(kind==='bottom'?29.82:30.40)}];
+  expect(turningShapes(later)).toEqual(first);
+ }
+});
+
+test('zero volume before the candidate is valid while invalid or missing bars still block it',()=>{
+ for(const kind of ['bottom','top']){
+  const p=kind==='bottom'?29.69:30.50;
+  const bars=times.filter(time=>time<='13:16').map(time=>({time,close:String(time==='13:16'?p:30),average:'29.95',volume:time==='13:15'?0:100000,complete:true}));
+  expect(turningShapes(bars).map(m=>[m.kind,m.time,m.price])).toEqual([[kind,'13:16',p]]);
+  for(const volume of [-1,NaN,Infinity])expect(turningShapes(bars.map(b=>b.time==='13:15'?{...b,volume}:b))).toEqual([]);
+  expect(turningShapes(bars.filter(b=>b.time!=='13:15'))).toEqual([]);
+  expect(turningShapes(bars.map(b=>b.time==='13:15'?{...b,complete:false}:b))).toEqual([]);
+  expect(turningShapes(bars.map(b=>b.time==='13:16'?{...b,volume:0}:b))).toEqual([]);
+ }
 });
 
 test('display merges exact overlap once and preserves every original Q1 point',()=>{

@@ -10,18 +10,18 @@ from core.store import Store
 from core.provider import CN
 
 CASES=json.loads((Path(__file__).parent/'ui/fixtures/turning-shapes.json').read_text())
+CANDIDATES=json.loads((Path(__file__).parent/'ui/fixtures/turning-candidates.json').read_text())
 
 class ShapeParityTests(unittest.TestCase):
  def test_exact_labelled_chart_engine_parity_including_q1_rejected_bottoms(self):
   for c in CASES:
    with self.subTest(code=c['code']):
-    got=signals(c['bars']);expected=c['expectedShapes']
-    self.assertEqual([r['key'] for r in got],[r['key'] for r in expected])
-    for actual,reference in zip(got,expected):
-     self.assertEqual(actual.keys(),reference.keys())
-     for key,value in reference.items():
-      if isinstance(value,(float,int)):self.assertAlmostEqual(actual[key],value,places=9)
-      else:self.assertEqual(actual[key],value)
+    got=signals(c['bars'])
+    self.assertEqual([[m['kind'],m['time'],m['price']] for m in got],CANDIDATES[c['code']])
+    for m in got:
+     self.assertEqual((m['time'],m['price']),(m['candidateTime'],m['candidatePrice']))
+     self.assertEqual(m['key'],f"candidate-shape-v1|{m['kind']}|{m['time']}")
+    self.assertEqual(q1_signals(c['bars']),c['expectedQ1'])
   c=next(c for c in CASES if c['code']=='sz000981')
   self.assertTrue(any(m['kind']=='bottom' for m in signals(c['bars'])))
   self.assertFalse(any(m['kind']=='bottom' for m in q1_signals(c['bars'])))
@@ -41,9 +41,29 @@ class ShapeParityTests(unittest.TestCase):
     self.assertEqual([m for m in signals(changed) if m['time']<=end],expected)
  def test_incomplete_duplicate_or_missing_confirmation_bars_do_not_trigger(self):
   for c in CASES:
-   mark=c['expectedShapes'][0];index=next(i for i,b in enumerate(c['bars']) if b['time']==mark['time'])
+   mark=signals(c['bars'])[0];index=next(i for i,b in enumerate(c['bars']) if b['time']==mark['time'])
    for changed in [[dict(b,complete=False) if i==index else b for i,b in enumerate(c['bars'])],c['bars'][:index]+c['bars'][index+1:],c['bars']+[c['bars'][index]]]:
     self.assertNotIn(mark['key'],[m['key'] for m in signals(changed)])
+
+ def test_candidate_is_immediate_and_does_not_move_or_repeat_after_future_bars(self):
+  from core.turning_q1 import TIMES
+  for kind,p,later in [('bottom',29.69,29.60),('top',30.50,30.60)]:
+   bars=[dict(time=t,close=str(p if t=='13:16' else 30),average='29.95',volume=100000,complete=True) for t in TIMES if t<='13:16']
+   first=signals(bars)
+   self.assertEqual([(m['kind'],m['time'],m['price']) for m in first],[(kind,'13:16',p)])
+   self.assertEqual(signals(bars+[dict(bars[-1],time='13:17',close=str(later)),dict(bars[-1],time='13:18',close=str(p))]),first)
+
+ def test_zero_volume_previous_minute_does_not_block_candidate_but_invalid_data_does(self):
+  from core.turning_q1 import TIMES
+  for kind,p in [('bottom',29.69),('top',30.50)]:
+   bars=[dict(time=t,close=str(p if t=='13:16' else 30),average='29.95',volume=0 if t=='13:15' else 100000,complete=True) for t in TIMES if t<='13:16']
+   with self.subTest(kind=kind):
+    self.assertEqual([(m['kind'],m['time'],m['price']) for m in signals(bars)],[(kind,'13:16',p)])
+    for volume in [-1,float('nan'),float('inf')]:
+     self.assertEqual(signals([dict(b,volume=volume) if b['time']=='13:15' else b for b in bars]),[])
+    self.assertEqual(signals([b for b in bars if b['time']!='13:15']),[])
+    self.assertEqual(signals([dict(b,complete=False) if b['time']=='13:15' else b for b in bars]),[])
+    self.assertEqual(signals([dict(b,volume=0) if b['time']=='13:16' else b for b in bars]),[])
 
 class SignalMigrationTests(unittest.TestCase):
  def setUp(self):
@@ -71,10 +91,10 @@ class SignalMigrationTests(unittest.TestCase):
 
 class LabelledBottomDispatchTests(unittest.TestCase):
  def test_live_labelled_bottom_omitted_by_q1_generates_one_account_scoped_plan(self):
-  c=next(c for c in CASES if c['code']=='sz000981');mark=c['expectedShapes'][0]
-  self.assertEqual((mark['kind'],mark['time']),('bottom','10:00'))
+  c=next(c for c in CASES if c['code']=='sz000981');mark=signals(c['bars'])[0]
+  self.assertEqual((mark['kind'],mark['time']),('bottom','09:58'))
   self.assertNotIn(mark['key'],[m['key'] for m in q1_signals(c['bars'])])
-  now=datetime.fromisoformat('2026-11-02T10:00:05+08:00')
+  now=datetime.fromisoformat('2026-11-02T09:58:05+08:00')
   with tempfile.TemporaryDirectory() as directory:
    store=Store(Path(directory)/'test.sqlite3')
    try:
@@ -99,3 +119,42 @@ class LabelledBottomDispatchTests(unittest.TestCase):
      self.assertEqual(payload['signal']['key'],mark['key']);self.assertEqual(payload['signal_source'],SIGNAL)
      submit.assert_not_called()
    finally:store.db.close()
+
+class CandidateLiveDispatchTests(unittest.TestCase):
+ def test_candidate_buy_and_sell_reach_the_existing_gateway_once_before_confirmation(self):
+  c=next(c for c in CASES if c['code']=='sz000981')
+  for kind,side,zero_previous in [('bottom','buy',False),('top','sell',False),('bottom','buy',True),('top','sell',True)]:
+   with self.subTest(kind=kind,zero_previous=zero_previous),tempfile.TemporaryDirectory() as directory:
+    mark=next(m for m in signals(c['bars']) if m['kind']==kind)
+    now=datetime.fromisoformat('2026-11-02T'+mark['time']+':05+08:00')
+    store=Store(Path(directory)/'test.sqlite3')
+    try:
+     with patch('core.live_trading.now_cn',return_value=now) as clock:
+      app=SimpleNamespace(store=store,quotes={});service=LiveTrading(app)
+      store.execute("INSERT INTO broker_accounts(id,broker,account) VALUES('a','zhangle','123456789')")
+      snapshot=dict(account_id='a',account_verified=True,observed_at=now.isoformat(),complete=True,funds=dict(available='10000'),positions=[dict(code=c['code'],name='山子高科',quantity=1000,sellable=1000,price=mark['price'])])
+      service.apply_snapshot('a',snapshot);rule=service.rule('a',c['code'])
+      service.save_rule('a',c['code'],{side+'_enabled':True,side+'_lots':2},rule['revision'])
+      store.setconfig('trading_mode','live');store.setconfig('trading_paused',False);store.setconfig('monitor',True)
+      earlier=(now-timedelta(minutes=5)).isoformat();service.started_at=earlier
+      store.execute('UPDATE trading_rules SET armed_at=?',(earlier,))
+      quote=dict(code=c['code'],price=mark['price'],timestamp=now.isoformat());app.quotes[c['code']]=quote
+      index=next(i for i,b in enumerate(c['bars']) if b['time']==mark['time'])
+      bars=[dict(b,volume=0) if zero_previous and i==index-1 else b for i,b in enumerate(c['bars'])]
+      service.ingest(c['code'],bars[:index],quote,now-timedelta(minutes=1),False)
+      service.ingest(c['code'],bars[:index+1],quote,now,True)
+      service.ingest(c['code'],bars[:index+1],quote,now,True)
+      def submit(*args,**kwargs):
+       kwargs['authorize']()
+       return dict(status='accepted',submitted=True,order_id='test-'+side)
+      with patch('core.live_trading.brokers.holdings',return_value=snapshot),patch('core.live_trading.brokers.submit_order',side_effect=submit) as gateway:
+       service.drain(reports=False);gateway.assert_called_once()
+       self.assertEqual(gateway.call_args.args[1:6],('a',side,'000981',200,str(mark['price'])))
+       run=store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
+       self.assertEqual(run['status'],'accepted');self.assertEqual(payload['signal']['time'],payload['signal']['candidateTime'])
+       self.assertEqual(payload['reference_price'],mark['candidatePrice'])
+       later=now+timedelta(minutes=2);clock.return_value=later
+       quote.update(timestamp=later.isoformat());service.ingest(c['code'],bars[:index+3],quote,later,True)
+       service.drain(reports=False);gateway.assert_called_once()
+       self.assertEqual(len(store.query('SELECT * FROM trading_runs')),1)
+    finally:store.db.close()

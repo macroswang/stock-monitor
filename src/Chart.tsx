@@ -248,7 +248,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   };
   const observationMarks=observations.map(m=>{
    const color=m.kind==='bottom'?'#ff5b78':'#00bf83',layout=signalLayout(m.price,m.kind==='bottom'?1:-1);
-   return {coord:[m.time,m.price],turningKind:m.kind==='bottom'?'底':'顶',value:m.shape?(m.kind==='bottom'?'底形态':'顶形态'):(m.kind==='bottom'?'Q1底信号':'Q1顶信号'),
+   return {coord:[m.time,m.price],turningKind:m.kind==='bottom'?'底':'顶',value:m.shape?(m.kind==='bottom'?'底信号':'顶信号'):(m.kind==='bottom'?'Q1底信号':'Q1顶信号'),
     observationKey:m.shape?.key,qualityKey:m.q1?.key,connectorDirection:layout.direction,connectorDistance:layout.distance,symbol:'circle',symbolSize:chosen?.kind===(m.kind==='bottom'?'底':'顶')&&chosen.time===m.time?6:3,
     itemStyle:{color,borderColor:'#fff',borderWidth:chosen?.kind===(m.kind==='bottom'?'底':'顶')&&chosen.time===m.time?2:m.q1?1:0},
     label:{show:!!m.shape||!showShapes,position:layout.position,distance:layout.distance,formatter:m.kind==='bottom'?'底':'顶',
@@ -295,9 +295,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
      }
      for(const point of observations.filter(m=>m.time===aligned[idx]?.time)){
       const observation=(point.shape||point.q1)!;
-      rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'形态':''}：${price(point.price)} 元`,
+      rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'信号':''}：${price(point.price)} 元`,
        `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
-       `确认时间：${point.time} · ${price(point.price)} 元`);
+       `${point.shape?'发出时间':'确认时间'}：${point.time} · ${price(point.price)} 元`);
      }
      for(const t of tradesByTime.get(labels[idx])||[])rows.push(`模拟成交 ${t.value}：${t.buyShares?`买入${t.buyShares}股 · 均价${price(t.buyAmount/t.buyShares/100)}元`:''}${t.buyShares&&t.sellShares?'；':''}${t.sellShares?`卖出${t.sellShares}股 · 均价${price(t.sellAmount/t.sellShares/100)}元`:''}${t.value==='T'?'（当日有买有卖）':''}`);
      if(!isDay)for(const t of tradePoints.filter(t=>t.time===labels[idx]&&t.orderCount&&(t.fills>t.orderCount||t.orderCount>1))){
@@ -308,7 +308,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       const row=document.createElement('div');
       const split=text.indexOf('：');
       if(split>=0){const label=document.createElement('span');label.textContent=text.slice(0,split+1);const value=document.createElement('span');value.textContent=text.slice(split+1).trim();row.append(label,value);row.className='quote-detail';if(text.startsWith('涨停：'))value.style.color='#ed7d81';if(text.startsWith('跌停：'))value.style.color='#51c7aa';if(text.startsWith('涨跌幅：'))value.style.color=text.includes('：-')?'#51c7aa':text.includes('：+')?'#ed7d81':'#e7edf7';}else row.textContent=text;
-      if(split<0||/^(基准|候选|确认|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发)：/.test(text)))row.classList.add('quote-wide');
+      if(split<0||/^(基准|候选|确认|发出|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发)：/.test(text)))row.classList.add('quote-wide');
       if(/^相对(触发|底|顶|位置)涨跌幅/.test(text)){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
      }
      if(comparison.childElementCount)root.append(comparison);
