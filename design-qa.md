@@ -18,6 +18,48 @@ final result: passed
 
 ---
 
+# Design QA — 分时行情浮窗单行紧凑布局
+
+- Source visual truth: `/var/folders/92/0tpdpsx10wz21wp30mfx6w7c0000gn/T/codex-clipboard-289fcda0-c5e2-439e-a18c-74e33ff9f63c.png`
+- Implementation screenshot: `http://127.0.0.1:1420/`，ChatGPT in-app Browser 中的宏昌电子分时悬停截图
+- Browser viewport: `1380 × 900` 与 `1000 × 900` CSS px，device scale factor `1`
+- Implementation measurement: 普通做T浮窗外框宽约 `246px`（1380px 窗口）和 `235px`（1000px 窗口），此前分别为 370px 和 350px；字号不变。
+- State: 深色主题、宏昌电子、分时页、行情浮窗；另临时复制实际浮窗并加入长量柱说明、涨跌停和约值买卖盘字段做布局核验，核验后已移除。临时数值仅用于布局测试。
+
+## Findings
+
+没有待处理的 P0、P1 或 P2 问题。
+
+- Fonts and typography: 沿用应用现有 9–10px 辅助字号与数字等宽特征。所有行情行的实际高度等于行高，`white-space` 为 `nowrap`，没有标签或数值换行。
+- Spacing and layout rhythm: 移除固定宽度，采用内容固有宽度；普通字段双列、列距 12px，标签和值相距 4px；基准、做T方向和价格路径紧邻排列，不再拉开至浮窗两端。长字段仅在出现时按内容撑开浮窗。
+- Colors and visual tokens: 深蓝背景、弱化标签、红涨绿跌及边框颜色全部沿用现有 token，没有新增不一致的颜色或阴影。
+- Image quality and assets: 浮窗没有图片、图标或品牌资产；图表画布清晰度和全天时间范围未改变。
+- Copy and content: 价格、涨跌幅、均价、分钟量、涨跌停、量柱说明和买卖盘文字及数值格式保持原样，仅调整布局。
+
+## Comparison history
+
+1. 参考图问题：固定宽度和两端对齐使标签与数值之间出现大量空白，普通行情也为最长内容预留宽度。
+2. 最终修正：使用 `max-content` 宽度和内容列，标签和值左对齐并紧邻排列；保留原有双列、字段、字号和做T结果层级。
+3. Post-fix evidence: 1380px 和 1000px 窗口中，普通做T浮窗宽度分别约 246px 和 235px，所有文本 span 均为单行；基础行情、基准、方向和价格路径均无溢出。
+4. 长字段核验：含两种量柱说明、涨跌停、约值买卖盘的临时组合在两种窗口宽度下均保持单行，无横向溢出。仅在内容确实变长时自适应扩宽。
+5. 前端类型检查及生产构建通过；日K/分时切换正常。
+
+## Implementation checklist
+
+- [x] 所有基础行情字段保持单行
+- [x] 量柱超限说明独占整行
+- [x] 买盘量与卖盘量保持左右双列
+- [x] 宽屏与 1000px 桌面断点均紧凑且无溢出
+- [x] 未修改行情数据、信号、模拟交易或自动下单逻辑
+
+## Follow-up polish
+
+没有阻塞性后续项。
+
+final result: passed
+
+---
+
 # Design QA — 分时页顶部与价格主图空间分配
 
 - Source visual truth: `/var/folders/92/0tpdpsx10wz21wp30mfx6w7c0000gn/T/codex-clipboard-d9314550-6337-4919-be86-0b33263015bb.png`

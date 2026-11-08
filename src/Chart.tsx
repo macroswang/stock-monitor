@@ -308,7 +308,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       const row=document.createElement('div');
       const split=text.indexOf('：');
       if(split>=0){const label=document.createElement('span');label.textContent=text.slice(0,split+1);const value=document.createElement('span');value.textContent=text.slice(split+1).trim();row.append(label,value);row.className='quote-detail';if(text.startsWith('涨停：'))value.style.color='#ed7d81';if(text.startsWith('跌停：'))value.style.color='#51c7aa';if(text.startsWith('涨跌幅：'))value.style.color=text.includes('：-')?'#51c7aa':text.includes('：+')?'#ed7d81':'#e7edf7';}else row.textContent=text;
-      if(split<0||/^(基准|候选|确认|模拟成交|委托累计|买卖量为约值)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发)：/.test(text)))row.classList.add('quote-wide');
+      if(split<0||/^(基准|候选|确认|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发)：/.test(text)))row.classList.add('quote-wide');
       if(/^相对(触发|底|顶|位置)涨跌幅/.test(text)){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
      }
      if(comparison.childElementCount)root.append(comparison);

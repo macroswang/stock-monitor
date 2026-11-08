@@ -213,7 +213,8 @@ test('index volume retains truthful hover without permanent overflow notes or pe
  expect(result.marks).toEqual([]);
  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+result.point[0],box.y+result.point[1]);
  await expect(page.locator('[data-volume-grid="3"]')).not.toContainText('超出刻度');await expect(page.locator('[data-volume-grid="3"] .volume-value')).toHaveText('500.00 万手');
- await expect(page.locator('.minute-tooltip').filter({hasText:'指数量柱超出刻度'})).toContainText(/实际\s*500.00\s*万手.*显示上限\s*20.00\s*万手/);
+ const overflow=page.locator('.minute-tooltip .quote-wide').filter({hasText:'指数量柱超出刻度'});await expect(overflow).toContainText(/实际\s*500.00\s*万手.*显示上限\s*20.00\s*万手/);
+ expect(await overflow.evaluate(el=>el.getBoundingClientRect().height<=parseFloat(getComputedStyle(el).lineHeight)+2)).toBe(true);
  await page.mouse.move(5,5);await page.locator('.chart-shell').first().screenshot({path:info.outputPath('stock-index-volume-emphasis.png')});
  bars[1].volume_lots=100000;await page.reload();await expect(page.locator('.volume-scale-note')).toHaveCount(0);expect((await read()).marks).toEqual([]);
 });

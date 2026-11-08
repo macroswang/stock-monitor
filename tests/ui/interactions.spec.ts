@@ -407,8 +407,10 @@ test('intraday tooltip switches sides to keep the crosshair visible without movi
   await hover(.35);const first=(await tooltip.locator('..').boundingBox())!,detail=(await page.locator('.detail').boundingBox())!;
   expect(first.y).toBeGreaterThanOrEqual(detail.y);expect(first.y+first.height).toBeLessThanOrEqual(box.y+30);
   expect(Math.abs(first.x+first.width-(detail.x+detail.width-13))).toBeLessThan(3);
-  expect(first.width).toBeLessThanOrEqual(325);expect(first.height).toBeLessThan(240);
+  expect(first.width).toBeLessThanOrEqual(310);expect(first.height).toBeLessThan(240);
   expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(10);
+  expect(await tooltip.evaluate(el=>getComputedStyle(el).whiteSpace)).toBe('nowrap');
+  expect(await tooltip.locator('.quote-detail').evaluateAll(rows=>rows.every(row=>row.getBoundingClientRect().height<=parseFloat(getComputedStyle(row).lineHeight)+2))).toBe(true);
   expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
   let covered=0;
