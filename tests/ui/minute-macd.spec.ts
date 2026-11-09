@@ -178,7 +178,7 @@ test('compact minute header gives its saved height only to the price pane',async
 });
 
 
-test('moderate volume pane heights preserve full-day values without persistent overflow text',async({page},info)=>{
+test('stock volume fits the complete peak without changing pane heights, bar spacing or full-day values',async({page},info)=>{
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
  await page.setViewportSize({width:1380,height:900});await setup(page);
  const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
@@ -191,14 +191,15 @@ test('moderate volume pane heights preserve full-day values without persistent o
  expect(r.times).toEqual(minuteSlots);expect(r.zoom.every(z=>z.start===0&&z.end===100)).toBe(true);
  expect(r.width).toBeCloseTo(r.band*.85,5);expect(r.width).toBeLessThan(r.band);expect(r.width).toBeLessThanOrEqual(9);
  const baseline=r.height,auxiliaryHeight=Math.max(350,baseline-30),auxiliary=Math.min(320,118+Math.max(0,auxiliaryHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3);
- expect(r.grids[1]).toBe(volume);expect(r.grids[1]).toBeGreaterThan(Math.round(auxiliary*.2));expect(r.grids[1]).toBeLessThanOrEqual(80);expect(r.max).toBe(20000);expect(r.scale).toEqual([0,20000]);
+ const peak=Math.max(...r.times.map((_:string,i:number)=>r.values.reduce((total:number,row:any[])=>total+Number(row[i]),0)));
+ expect(r.grids[1]).toBe(volume);expect(r.grids[1]).toBeGreaterThan(Math.round(auxiliary*.2));expect(r.grids[1]).toBeLessThanOrEqual(80);expect(r.max).toBeGreaterThanOrEqual(peak*1.1);expect(r.scale).toEqual([0,r.max]);
  expect(r.marks).toEqual([]);await expect(page.locator('.volume-panel-header').filter({hasText:'超出刻度'})).toHaveCount(0);await expect(page.locator('.volume-scale-note')).toHaveCount(0);
  expect(r.grids[3]).toBe(volume);expect(r.grids[2]).toBe(macd);expect(r.grids[4]).toBe(macd);expect(r.grids[0]).toBe(baseline-22-4*22-2*volume-2*macd-32);
  for(const b of fixture.minutes.sh603002.find((r:any)=>r.day==='2026-10-16').data.bars){const i=at(b.time);if(i<=0)continue;const sum=r.values.reduce((total:number,row:any[])=>total+Number(row[i]),0);expect(sum).toBeCloseTo(Number(b.volume)/100,6);}
  await page.mouse.move(5,5);await page.locator('.chart-shell').first().screenshot({path:info.outputPath('volume-default-full-day.png')});
 });
 
-test('index volume retains truthful hover without permanent overflow notes or per-bar arrows',async({page},info)=>{
+test('index volume fits the full peak and retains truthful hover without overflow notes or arrows',async({page},info)=>{
  await page.addInitScript(()=>{localStorage.setItem('stock-monitor-overview-collapsed','true');localStorage.setItem('stock-monitor-sidebar-collapsed','true');});
  await page.setViewportSize({width:1380,height:900});await setup(page);
  const bars=minuteSlots.map((time,i)=>({time,close:String(3600+i/100),volume_lots:i===1?5000000:100000}));
@@ -206,15 +207,15 @@ test('index volume retains truthful hover without permanent overflow notes or pe
  await page.reload();const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
  const read=()=>chart.evaluate(async el=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el),o=c.getOption(),model=c.getModel(),axis=model.getComponent('yAxis',o.yAxis.findIndex((a:any)=>a.gridIndex===3)),series=o.series.find((s:any)=>s.name==='指数成交量');
-  return {scale:axis.axis.scale.getExtent(),height:model.getComponent('grid',3).coordinateSystem.getRect().height,point:c.convertToPixel({xAxisIndex:3,yAxisIndex:axis.componentIndex},['09:31',10]),ordinaryPixels:Math.abs(c.convertToPixel({yAxisIndex:axis.componentIndex},10)-c.convertToPixel({yAxisIndex:axis.componentIndex},0)),data:series.data,marks:series.markPoint?.data||[]};
+  return {scale:axis.axis.scale.getExtent(),height:model.getComponent('grid',3).coordinateSystem.getRect().height,point:c.convertToPixel({xAxisIndex:3,yAxisIndex:axis.componentIndex},['09:31',500]),ordinaryPixels:Math.abs(c.convertToPixel({yAxisIndex:axis.componentIndex},10)-c.convertToPixel({yAxisIndex:axis.componentIndex},0)),data:series.data,marks:series.markPoint?.data||[]};
  });
- await expect.poll(async()=> (await read()).scale[1]).toBe(20);const result=await read();
- expect(result.ordinaryPixels).toBeCloseTo(result.height/2,5);expect(result.data[at('09:31')]).toBe(500);expect(result.data[at('10:30')]).toBe(10);
+ await expect.poll(async()=> (await read()).scale[1]).toBe(600);const result=await read();
+ expect(result.ordinaryPixels).toBeCloseTo(result.height*10/600,5);expect(result.data[at('09:31')]).toBe(500);expect(result.data[at('10:30')]).toBe(10);
  expect(result.marks).toEqual([]);
  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+result.point[0],box.y+result.point[1]);
  await expect(page.locator('[data-volume-grid="3"]')).not.toContainText('超出刻度');await expect(page.locator('[data-volume-grid="3"] .volume-value')).toHaveText('500.00 万手');
- const overflow=page.locator('.minute-tooltip .quote-wide').filter({hasText:'指数量柱超出刻度'});await expect(overflow).toContainText(/实际\s*500.00\s*万手.*显示上限\s*20.00\s*万手/);
- expect(await overflow.evaluate(el=>el.getBoundingClientRect().height<=parseFloat(getComputedStyle(el).lineHeight)+2)).toBe(true);
+ await expect(page.locator('.minute-tooltip')).toContainText('09:31');
+ await expect(page.locator('.minute-tooltip')).not.toContainText('超出刻度');
  await page.mouse.move(5,5);await page.locator('.chart-shell').first().screenshot({path:info.outputPath('stock-index-volume-emphasis.png')});
  bars[1].volume_lots=100000;await page.reload();await expect(page.locator('.volume-scale-note')).toHaveCount(0);expect((await read()).marks).toEqual([]);
 });
