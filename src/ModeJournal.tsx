@@ -1,6 +1,6 @@
 import {useEffect, useState, type FormEvent} from 'react';
 import './modeJournal.css';
-import OpportunityBoard from './OpportunityBoard';
+import MarketOpportunity from './MarketOpportunity';
 import type {BreadthDay} from './MarketBreadth';
 import {breadthView} from './marketOverview';
 import {requestWithTimeout} from './requestTimeout';
@@ -103,7 +103,7 @@ export default function ModeJournal({onBreadth,onPaper,watch,request,preview,act
   }
   const plans=rows.filter(e=>e.plan).sort((a,b)=>b.at.localeCompare(a.at));
   return <div className="mode-journal">
-    {active&&<OpportunityBoard request={request} preview={preview}/>}
+    {active&&<MarketOpportunity request={request} preview={preview}/>}
     <details className="mode-advanced"><summary>详细交易计划{plans.length?'（已保存 '+plans.length+' 条）':''}</summary>
     <section className="card"><h2>BAOBAOLI 模式计划</h2>
       <p>先看强势股延续和板块亏钱效应，再选一种手法。记录当时的依据，收盘核对执行。此处操作只写入本机研究日志。</p>

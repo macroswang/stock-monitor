@@ -1,0 +1,270 @@
+/* 市场机会 v2：定调 · 四张观测卡 · 方向研判 · 行动计划 · 数据覆盖 */
+.market-opportunity{display:grid;gap:8px;min-width:0;font-variant-numeric:tabular-nums}
+.mode-journal .market-opportunity .card{padding:12px 14px}
+.market-opportunity .card{min-width:0}
+.market-opportunity h2{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;font-size:16px;line-height:1.4;margin:0}
+.market-opportunity h3{font-size:13px;margin:10px 0 4px;color:#c6d6e8;font-weight:600}
+.market-opportunity .mo-sub{font-size:11px;font-weight:400;color:#8fa6c4;line-height:1.45}
+.market-opportunity .mo-wait{margin:0;color:#8fa6c4;font-size:12px;line-height:1.5}
+.market-opportunity a{color:#9dc4fc;text-decoration:none}
+.market-opportunity a:hover{text-decoration:underline}
+.market-opportunity .positive{color:#ffada4}
+.market-opportunity .negative{color:#51c7aa}
+.market-opportunity .mo-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.market-opportunity ul.mo-list{margin:0;padding-left:17px;color:#b8c9de;font-size:12px;line-height:1.55}
+.market-opportunity ul.mo-list li{margin:1px 0;overflow-wrap:anywhere}
+.market-opportunity .mo-scroll{max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden}
+.market-opportunity table{font-size:12px}
+.market-opportunity th,.market-opportunity td{padding:5px 7px;border-bottom:1px solid #27364b;vertical-align:top}
+.market-opportunity th{background:#142338;color:#8298b5;font-weight:400;white-space:nowrap}
+.market-opportunity .mo-table td{white-space:nowrap}
+.market-opportunity .mo-table td:last-child{white-space:normal}
+
+/* 定调条 */
+.mo-verdict{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
+.mo-verdict-main{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;min-width:0}
+.mo-verdict h2{font-size:19px;color:#eaf2fd}
+.mo-position{font-size:13px;color:#f1cf90;line-height:1.5}
+.mo-meta{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:11px;color:#8fa6c4;margin-left:auto;min-width:0;line-height:1.5}
+.mo-meta b{color:#dfe9f7;font-weight:600}
+.mo-summary-count{color:#a9c3e6}
+.mo-badge,.mo-chip{display:inline-block;border:1px solid #52657c;border-radius:3px;background:#1c2c43;color:#a9c3e6;padding:0 4px;font-size:11px;font-weight:500;line-height:1.55;white-space:nowrap}
+.mo-badge{font-size:12px;border-radius:5px;padding:1px 8px}
+.mo-bias.attack{border-color:#7a4044;background:#352229;color:#ffb3a8}
+.mo-bias.probe{border-color:#745d39;background:#352c20;color:#f3ce88}
+.mo-bias.defend{border-color:#2f6053;background:#1d3932;color:#9ee0c5}
+.mo-preview{border-color:#745d39;background:#352c20;color:#f3ce88}
+.mo-active{border-color:#4b6d4a;background:#1d3932;color:#9ee0c5}
+.mo-temp{border-color:#745d39;background:#352c20;color:#f3ce88}
+.mo-state{display:inline-block;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:600;line-height:1.6;white-space:nowrap}
+.mo-state.ready{background:#1d3932;color:#9ee0c5}
+.mo-state.wait{background:#352c20;color:#f3ce88}
+.mo-state.weak{background:#432e30;color:#ffbbad}
+.mo-state.unknown{background:#2b3b52;color:#a9c3e6}
+.mo-state.watch{background:#2c3345;color:#b9c9dd}
+.mo-state.avoid{background:#3b2730;color:#f0a6b8}
+.mo-static{margin-left:4px;font-size:10px;color:#8fa6c4;border:1px solid #3a4d68;border-radius:3px;padding:0 3px;white-space:nowrap}
+
+/* 四张观测卡 */
+.mo-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.mo-card{display:flex;flex-direction:column;gap:5px}
+.mo-block{min-width:0}
+.mo-indexes{display:grid;gap:4px;min-width:0}
+.mo-index{min-width:0;border-top:1px solid #324159;padding-top:4px}
+.mo-index:first-child{border-top:0;padding-top:0}
+.mo-index-line{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;font-size:13px;min-width:0}
+.mo-index-line b{color:#e1e9f5}
+.mo-index-meta{display:flex;flex-wrap:wrap;gap:1px 10px;font-size:11px;color:#8fa6c4;line-height:1.45;overflow-wrap:anywhere}
+.mo-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px;min-width:0}
+.mo-stat{min-width:0}
+.mo-stat>span{display:block;font-size:11px;color:#8fa6c4;line-height:1.4}
+.mo-stat>b{display:block;font-size:13px;color:#e1e9f5;font-weight:600;margin-top:1px;line-height:1.4;overflow-wrap:anywhere}
+.mo-flow{min-width:0}
+.mo-flow-head{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;font-size:12px;color:#cfdcec}
+.mo-flow-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 12px;margin-top:2px;min-width:0}
+.mo-flow-cols>div{min-width:0}
+.mo-flow-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:baseline;font-size:12px;line-height:1.65;min-width:0}
+.mo-flow-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cfdcec}
+.mo-flow-row .mo-num{text-align:right}
+.mo-chips{display:flex;flex-wrap:wrap;gap:4px}
+.mo-reasons{display:grid;gap:2px;font-size:12px}
+.mo-reason{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;min-width:0;border-top:1px solid #22344b;padding-top:2px}
+.mo-reason:first-child{border-top:0;padding-top:0}
+.mo-reason b{color:#e1e9f5;font-weight:600}
+.mo-news{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:12px}
+.mo-news li{display:flex;flex-direction:column;gap:1px;min-width:0;border-top:1px solid #22344b;padding-top:3px}
+.mo-news li:first-child{border-top:0;padding-top:0}
+.mo-news a{color:#bcd8fb;line-height:1.45;overflow-wrap:anywhere}
+.mo-news .mo-sub{overflow-wrap:anywhere}
+
+/* 方向排名表（窄屏折叠为卡片） */
+.mo-directions{min-width:0}
+.mo-rank{display:grid;gap:0;min-width:0;margin-top:4px}
+.mo-rank-head,.mo-rank-row{display:grid;grid-template-columns:2.4em minmax(110px,1.5fr) minmax(60px,.8fr) minmax(74px,.9fr) minmax(86px,1fr) minmax(56px,.7fr) minmax(86px,.95fr);gap:3px 8px;align-items:center;text-align:left;min-width:0}
+.mo-rank-head{padding:4px 6px;background:#142338;border-radius:4px;font-size:11px;color:#8298b5}
+.mo-rank-head>span:nth-child(n+3){text-align:right}
+.mo-rank-row{width:100%;padding:6px 6px;border:0;border-bottom:1px solid #324159;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer}
+.market-opportunity .mo-rank-row:hover{background:#26384c}
+.mo-rank-row[aria-pressed=true]{background:#1c3049;box-shadow:inset 3px 0 #80beff}
+.mo-rank-row:focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.mo-c-sector{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;min-width:0;text-align:left}
+.mo-c-sector b{color:#e1e9f5}
+.mo-c-change,.mo-c-net,.mo-c-net5,.mo-c-score,.mo-c-state{text-align:right;white-space:nowrap}
+.mo-c-why{grid-column:1/-1;font-size:11px;color:#8fa6c4;text-align:left;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+
+/* 方向详情 */
+.mo-detail{min-width:0}
+.mo-detail-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;min-width:0}
+.mo-detail-head h2{font-size:17px}
+.mo-why{margin:5px 0 2px;font-size:12px;color:#c7d6e8;line-height:1.55;overflow-wrap:anywhere}
+.mo-detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;min-width:0}
+.mo-detail-grid>div{min-width:0}
+.mo-detail p{margin:2px 0;font-size:12px;line-height:1.55;color:#b8c9de;overflow-wrap:anywhere}
+.mo-evidence{margin:0;padding:0;list-style:none;display:grid;gap:2px;font-size:12px;line-height:1.5;color:#b8c9de}
+.mo-evidence b{color:#dce8f8}
+.mo-evidence .mo-sub{margin-left:6px}
+.mo-news-title{font-size:12px;color:#a9c3e6;margin-top:4px!important}
+.mo-role{display:inline-block;border:1px solid #52657c;border-radius:3px;background:#1c2c43;color:#a9c3e6;padding:0 4px;font-size:10px;line-height:1.55;white-space:nowrap}
+.mo-code{margin-left:3px;font-size:10px;color:#7e93b0}
+.mo-stock-table{min-width:820px}
+.mo-stock-table td{white-space:nowrap}
+.mo-stock-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere;min-width:110px}
+.mo-stock-table td.mo-levels,.mo-stock-table td.mo-entry{white-space:normal;overflow-wrap:anywhere;min-width:132px;color:#b8c9de}
+.mo-entry-note{margin:5px 0 0;font-size:12px;color:#c7d6e8;line-height:1.5;overflow-wrap:anywhere}
+.mo-timing{margin-top:8px;border-top:1px solid #27364b;padding-top:5px;min-width:0}
+.mo-timing h3{display:flex;flex-wrap:wrap;gap:3px 10px;align-items:baseline;margin-top:0}
+.mo-timing-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;margin-top:3px;min-width:0}
+.mo-timing-cols>div{min-width:0}
+.mo-gates{margin-top:6px;min-width:0}
+.mo-gates ul{margin:3px 0 0;padding:0;list-style:none;display:grid;gap:2px;font-size:12px}
+.mo-gates li{display:flex;gap:7px;align-items:baseline;min-width:0;line-height:1.5;color:#b8c9de}
+.mo-gate-mark{flex:none;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;white-space:nowrap}
+.mo-gates li.ok .mo-gate-mark{background:#1d3932;color:#9ee0c5}
+.mo-gates li.bad .mo-gate-mark{background:#432e30;color:#ffbbad}
+.mo-gates li.unknown .mo-gate-mark{background:#2b3b52;color:#a9c3e6}
+
+/* 行动计划 */
+.mo-playbooks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:7px;margin-top:3px}
+.mo-playbook{min-width:0;border:1px solid #304058;border-radius:7px;background:#101c2c;padding:7px 9px}
+.mo-playbook.active{border-color:#4b6d4a;background:#14251f}
+.mo-playbook-head{display:flex;flex-wrap:wrap;gap:3px 8px;align-items:baseline;font-size:12px}
+.mo-playbook-head .mo-sub{margin-left:auto}
+.mo-playbook p{margin:5px 0 0;font-size:12px;color:#c7d6e8;line-height:1.5}
+.mo-timetable{min-width:520px}
+.mo-timetable td:first-child,.mo-timetable td:nth-child(2){white-space:nowrap}
+.mo-timetable td:last-child{white-space:normal;min-width:200px}
+.mo-risk li{color:#f0c9a8}
+
+/* 数据覆盖 */
+.mo-warnings li{color:#f0c9a8}
+.mo-coverage .mo-stat-grid{margin-top:5px}
+.mo-search{margin-top:7px;font-size:12px;color:#8fa6c4}
+.mo-search summary{cursor:pointer;color:#9dbbdf;padding:3px 0;width:fit-content}
+.mo-search label{display:flex;flex-direction:column;gap:4px;margin:5px 0;max-width:360px;font-size:12px}
+.mo-search-result p{margin:3px 0;line-height:1.5;overflow-wrap:anywhere}
+.mo-empty{display:grid;gap:3px}
+.mo-empty-title{margin:2px 0;font-size:16px;font-weight:600;color:#e8effb}
+
+/* 1000px 桌面宽度：观测卡单列，方向表折叠为卡片，不产生整页横向滚动 */
+@media(max-width:1100px){
+ .mo-cards{grid-template-columns:minmax(0,1fr)}
+ .mo-rank-head{display:none}
+ .mo-rank-row{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:8px 6px}
+ .mo-rank-row .mo-c-num{display:none}
+ .mo-rank-row .mo-c-sector{flex:1 1 100%;order:0}
+ .mo-rank-row .mo-c-state{order:0;margin-left:auto}
+ .mo-rank-row .mo-c-change,.mo-rank-row .mo-c-net,.mo-rank-row .mo-c-net5,.mo-rank-row .mo-c-score{order:1;text-align:left}
+ .mo-rank-row .mo-c-why{order:2;flex:1 1 100%;margin-top:1px;padding-top:2px;border-top:1px dashed #2b3b52}
+ .mo-timing-cols{grid-template-columns:minmax(0,1fr)}
+ .mo-stock-table{min-width:700px}
+ .mo-timetable{min-width:440px}
+}
+@media(max-width:700px){
+ .mo-stat-grid,.mo-flow-cols{grid-template-columns:minmax(0,1fr)}
+ .mo-verdict h2{font-size:17px}
+}
+/* ===== 首屏聚焦改版（2026-11-08）：定调 → 建仓清单 → 方向详情 → 折叠区 ===== */
+.mo-focus-line{margin:6px 0 0;font-size:13px;color:#f3ce88;line-height:1.5;overflow-wrap:anywhere}
+.mo-picks{min-width:0}
+.mo-picks-head{display:flex;flex-wrap:wrap;gap:3px 12px;align-items:baseline;justify-content:space-between;min-width:0}
+.mo-picks-head .mo-sub{justify-self:flex-end}
+.mo-picks-wrap{min-width:0;margin-top:5px}
+.mo-pick-head,.mo-pick-row{display:grid;grid-template-columns:minmax(92px,1.15fr) minmax(96px,1.2fr) minmax(84px,.98fr) minmax(76px,.9fr) minmax(88px,1.02fr) minmax(64px,.78fr) minmax(56px,.68fr) minmax(86px,.98fr) minmax(70px,.8fr) minmax(80px,.92fr);gap:4px 7px;align-items:center;text-align:left;min-width:0}
+.mo-pick-head{padding:4px 6px;background:#142338;border-radius:4px;font-size:11px;color:#8298b5;white-space:nowrap}
+.mo-pick-row{width:100%;padding:7px 6px;border:0;border-bottom:1px solid #324159;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer;min-width:0}
+.market-opportunity .mo-pick-row:hover{background:#26384c}
+.mo-pick-row[aria-pressed=true]{background:#1c3049;box-shadow:inset 3px 0 #80beff}
+.mo-pick-row:focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.mo-p-name,.mo-p-sector,.mo-p-price{display:flex;flex-wrap:wrap;gap:2px 5px;align-items:baseline;min-width:0}
+.mo-p-name b,.mo-p-sector b,.mo-p-price b{color:#e1e9f5}
+.mo-p-state,.mo-p-buy,.mo-p-chase,.mo-p-stop,.mo-p-target,.mo-p-sizing,.mo-p-window{white-space:nowrap;overflow-wrap:normal}
+.mo-p-sizing,.mo-p-window{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mo-p-target .positive{color:#ffada4}
+.mo-p-why{grid-column:1/-1;font-size:11px;color:#8fa6c4;text-align:left;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+.mo-p-label{display:none}
+.mo-tabs{display:flex;gap:4px;overflow-x:auto;padding:1px 0 5px;margin-bottom:5px;min-width:0;scrollbar-width:thin;scrollbar-gutter:stable}
+.mo-tab{display:flex;align-items:baseline;gap:5px;flex:none;padding:4px 8px;border:1px solid #304058;border-radius:6px;background:#101c2c;color:#c7d6e8;font-size:12px;white-space:nowrap;cursor:pointer}
+.market-opportunity .mo-tab:hover{background:#1c3049}
+.mo-tab[aria-pressed=true]{border-color:#547ab0;background:#1c3049;box-shadow:inset 0 -2px #80beff;color:#eef6ff}
+.mo-tab:focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.mo-tab-rank{color:#8298b5;font-size:11px}
+.mo-tab .mo-state{font-size:10px;padding:0 5px}
+.mo-detail .mo-timing{margin-top:4px}
+.mo-detail>h3,.mo-detail .mo-detail-head+h3{margin-top:10px}
+.mo-sell-table td.mo-sell{white-space:normal;overflow-wrap:anywhere;min-width:150px;color:#b8c9de}
+.mo-sell-note{color:#f0c9a8}
+.mo-entry-note{font-size:12px;color:#c7d6e8;line-height:1.5;margin:4px 0 0;overflow-wrap:anywhere}
+.mo-evidence-box{margin-top:8px;font-size:12px;color:#8fa6c4}
+.mo-evidence-box summary{cursor:pointer;color:#9dbbdf;padding:2px 0;width:fit-content}
+.mo-fold{background:#111d2e;border:1px solid #27354c;border-radius:11px;padding:0 14px;min-width:0}
+.mo-fold>summary{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;cursor:pointer;padding:10px 0;font-size:15px;font-weight:600;color:#e1e9f5;list-style:none}
+.mo-fold>summary::-webkit-details-marker{display:none}
+.mo-fold>summary::before{content:"▸";color:#8fa6c4;font-size:12px;font-weight:400}
+.mo-fold[open]>summary::before{content:"▾"}
+.mo-fold>summary .mo-sub{font-weight:400}
+.mo-fold-body{padding:0 0 12px;min-width:0}
+.mo-fold .mo-card{margin-bottom:8px}
+.mo-fold>section.card{margin:0 0 8px}
+.mo-fold .mo-action{margin-bottom:8px}
+.mo-fold .mo-coverage{margin-bottom:2px}
+.mo-fold[open]{padding-bottom:10px}
+.mo-stock-table td.mo-levels{min-width:150px}
+.mo-stock-table td.mo-entry{min-width:150px}
+@media(max-width:1100px){
+ .mo-pick-head{display:none}
+ .mo-pick-row{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:8px 6px}
+ .mo-pick-row .mo-p-name{flex:1 1 100%}
+ .mo-pick-row .mo-p-sector{flex:1 1 100%;font-size:12px}
+ .mo-pick-row .mo-p-price{order:0}
+ .mo-pick-row .mo-p-state{order:0;margin-left:auto}
+ .mo-pick-row .mo-p-buy,.mo-pick-row .mo-p-chase,.mo-pick-row .mo-p-stop,.mo-pick-row .mo-p-target,.mo-pick-row .mo-p-sizing,.mo-pick-row .mo-p-window{order:1}
+ .mo-pick-row .mo-p-why{flex:1 1 100%;order:2;border-top:1px dashed #2b3b52;padding-top:2px;margin-top:1px}
+ .mo-p-label{display:inline;margin-right:3px;font-size:10px;font-style:normal;color:#7e93b0}
+ .mo-detail .mo-timing-cols{grid-template-columns:minmax(0,1fr)}
+}
+/* ===== 炒作雷达（名称辈 / 生肖玄学 / 事件题材） ===== */
+.mo-radar{min-width:0}
+.mo-radar-head{display:flex;flex-wrap:wrap;gap:3px 12px;align-items:baseline;justify-content:space-between;min-width:0}
+.mo-radar-list{min-width:0;margin-top:5px}
+.mo-radar-head-row,.mo-radar-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(84px,.72fr) minmax(150px,1.35fr) minmax(130px,1.2fr) minmax(112px,.95fr);gap:4px 8px;align-items:center;text-align:left;min-width:0}
+.mo-radar-head-row{padding:4px 6px;background:#142338;border-radius:4px;font-size:11px;color:#8298b5;white-space:nowrap}
+.mo-radar-row{width:100%;padding:6px;border:0;border-bottom:1px solid #324159;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer;min-width:0}
+.market-opportunity .mo-radar-row:hover{background:#26384c}
+.mo-radar-row[aria-expanded=true]{background:#1c3049;box-shadow:inset 3px 0 #80beff}
+.mo-radar-row:focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.mo-r-theme{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;min-width:0}
+.mo-r-theme b{color:#e1e9f5}
+.mo-r-stage,.mo-r-signal,.mo-r-stocks,.mo-r-verdict{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mo-r-signal,.mo-r-stocks{white-space:normal;overflow-wrap:anywhere;color:#b8c9de;line-height:1.45}
+.mo-r-verdict{color:#f3ce88}
+.mo-r-label{display:none}
+.mo-stage{display:inline-block;border-radius:4px;padding:0 6px;font-size:11px;font-weight:600;line-height:1.65;white-space:nowrap;border:1px solid transparent}
+.mo-stage.start{border-color:#8a6524;background:#3d2a12;color:#ffd27a;animation:mo-stage-pulse 1.8s ease-in-out infinite}
+.mo-stage.ferment{background:#1d3932;color:#9ee0c5}
+.mo-stage.peak{background:#432e30;color:#ffbbad}
+.mo-stage.diverge{background:#352c20;color:#f3ce88}
+.mo-stage.ebb{background:#2b3b52;color:#a9c3e6}
+@keyframes mo-stage-pulse{0%,100%{box-shadow:0 0 0 rgba(255,210,122,0)}50%{box-shadow:0 0 0 3px rgba(255,210,122,.18)}}
+.mo-radar-detail{padding:8px 10px 10px;background:#0f1b2b;border-bottom:1px solid #324159;min-width:0}
+.mo-radar-detail h3{margin-top:7px}
+.mo-radar-detail h3:first-child{margin-top:0}
+.mo-radar-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:10px 14px;min-width:0}
+.mo-radar-cols>div{min-width:0}
+.mo-radar-risk{color:#f0c9a8}
+.mo-radar-stock-table{min-width:900px}
+.mo-radar-stock-table td{white-space:nowrap}
+.mo-radar-stock-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere;min-width:120px}
+.mo-radar-stock-table td.mo-levels,.mo-radar-stock-table td.mo-entry{white-space:normal;overflow-wrap:anywhere;min-width:130px}
+.mo-r-sizing{white-space:nowrap;color:#f3ce88}
+@media(prefers-reduced-motion:reduce){.mo-stage.start{animation:none}}
+@media(max-width:1100px){
+ .mo-radar-head-row{display:none}
+ .mo-radar-row{display:flex;flex-wrap:wrap;gap:3px 10px;align-items:baseline;padding:8px 6px}
+ .mo-radar-row .mo-r-theme{flex:1 1 100%}
+ .mo-radar-row .mo-r-verdict{order:0;margin-left:auto;white-space:normal}
+ .mo-radar-row .mo-r-stage{order:0}
+ .mo-radar-row .mo-r-signal,.mo-radar-row .mo-r-stocks{flex:1 1 100%;white-space:normal}
+ .mo-r-label{display:inline;margin-right:3px;font-size:10px;font-style:normal;color:#7e93b0}
+ .mo-radar-cols{grid-template-columns:minmax(0,1fr)}
+ .mo-radar-stock-table{min-width:720px}
+}

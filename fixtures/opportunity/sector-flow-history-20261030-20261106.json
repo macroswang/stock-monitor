@@ -1,0 +1,7704 @@
+{
+ "captured_at": "2026-11-08T19:47:54+08:00",
+ "note": "本机已校验快照，仅研究用",
+ "days": [
+  {
+   "date": "2026-10-30",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": 5137657900.24,
+     "change_percent": 3.4891
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": 3009386100.55,
+     "change_percent": 0.192647
+    },
+    {
+     "code": "new_jtys",
+     "name": "交通运输",
+     "net_yuan": 1594501012.8,
+     "change_percent": 2.20578
+    },
+    {
+     "code": "new_ylqx",
+     "name": "医疗器械",
+     "net_yuan": 1387533548.99,
+     "change_percent": 1.98986
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 1182818178.58,
+     "change_percent": 1.68277
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": 950837540.09,
+     "change_percent": 1.84687
+    },
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": 935525118.0,
+     "change_percent": -3.72945
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": 735389120.45,
+     "change_percent": -1.96412
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 707441420.48,
+     "change_percent": -2.87465
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": 641902273.43,
+     "change_percent": -2.26472
+    },
+    {
+     "code": "new_sphy",
+     "name": "食品行业",
+     "net_yuan": 631783966.22,
+     "change_percent": 0.680808
+    },
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 564170036.84,
+     "change_percent": -1.11961
+    },
+    {
+     "code": "new_qtxy",
+     "name": "其它行业",
+     "net_yuan": 476281636.403,
+     "change_percent": -0.325743
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": 469656347.09,
+     "change_percent": 0.0319788
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": 431679914.99,
+     "change_percent": 0.633128
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 332583811.25,
+     "change_percent": -0.768579
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 310888755.11,
+     "change_percent": -0.136028
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": 167276975.21,
+     "change_percent": -4.68681
+    },
+    {
+     "code": "new_fjzz",
+     "name": "飞机制造",
+     "net_yuan": 164117274.86,
+     "change_percent": -3.26967
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": 164055183.4,
+     "change_percent": -0.359827
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": 137124159.43,
+     "change_percent": -2.33238
+    },
+    {
+     "code": "new_kfq",
+     "name": "开发区",
+     "net_yuan": 123974001.88,
+     "change_percent": -2.08678
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": 121210711.94,
+     "change_percent": -1.76192
+    },
+    {
+     "code": "new_tchy",
+     "name": "陶瓷行业",
+     "net_yuan": 79372954.4,
+     "change_percent": -3.11771
+    },
+    {
+     "code": "new_zzhy",
+     "name": "造纸行业",
+     "net_yuan": 59939937.52,
+     "change_percent": -1.14445
+    },
+    {
+     "code": "new_glql",
+     "name": "公路桥梁",
+     "net_yuan": 40467717.58,
+     "change_percent": -0.184706
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": -10938129.46,
+     "change_percent": -2.26985
+    },
+    {
+     "code": "new_hghy",
+     "name": "化工行业",
+     "net_yuan": -43178141.33,
+     "change_percent": -2.00054
+    },
+    {
+     "code": "new_wzwm",
+     "name": "物资外贸",
+     "net_yuan": -60791499.78,
+     "change_percent": -0.802784
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": -111368628.6,
+     "change_percent": -1.36242
+    },
+    {
+     "code": "new_mtc",
+     "name": "摩托车",
+     "net_yuan": -112145730.78,
+     "change_percent": -3.54091
+    },
+    {
+     "code": "new_fzjx",
+     "name": "纺织机械",
+     "net_yuan": -115849819.08,
+     "change_percent": -3.80936
+    },
+    {
+     "code": "new_slzp",
+     "name": "塑料制品",
+     "net_yuan": -123734868.01,
+     "change_percent": -2.24644
+    },
+    {
+     "code": "new_jjhy",
+     "name": "家具行业",
+     "net_yuan": -134919722.04,
+     "change_percent": -3.79474
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": -163575947.7,
+     "change_percent": -0.317271
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": -175372681.72,
+     "change_percent": -2.67506
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": -198018205.16,
+     "change_percent": -2.68937
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": -198477736.72,
+     "change_percent": -2.3752
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": -218875253.69,
+     "change_percent": -0.815029
+    },
+    {
+     "code": "new_fdc",
+     "name": "房地产",
+     "net_yuan": -270700745.73,
+     "change_percent": -1.97176
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": -368886443.11,
+     "change_percent": -1.0544
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": -381502377.53,
+     "change_percent": -1.07356
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": -450838044.96,
+     "change_percent": -0.572355
+    },
+    {
+     "code": "new_cbzz",
+     "name": "船舶制造",
+     "net_yuan": -460903475.71,
+     "change_percent": -1.21469
+    },
+    {
+     "code": "new_fdsb",
+     "name": "发电设备",
+     "net_yuan": -643576198.04,
+     "change_percent": -3.01587
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": -1471364654.92,
+     "change_percent": -2.24561
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": -1721887899.26,
+     "change_percent": -5.29333
+    },
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": -7132703780.97,
+     "change_percent": -4.62202
+    }
+   ]
+  },
+  {
+   "date": "2026-10-30",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 7885818066.99,
+     "change_percent": 0.00832638
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 5576100954.82,
+     "change_percent": 0.485342
+    },
+    {
+     "code": "gn_bjgn",
+     "name": "白酒概念",
+     "net_yuan": 5211699710.51,
+     "change_percent": 3.50877
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 3754403268.47,
+     "change_percent": 0.204206
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 3210703427.49,
+     "change_percent": 0.931461
+    },
+    {
+     "code": "gn_yq50",
+     "name": "央企50",
+     "net_yuan": 2373934505.4,
+     "change_percent": 0.313457
+    },
+    {
+     "code": "gn_qszc",
+     "name": "券商重仓",
+     "net_yuan": 2265784961.24,
+     "change_percent": 0.54438
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": 2209847144.43,
+     "change_percent": -2.96976
+    },
+    {
+     "code": "gn_scp",
+     "name": "奢侈品",
+     "net_yuan": 2157037723.59,
+     "change_percent": 2.65022
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": 2067494795.24,
+     "change_percent": -0.060789
+    },
+    {
+     "code": "gn_sbzc",
+     "name": "社保重仓",
+     "net_yuan": 2014329851.44,
+     "change_percent": -0.206735
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 1912216683.79,
+     "change_percent": 0.98805
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 1792371814.91,
+     "change_percent": -0.814391
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": 1516670551.66,
+     "change_percent": -2.43893
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": 1496500649.82,
+     "change_percent": -0.333047
+    },
+    {
+     "code": "gn_hygn",
+     "name": "航运概念",
+     "net_yuan": 1492207553.94,
+     "change_percent": 3.59038
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": 1399126990.39,
+     "change_percent": -0.778645
+    },
+    {
+     "code": "gn_gtdc",
+     "name": "固态电池",
+     "net_yuan": 1305703249.92,
+     "change_percent": 0.612383
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 1264896316.32,
+     "change_percent": -0.0657597
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": 1163920521.5,
+     "change_percent": -1.09505
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": 1041323181.9,
+     "change_percent": -2.87121
+    },
+    {
+     "code": "gn_ndc",
+     "name": "钠电池",
+     "net_yuan": 909960083.37,
+     "change_percent": 1.0971
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": 817771514.96,
+     "change_percent": -0.629044
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": 807255219.51,
+     "change_percent": -1.92284
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 805688279.71,
+     "change_percent": -1.32882
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 743257427.08,
+     "change_percent": -1.80209
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": 740168958.58,
+     "change_percent": -2.82889
+    },
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 732081843.86,
+     "change_percent": -2.13779
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 721172121.81,
+     "change_percent": -0.400499
+    },
+    {
+     "code": "gn_yhtl",
+     "name": "盐湖提锂",
+     "net_yuan": 704768016.69,
+     "change_percent": -0.666913
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 687994480.34,
+     "change_percent": 0.0297545
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": 683153335.33,
+     "change_percent": -1.73418
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": 624641563.29,
+     "change_percent": 0.569492
+    },
+    {
+     "code": "gn_myyy",
+     "name": "民营医院",
+     "net_yuan": 609051111.24,
+     "change_percent": 0.86192
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 607549794.6,
+     "change_percent": -2.10708
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 601837375.04,
+     "change_percent": -1.16974
+    },
+    {
+     "code": "gn_cdgn",
+     "name": "超导概念",
+     "net_yuan": 589899727.04,
+     "change_percent": -4.55243
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 585912781.71,
+     "change_percent": -1.86845
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": 569546959.7,
+     "change_percent": -6.13501
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 517864737.59,
+     "change_percent": -0.407765
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": 504142509.38,
+     "change_percent": -1.62849
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 503310648.57,
+     "change_percent": 0.341997
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": 494546663.17,
+     "change_percent": -0.416424
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 485399574.07,
+     "change_percent": 1.8137
+    },
+    {
+     "code": "gn_yqgg",
+     "name": "油气改革",
+     "net_yuan": 456573129.51,
+     "change_percent": -0.0179858
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": 453197446.68,
+     "change_percent": -2.31666
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": 413865694.24,
+     "change_percent": -5.28981
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": 389506276.33,
+     "change_percent": 0.72346
+    },
+    {
+     "code": "gn_zncd",
+     "name": "智能穿戴",
+     "net_yuan": 371410465.1,
+     "change_percent": -3.0001
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": 352342827.19,
+     "change_percent": -1.96832
+    },
+    {
+     "code": "gn_jygn",
+     "name": "基因概念",
+     "net_yuan": 302518592.15,
+     "change_percent": -0.569011
+    },
+    {
+     "code": "gn_ljfl",
+     "name": "垃圾分类",
+     "net_yuan": 291243824.57,
+     "change_percent": -1.63897
+    },
+    {
+     "code": "gn_swym",
+     "name": "生物疫苗",
+     "net_yuan": 266793421.85,
+     "change_percent": -0.176245
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 264365824.39,
+     "change_percent": -1.97416
+    },
+    {
+     "code": "gn_wgg",
+     "name": "未股改",
+     "net_yuan": 262080049.53,
+     "change_percent": 1.0208
+    },
+    {
+     "code": "gn_myzl",
+     "name": "免疫治疗",
+     "net_yuan": 257319327.55,
+     "change_percent": 0.423531
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": 239909711.26,
+     "change_percent": 0.587835
+    },
+    {
+     "code": "gn_jxlg",
+     "name": "甲型流感",
+     "net_yuan": 231452536.52,
+     "change_percent": 0.515108
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": 224906982.13,
+     "change_percent": -0.0122442
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": 221913710.72,
+     "change_percent": -1.01439
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": 208088939.91,
+     "change_percent": -2.01481
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 200200296.19,
+     "change_percent": 0.0534793
+    },
+    {
+     "code": "gn_smx",
+     "name": "石墨烯",
+     "net_yuan": 198677957.23,
+     "change_percent": -4.75028
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 196656561.33,
+     "change_percent": -2.61779
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": 185571793.19,
+     "change_percent": -1.4181
+    },
+    {
+     "code": "gn_cjxj",
+     "name": "超级细菌",
+     "net_yuan": 182806334.74,
+     "change_percent": 0.730755
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 180618529.38,
+     "change_percent": -0.609272
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": 171884905.32,
+     "change_percent": -1.03216
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 171500964.64,
+     "change_percent": -1.72694
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 169012115.48,
+     "change_percent": -1.14111
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": 168277296.52,
+     "change_percent": -1.95762
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": 159347018.64,
+     "change_percent": 0.637753
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 156713477.72,
+     "change_percent": -1.68623
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 151819078.49,
+     "change_percent": -0.572816
+    },
+    {
+     "code": "gn_krb",
+     "name": "可燃冰",
+     "net_yuan": 140424356.22,
+     "change_percent": -1.55511
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": 137839781.49,
+     "change_percent": -1.62549
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 131548773.97,
+     "change_percent": -1.31478
+    },
+    {
+     "code": "gn_lk",
+     "name": "锂矿",
+     "net_yuan": 124927506.11,
+     "change_percent": -1.18843
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": 124529694.76,
+     "change_percent": -3.84793
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 112468359.28,
+     "change_percent": -0.720976
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": 111693716.17,
+     "change_percent": -2.42447
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 102097127.34,
+     "change_percent": -1.413
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": 98735238.47,
+     "change_percent": 0.173662
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": 95103248.76,
+     "change_percent": 0.0109967
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": 84583719.46,
+     "change_percent": -1.0366
+    },
+    {
+     "code": "gn_txw",
+     "name": "碳纤维",
+     "net_yuan": 72292387.98,
+     "change_percent": -1.70814
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": 68885105.24,
+     "change_percent": -1.65544
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 57579246.99,
+     "change_percent": -0.847598
+    },
+    {
+     "code": "gn_cdz",
+     "name": "充电桩",
+     "net_yuan": 43069548.58,
+     "change_percent": -2.59627
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": 34955725.5,
+     "change_percent": 0.50338
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 27245864.48,
+     "change_percent": -0.938211
+    },
+    {
+     "code": "gn_hBg",
+     "name": "含B股",
+     "net_yuan": 23534903.27,
+     "change_percent": -1.4466
+    },
+    {
+     "code": "gn_qhgn",
+     "name": "前海概念",
+     "net_yuan": 21589529.79,
+     "change_percent": 0.724664
+    },
+    {
+     "code": "gn_tmj",
+     "name": "图们江",
+     "net_yuan": 16828930.54,
+     "change_percent": -2.63579
+    },
+    {
+     "code": "gn_cdp",
+     "name": "超大盘",
+     "net_yuan": 11955355.96,
+     "change_percent": 0.222568
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 11344272.98,
+     "change_percent": -2.48734
+    },
+    {
+     "code": "gn_hGDR",
+     "name": "含GDR",
+     "net_yuan": 11291348.41,
+     "change_percent": -0.585137
+    },
+    {
+     "code": "gn_3Ddy",
+     "name": "3D打印",
+     "net_yuan": 11148337.02,
+     "change_percent": -2.45537
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": 965861.79,
+     "change_percent": -1.8082
+    },
+    {
+     "code": "gn_zxsy",
+     "name": "振兴沈阳",
+     "net_yuan": -6763119.77,
+     "change_percent": -0.515948
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": -10404685.71,
+     "change_percent": -2.40664
+    },
+    {
+     "code": "gn_swrl",
+     "name": "生物燃料",
+     "net_yuan": -11918360.69,
+     "change_percent": -1.38356
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": -14049675.22,
+     "change_percent": -0.756965
+    },
+    {
+     "code": "gn_zmgn",
+     "name": "摘帽概念",
+     "net_yuan": -26269506.89,
+     "change_percent": -0.835855
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": -26523796.12,
+     "change_percent": -1.28257
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": -27700622.36,
+     "change_percent": -0.794119
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": -45983230.1,
+     "change_percent": -0.768685
+    },
+    {
+     "code": "gn_kdts",
+     "name": "宽带提速",
+     "net_yuan": -51385098.44,
+     "change_percent": -5.31466
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": -60214255.19,
+     "change_percent": -3.70408
+    },
+    {
+     "code": "gn_jjj",
+     "name": "京津冀",
+     "net_yuan": -63722135.74,
+     "change_percent": -1.6453
+    },
+    {
+     "code": "gn_jr",
+     "name": "鸡肉",
+     "net_yuan": -67299780.66,
+     "change_percent": -1.24472
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": -67430127.22,
+     "change_percent": 0.00999177
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": -67622455.49,
+     "change_percent": -1.32573
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": -76853771.33,
+     "change_percent": -1.39202
+    },
+    {
+     "code": "gn_sqrl",
+     "name": "氢燃料",
+     "net_yuan": -88132941.31,
+     "change_percent": -0.440803
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": -103382173.97,
+     "change_percent": -1.12557
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": -108172462.41,
+     "change_percent": -2.05951
+    },
+    {
+     "code": "gn_HITdc",
+     "name": "HIT电池",
+     "net_yuan": -122185322.18,
+     "change_percent": -4.65595
+    },
+    {
+     "code": "gn_HJTdc",
+     "name": "HJT电池",
+     "net_yuan": -122185322.18,
+     "change_percent": -4.65595
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": -137408781.18,
+     "change_percent": -1.47099
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": -138662705.38,
+     "change_percent": -3.77113
+    },
+    {
+     "code": "gn_gxbj",
+     "name": "高校背景",
+     "net_yuan": -143119439.11,
+     "change_percent": -2.91436
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": -154414526.63,
+     "change_percent": -2.33035
+    },
+    {
+     "code": "gn_gfcl",
+     "name": "固废处理",
+     "net_yuan": -160051679.53,
+     "change_percent": -2.3434
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": -163828582.9,
+     "change_percent": -0.832152
+    },
+    {
+     "code": "gn_znjj",
+     "name": "智能家居",
+     "net_yuan": -164337488.06,
+     "change_percent": -3.77995
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": -181885213.44,
+     "change_percent": -1.64863
+    },
+    {
+     "code": "gn_tjy",
+     "name": "碳交易",
+     "net_yuan": -184116139.08,
+     "change_percent": -2.85152
+    },
+    {
+     "code": "gn_gtk",
+     "name": "钙钛矿",
+     "net_yuan": -184130711.48,
+     "change_percent": -4.53914
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": -184381012.82,
+     "change_percent": -4.82161
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": -206956347.75,
+     "change_percent": -1.50711
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": -210649928.89,
+     "change_percent": -1.52763
+    },
+    {
+     "code": "gn_fngn",
+     "name": "风能概念",
+     "net_yuan": -229755683.69,
+     "change_percent": -2.19904
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": -236945053.11,
+     "change_percent": -3.4884
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": -261473992.66,
+     "change_percent": -2.30923
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": -264666936.13,
+     "change_percent": -1.42693
+    },
+    {
+     "code": "gn_spaq",
+     "name": "食品安全",
+     "net_yuan": -269688577.77,
+     "change_percent": -2.23124
+    },
+    {
+     "code": "gn_fd",
+     "name": "风电",
+     "net_yuan": -287167784.23,
+     "change_percent": -0.955867
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": -296681279.04,
+     "change_percent": -2.24438
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": -298022719.07,
+     "change_percent": -4.04056
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": -321718562.15,
+     "change_percent": -1.84231
+    },
+    {
+     "code": "gn_hdgn",
+     "name": "恒大概念",
+     "net_yuan": -332411706.17,
+     "change_percent": -2.56079
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": -336742246.07,
+     "change_percent": -2.12197
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": -350358733.11,
+     "change_percent": -1.27076
+    },
+    {
+     "code": "gn_gykc",
+     "name": "高压快充",
+     "net_yuan": -360917670.04,
+     "change_percent": -4.96384
+    },
+    {
+     "code": "gn_kc50",
+     "name": "科创50",
+     "net_yuan": -365484247.28,
+     "change_percent": -4.52953
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": -366321912.96,
+     "change_percent": -1.25932
+    },
+    {
+     "code": "gn_wscl",
+     "name": "污水处理",
+     "net_yuan": -379936170.85,
+     "change_percent": -1.98261
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": -382592675.39,
+     "change_percent": -3.15083
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": -389810234.84,
+     "change_percent": -4.74054
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": -390043981.01,
+     "change_percent": -1.91704
+    },
+    {
+     "code": "gn_hmgn",
+     "name": "鸿蒙概念",
+     "net_yuan": -414975887.51,
+     "change_percent": -4.94327
+    },
+    {
+     "code": "gn_wxdh",
+     "name": "卫星导航",
+     "net_yuan": -419866582.91,
+     "change_percent": -3.88219
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": -463287589.33,
+     "change_percent": -2.39437
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": -473675384.05,
+     "change_percent": -1.68748
+    },
+    {
+     "code": "gn_bdgn",
+     "name": "百度概念",
+     "net_yuan": -490591300.41,
+     "change_percent": -3.75209
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": -491669858.98,
+     "change_percent": -4.53327
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": -492156793.67,
+     "change_percent": -1.28998
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": -536299567.12,
+     "change_percent": -1.82875
+    },
+    {
+     "code": "gn_kqzl",
+     "name": "空气治理",
+     "net_yuan": -568068992.14,
+     "change_percent": -3.40244
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": -574087656.2,
+     "change_percent": -5.21339
+    },
+    {
+     "code": "gn_5Ggn",
+     "name": "5G概念",
+     "net_yuan": -591085913.25,
+     "change_percent": -4.41399
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": -778423480.27,
+     "change_percent": -4.56516
+    },
+    {
+     "code": "gn_dfj",
+     "name": "大飞机",
+     "net_yuan": -785838861.92,
+     "change_percent": -2.4828
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": -814405036.48,
+     "change_percent": -5.44625
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": -834544989.34,
+     "change_percent": -1.14191
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": -909995724.41,
+     "change_percent": -2.09181
+    },
+    {
+     "code": "gn_dzzf",
+     "name": "电子支付",
+     "net_yuan": -946944217.78,
+     "change_percent": -4.12499
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": -974867400.45,
+     "change_percent": -3.81436
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": -1020950433.09,
+     "change_percent": -3.36172
+    },
+    {
+     "code": "gn_hwhs",
+     "name": "华为海思",
+     "net_yuan": -1079554881.18,
+     "change_percent": -4.66513
+    },
+    {
+     "code": "gn_hwqc",
+     "name": "华为汽车",
+     "net_yuan": -1116035002.35,
+     "change_percent": -3.87915
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": -1199294068.42,
+     "change_percent": -5.38578
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": -1347282404.41,
+     "change_percent": -1.89038
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": -1547098755.32,
+     "change_percent": -4.3616
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": -1898697101.72,
+     "change_percent": -4.99143
+    },
+    {
+     "code": "gn_zjtx",
+     "name": "专精特新",
+     "net_yuan": -2261750488.31,
+     "change_percent": -3.85035
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": -2265888608.91,
+     "change_percent": -2.15618
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": -2303811778.03,
+     "change_percent": -2.82483
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": -3586710681.77,
+     "change_percent": -3.1191
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": -3898400117.28,
+     "change_percent": -2.8676
+    }
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": 17329587436.99,
+     "change_percent": 3.84174
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 5471270980.61,
+     "change_percent": 1.41128
+    },
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": 4735380314.95,
+     "change_percent": 0.980487
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": 4614754189.11,
+     "change_percent": 0.148345
+    },
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": 3805920587.35,
+     "change_percent": 3.00611
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": 3729529504.84,
+     "change_percent": 2.00431
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": 3614558069.9,
+     "change_percent": 6.5808
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": 2862131945.05,
+     "change_percent": 1.30142
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": 2771997844.43,
+     "change_percent": 2.31193
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": 2719890548.1,
+     "change_percent": 3.76548
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": 2573398030.64,
+     "change_percent": -0.447903
+    },
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 2488216651.94,
+     "change_percent": 2.38435
+    },
+    {
+     "code": "new_fdsb",
+     "name": "发电设备",
+     "net_yuan": 2218777331.42,
+     "change_percent": 1.995
+    },
+    {
+     "code": "new_jtys",
+     "name": "交通运输",
+     "net_yuan": 2097323567.12,
+     "change_percent": 1.53078
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 1879517759.94,
+     "change_percent": 0.53623
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": 1700784746.69,
+     "change_percent": 1.33405
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": 1656023394.37,
+     "change_percent": 4.84421
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": 1377108767.63,
+     "change_percent": 2.1483
+    },
+    {
+     "code": "new_sphy",
+     "name": "食品行业",
+     "net_yuan": 1277395384.02,
+     "change_percent": 1.37212
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": 1079527807.06,
+     "change_percent": 2.16682
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 1040997303.99,
+     "change_percent": 1.24206
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": 971292942.93,
+     "change_percent": -0.24363
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 933097740.21,
+     "change_percent": -0.516008
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": 909241528.07,
+     "change_percent": 1.3432
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": 851376069.95,
+     "change_percent": 1.35261
+    },
+    {
+     "code": "new_fjzz",
+     "name": "飞机制造",
+     "net_yuan": 754090018.85,
+     "change_percent": 1.94335
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": 696302258.5,
+     "change_percent": 4.19166
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": 492274067.21,
+     "change_percent": 3.16775
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": 470152945.13,
+     "change_percent": 2.08772
+    },
+    {
+     "code": "new_glql",
+     "name": "公路桥梁",
+     "net_yuan": 442824816.6,
+     "change_percent": 0.895279
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": 432809475.38,
+     "change_percent": -0.301944
+    },
+    {
+     "code": "new_wzwm",
+     "name": "物资外贸",
+     "net_yuan": 419485325.8,
+     "change_percent": 2.06077
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": 392890467.02,
+     "change_percent": -1.67963
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": 356763701.08,
+     "change_percent": 0.926773
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": 235693088.89,
+     "change_percent": 0.73252
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": 209291014.63,
+     "change_percent": 0.656208
+    },
+    {
+     "code": "new_kfq",
+     "name": "开发区",
+     "net_yuan": 129624378.28,
+     "change_percent": 0.991368
+    },
+    {
+     "code": "new_fzjx",
+     "name": "纺织机械",
+     "net_yuan": 44967032.92,
+     "change_percent": 1.63993
+    },
+    {
+     "code": "new_tchy",
+     "name": "陶瓷行业",
+     "net_yuan": 14125008.81,
+     "change_percent": 2.62922
+    }
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 19029265316.85,
+     "change_percent": 0.376492
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": 14854676776.18,
+     "change_percent": 2.07063
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": 10793561142.05,
+     "change_percent": 1.56327
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": 10062009705.08,
+     "change_percent": 2.00684
+    },
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 9872110177.94,
+     "change_percent": 1.86413
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": 9085506379.77,
+     "change_percent": 1.22435
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": 7316107766.07,
+     "change_percent": 0.81735
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": 7062108200.15,
+     "change_percent": 1.06244
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 6976693984.52,
+     "change_percent": 0.370686
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": 6938466755.92,
+     "change_percent": 2.37711
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 6718178659.2,
+     "change_percent": 0.448385
+    },
+    {
+     "code": "gn_fd",
+     "name": "风电",
+     "net_yuan": 5817646773.69,
+     "change_percent": 0.200449
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 5748116726.46,
+     "change_percent": 1.33023
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": 5676268035.64,
+     "change_percent": 1.75212
+    },
+    {
+     "code": "gn_zjtx",
+     "name": "专精特新",
+     "net_yuan": 5493760102.66,
+     "change_percent": 1.56312
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": 5240842315.38,
+     "change_percent": 2.89995
+    },
+    {
+     "code": "gn_qszc",
+     "name": "券商重仓",
+     "net_yuan": 5187836055.39,
+     "change_percent": 1.49188
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": 5173797462.32,
+     "change_percent": 0.0737659
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": 5157963135.01,
+     "change_percent": 1.74311
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": 4828572317.53,
+     "change_percent": 0.53052
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": 4818840380.22,
+     "change_percent": 2.30574
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": 4488224650.2,
+     "change_percent": 1.5592
+    },
+    {
+     "code": "gn_bjgn",
+     "name": "白酒概念",
+     "net_yuan": 4154044937.63,
+     "change_percent": 3.12696
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": 3878666893.01,
+     "change_percent": 6.17415
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": 3753571667.93,
+     "change_percent": 1.76223
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": 3611023837.45,
+     "change_percent": 6.29489
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": 3570984628.31,
+     "change_percent": 4.66946
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": 3555260496.34,
+     "change_percent": 1.8046
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": 3347986731.51,
+     "change_percent": 5.69124
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 3284109970.22,
+     "change_percent": 0.395566
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": 3223813689.25,
+     "change_percent": 2.26402
+    },
+    {
+     "code": "gn_cdz",
+     "name": "充电桩",
+     "net_yuan": 3093359613.78,
+     "change_percent": 3.76513
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": 3069557222.87,
+     "change_percent": 0.456524
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": 3059774186.63,
+     "change_percent": 3.76025
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": 2978278565.68,
+     "change_percent": 3.46709
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": 2934520902.24,
+     "change_percent": 1.15073
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 2620031249.45,
+     "change_percent": 0.590109
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 2514074302.68,
+     "change_percent": 1.52743
+    },
+    {
+     "code": "gn_5Ggn",
+     "name": "5G概念",
+     "net_yuan": 2482058717.86,
+     "change_percent": 2.38564
+    },
+    {
+     "code": "gn_kc50",
+     "name": "科创50",
+     "net_yuan": 2402698299.86,
+     "change_percent": 3.29329
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": 2310359676.79,
+     "change_percent": 1.87918
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": 2291829211.16,
+     "change_percent": 0.157576
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 2240191210.08,
+     "change_percent": 0.880981
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": 2184478804.56,
+     "change_percent": 0.697142
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 2184219782.16,
+     "change_percent": 1.43604
+    },
+    {
+     "code": "gn_gtdc",
+     "name": "固态电池",
+     "net_yuan": 2142178086.13,
+     "change_percent": 2.47135
+    },
+    {
+     "code": "gn_hBg",
+     "name": "含B股",
+     "net_yuan": 2127941158.04,
+     "change_percent": 1.60563
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 2118086062.02,
+     "change_percent": 0.653175
+    },
+    {
+     "code": "gn_dfj",
+     "name": "大飞机",
+     "net_yuan": 2114886609.42,
+     "change_percent": 1.75223
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": 2077190971.72,
+     "change_percent": 0.528053
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": 2023649728.87,
+     "change_percent": 0.485661
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": 1983886226.94,
+     "change_percent": 1.85514
+    },
+    {
+     "code": "gn_lk",
+     "name": "锂矿",
+     "net_yuan": 1917257751.25,
+     "change_percent": 0.424311
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": 1879399789.97,
+     "change_percent": 1.15372
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": 1857490069.27,
+     "change_percent": 1.96172
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 1836894445.23,
+     "change_percent": 0.816825
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": 1789862439.05,
+     "change_percent": 3.75631
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 1776855325.24,
+     "change_percent": 2.18673
+    },
+    {
+     "code": "gn_gykc",
+     "name": "高压快充",
+     "net_yuan": 1762774381.19,
+     "change_percent": 2.56564
+    },
+    {
+     "code": "gn_scp",
+     "name": "奢侈品",
+     "net_yuan": 1760882822.45,
+     "change_percent": 2.79653
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": 1654661147.61,
+     "change_percent": 1.73316
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": 1628860544.99,
+     "change_percent": 1.8191
+    },
+    {
+     "code": "gn_ndc",
+     "name": "钠电池",
+     "net_yuan": 1618027230.12,
+     "change_percent": 2.85992
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 1554513362.55,
+     "change_percent": 2.57268
+    },
+    {
+     "code": "gn_qhgn",
+     "name": "前海概念",
+     "net_yuan": 1530288138.41,
+     "change_percent": 0.110673
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": 1509591111.45,
+     "change_percent": 0.859826
+    },
+    {
+     "code": "gn_dzzf",
+     "name": "电子支付",
+     "net_yuan": 1468258773.94,
+     "change_percent": 2.94341
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": 1455226933.22,
+     "change_percent": 3.12143
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 1440410145.23,
+     "change_percent": 0.0648312
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": 1424595909.52,
+     "change_percent": -0.236961
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": 1397134708.4,
+     "change_percent": 4.32526
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": 1394284685.6,
+     "change_percent": 1.56237
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": 1391354917.34,
+     "change_percent": 1.55545
+    },
+    {
+     "code": "gn_kdts",
+     "name": "宽带提速",
+     "net_yuan": 1383480237.55,
+     "change_percent": 1.99872
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": 1366216049.89,
+     "change_percent": 2.43767
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": 1352193098.74,
+     "change_percent": 2.05557
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": 1350998324.39,
+     "change_percent": 5.06179
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": 1343627916.38,
+     "change_percent": 1.03235
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": 1337763636.77,
+     "change_percent": 1.50866
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": 1280437240.26,
+     "change_percent": 1.54231
+    },
+    {
+     "code": "gn_yhtl",
+     "name": "盐湖提锂",
+     "net_yuan": 1267762436.01,
+     "change_percent": 1.98485
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": 1260331130.59,
+     "change_percent": 4.49854
+    },
+    {
+     "code": "gn_jygn",
+     "name": "基因概念",
+     "net_yuan": 1257434930.19,
+     "change_percent": 2.55827
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 1241664440.94,
+     "change_percent": 0.97639
+    },
+    {
+     "code": "gn_hdgn",
+     "name": "恒大概念",
+     "net_yuan": 1204909486.89,
+     "change_percent": 1.67396
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 1201932959.58,
+     "change_percent": 0.828086
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": 1183477769.68,
+     "change_percent": 3.34612
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": 1179887603.7,
+     "change_percent": 1.87353
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": 1167650234.73,
+     "change_percent": 2.01281
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 1141022320.15,
+     "change_percent": 2.18832
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": 1139787443.14,
+     "change_percent": 1.22779
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 1138795535.46,
+     "change_percent": 1.00677
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": 1109314239.55,
+     "change_percent": 1.10806
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 1106956913.92,
+     "change_percent": 1.22854
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 1067462997.9,
+     "change_percent": 0.93582
+    },
+    {
+     "code": "gn_tmj",
+     "name": "图们江",
+     "net_yuan": 1065296218.55,
+     "change_percent": 2.31154
+    },
+    {
+     "code": "gn_hygn",
+     "name": "航运概念",
+     "net_yuan": 1043750990.85,
+     "change_percent": 1.25245
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": 1029558462.56,
+     "change_percent": 1.49502
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 1027962930.63,
+     "change_percent": 1.09283
+    },
+    {
+     "code": "gn_3Ddy",
+     "name": "3D打印",
+     "net_yuan": 1005701600.38,
+     "change_percent": 0.87017
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": 1005506257.06,
+     "change_percent": 6.94134
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": 982482896.86,
+     "change_percent": 1.27091
+    },
+    {
+     "code": "gn_zxsy",
+     "name": "振兴沈阳",
+     "net_yuan": 981588527.04,
+     "change_percent": 0.607439
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": 976042359.21,
+     "change_percent": 1.7685
+    },
+    {
+     "code": "gn_swym",
+     "name": "生物疫苗",
+     "net_yuan": 972925510.47,
+     "change_percent": 1.98299
+    },
+    {
+     "code": "gn_zncd",
+     "name": "智能穿戴",
+     "net_yuan": 971119579.4,
+     "change_percent": 2.40462
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": 914903048.44,
+     "change_percent": 0.537307
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": 900101838.92,
+     "change_percent": 1.28336
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 898270934.84,
+     "change_percent": 1.27692
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": 821945173.68,
+     "change_percent": 1.32731
+    },
+    {
+     "code": "gn_wxdh",
+     "name": "卫星导航",
+     "net_yuan": 755052291.1,
+     "change_percent": 1.89884
+    },
+    {
+     "code": "gn_jjj",
+     "name": "京津冀",
+     "net_yuan": 753413782.25,
+     "change_percent": 1.16889
+    },
+    {
+     "code": "gn_gxbj",
+     "name": "高校背景",
+     "net_yuan": 736927390.16,
+     "change_percent": 2.00654
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 707584444.58,
+     "change_percent": 2.37304
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": 706315495.24,
+     "change_percent": 0.653619
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": 704624716.66,
+     "change_percent": 1.2638
+    },
+    {
+     "code": "gn_spaq",
+     "name": "食品安全",
+     "net_yuan": 683183611.63,
+     "change_percent": 3.11744
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": 677898323.08,
+     "change_percent": 1.65089
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": 667416141.79,
+     "change_percent": 1.25705
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": 666677780.44,
+     "change_percent": 2.54262
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 590770882.39,
+     "change_percent": 1.05776
+    },
+    {
+     "code": "gn_smx",
+     "name": "石墨烯",
+     "net_yuan": 583197717.35,
+     "change_percent": -0.771093
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": 576895871.26,
+     "change_percent": 3.22895
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": 558956984.48,
+     "change_percent": 1.59714
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": 550735056.13,
+     "change_percent": 1.04042
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 547374610.68,
+     "change_percent": 1.04079
+    },
+    {
+     "code": "gn_jr",
+     "name": "鸡肉",
+     "net_yuan": 522239605.22,
+     "change_percent": 2.48867
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 498326611.2,
+     "change_percent": 0.604522
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": 479287782.37,
+     "change_percent": 0.613823
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": 467090971.22,
+     "change_percent": -1.62391
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 412015937.71,
+     "change_percent": 2.41336
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 372253218.01,
+     "change_percent": 2.8717
+    },
+    {
+     "code": "gn_zmgn",
+     "name": "摘帽概念",
+     "net_yuan": 366818021.78,
+     "change_percent": 1.16303
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": 350987409.77,
+     "change_percent": 2.01022
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 338410381.11,
+     "change_percent": 0.727993
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": 325875374.75,
+     "change_percent": 0.0940328
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": 322389079.13,
+     "change_percent": 2.40514
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": 309126931.53,
+     "change_percent": 2.7766
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": 266673247.91,
+     "change_percent": 1.73133
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": 261304732.87,
+     "change_percent": 1.13375
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 252292470.68,
+     "change_percent": 2.55245
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 240815064.69,
+     "change_percent": 0.12876
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": 219848604.12,
+     "change_percent": 2.31589
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": 210756209.4,
+     "change_percent": 0.631072
+    },
+    {
+     "code": "gn_cjxj",
+     "name": "超级细菌",
+     "net_yuan": 190898753.86,
+     "change_percent": 1.43787
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": 184931975.01,
+     "change_percent": 1.65966
+    },
+    {
+     "code": "gn_txw",
+     "name": "碳纤维",
+     "net_yuan": 174568627.35,
+     "change_percent": 0.19337
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": 154743922.36,
+     "change_percent": 1.50268
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": 132188114.08,
+     "change_percent": 0.404669
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": 95622391.04,
+     "change_percent": -3.05376
+    },
+    {
+     "code": "gn_sqrl",
+     "name": "氢燃料",
+     "net_yuan": 88402468.54,
+     "change_percent": 0.33848
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": -21504768.53,
+     "change_percent": 3.10774
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": -101804623.66,
+     "change_percent": 1.84489
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": -1202224951.28,
+     "change_percent": -0.892008
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": -1310685332.68,
+     "change_percent": -0.891569
+    }
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 2211745516.09,
+     "change_percent": 1.95925
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": 1830919120.59,
+     "change_percent": 1.40363
+    },
+    {
+     "code": "new_fdsb",
+     "name": "发电设备",
+     "net_yuan": 1753880630.14,
+     "change_percent": 1.90317
+    },
+    {
+     "code": "new_jtys",
+     "name": "交通运输",
+     "net_yuan": 1526942692.46,
+     "change_percent": 1.21838
+    },
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": 1468252832.98,
+     "change_percent": 1.17798
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": 1397717073.27,
+     "change_percent": 1.50679
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": 1386184058.8,
+     "change_percent": 0.724908
+    },
+    {
+     "code": "new_hghy",
+     "name": "化工行业",
+     "net_yuan": 1377197021.41,
+     "change_percent": 0.915527
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 1374006182.23,
+     "change_percent": 1.33401
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 1270391310.13,
+     "change_percent": 1.24963
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": 1219566460.31,
+     "change_percent": 1.37552
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": 1209884494.25,
+     "change_percent": -1.61323
+    },
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": 1207089262.63,
+     "change_percent": -0.446345
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": 1148060092.1,
+     "change_percent": 1.00003
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": 1125408441.79,
+     "change_percent": 2.57619
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": 1100740619.9,
+     "change_percent": 0.904059
+    },
+    {
+     "code": "new_sphy",
+     "name": "食品行业",
+     "net_yuan": 814379752.38,
+     "change_percent": 1.82541
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": 744531727.18,
+     "change_percent": 1.34546
+    },
+    {
+     "code": "new_slzp",
+     "name": "塑料制品",
+     "net_yuan": 726813481.28,
+     "change_percent": 1.176
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 666757597.42,
+     "change_percent": 1.56275
+    },
+    {
+     "code": "new_qtxy",
+     "name": "其它行业",
+     "net_yuan": 602933403.205,
+     "change_percent": 0.263704
+    },
+    {
+     "code": "new_fdc",
+     "name": "房地产",
+     "net_yuan": 562415111.84,
+     "change_percent": 0.487218
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": 542759217.08,
+     "change_percent": 2.05266
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": 540804478.37,
+     "change_percent": 0.450384
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": 481164557.79,
+     "change_percent": 1.39149
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": 428774491.76,
+     "change_percent": 1.8306
+    },
+    {
+     "code": "new_glql",
+     "name": "公路桥梁",
+     "net_yuan": 339516902.44,
+     "change_percent": -0.37934
+    },
+    {
+     "code": "new_wzwm",
+     "name": "物资外贸",
+     "net_yuan": 335598582.8,
+     "change_percent": 1.30685
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": 327336262.14,
+     "change_percent": 0.391509
+    },
+    {
+     "code": "new_cbzz",
+     "name": "船舶制造",
+     "net_yuan": 322176754.35,
+     "change_percent": 1.74185
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": 229726003.12,
+     "change_percent": -0.568015
+    },
+    {
+     "code": "new_fjzz",
+     "name": "飞机制造",
+     "net_yuan": 227798923.76,
+     "change_percent": 1.11891
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": 182922867.07,
+     "change_percent": 1.72867
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": 182307995.86,
+     "change_percent": -0.727278
+    },
+    {
+     "code": "new_zzhy",
+     "name": "造纸行业",
+     "net_yuan": 159658484.59,
+     "change_percent": 1.08461
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": 103742716.47,
+     "change_percent": 1.06301
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": 84029414.75,
+     "change_percent": -2.33036
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": 74840442.79,
+     "change_percent": 0.60041
+    },
+    {
+     "code": "new_jjhy",
+     "name": "家具行业",
+     "net_yuan": 73861465.4,
+     "change_percent": 1.09279
+    },
+    {
+     "code": "new_ylqx",
+     "name": "医疗器械",
+     "net_yuan": 46642235.55,
+     "change_percent": 0.719679
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": 28022993.12,
+     "change_percent": 0.543463
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 27909104.32,
+     "change_percent": -0.971362
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": 27791963.78,
+     "change_percent": -1.21867
+    },
+    {
+     "code": "new_fzjx",
+     "name": "纺织机械",
+     "net_yuan": 22785446.07,
+     "change_percent": 0.432258
+    },
+    {
+     "code": "new_mtc",
+     "name": "摩托车",
+     "net_yuan": 20111216.42,
+     "change_percent": 0.0241726
+    },
+    {
+     "code": "new_kfq",
+     "name": "开发区",
+     "net_yuan": 10319709.78,
+     "change_percent": 0.351059
+    },
+    {
+     "code": "new_tchy",
+     "name": "陶瓷行业",
+     "net_yuan": -24217270.17,
+     "change_percent": 0.0399468
+    },
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": -39918105.76,
+     "change_percent": -0.858106
+    }
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 28310688570.86,
+     "change_percent": 0.317588
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 15210087807.57,
+     "change_percent": 0.456952
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 12981985309.49,
+     "change_percent": 0.105719
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": 9844528671.72,
+     "change_percent": -0.266883
+    },
+    {
+     "code": "gn_sbzc",
+     "name": "社保重仓",
+     "net_yuan": 7752039258.96,
+     "change_percent": 1.3452
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 7451951290.74,
+     "change_percent": 1.78733
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": 6495789584.86,
+     "change_percent": 0.619725
+    },
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 4606579335.89,
+     "change_percent": 0.393991
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": 4589852146.3,
+     "change_percent": 0.704227
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": 4213779823.56,
+     "change_percent": 0.808775
+    },
+    {
+     "code": "gn_qszc",
+     "name": "券商重仓",
+     "net_yuan": 3961147241.43,
+     "change_percent": 0.894973
+    },
+    {
+     "code": "gn_bjgn",
+     "name": "白酒概念",
+     "net_yuan": 3953808111.51,
+     "change_percent": 2.21679
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 3413046820.61,
+     "change_percent": 0.861144
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": 2920697881.86,
+     "change_percent": -0.649406
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": 2874793941.45,
+     "change_percent": 0.368874
+    },
+    {
+     "code": "gn_fd",
+     "name": "风电",
+     "net_yuan": 2763243713.88,
+     "change_percent": -0.353784
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": 2755539315.87,
+     "change_percent": 0.322085
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": 2693203023.67,
+     "change_percent": 0.89693
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": 2481120928.26,
+     "change_percent": 0.49462
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 2236939393.29,
+     "change_percent": -0.0594418
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": 2183422483.47,
+     "change_percent": 0.966771
+    },
+    {
+     "code": "gn_ndc",
+     "name": "钠电池",
+     "net_yuan": 2169027373.93,
+     "change_percent": 3.30152
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": 2000720727.85,
+     "change_percent": 0.976325
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": 1890957019.96,
+     "change_percent": 0.577084
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 1828098262.02,
+     "change_percent": 0.831243
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 1817340588.62,
+     "change_percent": 0.991308
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": 1804293736.3,
+     "change_percent": 1.38812
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": 1635543334.08,
+     "change_percent": 0.604887
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 1539418111.67,
+     "change_percent": 1.11661
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 1536737945.73,
+     "change_percent": 0.484761
+    },
+    {
+     "code": "gn_dfj",
+     "name": "大飞机",
+     "net_yuan": 1438328424.13,
+     "change_percent": 0.316821
+    },
+    {
+     "code": "gn_zxsy",
+     "name": "振兴沈阳",
+     "net_yuan": 1431728584.01,
+     "change_percent": 2.21683
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": 1412164630.06,
+     "change_percent": -0.0633314
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": 1390669858.35,
+     "change_percent": 0.133186
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 1367854010.44,
+     "change_percent": 0.889297
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": 1294093098.23,
+     "change_percent": 1.34931
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": 1279917381.77,
+     "change_percent": 1.7244
+    },
+    {
+     "code": "gn_yhtl",
+     "name": "盐湖提锂",
+     "net_yuan": 1278469004.38,
+     "change_percent": 0.974849
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": 1257875922.77,
+     "change_percent": 0.973587
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 1241889231.12,
+     "change_percent": 3.10827
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 1236450842.58,
+     "change_percent": 1.42456
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 1200304440.86,
+     "change_percent": 0.412597
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": 1190211765.23,
+     "change_percent": 0.184908
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": 1170249266.84,
+     "change_percent": 1.46424
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": 1169842469.42,
+     "change_percent": -0.0552418
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": 1118928547.69,
+     "change_percent": 0.530151
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": 1117390083.18,
+     "change_percent": 4.53822
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": 1094153276.39,
+     "change_percent": 3.97365
+    },
+    {
+     "code": "gn_fngn",
+     "name": "风能概念",
+     "net_yuan": 1023795895.92,
+     "change_percent": 0.51596
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": 1006372258.12,
+     "change_percent": 0.341221
+    },
+    {
+     "code": "gn_hBg",
+     "name": "含B股",
+     "net_yuan": 960438681.12,
+     "change_percent": 0.747157
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 950071196.17,
+     "change_percent": 0.673562
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 926678816.33,
+     "change_percent": 1.69194
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 926090916.88,
+     "change_percent": 1.24162
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 914396217.49,
+     "change_percent": 0.456093
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": 905553043.03,
+     "change_percent": 1.46711
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": 836926990.96,
+     "change_percent": 1.54565
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 825434134.59,
+     "change_percent": 1.02484
+    },
+    {
+     "code": "gn_kc50",
+     "name": "科创50",
+     "net_yuan": 790545882.27,
+     "change_percent": -2.71924
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 777772772.62,
+     "change_percent": -0.0422911
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 729770090.45,
+     "change_percent": 0.176368
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 721946682.47,
+     "change_percent": 2.93731
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": 706679426.11,
+     "change_percent": -0.32145
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": 670961847.4,
+     "change_percent": 1.05041
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": 660314930.74,
+     "change_percent": 1.72011
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": 655390288.97,
+     "change_percent": 0.0824944
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": 653565576.3,
+     "change_percent": 0.587066
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": 647497412.58,
+     "change_percent": 1.80768
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": 640068145.31,
+     "change_percent": -0.466608
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": 631086473.86,
+     "change_percent": 0.404796
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 622483754.22,
+     "change_percent": -0.0308154
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": 617554428.16,
+     "change_percent": 1.63487
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": 607927705.78,
+     "change_percent": 1.0017
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 607493981.84,
+     "change_percent": 1.14467
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": 596081625.3,
+     "change_percent": 1.06739
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": 590430092.09,
+     "change_percent": -0.0846467
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": 575245059.16,
+     "change_percent": 1.77654
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": 558628051.9,
+     "change_percent": 0.28875
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": 550721657.0,
+     "change_percent": 1.14237
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": 540622087.36,
+     "change_percent": -0.192634
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": 539073294.19,
+     "change_percent": 0.343186
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": 536966633.81,
+     "change_percent": 0.426746
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": 525721207.56,
+     "change_percent": 0.600083
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": 522727384.33,
+     "change_percent": -0.085663
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": 515038299.57,
+     "change_percent": 1.43728
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": 511042106.21,
+     "change_percent": -2.42592
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 503084926.9,
+     "change_percent": -1.22005
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 499583924.7,
+     "change_percent": 1.89619
+    },
+    {
+     "code": "gn_jjj",
+     "name": "京津冀",
+     "net_yuan": 499026669.77,
+     "change_percent": 1.16744
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": 451839184.59,
+     "change_percent": 0.334241
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": 440055813.6,
+     "change_percent": 0.559634
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 433087479.68,
+     "change_percent": 1.50096
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": 432054832.5,
+     "change_percent": 2.28199
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": 399085309.87,
+     "change_percent": 0.243434
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": 369466450.49,
+     "change_percent": -1.26727
+    },
+    {
+     "code": "gn_gfcl",
+     "name": "固废处理",
+     "net_yuan": 357135123.33,
+     "change_percent": 0.995179
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": 343984575.32,
+     "change_percent": 1.18384
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": 341850241.9,
+     "change_percent": 0.360818
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 315065244.31,
+     "change_percent": 0.385462
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": 292980580.47,
+     "change_percent": -0.478595
+    },
+    {
+     "code": "gn_wscl",
+     "name": "污水处理",
+     "net_yuan": 266864337.68,
+     "change_percent": 0.88508
+    },
+    {
+     "code": "gn_tjy",
+     "name": "碳交易",
+     "net_yuan": 264522751.35,
+     "change_percent": 0.987517
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": 263172945.44,
+     "change_percent": 0.765237
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 256567205.43,
+     "change_percent": 0.424503
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 249780589.26,
+     "change_percent": -0.144858
+    },
+    {
+     "code": "gn_sqrl",
+     "name": "氢燃料",
+     "net_yuan": 240664349.64,
+     "change_percent": 1.25174
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 223803432.23,
+     "change_percent": -0.0198618
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": 196619075.57,
+     "change_percent": -0.76889
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": 180212302.08,
+     "change_percent": -4.27123
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": 175880995.0,
+     "change_percent": 1.28884
+    },
+    {
+     "code": "gn_myyy",
+     "name": "民营医院",
+     "net_yuan": 171729901.32,
+     "change_percent": 0.185384
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": 165825769.41,
+     "change_percent": 1.46455
+    },
+    {
+     "code": "gn_wgg",
+     "name": "未股改",
+     "net_yuan": 155579936.38,
+     "change_percent": 0.322107
+    },
+    {
+     "code": "gn_znjj",
+     "name": "智能家居",
+     "net_yuan": 138412996.63,
+     "change_percent": 0.366999
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": 128055729.72,
+     "change_percent": 0.599435
+    },
+    {
+     "code": "gn_swrl",
+     "name": "生物燃料",
+     "net_yuan": 123087754.43,
+     "change_percent": 2.36893
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": 101185239.96,
+     "change_percent": -0.0479185
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": 89099728.28,
+     "change_percent": -0.246714
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": 88376821.99,
+     "change_percent": 0.586667
+    },
+    {
+     "code": "gn_yqgg",
+     "name": "油气改革",
+     "net_yuan": 59292242.52,
+     "change_percent": -1.38267
+    },
+    {
+     "code": "gn_cdgn",
+     "name": "超导概念",
+     "net_yuan": 57013127.89,
+     "change_percent": -2.55254
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": 53804857.73,
+     "change_percent": -0.808157
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": 14674797.32,
+     "change_percent": -1.86729
+    },
+    {
+     "code": "gn_bdgn",
+     "name": "百度概念",
+     "net_yuan": 13676995.68,
+     "change_percent": -0.614453
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": 13276371.84,
+     "change_percent": 0.588261
+    },
+    {
+     "code": "gn_kqzl",
+     "name": "空气治理",
+     "net_yuan": -14995533.89,
+     "change_percent": 0.0161084
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": -21026111.01,
+     "change_percent": -1.13554
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": -25539169.95,
+     "change_percent": -0.574856
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": -85887563.87,
+     "change_percent": -1.28491
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": -116031808.27,
+     "change_percent": -1.80582
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": -157475922.5,
+     "change_percent": -1.66427
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": -169334369.72,
+     "change_percent": -3.72664
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": -283821322.25,
+     "change_percent": -2.48709
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": -320090363.91,
+     "change_percent": -3.00951
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": -325414755.83,
+     "change_percent": -0.665582
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": -339607841.68,
+     "change_percent": -0.876306
+    },
+    {
+     "code": "gn_hwqc",
+     "name": "华为汽车",
+     "net_yuan": -380562833.96,
+     "change_percent": -1.16352
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": -562737880.87,
+     "change_percent": -1.91396
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": -776901234.48,
+     "change_percent": -3.06128
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": -843066817.79,
+     "change_percent": -2.04859
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": -965168987.71,
+     "change_percent": -3.19773
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": -1003438919.41,
+     "change_percent": -3.53763
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": -1077622255.95,
+     "change_percent": -2.16973
+    },
+    {
+     "code": "gn_kdts",
+     "name": "宽带提速",
+     "net_yuan": -1573848254.6,
+     "change_percent": -4.76779
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": -1767521494.37,
+     "change_percent": -4.37595
+    },
+    {
+     "code": "gn_zjtx",
+     "name": "专精特新",
+     "net_yuan": -4938957389.66,
+     "change_percent": -3.5658
+    }
+   ]
+  },
+  {
+   "date": "2026-11-04",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": 23187009472.63,
+     "change_percent": 6.80012
+    },
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": 14412881455.99,
+     "change_percent": 3.58846
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": 10741593573.4,
+     "change_percent": 5.16397
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 10468387355.88,
+     "change_percent": 4.06342
+    },
+    {
+     "code": "new_hghy",
+     "name": "化工行业",
+     "net_yuan": 5686994277.14,
+     "change_percent": 2.93213
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": 4953052172.42,
+     "change_percent": 1.31599
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": 4818075522.91,
+     "change_percent": 1.30177
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": 2621174838.77,
+     "change_percent": 2.20648
+    },
+    {
+     "code": "new_qtxy",
+     "name": "其它行业",
+     "net_yuan": 2500673010.147,
+     "change_percent": 1.29545
+    },
+    {
+     "code": "new_fdsb",
+     "name": "发电设备",
+     "net_yuan": 2335959804.04,
+     "change_percent": 2.50318
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": 2292358141.9,
+     "change_percent": 3.31537
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 1960558935.41,
+     "change_percent": 0.629977
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": 1771872619.81,
+     "change_percent": -0.199941
+    },
+    {
+     "code": "new_jtys",
+     "name": "交通运输",
+     "net_yuan": 1747435945.87,
+     "change_percent": 1.42454
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": 1537389355.91,
+     "change_percent": 1.1493
+    },
+    {
+     "code": "new_fdc",
+     "name": "房地产",
+     "net_yuan": 1511730440.42,
+     "change_percent": 0.890201
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": 1295399424.61,
+     "change_percent": 1.91567
+    },
+    {
+     "code": "new_fjzz",
+     "name": "飞机制造",
+     "net_yuan": 1280284757.36,
+     "change_percent": 2.90366
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": 1058160763.06,
+     "change_percent": 0.661481
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": 1041584166.35,
+     "change_percent": -1.32788
+    },
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": 1011250228.49,
+     "change_percent": -1.97917
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": 969520243.55,
+     "change_percent": 5.96494
+    },
+    {
+     "code": "new_zzhy",
+     "name": "造纸行业",
+     "net_yuan": 809471663.83,
+     "change_percent": 1.08814
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": 770728593.73,
+     "change_percent": 0.632284
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 640025477.34,
+     "change_percent": 0.493114
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": 632297803.41,
+     "change_percent": -1.36569
+    },
+    {
+     "code": "new_slzp",
+     "name": "塑料制品",
+     "net_yuan": 580224019.22,
+     "change_percent": 2.4052
+    },
+    {
+     "code": "new_ylqx",
+     "name": "医疗器械",
+     "net_yuan": 441822137.34,
+     "change_percent": 1.59122
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": 415933684.2,
+     "change_percent": 0.860596
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": 412278195.28,
+     "change_percent": 2.11826
+    },
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 410540390.13,
+     "change_percent": 0.322197
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": 409453237.24,
+     "change_percent": 1.96706
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 400982213.45,
+     "change_percent": -0.382163
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": 399389566.44,
+     "change_percent": 1.31015
+    },
+    {
+     "code": "new_wzwm",
+     "name": "物资外贸",
+     "net_yuan": 393306713.77,
+     "change_percent": 0.62483
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": 208270898.69,
+     "change_percent": -2.15406
+    },
+    {
+     "code": "new_mtc",
+     "name": "摩托车",
+     "net_yuan": 192881674.15,
+     "change_percent": 1.63699
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": 186908292.75,
+     "change_percent": -0.231858
+    },
+    {
+     "code": "new_kfq",
+     "name": "开发区",
+     "net_yuan": 162723108.89,
+     "change_percent": 1.75888
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": 152465107.43,
+     "change_percent": 0.0822532
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": 138495725.35,
+     "change_percent": 0.42768
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": 125031605.56,
+     "change_percent": -0.213242
+    },
+    {
+     "code": "new_jjhy",
+     "name": "家具行业",
+     "net_yuan": 91192064.54,
+     "change_percent": 1.81687
+    },
+    {
+     "code": "new_tchy",
+     "name": "陶瓷行业",
+     "net_yuan": 83191077.92,
+     "change_percent": 6.96841
+    },
+    {
+     "code": "new_fzjx",
+     "name": "纺织机械",
+     "net_yuan": 36645639.18,
+     "change_percent": 1.07211
+    },
+    {
+     "code": "new_cbzz",
+     "name": "船舶制造",
+     "net_yuan": 29899313.49,
+     "change_percent": 0.381294
+    },
+    {
+     "code": "new_sphy",
+     "name": "食品行业",
+     "net_yuan": -95026386.36,
+     "change_percent": -1.25635
+    }
+   ]
+  },
+  {
+   "date": "2026-11-04",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 19122156667.46,
+     "change_percent": -0.641384
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": 17002906128.74,
+     "change_percent": 2.41507
+    },
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 16992187424.18,
+     "change_percent": 2.5657
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": 16528302727.51,
+     "change_percent": 1.5134
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": 15836930472.95,
+     "change_percent": 4.72607
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": 12484671314.21,
+     "change_percent": 2.63056
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": 10328051933.91,
+     "change_percent": 2.24089
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": 10125628851.29,
+     "change_percent": 1.42916
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": 9874748516.06,
+     "change_percent": 1.26731
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": 9259001168.19,
+     "change_percent": 4.8799
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": 8819762280.08,
+     "change_percent": 3.47808
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": 8730307643.36,
+     "change_percent": 7.259
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": 7914116926.61,
+     "change_percent": 6.75604
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": 7622427029.85,
+     "change_percent": 2.46271
+    },
+    {
+     "code": "gn_hwhs",
+     "name": "华为海思",
+     "net_yuan": 7219000322.24,
+     "change_percent": 8.83126
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": 7200345311.32,
+     "change_percent": 0.909638
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": 7172231702.29,
+     "change_percent": 2.84783
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": 6679805939.17,
+     "change_percent": 3.57122
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": 6654312719.06,
+     "change_percent": 7.86234
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": 6444323589.8,
+     "change_percent": 6.96729
+    },
+    {
+     "code": "gn_sbzc",
+     "name": "社保重仓",
+     "net_yuan": 5962307826.66,
+     "change_percent": 0.494906
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": 5903243833.12,
+     "change_percent": 4.98522
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 5803381425.95,
+     "change_percent": -1.15538
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": 5720179819.19,
+     "change_percent": 2.32568
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": 5561802389.57,
+     "change_percent": 3.58665
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": 5329101200.08,
+     "change_percent": 3.68324
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": 4867756245.74,
+     "change_percent": 9.41591
+    },
+    {
+     "code": "gn_hwqc",
+     "name": "华为汽车",
+     "net_yuan": 4823412248.0,
+     "change_percent": 3.29891
+    },
+    {
+     "code": "gn_zncd",
+     "name": "智能穿戴",
+     "net_yuan": 4752376769.7,
+     "change_percent": 6.36712
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 4732219740.63,
+     "change_percent": 1.89443
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": 4712220385.88,
+     "change_percent": 9.49706
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": 4645842292.66,
+     "change_percent": -0.972947
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": 4619464745.66,
+     "change_percent": 4.12803
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 4498523547.33,
+     "change_percent": -1.43095
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": 4329106619.98,
+     "change_percent": 5.38731
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 4181463376.78,
+     "change_percent": -0.726895
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 4168018411.27,
+     "change_percent": 1.33968
+    },
+    {
+     "code": "gn_dzzf",
+     "name": "电子支付",
+     "net_yuan": 4099642332.44,
+     "change_percent": 5.12457
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": 3878108234.73,
+     "change_percent": 1.19506
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": 3656759204.83,
+     "change_percent": 5.96843
+    },
+    {
+     "code": "gn_5Ggn",
+     "name": "5G概念",
+     "net_yuan": 3589575179.79,
+     "change_percent": 3.96326
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": 3554763242.77,
+     "change_percent": 1.40653
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 3507155766.26,
+     "change_percent": -0.744765
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": 3462976112.66,
+     "change_percent": 7.1818
+    },
+    {
+     "code": "gn_3Ddy",
+     "name": "3D打印",
+     "net_yuan": 3161670122.74,
+     "change_percent": 2.78448
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": 3159187856.22,
+     "change_percent": 0.0706269
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 3115220159.95,
+     "change_percent": 1.75583
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 2892787579.74,
+     "change_percent": 2.05829
+    },
+    {
+     "code": "gn_kdts",
+     "name": "宽带提速",
+     "net_yuan": 2832223540.9,
+     "change_percent": 5.76846
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": 2772967208.09,
+     "change_percent": 1.51742
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": 2753247854.26,
+     "change_percent": 2.33482
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": 2751522538.74,
+     "change_percent": 3.79161
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": 2700838492.85,
+     "change_percent": 3.45056
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": 2691110537.77,
+     "change_percent": 6.05702
+    },
+    {
+     "code": "gn_hBg",
+     "name": "含B股",
+     "net_yuan": 2612077990.75,
+     "change_percent": 1.42744
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 2518757943.54,
+     "change_percent": 0.889699
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": 2446007831.5,
+     "change_percent": 0.563367
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": 2429425596.68,
+     "change_percent": 2.08149
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": 2379270205.82,
+     "change_percent": 1.75093
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 2327958487.35,
+     "change_percent": 1.00759
+    },
+    {
+     "code": "gn_fngn",
+     "name": "风能概念",
+     "net_yuan": 2264549535.91,
+     "change_percent": 1.68865
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": 2200291532.06,
+     "change_percent": 0.972497
+    },
+    {
+     "code": "gn_HJTdc",
+     "name": "HJT电池",
+     "net_yuan": 2182447166.09,
+     "change_percent": 6.72469
+    },
+    {
+     "code": "gn_HITdc",
+     "name": "HIT电池",
+     "net_yuan": 2182447166.09,
+     "change_percent": 6.72469
+    },
+    {
+     "code": "gn_gykc",
+     "name": "高压快充",
+     "net_yuan": 2162270978.03,
+     "change_percent": 3.97467
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": 2107955772.16,
+     "change_percent": 2.00734
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": 2093121920.26,
+     "change_percent": 0.580462
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 2080643131.61,
+     "change_percent": 1.95903
+    },
+    {
+     "code": "gn_yhtl",
+     "name": "盐湖提锂",
+     "net_yuan": 1936978489.45,
+     "change_percent": 1.53789
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": 1901722287.36,
+     "change_percent": 1.97693
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 1851733357.06,
+     "change_percent": 5.79458
+    },
+    {
+     "code": "gn_cdz",
+     "name": "充电桩",
+     "net_yuan": 1837017298.69,
+     "change_percent": 3.30153
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": 1825827300.14,
+     "change_percent": 5.44373
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 1803785365.89,
+     "change_percent": 0.769453
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": 1683139734.81,
+     "change_percent": 3.40001
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": 1656479497.62,
+     "change_percent": 1.02238
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": 1609060559.16,
+     "change_percent": 2.4235
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": 1602384923.2,
+     "change_percent": 2.21519
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": 1576322590.79,
+     "change_percent": 1.54218
+    },
+    {
+     "code": "gn_kqzl",
+     "name": "空气治理",
+     "net_yuan": 1549273264.32,
+     "change_percent": 3.07103
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 1511466023.5,
+     "change_percent": 2.77509
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": 1510657274.02,
+     "change_percent": 1.55584
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": 1427629125.52,
+     "change_percent": 3.59865
+    },
+    {
+     "code": "gn_wxdh",
+     "name": "卫星导航",
+     "net_yuan": 1413242713.18,
+     "change_percent": 4.45069
+    },
+    {
+     "code": "gn_zxsy",
+     "name": "振兴沈阳",
+     "net_yuan": 1396903072.84,
+     "change_percent": -0.616678
+    },
+    {
+     "code": "gn_txw",
+     "name": "碳纤维",
+     "net_yuan": 1386833974.19,
+     "change_percent": 1.85839
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 1348145160.92,
+     "change_percent": 2.14771
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": 1342522210.59,
+     "change_percent": 3.11153
+    },
+    {
+     "code": "gn_yq50",
+     "name": "央企50",
+     "net_yuan": 1334976455.32,
+     "change_percent": -1.12439
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": 1327679484.41,
+     "change_percent": 1.9686
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": 1324339397.21,
+     "change_percent": 1.85149
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": 1306819448.45,
+     "change_percent": 2.28279
+    },
+    {
+     "code": "gn_gtdc",
+     "name": "固态电池",
+     "net_yuan": 1279433507.56,
+     "change_percent": 1.53781
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 1257480657.85,
+     "change_percent": 1.87583
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": 1236047411.55,
+     "change_percent": 3.79405
+    },
+    {
+     "code": "gn_cdgn",
+     "name": "超导概念",
+     "net_yuan": 1212044118.52,
+     "change_percent": 4.3144
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": 1194364684.93,
+     "change_percent": 1.71919
+    },
+    {
+     "code": "gn_gxbj",
+     "name": "高校背景",
+     "net_yuan": 1189192858.7,
+     "change_percent": 4.24524
+    },
+    {
+     "code": "gn_bjgn",
+     "name": "白酒概念",
+     "net_yuan": 1182599224.58,
+     "change_percent": -1.9697
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 1170380840.29,
+     "change_percent": 0.578272
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": 1147244168.98,
+     "change_percent": 2.64898
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": 1138645190.7,
+     "change_percent": 1.24316
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 1097373018.99,
+     "change_percent": 1.86392
+    },
+    {
+     "code": "gn_myyy",
+     "name": "民营医院",
+     "net_yuan": 1092569826.9,
+     "change_percent": 1.57387
+    },
+    {
+     "code": "gn_qhgn",
+     "name": "前海概念",
+     "net_yuan": 1061611139.03,
+     "change_percent": 0.338674
+    },
+    {
+     "code": "gn_ndc",
+     "name": "钠电池",
+     "net_yuan": 1026305339.16,
+     "change_percent": 1.59295
+    },
+    {
+     "code": "gn_gfcl",
+     "name": "固废处理",
+     "net_yuan": 983894677.0,
+     "change_percent": 1.55613
+    },
+    {
+     "code": "gn_swym",
+     "name": "生物疫苗",
+     "net_yuan": 979986480.78,
+     "change_percent": 1.32862
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": 960893521.0,
+     "change_percent": 3.26351
+    },
+    {
+     "code": "gn_spaq",
+     "name": "食品安全",
+     "net_yuan": 958517701.91,
+     "change_percent": 2.5506
+    },
+    {
+     "code": "gn_hdgn",
+     "name": "恒大概念",
+     "net_yuan": 915901285.5,
+     "change_percent": 1.69392
+    },
+    {
+     "code": "gn_wscl",
+     "name": "污水处理",
+     "net_yuan": 858719864.47,
+     "change_percent": 0.950281
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": 816779849.65,
+     "change_percent": 0.859901
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 807956801.98,
+     "change_percent": 0.6868
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": 805459457.83,
+     "change_percent": 0.908814
+    },
+    {
+     "code": "gn_yqgg",
+     "name": "油气改革",
+     "net_yuan": 756049332.48,
+     "change_percent": 1.35651
+    },
+    {
+     "code": "gn_scp",
+     "name": "奢侈品",
+     "net_yuan": 750713873.44,
+     "change_percent": -1.8448
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": 741598852.87,
+     "change_percent": 0.66446
+    },
+    {
+     "code": "gn_krb",
+     "name": "可燃冰",
+     "net_yuan": 740244176.37,
+     "change_percent": 4.13832
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 717564749.06,
+     "change_percent": 0.301293
+    },
+    {
+     "code": "gn_cdp",
+     "name": "超大盘",
+     "net_yuan": 691284177.61,
+     "change_percent": -1.33596
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 687588718.92,
+     "change_percent": 0.269051
+    },
+    {
+     "code": "gn_jygn",
+     "name": "基因概念",
+     "net_yuan": 684303382.41,
+     "change_percent": 1.2586
+    },
+    {
+     "code": "gn_hmgn",
+     "name": "鸿蒙概念",
+     "net_yuan": 677022637.88,
+     "change_percent": 2.34859
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": 676814953.06,
+     "change_percent": 1.1823
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": 654694770.66,
+     "change_percent": 1.62299
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 652195275.75,
+     "change_percent": -0.302983
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": 652131311.22,
+     "change_percent": 1.74925
+    },
+    {
+     "code": "gn_bdgn",
+     "name": "百度概念",
+     "net_yuan": 636654410.49,
+     "change_percent": 2.61734
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": 633562644.07,
+     "change_percent": 5.31916
+    },
+    {
+     "code": "gn_tmj",
+     "name": "图们江",
+     "net_yuan": 627757768.11,
+     "change_percent": 2.59178
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": 585536918.69,
+     "change_percent": 0.264141
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 584172609.77,
+     "change_percent": 0.278437
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": 569490394.27,
+     "change_percent": 1.53225
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": 556102538.12,
+     "change_percent": 1.01807
+    },
+    {
+     "code": "gn_ljfl",
+     "name": "垃圾分类",
+     "net_yuan": 542129566.79,
+     "change_percent": 1.32103
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": 494009637.63,
+     "change_percent": 0.423036
+    },
+    {
+     "code": "gn_znjj",
+     "name": "智能家居",
+     "net_yuan": 485386072.1,
+     "change_percent": 2.34461
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 467869324.26,
+     "change_percent": -0.0789062
+    },
+    {
+     "code": "gn_cjxj",
+     "name": "超级细菌",
+     "net_yuan": 465338082.56,
+     "change_percent": 1.44744
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": 464141178.49,
+     "change_percent": 1.20709
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 437906410.76,
+     "change_percent": 0.433425
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 430460503.72,
+     "change_percent": 1.57449
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": 416942998.12,
+     "change_percent": 0.699926
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": 355512453.13,
+     "change_percent": 2.51391
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": 343315416.3,
+     "change_percent": -0.0952113
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 327434049.51,
+     "change_percent": 0.866733
+    },
+    {
+     "code": "gn_myzl",
+     "name": "免疫治疗",
+     "net_yuan": 316641489.01,
+     "change_percent": 1.4588
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": 303869331.52,
+     "change_percent": 1.92976
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 298963075.79,
+     "change_percent": -0.502575
+    },
+    {
+     "code": "gn_swrl",
+     "name": "生物燃料",
+     "net_yuan": 296231882.52,
+     "change_percent": 0.189456
+    },
+    {
+     "code": "gn_jr",
+     "name": "鸡肉",
+     "net_yuan": 271778902.4,
+     "change_percent": -0.0726512
+    },
+    {
+     "code": "gn_sqrl",
+     "name": "氢燃料",
+     "net_yuan": 257232695.67,
+     "change_percent": 0.828785
+    },
+    {
+     "code": "gn_wgg",
+     "name": "未股改",
+     "net_yuan": 252124562.4,
+     "change_percent": 0.0378732
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": 250162246.75,
+     "change_percent": 0.353041
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 242541788.87,
+     "change_percent": 0.891111
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": 234821222.78,
+     "change_percent": 0.0399261
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": 227398139.4,
+     "change_percent": 1.26332
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": 211983292.63,
+     "change_percent": 0.107843
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": 205713916.91,
+     "change_percent": 1.81862
+    },
+    {
+     "code": "gn_jxlg",
+     "name": "甲型流感",
+     "net_yuan": 198288797.34,
+     "change_percent": 0.911949
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 171756140.16,
+     "change_percent": 1.13497
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": 154886575.6,
+     "change_percent": 1.03585
+    },
+    {
+     "code": "gn_zmgn",
+     "name": "摘帽概念",
+     "net_yuan": 153684348.74,
+     "change_percent": -0.0613771
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": 102361338.52,
+     "change_percent": 0.714798
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": 47344669.01,
+     "change_percent": 0.524074
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": 41841523.78,
+     "change_percent": 0.0389277
+    },
+    {
+     "code": "gn_hGDR",
+     "name": "含GDR",
+     "net_yuan": -69340584.64,
+     "change_percent": -0.447678
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": -557914452.87,
+     "change_percent": -2.05788
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": -572503148.55,
+     "change_percent": -2.95651
+    }
+   ]
+  },
+  {
+   "date": "2026-11-05",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": 7741948867.25,
+     "change_percent": 1.51189
+    },
+    {
+     "code": "new_hghy",
+     "name": "化工行业",
+     "net_yuan": 4213867635.97,
+     "change_percent": 2.56824
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": 3172394715.44,
+     "change_percent": 1.58329
+    },
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": 2856043693.44,
+     "change_percent": 0.645002
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": 2423759270.29,
+     "change_percent": 0.974937
+    },
+    {
+     "code": "new_fdc",
+     "name": "房地产",
+     "net_yuan": 2168670011.62,
+     "change_percent": 2.65564
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": 1979737190.47,
+     "change_percent": 2.68817
+    },
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": 1909267399.03,
+     "change_percent": 0.707502
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": 1750052651.37,
+     "change_percent": 4.38272
+    },
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 1583099455.0,
+     "change_percent": 1.51151
+    },
+    {
+     "code": "new_qtxy",
+     "name": "其它行业",
+     "net_yuan": 1479108029.718,
+     "change_percent": 1.20073
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": 1390198750.58,
+     "change_percent": 1.59403
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": 1182626943.31,
+     "change_percent": 3.01646
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": 1134744159.42,
+     "change_percent": 1.45459
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 985285837.13,
+     "change_percent": 0.379551
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": 980834592.11,
+     "change_percent": 2.75423
+    },
+    {
+     "code": "new_slzp",
+     "name": "塑料制品",
+     "net_yuan": 848005592.04,
+     "change_percent": 2.85762
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": 794837545.89,
+     "change_percent": 0.509086
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 780462563.72,
+     "change_percent": 1.71461
+    },
+    {
+     "code": "new_zzhy",
+     "name": "造纸行业",
+     "net_yuan": 754483420.96,
+     "change_percent": 2.19322
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": 658035358.75,
+     "change_percent": 1.74046
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": 613790619.54,
+     "change_percent": 2.00081
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": 612771349.11,
+     "change_percent": -0.0499872
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 595798782.8,
+     "change_percent": 0.49544
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 521502620.29,
+     "change_percent": 0.473596
+    },
+    {
+     "code": "new_jjhy",
+     "name": "家具行业",
+     "net_yuan": 500782312.35,
+     "change_percent": 3.36869
+    },
+    {
+     "code": "new_jtys",
+     "name": "交通运输",
+     "net_yuan": 412673553.06,
+     "change_percent": 0.933041
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": 400116752.2,
+     "change_percent": 2.16195
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": 337879242.82,
+     "change_percent": 2.09586
+    },
+    {
+     "code": "new_ylqx",
+     "name": "医疗器械",
+     "net_yuan": 260013786.43,
+     "change_percent": 1.36716
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": 251669467.74,
+     "change_percent": 0.575068
+    },
+    {
+     "code": "new_kfq",
+     "name": "开发区",
+     "net_yuan": 71042798.27,
+     "change_percent": 1.3648
+    },
+    {
+     "code": "new_mtc",
+     "name": "摩托车",
+     "net_yuan": 61867764.42,
+     "change_percent": 0.646054
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": 38496783.02,
+     "change_percent": 1.54555
+    },
+    {
+     "code": "new_fzjx",
+     "name": "纺织机械",
+     "net_yuan": 24782307.87,
+     "change_percent": 1.82715
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": 15333395.23,
+     "change_percent": -1.35659
+    },
+    {
+     "code": "new_cbzz",
+     "name": "船舶制造",
+     "net_yuan": -21027870.14,
+     "change_percent": -0.294946
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": -34297657.31,
+     "change_percent": 0.648682
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": -76612922.88,
+     "change_percent": 0.303879
+    },
+    {
+     "code": "new_glql",
+     "name": "公路桥梁",
+     "net_yuan": -100431055.01,
+     "change_percent": -1.20773
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": -180350941.99,
+     "change_percent": -6.11697
+    },
+    {
+     "code": "new_tchy",
+     "name": "陶瓷行业",
+     "net_yuan": -238340563.07,
+     "change_percent": -6.50469
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": -591261089.19,
+     "change_percent": -0.449833
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": -960086801.13,
+     "change_percent": -4.74139
+    }
+   ]
+  },
+  {
+   "date": "2026-11-05",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 11358598643.98,
+     "change_percent": 2.42274
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": 8722864299.54,
+     "change_percent": 1.60448
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": 8014550978.95,
+     "change_percent": 1.9777
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": 6841268581.86,
+     "change_percent": 2.81336
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": 5291335939.21,
+     "change_percent": 3.17508
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": 4973338326.94,
+     "change_percent": 0.796663
+    },
+    {
+     "code": "gn_fd",
+     "name": "风电",
+     "net_yuan": 4921830261.47,
+     "change_percent": -0.640316
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": 4833135559.5,
+     "change_percent": 2.8218
+    },
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 4272803508.64,
+     "change_percent": -0.793613
+    },
+    {
+     "code": "gn_zjtx",
+     "name": "专精特新",
+     "net_yuan": 4268603112.05,
+     "change_percent": 1.64971
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 3800973652.11,
+     "change_percent": 1.37686
+    },
+    {
+     "code": "gn_lk",
+     "name": "锂矿",
+     "net_yuan": 3596730914.67,
+     "change_percent": 2.45137
+    },
+    {
+     "code": "gn_gtdc",
+     "name": "固态电池",
+     "net_yuan": 3410152495.2,
+     "change_percent": 4.48767
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": 3331608136.35,
+     "change_percent": 0.811501
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": 3288094745.34,
+     "change_percent": 1.38212
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": 3232569181.12,
+     "change_percent": 2.1992
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": 3172318818.8,
+     "change_percent": 5.70857
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": 2899228024.86,
+     "change_percent": 1.13028
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": 2847312296.61,
+     "change_percent": 3.05328
+    },
+    {
+     "code": "gn_HJTdc",
+     "name": "HJT电池",
+     "net_yuan": 2794315881.07,
+     "change_percent": 5.67664
+    },
+    {
+     "code": "gn_HITdc",
+     "name": "HIT电池",
+     "net_yuan": 2794315881.07,
+     "change_percent": 5.67664
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": 2710941857.28,
+     "change_percent": 2.62535
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": 2691995315.05,
+     "change_percent": 1.20013
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 2645268038.28,
+     "change_percent": 0.949175
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": 2522836159.2,
+     "change_percent": 1.19952
+    },
+    {
+     "code": "gn_gtk",
+     "name": "钙钛矿",
+     "net_yuan": 2501150661.79,
+     "change_percent": 4.38035
+    },
+    {
+     "code": "gn_sbzc",
+     "name": "社保重仓",
+     "net_yuan": 2455098930.82,
+     "change_percent": 0.436168
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": 2400826830.59,
+     "change_percent": 1.61411
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 2397015289.84,
+     "change_percent": -0.389586
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 2387580139.33,
+     "change_percent": 1.85208
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": 2355806047.95,
+     "change_percent": 1.25949
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": 2269604084.82,
+     "change_percent": 0.228187
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": 2161656943.36,
+     "change_percent": 2.40475
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 2148276109.74,
+     "change_percent": 4.56357
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 2125393605.25,
+     "change_percent": -1.26453
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": 2115095596.65,
+     "change_percent": 1.57228
+    },
+    {
+     "code": "gn_ndc",
+     "name": "钠电池",
+     "net_yuan": 2025902022.99,
+     "change_percent": 4.71979
+    },
+    {
+     "code": "gn_yhtl",
+     "name": "盐湖提锂",
+     "net_yuan": 1999878743.97,
+     "change_percent": 2.5437
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": 1956437877.07,
+     "change_percent": 2.95145
+    },
+    {
+     "code": "gn_hwhs",
+     "name": "华为海思",
+     "net_yuan": 1916606159.88,
+     "change_percent": 4.46937
+    },
+    {
+     "code": "gn_cdz",
+     "name": "充电桩",
+     "net_yuan": 1855487923.46,
+     "change_percent": 3.36934
+    },
+    {
+     "code": "gn_fngn",
+     "name": "风能概念",
+     "net_yuan": 1707558467.29,
+     "change_percent": 1.34471
+    },
+    {
+     "code": "gn_kc50",
+     "name": "科创50",
+     "net_yuan": 1649787848.49,
+     "change_percent": 2.33971
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": 1588752091.44,
+     "change_percent": 3.78611
+    },
+    {
+     "code": "gn_5Ggn",
+     "name": "5G概念",
+     "net_yuan": 1559762465.35,
+     "change_percent": 1.32053
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 1538633567.87,
+     "change_percent": 1.26661
+    },
+    {
+     "code": "gn_qszc",
+     "name": "券商重仓",
+     "net_yuan": 1478313612.44,
+     "change_percent": 0.599802
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": 1473693577.56,
+     "change_percent": 2.85831
+    },
+    {
+     "code": "gn_smx",
+     "name": "石墨烯",
+     "net_yuan": 1438741949.85,
+     "change_percent": 0.919819
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": 1400665768.4,
+     "change_percent": 0.458894
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": 1395503535.57,
+     "change_percent": 3.48044
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": 1363822755.95,
+     "change_percent": 2.13459
+    },
+    {
+     "code": "gn_dzzf",
+     "name": "电子支付",
+     "net_yuan": 1360653582.1,
+     "change_percent": 2.89614
+    },
+    {
+     "code": "gn_gykc",
+     "name": "高压快充",
+     "net_yuan": 1304158260.16,
+     "change_percent": 2.96174
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": 1267066428.5,
+     "change_percent": 0.828046
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": 1258699916.81,
+     "change_percent": 0.508614
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": 1232804182.29,
+     "change_percent": 2.12148
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 1222486109.14,
+     "change_percent": 2.6827
+    },
+    {
+     "code": "gn_kdts",
+     "name": "宽带提速",
+     "net_yuan": 1220959478.53,
+     "change_percent": 1.56336
+    },
+    {
+     "code": "gn_dfj",
+     "name": "大飞机",
+     "net_yuan": 1207737848.11,
+     "change_percent": 1.08962
+    },
+    {
+     "code": "gn_bjgn",
+     "name": "白酒概念",
+     "net_yuan": 1203276864.69,
+     "change_percent": 0.526718
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": 1185404002.47,
+     "change_percent": 3.47183
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 1180704293.99,
+     "change_percent": 0.0805289
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 1172659174.42,
+     "change_percent": 0.504285
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 1156228241.59,
+     "change_percent": 1.32456
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": 1148856301.88,
+     "change_percent": 1.82869
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": 1072666183.98,
+     "change_percent": 1.16089
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 1072182466.49,
+     "change_percent": -1.17583
+    },
+    {
+     "code": "gn_zncd",
+     "name": "智能穿戴",
+     "net_yuan": 1019745830.0,
+     "change_percent": 2.21653
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": 1004879337.03,
+     "change_percent": 1.04427
+    },
+    {
+     "code": "gn_hwqc",
+     "name": "华为汽车",
+     "net_yuan": 991127331.87,
+     "change_percent": 1.2746
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": 960596162.74,
+     "change_percent": 2.21675
+    },
+    {
+     "code": "gn_hBg",
+     "name": "含B股",
+     "net_yuan": 959373578.11,
+     "change_percent": 1.01099
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 947395010.25,
+     "change_percent": 1.05479
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 945958946.21,
+     "change_percent": 1.61646
+    },
+    {
+     "code": "gn_scp",
+     "name": "奢侈品",
+     "net_yuan": 934089465.84,
+     "change_percent": 0.260821
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": 877547535.1,
+     "change_percent": 3.94545
+    },
+    {
+     "code": "gn_3Ddy",
+     "name": "3D打印",
+     "net_yuan": 865018590.81,
+     "change_percent": 1.27813
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": 860919865.54,
+     "change_percent": 2.57923
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": 851508053.39,
+     "change_percent": 3.09279
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": 848817262.42,
+     "change_percent": 4.0089
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 811606524.09,
+     "change_percent": 0.978313
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": 807202616.39,
+     "change_percent": 2.17684
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": 754315000.53,
+     "change_percent": 2.08049
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": 730705111.74,
+     "change_percent": 1.88509
+    },
+    {
+     "code": "gn_gxbj",
+     "name": "高校背景",
+     "net_yuan": 705041715.06,
+     "change_percent": 1.67536
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": 695696967.86,
+     "change_percent": 2.20839
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": 694033961.04,
+     "change_percent": 1.20774
+    },
+    {
+     "code": "gn_myyy",
+     "name": "民营医院",
+     "net_yuan": 690494956.7,
+     "change_percent": 1.28573
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": 686276308.62,
+     "change_percent": 2.50253
+    },
+    {
+     "code": "gn_txw",
+     "name": "碳纤维",
+     "net_yuan": 678059199.24,
+     "change_percent": 3.3131
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 672167078.88,
+     "change_percent": 0.782309
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": 671250989.33,
+     "change_percent": 0.761556
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": 625924470.53,
+     "change_percent": 1.83423
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 623910192.59,
+     "change_percent": 1.01925
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": 622700967.37,
+     "change_percent": 1.06973
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": 536329480.94,
+     "change_percent": 1.45268
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": 524049186.63,
+     "change_percent": 1.32805
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": 517170982.67,
+     "change_percent": 3.5735
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": 514226027.5,
+     "change_percent": 2.49156
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": 513786697.37,
+     "change_percent": 1.37966
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": 472142230.78,
+     "change_percent": 0.682456
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": 447843197.42,
+     "change_percent": 1.67112
+    },
+    {
+     "code": "gn_hmgn",
+     "name": "鸿蒙概念",
+     "net_yuan": 447697225.99,
+     "change_percent": 2.0398
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": 447484523.57,
+     "change_percent": -0.106583
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": 444209238.3,
+     "change_percent": 1.92015
+    },
+    {
+     "code": "gn_jygn",
+     "name": "基因概念",
+     "net_yuan": 441339682.57,
+     "change_percent": 1.19837
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": 436228776.35,
+     "change_percent": -0.0535015
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": 428810436.81,
+     "change_percent": 1.36602
+    },
+    {
+     "code": "gn_zmgn",
+     "name": "摘帽概念",
+     "net_yuan": 421594821.18,
+     "change_percent": 3.33885
+    },
+    {
+     "code": "gn_ljfl",
+     "name": "垃圾分类",
+     "net_yuan": 418888607.33,
+     "change_percent": 1.62331
+    },
+    {
+     "code": "gn_zxsy",
+     "name": "振兴沈阳",
+     "net_yuan": 410761797.96,
+     "change_percent": 2.14108
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": 410388093.73,
+     "change_percent": -0.197572
+    },
+    {
+     "code": "gn_tjy",
+     "name": "碳交易",
+     "net_yuan": 374179924.02,
+     "change_percent": 1.92443
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 374018464.13,
+     "change_percent": 1.47958
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": 370320319.34,
+     "change_percent": -0.0128903
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 368719414.11,
+     "change_percent": 0.980506
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": 367297690.89,
+     "change_percent": 1.6674
+    },
+    {
+     "code": "gn_hdgn",
+     "name": "恒大概念",
+     "net_yuan": 349417722.96,
+     "change_percent": 0.620355
+    },
+    {
+     "code": "gn_jr",
+     "name": "鸡肉",
+     "net_yuan": 348356280.15,
+     "change_percent": 1.3643
+    },
+    {
+     "code": "gn_cdgn",
+     "name": "超导概念",
+     "net_yuan": 345908669.83,
+     "change_percent": 1.8398
+    },
+    {
+     "code": "gn_kqzl",
+     "name": "空气治理",
+     "net_yuan": 308855794.27,
+     "change_percent": 1.12612
+    },
+    {
+     "code": "gn_qhgn",
+     "name": "前海概念",
+     "net_yuan": 302793867.19,
+     "change_percent": -0.0984158
+    },
+    {
+     "code": "gn_bdgn",
+     "name": "百度概念",
+     "net_yuan": 301142485.54,
+     "change_percent": 1.3511
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 299666674.74,
+     "change_percent": 0.870956
+    },
+    {
+     "code": "gn_tmj",
+     "name": "图们江",
+     "net_yuan": 293098183.3,
+     "change_percent": 1.01829
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 291118044.95,
+     "change_percent": 0.639024
+    },
+    {
+     "code": "gn_spaq",
+     "name": "食品安全",
+     "net_yuan": 278232604.21,
+     "change_percent": 1.79248
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": 270957708.04,
+     "change_percent": 2.65691
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 258251637.98,
+     "change_percent": 1.08804
+    },
+    {
+     "code": "gn_jjj",
+     "name": "京津冀",
+     "net_yuan": 255154774.19,
+     "change_percent": 0.619915
+    },
+    {
+     "code": "gn_hygn",
+     "name": "航运概念",
+     "net_yuan": 254957543.56,
+     "change_percent": -1.57514
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": 252110341.68,
+     "change_percent": -1.37287
+    },
+    {
+     "code": "gn_znjj",
+     "name": "智能家居",
+     "net_yuan": 232158106.19,
+     "change_percent": 2.21174
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 223055426.44,
+     "change_percent": 1.17285
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 221593226.76,
+     "change_percent": 0.783313
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 218100074.96,
+     "change_percent": 0.595013
+    },
+    {
+     "code": "gn_wxdh",
+     "name": "卫星导航",
+     "net_yuan": 215595002.92,
+     "change_percent": 1.35201
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": 209924780.13,
+     "change_percent": 1.50861
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": 206781873.44,
+     "change_percent": 0.422481
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": 204716677.1,
+     "change_percent": 0.813708
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": 200664698.0,
+     "change_percent": 0.323973
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": 177961370.46,
+     "change_percent": 1.21247
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": 173267263.04,
+     "change_percent": 0.172967
+    },
+    {
+     "code": "gn_yqgg",
+     "name": "油气改革",
+     "net_yuan": 165610130.39,
+     "change_percent": 0.303793
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 153733877.09,
+     "change_percent": 1.86938
+    },
+    {
+     "code": "gn_gfcl",
+     "name": "固废处理",
+     "net_yuan": 153476281.23,
+     "change_percent": 1.27869
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 135256346.72,
+     "change_percent": 0.249038
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 128871923.85,
+     "change_percent": 1.81317
+    },
+    {
+     "code": "gn_wgg",
+     "name": "未股改",
+     "net_yuan": 126751953.21,
+     "change_percent": 0.720289
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": 126198528.03,
+     "change_percent": 1.16795
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": 115513460.53,
+     "change_percent": 1.29716
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 114503295.67,
+     "change_percent": 0.930397
+    },
+    {
+     "code": "gn_wscl",
+     "name": "污水处理",
+     "net_yuan": 112262044.75,
+     "change_percent": 0.272495
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": 99983717.39,
+     "change_percent": 1.90782
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": 92356329.8,
+     "change_percent": 0.186082
+    },
+    {
+     "code": "gn_swym",
+     "name": "生物疫苗",
+     "net_yuan": 87739653.84,
+     "change_percent": 1.01746
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": 71696755.13,
+     "change_percent": 0.566442
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": 70055863.0,
+     "change_percent": 0.843919
+    },
+    {
+     "code": "gn_sqrl",
+     "name": "氢燃料",
+     "net_yuan": 66665867.06,
+     "change_percent": 0.877878
+    },
+    {
+     "code": "gn_myzl",
+     "name": "免疫治疗",
+     "net_yuan": 64661105.71,
+     "change_percent": 1.39483
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": 59886892.18,
+     "change_percent": 2.08178
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": 58742304.0,
+     "change_percent": 1.33019
+    },
+    {
+     "code": "gn_krb",
+     "name": "可燃冰",
+     "net_yuan": 58698182.77,
+     "change_percent": -0.0398258
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": 56732891.67,
+     "change_percent": 1.23108
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": 47999307.72,
+     "change_percent": 0.860342
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": 44904728.96,
+     "change_percent": -0.0558285
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": 44453529.44,
+     "change_percent": 0.788007
+    },
+    {
+     "code": "gn_swrl",
+     "name": "生物燃料",
+     "net_yuan": 34972259.23,
+     "change_percent": -0.374831
+    },
+    {
+     "code": "gn_cjxj",
+     "name": "超级细菌",
+     "net_yuan": 31629441.29,
+     "change_percent": 0.473466
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": 25106852.23,
+     "change_percent": 0.110302
+    },
+    {
+     "code": "gn_hGDR",
+     "name": "含GDR",
+     "net_yuan": 17776514.14,
+     "change_percent": 0.618325
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 6307093.66,
+     "change_percent": -0.107497
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": 1647446.81,
+     "change_percent": -0.0222519
+    },
+    {
+     "code": "gn_jxlg",
+     "name": "甲型流感",
+     "net_yuan": -20829269.04,
+     "change_percent": 0.770468
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": -121940560.19,
+     "change_percent": 1.06805
+    },
+    {
+     "code": "gn_yq50",
+     "name": "央企50",
+     "net_yuan": -470363885.27,
+     "change_percent": -1.60191
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": -578094900.38,
+     "change_percent": -0.550331
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": -598777730.12,
+     "change_percent": -0.869331
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": -763934088.54,
+     "change_percent": -0.801734
+    },
+    {
+     "code": "gn_cdp",
+     "name": "超大盘",
+     "net_yuan": -2194515097.84,
+     "change_percent": -2.2521
+    }
+   ]
+  },
+  {
+   "date": "2026-11-06",
+   "source": "新浪行业资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "new_dzqj",
+     "name": "电子器件",
+     "net_yuan": 2298180165.31,
+     "change_percent": -2.79054
+    },
+    {
+     "code": "new_nlmy",
+     "name": "农林牧渔",
+     "net_yuan": 2231868530.46,
+     "change_percent": 0.611337
+    },
+    {
+     "code": "new_dlhy",
+     "name": "电力行业",
+     "net_yuan": 1804430041.35,
+     "change_percent": 1.42341
+    },
+    {
+     "code": "new_jdhy",
+     "name": "家电行业",
+     "net_yuan": 1442299830.28,
+     "change_percent": 0.894771
+    },
+    {
+     "code": "new_jxhy",
+     "name": "机械行业",
+     "net_yuan": 1135409874.88,
+     "change_percent": -3.28028
+    },
+    {
+     "code": "new_fzhy",
+     "name": "纺织行业",
+     "net_yuan": 1076745393.98,
+     "change_percent": -0.606906
+    },
+    {
+     "code": "new_glql",
+     "name": "公路桥梁",
+     "net_yuan": 851304983.62,
+     "change_percent": 1.63724
+    },
+    {
+     "code": "new_jzjc",
+     "name": "建筑建材",
+     "net_yuan": 816158198.55,
+     "change_percent": -0.115525
+    },
+    {
+     "code": "new_wzwm",
+     "name": "物资外贸",
+     "net_yuan": 247337865.98,
+     "change_percent": -0.221847
+    },
+    {
+     "code": "new_fjzz",
+     "name": "飞机制造",
+     "net_yuan": 237002412.59,
+     "change_percent": -0.901869
+    },
+    {
+     "code": "new_fdsb",
+     "name": "发电设备",
+     "net_yuan": 184530916.19,
+     "change_percent": -1.29341
+    },
+    {
+     "code": "new_fzxl",
+     "name": "服装鞋类",
+     "net_yuan": 137486332.75,
+     "change_percent": -0.091974
+    },
+    {
+     "code": "new_hbhy",
+     "name": "环保行业",
+     "net_yuan": 104021580.78,
+     "change_percent": -0.338167
+    },
+    {
+     "code": "new_cmyl",
+     "name": "传媒娱乐",
+     "net_yuan": 30801850.33,
+     "change_percent": -0.618968
+    },
+    {
+     "code": "new_gsgq",
+     "name": "供水供气",
+     "net_yuan": 28912411.23,
+     "change_percent": -0.158439
+    },
+    {
+     "code": "new_nyhf",
+     "name": "农药化肥",
+     "net_yuan": 24023071.41,
+     "change_percent": -0.426191
+    },
+    {
+     "code": "new_slzp",
+     "name": "塑料制品",
+     "net_yuan": 1681162.83,
+     "change_percent": -1.46805
+    },
+    {
+     "code": "new_syhy",
+     "name": "石油行业",
+     "net_yuan": -9691523.63,
+     "change_percent": 0.945967
+    },
+    {
+     "code": "new_cbzz",
+     "name": "船舶制造",
+     "net_yuan": -37801170.59,
+     "change_percent": -0.560867
+    },
+    {
+     "code": "new_zzhy",
+     "name": "造纸行业",
+     "net_yuan": -46223508.11,
+     "change_percent": -0.959696
+    },
+    {
+     "code": "new_hqhy",
+     "name": "化纤行业",
+     "net_yuan": -48461998.05,
+     "change_percent": -2.51345
+    },
+    {
+     "code": "new_jjhy",
+     "name": "家具行业",
+     "net_yuan": -62555679.67,
+     "change_percent": -1.03548
+    },
+    {
+     "code": "new_snhy",
+     "name": "水泥行业",
+     "net_yuan": -74421838.73,
+     "change_percent": -0.421591
+    },
+    {
+     "code": "new_zhhy",
+     "name": "综合行业",
+     "net_yuan": -120550486.07,
+     "change_percent": -1.80029
+    },
+    {
+     "code": "new_mthy",
+     "name": "煤炭行业",
+     "net_yuan": -187983018.16,
+     "change_percent": 0.462475
+    },
+    {
+     "code": "new_sphy",
+     "name": "食品行业",
+     "net_yuan": -228123356.83,
+     "change_percent": -0.0112289
+    },
+    {
+     "code": "new_sybh",
+     "name": "商业百货",
+     "net_yuan": -230168956.55,
+     "change_percent": -0.811632
+    },
+    {
+     "code": "new_jdly",
+     "name": "酒店旅游",
+     "net_yuan": -237364483.42,
+     "change_percent": -1.26717
+    },
+    {
+     "code": "new_fdc",
+     "name": "房地产",
+     "net_yuan": -301392661.92,
+     "change_percent": -1.50934
+    },
+    {
+     "code": "new_gthy",
+     "name": "钢铁行业",
+     "net_yuan": -306632740.57,
+     "change_percent": -0.867274
+    },
+    {
+     "code": "new_ysbz",
+     "name": "印刷包装",
+     "net_yuan": -307754683.31,
+     "change_percent": -1.71791
+    },
+    {
+     "code": "new_yqyb",
+     "name": "仪器仪表",
+     "net_yuan": -308889679.18,
+     "change_percent": -2.06031
+    },
+    {
+     "code": "new_jrhy",
+     "name": "金融行业",
+     "net_yuan": -322217860.44,
+     "change_percent": 0.739155
+    },
+    {
+     "code": "new_ylqx",
+     "name": "医疗器械",
+     "net_yuan": -324827449.72,
+     "change_percent": -1.48851
+    },
+    {
+     "code": "new_hghy",
+     "name": "化工行业",
+     "net_yuan": -368481983.32,
+     "change_percent": -1.77575
+    },
+    {
+     "code": "new_dqhy",
+     "name": "电器行业",
+     "net_yuan": -373493962.45,
+     "change_percent": -2.36374
+    },
+    {
+     "code": "new_blhy",
+     "name": "玻璃行业",
+     "net_yuan": -415096315.33,
+     "change_percent": -3.12926
+    },
+    {
+     "code": "new_swzz",
+     "name": "生物制药",
+     "net_yuan": -502766034.6,
+     "change_percent": -0.65763
+    },
+    {
+     "code": "new_ljhy",
+     "name": "酿酒行业",
+     "net_yuan": -680745757.98,
+     "change_percent": -0.134558
+    },
+    {
+     "code": "new_qtxy",
+     "name": "其它行业",
+     "net_yuan": -787029751.288,
+     "change_percent": -1.21968
+    },
+    {
+     "code": "new_qczz",
+     "name": "汽车制造",
+     "net_yuan": -999002085.77,
+     "change_percent": -1.76087
+    },
+    {
+     "code": "new_ysjs",
+     "name": "有色金属",
+     "net_yuan": -3652267370.5,
+     "change_percent": -3.00591
+    },
+    {
+     "code": "new_dzxx",
+     "name": "电子信息",
+     "net_yuan": -5640410860.65,
+     "change_percent": -2.6548
+    }
+   ]
+  },
+  {
+   "date": "2026-11-06",
+   "source": "新浪概念资金流",
+   "measure": "买卖方向净额",
+   "sectors": [
+    {
+     "code": "gn_gf",
+     "name": "光伏",
+     "net_yuan": 3522906823.19,
+     "change_percent": -1.10479
+    },
+    {
+     "code": "gn_hhsj",
+     "name": "黄河三角",
+     "net_yuan": 3161299726.98,
+     "change_percent": -4.09553
+    },
+    {
+     "code": "gn_HJTdc",
+     "name": "HJT电池",
+     "net_yuan": 1836850438.33,
+     "change_percent": -1.66567
+    },
+    {
+     "code": "gn_HITdc",
+     "name": "HIT电池",
+     "net_yuan": 1836850438.33,
+     "change_percent": -1.66567
+    },
+    {
+     "code": "gn_bxzc",
+     "name": "保险重仓",
+     "net_yuan": 1799047078.27,
+     "change_percent": 0.804113
+    },
+    {
+     "code": "gn_TOPCon",
+     "name": "TOPCon",
+     "net_yuan": 1751514738.38,
+     "change_percent": -1.83124
+    },
+    {
+     "code": "gn_gtk",
+     "name": "钙钛矿",
+     "net_yuan": 1721640282.38,
+     "change_percent": -2.34156
+    },
+    {
+     "code": "gn_swyz",
+     "name": "生物育种",
+     "net_yuan": 1653213195.89,
+     "change_percent": 1.2619
+    },
+    {
+     "code": "gn_xczx",
+     "name": "乡村振兴",
+     "net_yuan": 1651429217.15,
+     "change_percent": -0.143513
+    },
+    {
+     "code": "gn_xtzc",
+     "name": "信托重仓",
+     "net_yuan": 1607355503.29,
+     "change_percent": -0.293462
+    },
+    {
+     "code": "gn_fd",
+     "name": "风电",
+     "net_yuan": 1454889789.33,
+     "change_percent": -0.237445
+    },
+    {
+     "code": "gn_qszc",
+     "name": "券商重仓",
+     "net_yuan": 1090509207.48,
+     "change_percent": 0.0712636
+    },
+    {
+     "code": "gn_yq50",
+     "name": "央企50",
+     "net_yuan": 1068811932.47,
+     "change_percent": 0.987962
+    },
+    {
+     "code": "gn_xny",
+     "name": "新能源",
+     "net_yuan": 1060036756.5,
+     "change_percent": -0.32793
+    },
+    {
+     "code": "gn_QFIIzc",
+     "name": "QFII重仓",
+     "net_yuan": 1055679341.24,
+     "change_percent": 0.201306
+    },
+    {
+     "code": "gn_sgqgg",
+     "name": "国企改革",
+     "net_yuan": 1044105529.74,
+     "change_percent": -0.0750111
+    },
+    {
+     "code": "gn_scp1",
+     "name": "水产品",
+     "net_yuan": 982068268.51,
+     "change_percent": 1.84047
+    },
+    {
+     "code": "gn_byjj",
+     "name": "本月解禁",
+     "net_yuan": 960961578.31,
+     "change_percent": -0.719669
+    },
+    {
+     "code": "gn_jrcg",
+     "name": "金融参股",
+     "net_yuan": 932097579.19,
+     "change_percent": -0.361671
+    },
+    {
+     "code": "gn_sygg",
+     "name": "水域改革",
+     "net_yuan": 925612453.21,
+     "change_percent": 1.24463
+    },
+    {
+     "code": "gn_jjzc",
+     "name": "基金重仓",
+     "net_yuan": 862223874.11,
+     "change_percent": 0.410022
+    },
+    {
+     "code": "gn_yhfz",
+     "name": "沿海发展",
+     "net_yuan": 768347931.88,
+     "change_percent": -0.0808601
+    },
+    {
+     "code": "gn_cdgn",
+     "name": "超导概念",
+     "net_yuan": 754973347.52,
+     "change_percent": -2.37691
+    },
+    {
+     "code": "gn_stny",
+     "name": "生态农业",
+     "net_yuan": 715339034.86,
+     "change_percent": 0.439392
+    },
+    {
+     "code": "gn_myyx",
+     "name": "民营银行",
+     "net_yuan": 699870416.26,
+     "change_percent": -0.291592
+    },
+    {
+     "code": "gn_sbzc",
+     "name": "社保重仓",
+     "net_yuan": 676240621.31,
+     "change_percent": -0.717685
+    },
+    {
+     "code": "gn_cxgg",
+     "name": "朝鲜改革",
+     "net_yuan": 664989666.29,
+     "change_percent": -0.714935
+    },
+    {
+     "code": "gn_zSTg",
+     "name": "准ST股",
+     "net_yuan": 656729669.26,
+     "change_percent": -1.01438
+    },
+    {
+     "code": "gn_ztss",
+     "name": "整体上市",
+     "net_yuan": 594286838.11,
+     "change_percent": 0.105057
+    },
+    {
+     "code": "gn_zr",
+     "name": "猪肉",
+     "net_yuan": 555373893.9,
+     "change_percent": 0.896126
+    },
+    {
+     "code": "gn_swrl",
+     "name": "生物燃料",
+     "net_yuan": 529388669.01,
+     "change_percent": 1.37094
+    },
+    {
+     "code": "gn_fn",
+     "name": "风能",
+     "net_yuan": 494684365.86,
+     "change_percent": -0.700051
+    },
+    {
+     "code": "gn_rzrq",
+     "name": "融资融券",
+     "net_yuan": 494535306.29,
+     "change_percent": 0.220654
+    },
+    {
+     "code": "gn_cgjr",
+     "name": "参股金融",
+     "net_yuan": 490785992.53,
+     "change_percent": -0.990548
+    },
+    {
+     "code": "gn_dtjj",
+     "name": "低碳经济",
+     "net_yuan": 409419671.91,
+     "change_percent": -0.833263
+    },
+    {
+     "code": "gn_dfj",
+     "name": "大飞机",
+     "net_yuan": 406790314.09,
+     "change_percent": -1.24695
+    },
+    {
+     "code": "gn_zczr",
+     "name": "资产注入",
+     "net_yuan": 392761052.42,
+     "change_percent": -0.817475
+    },
+    {
+     "code": "gn_qcdz",
+     "name": "汽车电子",
+     "net_yuan": 392670573.91,
+     "change_percent": -4.41659
+    },
+    {
+     "code": "gn_czt",
+     "name": "长株潭",
+     "net_yuan": 392527326.25,
+     "change_percent": -0.376583
+    },
+    {
+     "code": "gn_shzm",
+     "name": "上海自贸",
+     "net_yuan": 363783567.23,
+     "change_percent": -1.06141
+    },
+    {
+     "code": "gn_rhmy",
+     "name": "日韩贸易",
+     "net_yuan": 362673924.67,
+     "change_percent": 0.152951
+    },
+    {
+     "code": "gn_dsn",
+     "name": "迪士尼",
+     "net_yuan": 342706924.09,
+     "change_percent": -1.4104
+    },
+    {
+     "code": "gn_shbd",
+     "name": "上海本地",
+     "net_yuan": 341413339.59,
+     "change_percent": -0.721092
+    },
+    {
+     "code": "gn_wzbj",
+     "name": "外资背景",
+     "net_yuan": 335347051.61,
+     "change_percent": 0.546552
+    },
+    {
+     "code": "gn_wscl",
+     "name": "污水处理",
+     "net_yuan": 325430435.97,
+     "change_percent": -0.272845
+    },
+    {
+     "code": "gn_gcrj",
+     "name": "国产软件",
+     "net_yuan": 284141947.88,
+     "change_percent": -2.1789
+    },
+    {
+     "code": "gn_hwhs",
+     "name": "华为海思",
+     "net_yuan": 273972518.08,
+     "change_percent": -2.12607
+    },
+    {
+     "code": "gn_jr",
+     "name": "鸡肉",
+     "net_yuan": 266339941.14,
+     "change_percent": 0.16712
+    },
+    {
+     "code": "gn_cmp",
+     "name": "触摸屏",
+     "net_yuan": 257724107.73,
+     "change_percent": -2.6613
+    },
+    {
+     "code": "gn_cgl",
+     "name": "草甘膦",
+     "net_yuan": 222530162.4,
+     "change_percent": -0.74416
+    },
+    {
+     "code": "gn_jycx",
+     "name": "基因测序",
+     "net_yuan": 210481259.31,
+     "change_percent": -0.723371
+    },
+    {
+     "code": "gn_zndw",
+     "name": "智能电网",
+     "net_yuan": 209443280.07,
+     "change_percent": -1.00183
+    },
+    {
+     "code": "gn_fzy",
+     "name": "仿制药",
+     "net_yuan": 205173589.79,
+     "change_percent": -0.61486
+    },
+    {
+     "code": "gn_fdc",
+     "name": "钒电池",
+     "net_yuan": 201685074.23,
+     "change_percent": -1.90218
+    },
+    {
+     "code": "gn_hwfz",
+     "name": "核污防治",
+     "net_yuan": 200704250.08,
+     "change_percent": 0.304233
+    },
+    {
+     "code": "gn_fngn",
+     "name": "风能概念",
+     "net_yuan": 196588117.53,
+     "change_percent": -0.39608
+    },
+    {
+     "code": "gn_gfcl",
+     "name": "固废处理",
+     "net_yuan": 177361562.14,
+     "change_percent": -0.65768
+    },
+    {
+     "code": "gn_hdhn",
+     "name": "核电核能",
+     "net_yuan": 173979346.73,
+     "change_percent": -0.329983
+    },
+    {
+     "code": "gn_jaz",
+     "name": "聚氨酯",
+     "net_yuan": 170440709.12,
+     "change_percent": -1.29224
+    },
+    {
+     "code": "gn_tjy",
+     "name": "碳交易",
+     "net_yuan": 154931548.09,
+     "change_percent": -0.76842
+    },
+    {
+     "code": "gn_zncd",
+     "name": "智能穿戴",
+     "net_yuan": 149023435.59,
+     "change_percent": -2.62523
+    },
+    {
+     "code": "gn_fcss",
+     "name": "分拆上市",
+     "net_yuan": 111192755.27,
+     "change_percent": -0.300228
+    },
+    {
+     "code": "gn_xhjj",
+     "name": "循环经济",
+     "net_yuan": 103600746.32,
+     "change_percent": -0.939342
+    },
+    {
+     "code": "gn_hsdh",
+     "name": "海水淡化",
+     "net_yuan": 95954879.66,
+     "change_percent": -0.908852
+    },
+    {
+     "code": "gn_gykc",
+     "name": "高压快充",
+     "net_yuan": 95553841.03,
+     "change_percent": -2.15732
+    },
+    {
+     "code": "gn_whzx",
+     "name": "文化振兴",
+     "net_yuan": 94085809.97,
+     "change_percent": -0.322383
+    },
+    {
+     "code": "gn_ka",
+     "name": "抗癌",
+     "net_yuan": 87548700.08,
+     "change_percent": -0.356792
+    },
+    {
+     "code": "gn_jygn",
+     "name": "基因概念",
+     "net_yuan": 81923219.29,
+     "change_percent": -1.11644
+    },
+    {
+     "code": "gn_dsgn",
+     "name": "电商概念",
+     "net_yuan": 73313646.02,
+     "change_percent": -1.12611
+    },
+    {
+     "code": "gn_tzh",
+     "name": "碳中和",
+     "net_yuan": 60128693.71,
+     "change_percent": -0.607315
+    },
+    {
+     "code": "gn_BCdc",
+     "name": "BC电池",
+     "net_yuan": 50843478.28,
+     "change_percent": -2.53403
+    },
+    {
+     "code": "gn_tmj",
+     "name": "图们江",
+     "net_yuan": 35142558.58,
+     "change_percent": -1.54375
+    },
+    {
+     "code": "gn_sbjx",
+     "name": "三板精选",
+     "net_yuan": 32171680.13,
+     "change_percent": -1.38278
+    },
+    {
+     "code": "gn_3Ddy",
+     "name": "3D打印",
+     "net_yuan": 20982856.45,
+     "change_percent": -1.51798
+    },
+    {
+     "code": "gn_whgh",
+     "name": "武汉规划",
+     "net_yuan": 19442807.2,
+     "change_percent": -2.25268
+    },
+    {
+     "code": "gn_ljfl",
+     "name": "垃圾分类",
+     "net_yuan": -3869381.2,
+     "change_percent": -1.12216
+    },
+    {
+     "code": "gn_wss",
+     "name": "维生素",
+     "net_yuan": -6387031.85,
+     "change_percent": -0.778814
+    },
+    {
+     "code": "gn_myyy",
+     "name": "民营医院",
+     "net_yuan": -9164779.38,
+     "change_percent": -0.899153
+    },
+    {
+     "code": "gn_jxlg",
+     "name": "甲型流感",
+     "net_yuan": -10832931.02,
+     "change_percent": -0.750081
+    },
+    {
+     "code": "gn_dtgn",
+     "name": "代糖概念",
+     "net_yuan": -14820687.18,
+     "change_percent": -0.0404557
+    },
+    {
+     "code": "gn_smgn",
+     "name": "赛马概念",
+     "net_yuan": -22307004.01,
+     "change_percent": -0.423589
+    },
+    {
+     "code": "gn_scp",
+     "name": "奢侈品",
+     "net_yuan": -26277969.7,
+     "change_percent": -0.0692243
+    },
+    {
+     "code": "gn_sljs",
+     "name": "水利建设",
+     "net_yuan": -32730785.89,
+     "change_percent": -0.917424
+    },
+    {
+     "code": "gn_zmq",
+     "name": "自贸区",
+     "net_yuan": -33934980.52,
+     "change_percent": -0.270038
+    },
+    {
+     "code": "gn_zjtx",
+     "name": "专精特新",
+     "net_yuan": -37819728.4,
+     "change_percent": -3.04888
+    },
+    {
+     "code": "gn_hssl",
+     "name": "海上丝路",
+     "net_yuan": -37948548.75,
+     "change_percent": -0.431307
+    },
+    {
+     "code": "gn_hljr",
+     "name": "互联金融",
+     "net_yuan": -39268523.77,
+     "change_percent": -1.21087
+    },
+    {
+     "code": "gn_cjxj",
+     "name": "超级细菌",
+     "net_yuan": -45312366.51,
+     "change_percent": -1.0855
+    },
+    {
+     "code": "gn_cytq",
+     "name": "成渝特区",
+     "net_yuan": -45960330.13,
+     "change_percent": -0.80099
+    },
+    {
+     "code": "gn_mtjzm",
+     "name": "天津自贸",
+     "net_yuan": -49200049.72,
+     "change_percent": -0.877818
+    },
+    {
+     "code": "gn_hgzb",
+     "name": "海工装备",
+     "net_yuan": -55282186.43,
+     "change_percent": -1.56258
+    },
+    {
+     "code": "gn_ssgn",
+     "name": "三沙概念",
+     "net_yuan": -55861841.94,
+     "change_percent": -1.19885
+    },
+    {
+     "code": "gn_ytgn",
+     "name": "婴童概念",
+     "net_yuan": -58370647.36,
+     "change_percent": -1.33057
+    },
+    {
+     "code": "gn_txw",
+     "name": "碳纤维",
+     "net_yuan": -65755090.04,
+     "change_percent": -1.87856
+    },
+    {
+     "code": "gn_spaq",
+     "name": "食品安全",
+     "net_yuan": -84555613.35,
+     "change_percent": -2.04833
+    },
+    {
+     "code": "gn_hdgn",
+     "name": "恒大概念",
+     "net_yuan": -89058060.23,
+     "change_percent": -1.03735
+    },
+    {
+     "code": "gn_zmgn",
+     "name": "摘帽概念",
+     "net_yuan": -102178846.93,
+     "change_percent": -1.61002
+    },
+    {
+     "code": "gn_drn",
+     "name": "地热能",
+     "net_yuan": -105529589.92,
+     "change_percent": -2.92456
+    },
+    {
+     "code": "gn_swym",
+     "name": "生物疫苗",
+     "net_yuan": -108097194.62,
+     "change_percent": -1.10893
+    },
+    {
+     "code": "gn_jnhb",
+     "name": "节能环保",
+     "net_yuan": -119516737.14,
+     "change_percent": -1.15945
+    },
+    {
+     "code": "gn_tdlz",
+     "name": "土地流转",
+     "net_yuan": -119965397.9,
+     "change_percent": -1.39607
+    },
+    {
+     "code": "gn_hGDR",
+     "name": "含GDR",
+     "net_yuan": -124938805.35,
+     "change_percent": -0.335196
+    },
+    {
+     "code": "gn_xaxq",
+     "name": "雄安新区",
+     "net_yuan": -131691514.6,
+     "change_percent": -1.30331
+    },
+    {
+     "code": "gn_zjqrgn",
+     "name": "机器人概念",
+     "net_yuan": -136560878.12,
+     "change_percent": -2.38474
+    },
+    {
+     "code": "gn_gxbj",
+     "name": "高校背景",
+     "net_yuan": -140822346.64,
+     "change_percent": -2.95133
+    },
+    {
+     "code": "gn_szql",
+     "name": "送转潜力",
+     "net_yuan": -141001132.66,
+     "change_percent": -3.1025
+    },
+    {
+     "code": "gn_affw",
+     "name": "安防服务",
+     "net_yuan": -144809036.86,
+     "change_percent": -1.30296
+    },
+    {
+     "code": "gn_myzl",
+     "name": "免疫治疗",
+     "net_yuan": -146787506.09,
+     "change_percent": -1.3313
+    },
+    {
+     "code": "gn_sgn",
+     "name": "陕甘宁",
+     "net_yuan": -154863012.61,
+     "change_percent": -0.552121
+    },
+    {
+     "code": "gn_kqzl",
+     "name": "空气治理",
+     "net_yuan": -159538957.9,
+     "change_percent": -2.12256
+    },
+    {
+     "code": "gn_jrgg",
+     "name": "金融改革",
+     "net_yuan": -162871756.64,
+     "change_percent": -1.32973
+    },
+    {
+     "code": "gn_hygn",
+     "name": "航运概念",
+     "net_yuan": -167064399.05,
+     "change_percent": -2.07407
+    },
+    {
+     "code": "gn_znjq",
+     "name": "智能机器",
+     "net_yuan": -184133663.54,
+     "change_percent": -2.30469
+    },
+    {
+     "code": "gn_jmrh",
+     "name": "军民融合",
+     "net_yuan": -186093463.42,
+     "change_percent": -1.45181
+    },
+    {
+     "code": "gn_jjj",
+     "name": "京津冀",
+     "net_yuan": -188518263.37,
+     "change_percent": -1.65713
+    },
+    {
+     "code": "gn_tygn",
+     "name": "体育概念",
+     "net_yuan": -200877930.26,
+     "change_percent": -0.962878
+    },
+    {
+     "code": "gn_skgn",
+     "name": "涉矿概念",
+     "net_yuan": -206016763.09,
+     "change_percent": -1.10014
+    },
+    {
+     "code": "gn_xxaq",
+     "name": "信息安全",
+     "net_yuan": -227963728.43,
+     "change_percent": -2.36041
+    },
+    {
+     "code": "gn_wlyx",
+     "name": "网络游戏",
+     "net_yuan": -237884594.87,
+     "change_percent": -1.65371
+    },
+    {
+     "code": "gn_wxdh",
+     "name": "卫星导航",
+     "net_yuan": -243887772.0,
+     "change_percent": -1.87834
+    },
+    {
+     "code": "gn_hmgn",
+     "name": "鸿蒙概念",
+     "net_yuan": -244260746.79,
+     "change_percent": -2.3554
+    },
+    {
+     "code": "gn_dyzm",
+     "name": "东亚自贸",
+     "net_yuan": -262938012.59,
+     "change_percent": -0.934019
+    },
+    {
+     "code": "gn_wjqy",
+     "name": "皖江区域",
+     "net_yuan": -287672809.52,
+     "change_percent": -1.43929
+    },
+    {
+     "code": "gn_gqgn",
+     "name": "股期概念",
+     "net_yuan": -288394653.92,
+     "change_percent": -1.02528
+    },
+    {
+     "code": "gn_bdgn",
+     "name": "百度概念",
+     "net_yuan": -305773237.57,
+     "change_percent": -2.16359
+    },
+    {
+     "code": "gn_bcgn",
+     "name": "博彩概念",
+     "net_yuan": -309245820.33,
+     "change_percent": -1.63166
+    },
+    {
+     "code": "gn_nmgh",
+     "name": "内贸规划",
+     "net_yuan": -338466296.58,
+     "change_percent": -0.726978
+    },
+    {
+     "code": "gn_smx",
+     "name": "石墨烯",
+     "net_yuan": -351673690.19,
+     "change_percent": -4.24661
+    },
+    {
+     "code": "gn_qny",
+     "name": "氢能源",
+     "net_yuan": -360772399.59,
+     "change_percent": -3.10005
+    },
+    {
+     "code": "gn_jzjn",
+     "name": "建筑节能",
+     "net_yuan": -363424689.64,
+     "change_percent": -1.21207
+    },
+    {
+     "code": "gn_yqgg",
+     "name": "油气改革",
+     "net_yuan": -403130904.82,
+     "change_percent": -2.82358
+    },
+    {
+     "code": "gn_ckts",
+     "name": "出口退税",
+     "net_yuan": -411960683.56,
+     "change_percent": -1.90644
+    },
+    {
+     "code": "gn_wxej",
+     "name": "无线耳机",
+     "net_yuan": -430226562.06,
+     "change_percent": -3.52253
+    },
+    {
+     "code": "gn_djy",
+     "name": "电解液",
+     "net_yuan": -494093842.13,
+     "change_percent": -1.88893
+    },
+    {
+     "code": "gn_hnzm",
+     "name": "海南自贸",
+     "net_yuan": -494860554.72,
+     "change_percent": -1.74265
+    },
+    {
+     "code": "gn_hdgn1",
+     "name": "恒大概念",
+     "net_yuan": -509161052.77,
+     "change_percent": -1.55685
+    },
+    {
+     "code": "gn_xfdz",
+     "name": "消费电子",
+     "net_yuan": -510691037.85,
+     "change_percent": -2.87159
+    },
+    {
+     "code": "gn_yjys",
+     "name": "业绩预升",
+     "net_yuan": -585004236.65,
+     "change_percent": -1.23942
+    },
+    {
+     "code": "gn_szbd",
+     "name": "深圳本地",
+     "net_yuan": -602384883.55,
+     "change_percent": -0.270948
+    },
+    {
+     "code": "gn_qhgn",
+     "name": "前海概念",
+     "net_yuan": -622924650.59,
+     "change_percent": -0.334228
+    },
+    {
+     "code": "gn_krb",
+     "name": "可燃冰",
+     "net_yuan": -664550495.92,
+     "change_percent": -4.36206
+    },
+    {
+     "code": "gn_pggn",
+     "name": "苹果概念",
+     "net_yuan": -673213090.44,
+     "change_percent": -1.71588
+    },
+    {
+     "code": "gn_hwhm",
+     "name": "华为鸿蒙",
+     "net_yuan": -699564068.75,
+     "change_percent": -2.57004
+    },
+    {
+     "code": "gn_hjgn",
+     "name": "黄金概念",
+     "net_yuan": -715262752.06,
+     "change_percent": -2.82989
+    },
+    {
+     "code": "gn_hwqc",
+     "name": "华为汽车",
+     "net_yuan": -717758223.77,
+     "change_percent": -2.42992
+    },
+    {
+     "code": "gn_wlw",
+     "name": "物联网",
+     "net_yuan": -752882112.79,
+     "change_percent": -2.79822
+    },
+    {
+     "code": "gn_stbk",
+     "name": "ST板块",
+     "net_yuan": -760132400.61,
+     "change_percent": -1.25809
+    },
+    {
+     "code": "gn_hxxa",
+     "name": "海峡西岸",
+     "net_yuan": -1000138221.41,
+     "change_percent": -1.26278
+    },
+    {
+     "code": "gn_yyq",
+     "name": "页岩气",
+     "net_yuan": -1083608885.53,
+     "change_percent": -3.49215
+    },
+    {
+     "code": "gn_jght",
+     "name": "军工航天",
+     "net_yuan": -1084457907.84,
+     "change_percent": -1.49052
+    },
+    {
+     "code": "gn_gfjg",
+     "name": "国防军工",
+     "net_yuan": -1233803293.79,
+     "change_percent": -1.64904
+    },
+    {
+     "code": "gn_CROgn",
+     "name": "CRO概念",
+     "net_yuan": -1290297756.81,
+     "change_percent": -4.64977
+    },
+    {
+     "code": "gn_gqjl",
+     "name": "股权激励",
+     "net_yuan": -1346670741.25,
+     "change_percent": -0.922075
+    },
+    {
+     "code": "gn_CXOgn",
+     "name": "CXO概念",
+     "net_yuan": -1380836315.58,
+     "change_percent": -4.63912
+    },
+    {
+     "code": "gn_hHg",
+     "name": "含H股",
+     "net_yuan": -1381920193.82,
+     "change_percent": 0.308681
+    },
+    {
+     "code": "gn_cxy",
+     "name": "创新药",
+     "net_yuan": -1657082535.84,
+     "change_percent": -1.45948
+    },
+    {
+     "code": "gn_gtdc",
+     "name": "固态电池",
+     "net_yuan": -1746887603.44,
+     "change_percent": -3.00055
+    },
+    {
+     "code": "gn_ldc",
+     "name": "锂电池",
+     "net_yuan": -1782479401.93,
+     "change_percent": -2.09588
+    },
+    {
+     "code": "gn_zzgn",
+     "name": "重组概念",
+     "net_yuan": -2038620976.14,
+     "change_percent": -0.955675
+    },
+    {
+     "code": "gn_gfgn",
+     "name": "光伏概念",
+     "net_yuan": -2257250471.63,
+     "change_percent": -1.86542
+    },
+    {
+     "code": "gn_xqzy",
+     "name": "稀缺资源",
+     "net_yuan": -2307358986.12,
+     "change_percent": -2.99962
+    },
+    {
+     "code": "gn_yjyj",
+     "name": "业绩预降",
+     "net_yuan": -2407820930.97,
+     "change_percent": -2.56294
+    },
+    {
+     "code": "gn_lk",
+     "name": "锂矿",
+     "net_yuan": -2452029848.61,
+     "change_percent": -2.5121
+    },
+    {
+     "code": "gn_lszm",
+     "name": "绿色照明",
+     "net_yuan": -3921874147.84,
+     "change_percent": -3.94959
+    },
+    {
+     "code": "gn_tsl",
+     "name": "特斯拉",
+     "net_yuan": -4202843246.65,
+     "change_percent": -2.60266
+    },
+    {
+     "code": "gn_hwgn",
+     "name": "华为概念",
+     "net_yuan": -4271290946.38,
+     "change_percent": -4.93821
+    },
+    {
+     "code": "gn_xmgn",
+     "name": "小米概念",
+     "net_yuan": -4486743854.44,
+     "change_percent": -2.10297
+    }
+   ]
+  }
+ ]
+}

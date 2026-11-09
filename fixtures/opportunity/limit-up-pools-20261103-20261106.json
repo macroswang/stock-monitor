@@ -1,0 +1,2933 @@
+{
+ "captured_at": "2026-11-08T19:47:54+08:00",
+ "source": "同花顺涨停池",
+ "url_template": "https://data.10jqka.com.cn/dataapi/limit_up/limit_up_pool?date={yyyymmdd}&page={page}&limit=100&filter=HS,GEM2STAR&field=code,name,reason_type,high_days,high_days_value,is_again_limit,limit_up_type,order_amount&order_field=199112&order_type=0",
+ "days": [
+  {
+   "date": "2026-11-06",
+   "page_total": 32,
+   "limit_up_count": {
+    "today": {
+     "num": 32,
+     "history_num": 45,
+     "rate": 0.7111111111111111,
+     "open_num": 13
+    },
+    "yesterday": {
+     "num": 83,
+     "history_num": 130,
+     "rate": 0.6384615384615384,
+     "open_num": 47
+    }
+   },
+   "limit_down_count": {
+    "today": {
+     "num": 15,
+     "history_num": 23,
+     "rate": 0.6521739130434783,
+     "open_num": 8
+    },
+    "yesterday": {
+     "num": 0,
+     "history_num": 4,
+     "rate": 0.0,
+     "open_num": 4
+    }
+   },
+   "rows": [
+    {
+     "code": "301697",
+     "name": "贝特利",
+     "reason_type": "光伏银粉+低温光伏浆料+电子皮肤+次新股",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 83161642.0
+    },
+    {
+     "code": "300686",
+     "name": "智动力",
+     "reason_type": "消费电子+固态电池+人形机器人+三季报亏损收窄",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 26151495.0
+    },
+    {
+     "code": "300237",
+     "name": "美晨科技",
+     "reason_type": "摘帽+复牌+资产剥离+汽车零部件",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 29391549.0
+    },
+    {
+     "code": "601188",
+     "name": "龙江交通",
+     "reason_type": "冰雪旅游保障+高速公路运营+黑龙江国资",
+     "high_days": "7天3板",
+     "high_days_value": 196615,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 19689699.0
+    },
+    {
+     "code": "002578",
+     "name": "闽发铝业",
+     "reason_type": "光伏边框+液冷铝材+机器人布局+三季报扭亏",
+     "high_days": "5天5板",
+     "high_days_value": 327685,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 220341800.0
+    },
+    {
+     "code": "600540",
+     "name": "新赛股份",
+     "reason_type": "棉花全产业链+棉蛋白+三季报扭亏+新疆兵团国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 64695889.0
+    },
+    {
+     "code": "600327",
+     "name": "大东方",
+     "reason_type": "“东方”+百货零售+儿科医疗+回购注销",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 38959313.0
+    },
+    {
+     "code": "000525",
+     "name": "红太阳",
+     "reason_type": "“羊”字辈+百草枯+农业无人机+三季报扭亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 77237469.0
+    },
+    {
+     "code": "002388",
+     "name": "新亚制程",
+     "reason_type": "电解液+固态电池+启元气体收购+AI服务器电源",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 58130384.0
+    },
+    {
+     "code": "600278",
+     "name": "东方创业",
+     "reason_type": "“东方”+贸易+现代物流+上海国企",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 26591790.0
+    },
+    {
+     "code": "002889",
+     "name": "东方嘉盛",
+     "reason_type": "“东方”+光刻机保税维修+智慧仓",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 91180018.0
+    },
+    {
+     "code": "603366",
+     "name": "日出东方",
+     "reason_type": "“东方”+储能+空气能热泵+光伏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 192785430.0
+    },
+    {
+     "code": "600371",
+     "name": "万向德农",
+     "reason_type": "玉米种业+转基因玉米+新品研发",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 85850310.0
+    },
+    {
+     "code": "605339",
+     "name": "南侨食品",
+     "reason_type": "烘焙油脂+乳制品+预制烘焙",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 44132418.0
+    },
+    {
+     "code": "603381",
+     "name": "永臻股份",
+     "reason_type": "光伏+电池铝箔+人形机器人+三季报增长",
+     "high_days": "4天4板",
+     "high_days_value": 262148,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 146363710.0
+    },
+    {
+     "code": "000595",
+     "name": "新能股份",
+     "reason_type": "储能并网+风光储一体化+宁夏国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 57469138.0
+    },
+    {
+     "code": "002088",
+     "name": "鲁阳节能",
+     "reason_type": "“羊”字辈+陶瓷纤维+锂电隔热",
+     "high_days": "6天5板",
+     "high_days_value": 327686,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 4409384.0
+    },
+    {
+     "code": "002929",
+     "name": "润建股份",
+     "reason_type": "词元出海+算力网络+机器人",
+     "high_days": "5天3板",
+     "high_days_value": 196613,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 181214500.0
+    },
+    {
+     "code": "001316",
+     "name": "润贝航科",
+     "reason_type": "航材国产化+AI航检眼镜+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 61759593.0
+    },
+    {
+     "code": "603657",
+     "name": "春光科技",
+     "reason_type": "扫地机器人+家庭具身机器人+清洁电器代工",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 17024700.0
+    },
+    {
+     "code": "002973",
+     "name": "侨银股份",
+     "reason_type": "人形机器人+算力服务+应收账款回款+城市服务",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 51569364.0
+    },
+    {
+     "code": "001258",
+     "name": "立新能源",
+     "reason_type": "风电光伏+疆电外送+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 143545220.0
+    },
+    {
+     "code": "601595",
+     "name": "上海电影",
+     "reason_type": "AI影视+即梦合作+院线+IP",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 55407259.0
+    },
+    {
+     "code": "600261",
+     "name": "阳光照明",
+     "reason_type": "商业航天+激光通信+照明+“羊”字辈",
+     "high_days": "7天6板",
+     "high_days_value": 393223,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 138619510.0
+    },
+    {
+     "code": "001308",
+     "name": "康冠科技",
+     "reason_type": "端侧AI+AI眼镜+智能显示",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 44603079.0
+    },
+    {
+     "code": "002086",
+     "name": "东方海洋",
+     "reason_type": "“羊”字辈+海洋养殖+体外诊断",
+     "high_days": "13天8板",
+     "high_days_value": 524301,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 111474948.0
+    },
+    {
+     "code": "002712",
+     "name": "思美传媒",
+     "reason_type": "AI营销+AI漫剧+四川国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 37308348.0
+    },
+    {
+     "code": "601599",
+     "name": "浙文影业",
+     "reason_type": "AI漫剧+微短剧+三季报增长",
+     "high_days": "5天5板",
+     "high_days_value": 327685,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 169470680.0
+    },
+    {
+     "code": "600156",
+     "name": "华升股份",
+     "reason_type": "算力租赁+重组推进+苎麻纺织",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 28962255.0
+    },
+    {
+     "code": "002310",
+     "name": "东方新能",
+     "reason_type": "“东方”+光伏+重组+三季报扭亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 121390963.0
+    },
+    {
+     "code": "600229",
+     "name": "城市传媒",
+     "reason_type": "AIGC+IP运营+教育出版+青岛国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 62382832.0
+    },
+    {
+     "code": "600207",
+     "name": "安彩高科",
+     "reason_type": "光伏玻璃+高透产品+河南国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 59314936.0
+    }
+   ]
+  },
+  {
+   "date": "2026-11-05",
+   "page_total": 83,
+   "limit_up_count": {
+    "today": {
+     "num": 83,
+     "history_num": 130,
+     "rate": 0.6384615384615384,
+     "open_num": 47
+    },
+    "yesterday": {
+     "num": 116,
+     "history_num": 149,
+     "rate": 0.7785234899328859,
+     "open_num": 33
+    }
+   },
+   "limit_down_count": {
+    "today": {
+     "num": 0,
+     "history_num": 4,
+     "rate": 0.0,
+     "open_num": 4
+    },
+    "yesterday": {
+     "num": 10,
+     "history_num": 33,
+     "rate": 0.30303030303030304,
+     "open_num": 23
+    }
+   },
+   "rows": [
+    {
+     "code": "300071",
+     "name": "福石控股",
+     "reason_type": "AI应用+数字营销+三季报减亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 20110090.0
+    },
+    {
+     "code": "300709",
+     "name": "精研科技",
+     "reason_type": "液冷散热+机器人+高速连接器",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 50048655.0
+    },
+    {
+     "code": "688316",
+     "name": "青云科技",
+     "reason_type": "智算平台+算力租赁+集成电路",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 35414010.0
+    },
+    {
+     "code": "301209",
+     "name": "联合化学",
+     "reason_type": "光刻胶+光刻机+有机颜料",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 59182969.0
+    },
+    {
+     "code": "301000",
+     "name": "肇民科技",
+     "reason_type": "人形机器人+精密注塑+汽车零部件",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 100405656.0
+    },
+    {
+     "code": "300093",
+     "name": "金刚光伏",
+     "reason_type": "光伏HJT+算力服务+GPU采购",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 5607330.0
+    },
+    {
+     "code": "300049",
+     "name": "福瑞医科",
+     "reason_type": "收购Echosens+MAS​​H筛查+肝病诊断",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 84045571.0
+    },
+    {
+     "code": "688648",
+     "name": "中邮科技",
+     "reason_type": "智能物流+机器人+无人车",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 46487746.0
+    },
+    {
+     "code": "688109",
+     "name": "品茗科技",
+     "reason_type": "AI建造+AI眼镜+机器人+建筑信息化",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 3971302.1
+    },
+    {
+     "code": "301697",
+     "name": "贝特利",
+     "reason_type": "光伏银粉+低温光伏浆料+次新股",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 158102360.0
+    },
+    {
+     "code": "688429",
+     "name": "时创能源",
+     "reason_type": "光伏设备+叠栅技术+TOPCon电池",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 35343684.0
+    },
+    {
+     "code": "300493",
+     "name": "润欣科技",
+     "reason_type": "端侧AI+芯片分销+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 72361146.0
+    },
+    {
+     "code": "600569",
+     "name": "安阳钢铁",
+     "reason_type": "特钢转型+定增推进+国企改革+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 29414240.0
+    },
+    {
+     "code": "002309",
+     "name": "中利集团",
+     "reason_type": "光伏储能+特种线缆+三季报扭亏+厦门国资",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 83712312.0
+    },
+    {
+     "code": "601929",
+     "name": "吉视传媒",
+     "reason_type": "AI微短剧+AI应用+智慧广电",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 85903020.0
+    },
+    {
+     "code": "000889",
+     "name": "中嘉博创",
+     "reason_type": "算力销售+通信网络维护+业绩扭亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 31436864.0
+    },
+    {
+     "code": "600261",
+     "name": "阳光照明",
+     "reason_type": "商业航天+激光通信+照明+“羊”字辈",
+     "high_days": "6天5板",
+     "high_days_value": 327686,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 68790328.0
+    },
+    {
+     "code": "000428",
+     "name": "华天酒店",
+     "reason_type": "酒店服务+文体旅融合+湖南国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 12227820.0
+    },
+    {
+     "code": "600986",
+     "name": "浙文互联",
+     "reason_type": "AI营销+算力基础设施+数字文化",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 44181810.0
+    },
+    {
+     "code": "600683",
+     "name": "京投发展",
+     "reason_type": "资产重组+TOD轨道物业+北京国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 67460066.0
+    },
+    {
+     "code": "002086",
+     "name": "东方海洋",
+     "reason_type": "“羊”字辈+海洋养殖+大健康+体外诊断",
+     "high_days": "12天7板",
+     "high_days_value": 458764,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 18363110.0
+    },
+    {
+     "code": "600396",
+     "name": "华电辽能",
+     "reason_type": "电力+储能+央企",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 42025076.0
+    },
+    {
+     "code": "603500",
+     "name": "祥和实业",
+     "reason_type": "轨道扣件+电容配件+智能检测",
+     "high_days": null,
+     "high_days_value": null,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 11000648.0
+    },
+    {
+     "code": "002088",
+     "name": "鲁阳节能",
+     "reason_type": "陶瓷纤维+锂电隔热+“羊”字辈",
+     "high_days": "5天4板",
+     "high_days_value": 262149,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 23872464.0
+    },
+    {
+     "code": "605069",
+     "name": "正和生态",
+     "reason_type": "AI大模型+水务机器人+生态水利",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 28692248.0
+    },
+    {
+     "code": "605339",
+     "name": "南侨食品",
+     "reason_type": "烘焙油脂+乳制品+预制烘焙",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 15024868.0
+    },
+    {
+     "code": "002421",
+     "name": "达实智能",
+     "reason_type": "智慧空间+AIoT平台+战略合作",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 79220990.0
+    },
+    {
+     "code": "000017",
+     "name": "深中华A",
+     "reason_type": "黄金珠宝+珠宝加工+客户拓展",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 93151188.0
+    },
+    {
+     "code": "001360",
+     "name": "南矿集团",
+     "reason_type": "拟购境外金矿+矿山装备",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 83329792.0
+    },
+    {
+     "code": "603682",
+     "name": "锦和商管",
+     "reason_type": "城市更新+轻资产运营+协议转让",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 21528034.0
+    },
+    {
+     "code": "002131",
+     "name": "利欧股份",
+     "reason_type": "AI营销+智能体+液冷泵",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 137026830.0
+    },
+    {
+     "code": "002343",
+     "name": "慈文传媒",
+     "reason_type": "微短剧+影视剧+影视IP",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 52002171.0
+    },
+    {
+     "code": "002773",
+     "name": "康弘药业",
+     "reason_type": "创新药+基因治疗+阿尔茨海默症",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 47356140.0
+    },
+    {
+     "code": "000995",
+     "name": "皇台酒业",
+     "reason_type": "白酒+老窖池+董事会换届",
+     "high_days": "5天4板",
+     "high_days_value": 262149,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 23385600.0
+    },
+    {
+     "code": "002135",
+     "name": "东南网架",
+     "reason_type": "光伏建筑一体化+装配式建筑+回购",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 32605794.0
+    },
+    {
+     "code": "000533",
+     "name": "顺钠股份",
+     "reason_type": "数据中心+干式变压器+核电",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 92141652.0
+    },
+    {
+     "code": "603185",
+     "name": "弘元绿能",
+     "reason_type": "光伏一体化+TOPCon组件+高端装备",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 73864273.0
+    },
+    {
+     "code": "000710",
+     "name": "贝瑞基因",
+     "reason_type": "AI医疗+三代测序+生育健康检测",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 9261729.0
+    },
+    {
+     "code": "603737",
+     "name": "三棵树",
+     "reason_type": "建筑涂料+好房子战略合作+马上住4.0",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 21685904.0
+    },
+    {
+     "code": "603098",
+     "name": "森特股份",
+     "reason_type": "BIPV+光储充+高管增持",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 29211536.0
+    },
+    {
+     "code": "002929",
+     "name": "润建股份",
+     "reason_type": "词元出海+算力网络+机器人",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 200057280.0
+    },
+    {
+     "code": "605188",
+     "name": "国光连锁",
+     "reason_type": "零售主业+大消费+商业综合体",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 18679680.0
+    },
+    {
+     "code": "000603",
+     "name": "盛达资源",
+     "reason_type": "白银采选+贵金属+拟购方鑫矿业+三季报高增",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 106112070.0
+    },
+    {
+     "code": "003033",
+     "name": "征和工业",
+     "reason_type": "灵巧手+机器人+农机链",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 3301492.0
+    },
+    {
+     "code": "603151",
+     "name": "邦基科技",
+     "reason_type": "猪饲料+生猪养殖+猪周期反转",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 5913840.0
+    },
+    {
+     "code": "603598",
+     "name": "引力传媒",
+     "reason_type": "AI短剧+AI营销+三季报增长",
+     "high_days": "4天3板",
+     "high_days_value": 196612,
+     "is_again_limit": 0,
+     "limit_up_type": "T字板",
+     "order_amount": 84486996.0
+    },
+    {
+     "code": "001393",
+     "name": "维通利",
+     "reason_type": "电连接+电力电工+数据中心+次新股",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 18176272.0
+    },
+    {
+     "code": "605488",
+     "name": "福莱新材",
+     "reason_type": "柔性传感+数据采集手套+人形机器人+广告喷墨",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 55480631.0
+    },
+    {
+     "code": "603956",
+     "name": "威派格",
+     "reason_type": "PCB钻针+智慧水务+AI应用",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 7045862.3
+    },
+    {
+     "code": "603657",
+     "name": "春光科技",
+     "reason_type": "扫地机器人+家庭具身机器人+清洁电器代工",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 21664720.0
+    },
+    {
+     "code": "603212",
+     "name": "赛伍技术",
+     "reason_type": "光伏胶膜+半导体材料+三季报减亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 39766023.0
+    },
+    {
+     "code": "601599",
+     "name": "浙文影业",
+     "reason_type": "AI漫剧+微短剧+三季报增长",
+     "high_days": "4天4板",
+     "high_days_value": 262148,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 269673560.0
+    },
+    {
+     "code": "600641",
+     "name": "先导基电",
+     "reason_type": "铟+离子注入机+半导体设备+SOFC",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 280194600.0
+    },
+    {
+     "code": "600206",
+     "name": "有研新材",
+     "reason_type": "半导体靶材+先进存储+靶材扩产+三季报增长",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 160647560.0
+    },
+    {
+     "code": "002865",
+     "name": "钧达股份",
+     "reason_type": "光伏电池+商业航天+太空光伏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 53740127.0
+    },
+    {
+     "code": "002081",
+     "name": "金螳螂",
+     "reason_type": "洁净室+半导体厂房配套+建筑装饰",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 225859630.0
+    },
+    {
+     "code": "002045",
+     "name": "国光电器",
+     "reason_type": "AI眼镜+智能音箱+声学模组",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 83523330.0
+    },
+    {
+     "code": "001330",
+     "name": "博纳影业",
+     "reason_type": "AI影视+AI短剧+院线影院+三季报减亏",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 146433670.0
+    },
+    {
+     "code": "603893",
+     "name": "瑞芯微",
+     "reason_type": "端侧AI+机器人数据采集+半导体",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 127497479.0
+    },
+    {
+     "code": "603699",
+     "name": "纽威股份",
+     "reason_type": "工业阀门+核电阀门+能源装备项目",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 11760396.6
+    },
+    {
+     "code": "603297",
+     "name": "永新光学",
+     "reason_type": "半导体光学+光刻机+精密光学+提前终止减持",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 29934062.0
+    },
+    {
+     "code": "605287",
+     "name": "德才股份",
+     "reason_type": "AI漫剧+互动影游+智能体",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 55100989.0
+    },
+    {
+     "code": "000029",
+     "name": "深深房A",
+     "reason_type": "房地产+私募投资+深圳国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 42249036.0
+    },
+    {
+     "code": "603068",
+     "name": "博通集成",
+     "reason_type": "端侧AI+无线芯片+AIoT",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 70038524.0
+    },
+    {
+     "code": "600539",
+     "name": "狮头股份",
+     "reason_type": "光伏+机器视觉+半导体先进封装+AI应用",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 23652678.0
+    },
+    {
+     "code": "002318",
+     "name": "久立特材",
+     "reason_type": "核电+可控核聚变+超超临界+回购",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 29460780.0
+    },
+    {
+     "code": "603990",
+     "name": "麦迪科技",
+     "reason_type": "AI医疗+康养机器人+绵阳国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 43172172.0
+    },
+    {
+     "code": "002529",
+     "name": "海源复材",
+     "reason_type": "光伏组件+汽车轻量化+储能",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 31139808.0
+    },
+    {
+     "code": "001269",
+     "name": "欧晶科技",
+     "reason_type": "光伏石英坩埚+半导体石英坩埚+亏损收窄",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 11161154.8
+    },
+    {
+     "code": "600865",
+     "name": "百大集团",
+     "reason_type": "商业零售+物业租赁+净利润增长",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 28119328.0
+    },
+    {
+     "code": "002388",
+     "name": "新亚制程",
+     "reason_type": "锂电材料+固态电池+启元气体收购+AI服务器电源",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 68605866.0
+    },
+    {
+     "code": "603381",
+     "name": "永臻股份",
+     "reason_type": "光伏+电池铝箔+人形机器人+三季报增长",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 255898180.0
+    },
+    {
+     "code": "603876",
+     "name": "鼎胜新材",
+     "reason_type": "电池铝箔+固态电池+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 65497801.0
+    },
+    {
+     "code": "000700",
+     "name": "模塑科技",
+     "reason_type": "人形机器人+汽车外饰件+机器人外覆盖件+社保基金持仓",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 152691000.0
+    },
+    {
+     "code": "002565",
+     "name": "顺灏股份",
+     "reason_type": "太空算力+商业航天+特种防伪环保纸",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 54070167.0
+    },
+    {
+     "code": "002506",
+     "name": "协鑫集成",
+     "reason_type": "光伏组件+GPC电池+储能系统",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 165333230.0
+    },
+    {
+     "code": "002313",
+     "name": "日海智能",
+     "reason_type": "端侧AI+通信模组+机器人应用+国资划转",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 4188392.0
+    },
+    {
+     "code": "000635",
+     "name": "英力特",
+     "reason_type": "氯碱化工+控制权变更+央企",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 43307784.0
+    },
+    {
+     "code": "603313",
+     "name": "梦百合",
+     "reason_type": "记忆绵家居+境外电商+智能床",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 3147835.1
+    },
+    {
+     "code": "002307",
+     "name": "北新路桥",
+     "reason_type": "公路基建+资产盘活+新疆国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 108818908.0
+    },
+    {
+     "code": "002578",
+     "name": "闽发铝业",
+     "reason_type": "光伏边框+液冷铝材+机器人布局+三季报扭亏",
+     "high_days": "4天4板",
+     "high_days_value": 262148,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 214628410.0
+    },
+    {
+     "code": "002596",
+     "name": "海南瑞泽",
+     "reason_type": "商品混凝土+海南自贸港+智算布局+市政环卫",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 5424570.0
+    },
+    {
+     "code": "600481",
+     "name": "双良节能",
+     "reason_type": "光伏+冷却塔+液冷",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 61831218.0
+    }
+   ]
+  },
+  {
+   "date": "2026-11-04",
+   "page_total": 116,
+   "limit_up_count": {
+    "today": {
+     "num": 116,
+     "history_num": 149,
+     "rate": 0.7785234899328859,
+     "open_num": 33
+    },
+    "yesterday": {
+     "num": 48,
+     "history_num": 82,
+     "rate": 0.5853658536585366,
+     "open_num": 34
+    }
+   },
+   "limit_down_count": {
+    "today": {
+     "num": 10,
+     "history_num": 33,
+     "rate": 0.30303030303030304,
+     "open_num": 23
+    },
+    "yesterday": {
+     "num": 17,
+     "history_num": 24,
+     "rate": 0.7083333333333334,
+     "open_num": 7
+    }
+   },
+   "rows": [
+    {
+     "code": "688517",
+     "name": "金冠电气",
+     "reason_type": "国网预中标+特高压避雷器+电网设备",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 6748182.8
+    },
+    {
+     "code": "301697",
+     "name": "贝特利",
+     "reason_type": "次新股+半导体材料+低温光伏浆料",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 40311036.0
+    },
+    {
+     "code": "300943",
+     "name": "春晖智控",
+     "reason_type": "商业航天+卫星解除装置+半导体设备+春晖仪表",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 48187976.0
+    },
+    {
+     "code": "688507",
+     "name": "索辰科技",
+     "reason_type": "物理AI+低空经济+工程仿真",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 50524549.0
+    },
+    {
+     "code": "688652",
+     "name": "京仪装备",
+     "reason_type": "半导体设备+存储芯片+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 125204196.0
+    },
+    {
+     "code": "300489",
+     "name": "光智科技",
+     "reason_type": "磷化铟衬底+光通信材料+三季度业绩增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 94731340.0
+    },
+    {
+     "code": "688835",
+     "name": "高凯技术",
+     "reason_type": "存储芯片+半导体流控+订单增长+科创次新股",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 13937676.0
+    },
+    {
+     "code": "688809",
+     "name": "强一股份",
+     "reason_type": "晶圆测试探针卡+存储探针卡+回购",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 25410874.0
+    },
+    {
+     "code": "688037",
+     "name": "芯源微",
+     "reason_type": "先进封装+涂胶显影+化学清洗",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 110654520.0
+    },
+    {
+     "code": "688072",
+     "name": "拓荆科技",
+     "reason_type": "半导体设备+先进封装+拟收购资产",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 124191822.0
+    },
+    {
+     "code": "688596",
+     "name": "正帆科技",
+     "reason_type": "半导体零部件+存储芯片+三季报增长",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 50444327.0
+    },
+    {
+     "code": "688409",
+     "name": "富创精密",
+     "reason_type": "半导体零部件+三季报高增+超跌反弹",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 47566516.0
+    },
+    {
+     "code": "301070",
+     "name": "开勒股份",
+     "reason_type": "半导体产业链+硅光子技术+拟收购威泰思+工业风扇",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 77181893.0
+    },
+    {
+     "code": "300788",
+     "name": "中信出版",
+     "reason_type": "AI视频+IP运营+图书出版",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 20269326.0
+    },
+    {
+     "code": "688200",
+     "name": "华峰测控",
+     "reason_type": "半导体设备+超跌反弹+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 149303410.0
+    },
+    {
+     "code": "300666",
+     "name": "江丰电子",
+     "reason_type": "半导体靶材+先进存储+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 125483216.0
+    },
+    {
+     "code": "688536",
+     "name": "思瑞浦",
+     "reason_type": "模拟芯片+光模块+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 19204351.0
+    },
+    {
+     "code": "688361",
+     "name": "中科飞测",
+     "reason_type": "拟回购+半导体量检测+存储芯片",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 151824550.0
+    },
+    {
+     "code": "301583",
+     "name": "托伦斯",
+     "reason_type": "半导体零部件+先进封装+存储芯片",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 72315642.0
+    },
+    {
+     "code": "300139",
+     "name": "晓程科技",
+     "reason_type": "黄金+加纳金矿+FGM选厂",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 93793482.0
+    },
+    {
+     "code": "002578",
+     "name": "闽发铝业",
+     "reason_type": "光伏边框+液冷铝材+机器人布局+三季报扭亏",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 54342882.0
+    },
+    {
+     "code": "002529",
+     "name": "海源复材",
+     "reason_type": "汽车轻量化+光伏组件+宁德时代",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 14776424.0
+    },
+    {
+     "code": "002652",
+     "name": "扬子新材",
+     "reason_type": "高洁净板+有机涂层板+三季报减亏+“羊”字辈",
+     "high_days": "4天3板",
+     "high_days_value": 196612,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 64144424.0
+    },
+    {
+     "code": "000919",
+     "name": "金陵药业",
+     "reason_type": "医康养护+创新药+拟收购四药+南京国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 30561953.0
+    },
+    {
+     "code": "600371",
+     "name": "万向德农",
+     "reason_type": "玉米种业+转基因玉米+新品研发",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 20137600.0
+    },
+    {
+     "code": "001282",
+     "name": "三联锻造",
+     "reason_type": "人形机器人+关节模组+汽车锻件",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 69004003.0
+    },
+    {
+     "code": "603248",
+     "name": "锡华科技",
+     "reason_type": "风电齿轮箱+大兆瓦风电+国际客户+次新股",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 31798800.0
+    },
+    {
+     "code": "002674",
+     "name": "兴业科技",
+     "reason_type": "磷化铟+机器人电子皮肤+汽车内饰皮革+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 32493591.0
+    },
+    {
+     "code": "000426",
+     "name": "兴业银锡",
+     "reason_type": "白银+锡+银漫矿业复产+高管增持",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 82619734.0
+    },
+    {
+     "code": "002155",
+     "name": "湖南黄金",
+     "reason_type": "黄金+重大资产重组+锑钨",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 15238457.0
+    },
+    {
+     "code": "601123",
+     "name": "马矿股份",
+     "reason_type": "铁精粉+采选扩能+三季报增长+次新股",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 39742343.0
+    },
+    {
+     "code": "603657",
+     "name": "春光科技",
+     "reason_type": "家庭机器人+清洁电器+乐享科技",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 4054400.0
+    },
+    {
+     "code": "603777",
+     "name": "来伊份",
+     "reason_type": "休闲食品+全渠道零售",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 39520055.0
+    },
+    {
+     "code": "002992",
+     "name": "宝明科技",
+     "reason_type": "固态电池+AI服务器+HVLP铜箔+复合铜箔",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 28447147.0
+    },
+    {
+     "code": "000096",
+     "name": "广聚能源",
+     "reason_type": "成品油+光储充放油+深圳国资+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 423659880.0
+    },
+    {
+     "code": "603381",
+     "name": "永臻股份",
+     "reason_type": "光伏+电池铝箔+人形机器人+三季报增长",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 74655395.0
+    },
+    {
+     "code": "001360",
+     "name": "南矿集团",
+     "reason_type": "拟购境外金矿+矿山装备",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 7752150.0
+    },
+    {
+     "code": "603115",
+     "name": "海星股份",
+     "reason_type": "电极箔+AI算力+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 4694210.0
+    },
+    {
+     "code": "000657",
+     "name": "中钨高新",
+     "reason_type": "AI PCB微钻+钨全产业链+三季报高增",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 148204980.0
+    },
+    {
+     "code": "600699",
+     "name": "均胜电子",
+     "reason_type": "回购注销+数据中心液冷+人形机器人",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 20255130.0
+    },
+    {
+     "code": "603048",
+     "name": "浙江黎明",
+     "reason_type": "关注机器人行业+汽车零部件+股权转让",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 9150274.0
+    },
+    {
+     "code": "603773",
+     "name": "沃格光电",
+     "reason_type": "玻璃基板+先进封装+算力硬件+商业航天",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 13698855.0
+    },
+    {
+     "code": "000975",
+     "name": "山金国际",
+     "reason_type": "黄金+央行购金+海外金矿+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 82995403.0
+    },
+    {
+     "code": "002636",
+     "name": "金安国纪",
+     "reason_type": "覆铜板+AI服务器+三季报高增",
+     "high_days": "6天3板",
+     "high_days_value": 196614,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 140923410.0
+    },
+    {
+     "code": "000506",
+     "name": "招金黄金",
+     "reason_type": "黄金+斐济金矿+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 64125279.0
+    },
+    {
+     "code": "603955",
+     "name": "大千生态",
+     "reason_type": "羽毛球机器人+宠物经济+定增完成+拟更名灵动股份",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 36756174.0
+    },
+    {
+     "code": "603256",
+     "name": "宏和科技",
+     "reason_type": "电子布+PCB概念+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 17746938.0
+    },
+    {
+     "code": "603767",
+     "name": "中马传动",
+     "reason_type": "减速器+汽车变速器+车辆齿轮+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 61668242.0
+    },
+    {
+     "code": "601208",
+     "name": "东材科技",
+     "reason_type": "高速电子树脂+光刻胶材料+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 32120833.0
+    },
+    {
+     "code": "002409",
+     "name": "雅克科技",
+     "reason_type": "半导体前驱体+存储芯片+光刻胶+超跌反弹",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 180949390.0
+    },
+    {
+     "code": "003021",
+     "name": "兆威机电",
+     "reason_type": "人形机器人+灵巧手+微型传动",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 47817116.0
+    },
+    {
+     "code": "002156",
+     "name": "通富微电",
+     "reason_type": "先进封装+AMD封测+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 380000640.0
+    },
+    {
+     "code": "601069",
+     "name": "西部黄金",
+     "reason_type": "黄金采选冶+三季报增长+拟发行H股",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 26574674.0
+    },
+    {
+     "code": "600547",
+     "name": "山东黄金",
+     "reason_type": "黄金+回购+山东国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 46201161.0
+    },
+    {
+     "code": "002008",
+     "name": "大族激光",
+     "reason_type": "回购+电路板设备+半导体设备",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 106308601.0
+    },
+    {
+     "code": "603662",
+     "name": "柯力传感",
+     "reason_type": "人形机器人+六维力传感器",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 27097872.0
+    },
+    {
+     "code": "002971",
+     "name": "和远气体",
+     "reason_type": "电子特气+大宗气体+硅基新材料",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 16633101.0
+    },
+    {
+     "code": "002827",
+     "name": "高争民爆",
+     "reason_type": "重组复牌+拟注铜锂矿+民爆+西藏国资",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 419933080.0
+    },
+    {
+     "code": "603127",
+     "name": "昭衍新药",
+     "reason_type": "创新药CRO+实验猴+订单回暖+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 19330177.0
+    },
+    {
+     "code": "001359",
+     "name": "平安电工",
+     "reason_type": "电子布+拟定增13亿元+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 34419362.0
+    },
+    {
+     "code": "605376",
+     "name": "博迁新材",
+     "reason_type": "MLCC镍粉+AI服务器+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 12803669.0
+    },
+    {
+     "code": "605288",
+     "name": "凯迪股份",
+     "reason_type": "具身机器人+线性驱动+汽车零部件",
+     "high_days": "6天3板",
+     "high_days_value": 196614,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 31235119.0
+    },
+    {
+     "code": "603259",
+     "name": "药明康德",
+     "reason_type": "CXO龙头+在手订单增长+AI制药服务",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 322768890.0
+    },
+    {
+     "code": "002980",
+     "name": "华盛昌",
+     "reason_type": "光通信测试+共封装光学+三季报增长+前期跌幅较大",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 49186349.0
+    },
+    {
+     "code": "002916",
+     "name": "深南电路",
+     "reason_type": "算力PCB订单饱满+超跌反弹+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 146820480.0
+    },
+    {
+     "code": "605577",
+     "name": "龙版传媒",
+     "reason_type": "AI漫剧+出版发行+数字出版",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 21381789.0
+    },
+    {
+     "code": "603598",
+     "name": "引力传媒",
+     "reason_type": "AI短剧+AI营销+三季报增长",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 102370279.0
+    },
+    {
+     "code": "603283",
+     "name": "赛腾股份",
+     "reason_type": "HBM检测+三星供货+电路板设备+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 37475350.0
+    },
+    {
+     "code": "603203",
+     "name": "快克智能",
+     "reason_type": "先进封装+存储芯片+光模块+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 13008734.2
+    },
+    {
+     "code": "603061",
+     "name": "金海通",
+     "reason_type": "半导体测试分选机+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 48449120.0
+    },
+    {
+     "code": "600988",
+     "name": "赤峰黄金",
+     "reason_type": "黄金+紫金入主+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 220600520.0
+    },
+    {
+     "code": "600391",
+     "name": "航发科技",
+     "reason_type": "燃气轮机+航空轴承+军工+国企",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 73752525.0
+    },
+    {
+     "code": "002975",
+     "name": "博杰股份",
+     "reason_type": "机器人测试+磷化铟+MLCC设备+液冷测试",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 56513924.0
+    },
+    {
+     "code": "002275",
+     "name": "桂林三金",
+     "reason_type": "创新药+中成药+单季增长+分红",
+     "high_days": "5天4板",
+     "high_days_value": 262149,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 77625789.0
+    },
+    {
+     "code": "001337",
+     "name": "四川黄金",
+     "reason_type": "黄金采选+金价上涨+四川国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 64034779.0
+    },
+    {
+     "code": "000530",
+     "name": "冰山冷热",
+     "reason_type": "冰雪工程+数据中心液冷+船舶制冷",
+     "high_days": "5天3板",
+     "high_days_value": 196613,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 13982826.0
+    },
+    {
+     "code": "000017",
+     "name": "深中华A",
+     "reason_type": "黄金珠宝+珠宝加工+客户拓展",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 88264748.0
+    },
+    {
+     "code": "002371",
+     "name": "北方华创",
+     "reason_type": "半导体设备+存储芯片+混合键合",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 356327060.0
+    },
+    {
+     "code": "603893",
+     "name": "瑞芯微",
+     "reason_type": "机器人芯片+端侧AI+半导体",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 136934210.0
+    },
+    {
+     "code": "002821",
+     "name": "凯莱英",
+     "reason_type": "CXO+多肽CDMO+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 185335570.0
+    },
+    {
+     "code": "603186",
+     "name": "华正新材",
+     "reason_type": "高速覆铜板+AI服务器+CBF积层绝缘膜",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 74570470.0
+    },
+    {
+     "code": "001339",
+     "name": "智微智能",
+     "reason_type": "机器人控制器+智元供应链+智算业务+三季报高增",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 14680981.0
+    },
+    {
+     "code": "002222",
+     "name": "福晶科技",
+     "reason_type": "光通信+精密光学+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 8141319.0
+    },
+    {
+     "code": "002353",
+     "name": "杰瑞股份",
+     "reason_type": "AIDC燃气轮机+油气装备",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 72374850.0
+    },
+    {
+     "code": "003033",
+     "name": "征和工业",
+     "reason_type": "灵巧手+机器人+农机链",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 54400255.0
+    },
+    {
+     "code": "001389",
+     "name": "广合科技",
+     "reason_type": "算力PCB+首次回购+三季报高增",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 16909102.0
+    },
+    {
+     "code": "002876",
+     "name": "三利谱",
+     "reason_type": "偏光片+三季报增长+拟投建莆田项目",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 11716172.4
+    },
+    {
+     "code": "002428",
+     "name": "云南锗业",
+     "reason_type": "与AOI签订长期供货协议+磷化铟+卫星锗晶片+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 408938010.0
+    },
+    {
+     "code": "605488",
+     "name": "福莱新材",
+     "reason_type": "数据采集手套+柔性传感+广告喷墨",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 45121446.0
+    },
+    {
+     "code": "002463",
+     "name": "沪电股份",
+     "reason_type": "印制电路板+高速交换机+三季报高增+超跌反弹",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 95723203.0
+    },
+    {
+     "code": "603950",
+     "name": "长源东谷",
+     "reason_type": "燃气轮机+发动机零部件+拟收购康豪机电",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 6710688.5
+    },
+    {
+     "code": "605287",
+     "name": "德才股份",
+     "reason_type": "AI漫剧+智能体+建筑装饰",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 50445230.0
+    },
+    {
+     "code": "001233",
+     "name": "海安集团",
+     "reason_type": "次新股+全钢巨胎+业绩修复",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 76719620.0
+    },
+    {
+     "code": "002536",
+     "name": "飞龙股份",
+     "reason_type": "服务器液冷+液冷订单+汽车热管理+楚能合作",
+     "high_days": null,
+     "high_days_value": null,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 9646140.2
+    },
+    {
+     "code": "605111",
+     "name": "新洁能",
+     "reason_type": "功率半导体+回购提议+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 137321380.0
+    },
+    {
+     "code": "600584",
+     "name": "长电科技",
+     "reason_type": "先进封装+CPO+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 230494560.0
+    },
+    {
+     "code": "000962",
+     "name": "东方钽业",
+     "reason_type": "半导体钽材+商业航天+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 33352784.0
+    },
+    {
+     "code": "002317",
+     "name": "众生药业",
+     "reason_type": "减肥药+多肽药物+创新药",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 66476800.0
+    },
+    {
+     "code": "600206",
+     "name": "有研新材",
+     "reason_type": "半导体靶材+先进存储+靶材扩产+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 195735710.0
+    },
+    {
+     "code": "002811",
+     "name": "郑中设计",
+     "reason_type": "入股深迪半导体+AI设计+室内设计",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 45215289.0
+    },
+    {
+     "code": "000603",
+     "name": "盛达资源",
+     "reason_type": "白银采选+贵金属+拟购方鑫矿业+三季报高增",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 195791730.0
+    },
+    {
+     "code": "002058",
+     "name": "紫竹高科",
+     "reason_type": "固态电池+铝塑膜+汽车检具",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 21278544.0
+    },
+    {
+     "code": "002716",
+     "name": "湖南白银",
+     "reason_type": "白银+贵金属+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 27534800.0
+    },
+    {
+     "code": "600641",
+     "name": "先导基电",
+     "reason_type": "铟+离子注入机+半导体设备+SOFC",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 311007110.0
+    },
+    {
+     "code": "002436",
+     "name": "兴森科技",
+     "reason_type": "超跌修复+封装基板+印制电路板+光模块基板",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 35910120.0
+    },
+    {
+     "code": "002364",
+     "name": "中恒电气",
+     "reason_type": "数据中心电源+宁德时代合作+三季报增长",
+     "high_days": null,
+     "high_days_value": null,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 31812051.0
+    },
+    {
+     "code": "002388",
+     "name": "新亚制程",
+     "reason_type": "锂电材料+固态电池+启元气体收购+AI服务器电源",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 72591495.0
+    },
+    {
+     "code": "600892",
+     "name": "大晟文化",
+     "reason_type": "短剧+游戏+股权转让+三季报减亏",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 142929980.0
+    },
+    {
+     "code": "002741",
+     "name": "光华科技",
+     "reason_type": "PCB化学品+先进封装+CPO+硫化锂",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 31458132.0
+    },
+    {
+     "code": "002565",
+     "name": "顺灏股份",
+     "reason_type": "太空算力+特种纸印刷+员工持股计划",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 56705947.0
+    },
+    {
+     "code": "002081",
+     "name": "金螳螂",
+     "reason_type": "洁净室+参建数据中心+建筑装饰",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 119559200.0
+    },
+    {
+     "code": "000679",
+     "name": "大连友谊",
+     "reason_type": "新零售+进出口贸易+拟国资入主",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 45945740.0
+    },
+    {
+     "code": "002088",
+     "name": "鲁阳节能",
+     "reason_type": "陶瓷纤维+锂电隔热+“羊”字辈",
+     "high_days": "4天3板",
+     "high_days_value": 196612,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 16023432.0
+    },
+    {
+     "code": "002309",
+     "name": "中利集团",
+     "reason_type": "光伏储能+特种线缆+三季报扭亏+厦门国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 36407290.0
+    },
+    {
+     "code": "601212",
+     "name": "白银有色",
+     "reason_type": "白银黄金+投资计划+三季报扭亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 20383048.0
+    },
+    {
+     "code": "601599",
+     "name": "浙文影业",
+     "reason_type": "AI漫剧+微短剧+三季报增长",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 185745400.0
+    }
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "page_total": 48,
+   "limit_up_count": {
+    "today": {
+     "num": 48,
+     "history_num": 82,
+     "rate": 0.5853658536585366,
+     "open_num": 34
+    },
+    "yesterday": {
+     "num": 125,
+     "history_num": 153,
+     "rate": 0.8169934640522876,
+     "open_num": 28
+    }
+   },
+   "limit_down_count": {
+    "today": {
+     "num": 17,
+     "history_num": 24,
+     "rate": 0.7083333333333334,
+     "open_num": 7
+    },
+    "yesterday": {
+     "num": 8,
+     "history_num": 33,
+     "rate": 0.24242424242424243,
+     "open_num": 25
+    }
+   },
+   "rows": [
+    {
+     "code": "301513",
+     "name": "尚水智能",
+     "reason_type": "固态电池设备+锂电智能装备+制浆龙头",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 55326047.0
+    },
+    {
+     "code": "600327",
+     "name": "大东方",
+     "reason_type": "百货零售+医疗服务",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 23275545.0
+    },
+    {
+     "code": "601188",
+     "name": "龙江交通",
+     "reason_type": "冰雪旅游保障+高速公路运营",
+     "high_days": "4天2板",
+     "high_days_value": 131076,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 11983323.2
+    },
+    {
+     "code": "002105",
+     "name": "信隆健康",
+     "reason_type": "外骨骼机器人+自行车配件",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 32490416.0
+    },
+    {
+     "code": "601599",
+     "name": "浙文影业",
+     "reason_type": "AI影视+微短剧+三季报增长",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 155809400.0
+    },
+    {
+     "code": "600358",
+     "name": "国旅联合",
+     "reason_type": "互联网营销+饮用水+跨境电商+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 30720299.0
+    },
+    {
+     "code": "000591",
+     "name": "太阳能",
+     "reason_type": "光伏电站+机器人概念+央企+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 90500571.0
+    },
+    {
+     "code": "600892",
+     "name": "大晟文化",
+     "reason_type": "短剧+三季报减亏+股权转让",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 249427840.0
+    },
+    {
+     "code": "600558",
+     "name": "大西洋",
+     "reason_type": "机器人焊接材料+可控核聚变+航空航天+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 85505971.0
+    },
+    {
+     "code": "002088",
+     "name": "鲁阳节能",
+     "reason_type": "陶瓷纤维+锂电隔热+“羊”字辈",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 28880110.0
+    },
+    {
+     "code": "605378",
+     "name": "野马电池",
+     "reason_type": "锌锰电池+锂电池+海外基地",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 54691496.0
+    },
+    {
+     "code": "002805",
+     "name": "丰元股份",
+     "reason_type": "固态电池+磷酸铁锂+比亚迪合作",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 89450738.0
+    },
+    {
+     "code": "605388",
+     "name": "均瑶健康",
+     "reason_type": "益生菌食品+益生菌出海+菌株研发",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 34249565.0
+    },
+    {
+     "code": "603381",
+     "name": "永臻股份",
+     "reason_type": "光伏+电池铝箔+人形机器人+三季报增长",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 43887099.0
+    },
+    {
+     "code": "002652",
+     "name": "扬子新材",
+     "reason_type": "有机涂层板+高洁净板+三季报减亏+“羊”字辈",
+     "high_days": "3天2板",
+     "high_days_value": 131075,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 19220781.0
+    },
+    {
+     "code": "000599",
+     "name": "青岛双星",
+     "reason_type": "轮胎+锦湖并表+并购重组+青岛国资",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 42435450.0
+    },
+    {
+     "code": "600778",
+     "name": "友好集团",
+     "reason_type": "零售+新疆商业+京东租赁",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 20159209.0
+    },
+    {
+     "code": "603258",
+     "name": "电魂网络",
+     "reason_type": "游戏+漫剧+衍生品",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 21057773.0
+    },
+    {
+     "code": "002580",
+     "name": "圣阳股份",
+     "reason_type": "固态电池+液冷储能+算力+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 256944210.0
+    },
+    {
+     "code": "600241",
+     "name": "时代万恒",
+     "reason_type": "锂电池+镍氢电池+辽宁国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 40044552.0
+    },
+    {
+     "code": "000151",
+     "name": "中成股份",
+     "reason_type": "成套设备出口+央企+储能",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 11720560.0
+    },
+    {
+     "code": "002029",
+     "name": "七匹狼",
+     "reason_type": "夹克男装+投资科技+基金备案+海峡两岸",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 110691115.0
+    },
+    {
+     "code": "002827",
+     "name": "高争民爆",
+     "reason_type": "重组复牌+拟注铜锂矿+民爆+西藏国资",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 549678530.0
+    },
+    {
+     "code": "605577",
+     "name": "龙版传媒",
+     "reason_type": "漫剧+出版发行+数字出版",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 158468310.0
+    },
+    {
+     "code": "601566",
+     "name": "九牧王",
+     "reason_type": "羊毛羊绒+男裤+太空裤+海峡两岸",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 66793500.0
+    },
+    {
+     "code": "601366",
+     "name": "利群股份",
+     "reason_type": "零售连锁+即时零售+大消费",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 35402459.0
+    },
+    {
+     "code": "601123",
+     "name": "马矿股份",
+     "reason_type": "铁精粉+采选扩能+三季报增长+次新股",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 44652184.0
+    },
+    {
+     "code": "600261",
+     "name": "阳光照明",
+     "reason_type": "商业航天+激光通信+照明+“羊”字辈",
+     "high_days": "4天4板",
+     "high_days_value": 262148,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 198822810.0
+    },
+    {
+     "code": "002992",
+     "name": "宝明科技",
+     "reason_type": "固态电池+AI服务器+HVLP铜箔+复合铜箔",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 1244760.0
+    },
+    {
+     "code": "002692",
+     "name": "远程股份",
+     "reason_type": "拟收购中复碳芯股权+电线电缆",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 35761154.0
+    },
+    {
+     "code": "002522",
+     "name": "浙江众成",
+     "reason_type": "光纤油膏+三季报增长+POF热收缩膜+子公司完成增资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 83934774.0
+    },
+    {
+     "code": "001318",
+     "name": "阳光乳业",
+     "reason_type": "低温乳制品+大消费+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 29572646.0
+    },
+    {
+     "code": "000995",
+     "name": "皇台酒业",
+     "reason_type": "白酒+老窖池+董事会换届",
+     "high_days": "3天3板",
+     "high_days_value": 196611,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 138031610.0
+    },
+    {
+     "code": "002058",
+     "name": "紫竹高科",
+     "reason_type": "固态电池+铝塑膜+汽车检具",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 73327439.0
+    },
+    {
+     "code": "603402",
+     "name": "陕西旅游",
+     "reason_type": "旅游演艺+旅游索道+次新股+陕西国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 96566826.0
+    },
+    {
+     "code": "002292",
+     "name": "奥飞娱乐",
+     "reason_type": "智能内容制作+喜羊羊+潮玩品牌+三季报增长",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 121548061.0
+    },
+    {
+     "code": "603906",
+     "name": "龙蟠科技",
+     "reason_type": "固态电池材料+磷酸铁锂+液冷+三季报扭亏",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 76726712.0
+    },
+    {
+     "code": "600630",
+     "name": "龙头股份",
+     "reason_type": "纺织服装+跨境电商+上海国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 47815920.0
+    },
+    {
+     "code": "603289",
+     "name": "泰瑞机器",
+     "reason_type": "拟收购半导体公司+一体化压铸+汽车注塑+海外业务",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "一字板",
+     "order_amount": 33655939.0
+    },
+    {
+     "code": "002086",
+     "name": "东方海洋",
+     "reason_type": "“羊”字辈+体外诊断+海参养殖+水溶性维生素试剂",
+     "high_days": "10天6板",
+     "high_days_value": 393226,
+     "is_again_limit": 1,
+     "limit_up_type": "T字板",
+     "order_amount": 215780210.0
+    },
+    {
+     "code": "000679",
+     "name": "大连友谊",
+     "reason_type": "新零售+进出口贸易+拟国资入主",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 0,
+     "limit_up_type": "换手板",
+     "order_amount": 18757770.0
+    },
+    {
+     "code": "002696",
+     "name": "百洋股份",
+     "reason_type": "水产加工+鱼粉鱼油+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 98507470.0
+    },
+    {
+     "code": "002300",
+     "name": "太阳电缆",
+     "reason_type": "电线电缆+海底电缆+海峡两岸+“羊”字辈",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 52517072.0
+    },
+    {
+     "code": "600802",
+     "name": "福建水泥",
+     "reason_type": "水泥熟料+重点工程+福建国资",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 33012330.0
+    },
+    {
+     "code": "002578",
+     "name": "闽发铝业",
+     "reason_type": "光伏边框+液冷铝材+机器人布局+三季报扭亏",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 23577832.0
+    },
+    {
+     "code": "000608",
+     "name": "阳光股份",
+     "reason_type": "商业物业+智算业务+“羊字辈”",
+     "high_days": "首板",
+     "high_days_value": 65537,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 33496864.0
+    },
+    {
+     "code": "600293",
+     "name": "三峡新材",
+     "reason_type": "赛纬重组+锂电电解液+浮法玻璃",
+     "high_days": "2天2板",
+     "high_days_value": 131074,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 61149000.0
+    },
+    {
+     "code": "600715",
+     "name": "文投控股",
+     "reason_type": "AI漫剧+游戏运营+影院多元业态",
+     "high_days": "6天5板",
+     "high_days_value": 327686,
+     "is_again_limit": 1,
+     "limit_up_type": "换手板",
+     "order_amount": 14123106.0
+    }
+   ]
+  }
+ ]
+}

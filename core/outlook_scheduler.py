@@ -10,13 +10,13 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from . import breadth, disclosure_themes, sector_flow, sector_members, theme_discovery
+from . import market_pulse, market_plan, market_radar
 from .provider import CN, get, now_cn
 
 INTERVAL_MINUTES = 30
-SCREEN_VERSION = 8
-NON_BUSINESS = re.compile('重仓|参股|解禁|ST|央企50|融资融券|整体上市|改革|持股|沪深300|次新|上证|深证|三板|举牌|增持|破净|送转|预盈|预增|低价股|高价股|资产注入|外资背景|地域|地区|股权|本月|B股|综合行业')
-CAUTION = re.compile('下滑|下降|下调|萎缩|回撤|收紧|下跌|走弱|亏损|立案|起火|冲突|预警|抵制|暴跌|出口限制|制裁')
-SUPPORT = re.compile('增长|上调|获批|投产|中标|扩产|签约|保供|订单增加|提高补贴|需求回升|增产|复产')
+SCREEN_VERSION = 9
+NON_BUSINESS = market_pulse.NON_BUSINESS
+CAUTION, SUPPORT = market_plan.CAUTION, market_plan.SUPPORT
 
 
 def due_slot(now):
@@ -186,9 +186,32 @@ def produce(store, now):
             used.add(stocks[0][0]); groups.append((row['name'],basket))
     if ranked and missed==len(ranked):
         raise ValueError('所有候选板块成分均未取得')
-    return dict(exclusions=exclusions, directory={r['code']:r['name'] for r in boards}, discovery=discovery, themes=themes, quote_date=summary['date'],covered=summary['covered'],
+    issue = dict(exclusions=exclusions, directory={r['code']:r['name'] for r in boards}, discovery=discovery, themes=themes, quote_date=summary['date'],covered=summary['covered'],
                 coverage=dict(industry=len(industry['sectors']),concept=len(concept['sectors']),disclosed=len(themes),unavailable=missed),
                 news_counts=dict(domestic=len(domestic),international=len(international)),ideas=ideas)
+    # The research report is an enrichment, never a reason to drop the screened ideas.
+    try:
+        pulse = market_pulse.build(store, summary, quotes, industry, concept, feeds, now)
+        issue['pulse'] = pulse
+        issue.update(market_plan.build(store, ideas, pulse, quotes, summary, now))
+        try:
+            radar = market_radar.build(store, summary, quotes, concept, feeds, pulse.get('sentiment'),
+                                       issue.get('directions') or [], now)
+            issue['radar'] = radar['items']
+            issue['radar_summary'] = radar['summary']
+            issue['warnings'] = list(dict.fromkeys(pulse.get('warnings', []) + radar.get('warnings', [])
+                                                   + issue.get('warnings', [])))
+        except Exception as exc:
+            issue.update(radar=[], radar_summary='',
+                         warnings=list(dict.fromkeys(pulse.get('warnings', []) + issue.get('warnings', []) +
+                                                     ['炒作雷达暂不可用：' + (str(exc) if isinstance(exc, ValueError)
+                                                                             else type(exc).__name__)])))
+    except Exception as exc:
+        issue.update(pulse=None, verdict='研判增强暂不可用', bias='防守', horizon='未来 1–3 个交易日',
+                     position='总仓 ≤2 成或空仓，只观察不追高。', directions=[], playbooks=[], timetable=[],
+                     risk=['研判增强暂不可用，本轮只保留已筛方向。', '公开数据统计与研究，不构成任何投资建议。'],
+                     warnings=['研判增强暂不可用：' + (str(exc) if isinstance(exc, ValueError) else type(exc).__name__)])
+    return issue
 
 
 def write_issue(folder, issue, stamp):

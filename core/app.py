@@ -524,7 +524,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.38',rule='running_max_inclusive_v1')
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.39',rule='running_max_inclusive_v1')
         if method=='add_job': return self.start_job(lambda:self.call('add',args))
         if method=='refresh':
             code=symbol(args['code'])
