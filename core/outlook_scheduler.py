@@ -15,6 +15,7 @@ from .provider import CN, get, now_cn
 
 INTERVAL_MINUTES = 30
 SCREEN_VERSION = 9
+RANK_LIMIT = 36
 NON_BUSINESS = market_pulse.NON_BUSINESS
 CAUTION, SUPPORT = market_plan.CAUTION, market_plan.SUPPORT
 
@@ -47,7 +48,17 @@ def market(store, now):
         values = store.getcache(breadth.CODE, kind, day)
         return values[0]['data'] if values else {}
     summary, raw = cached(breadth.KIND), cached('breadth_raw_v1')
-    if not (breadth.valid_closed_breadth(summary, day, now) and raw.get('collected_at') == summary.get('collected_at')):
+    # A fresh intraday batch is already complete; only re-scan when it is stale or not paired.
+    paired = raw.get('collected_at') == summary.get('collected_at') and raw.get('date') == day
+    fresh_intraday = (paired and summary.get('date') == day and summary.get('status') == 'provisional'
+                      and summary.get('missing') == 0 and summary.get('covered') == summary.get('expected'))
+    if fresh_intraday:
+        try:
+            age = (now - datetime.fromisoformat(summary['collected_at'])).total_seconds()
+            fresh_intraday = 0 <= age <= 240
+        except (KeyError, TypeError, ValueError):
+            fresh_intraday = False
+    if not (breadth.valid_closed_breadth(summary, day, now) and paired) and not fresh_intraday:
         summary, raw = breadth.collect()
     if (summary['date'] != day or raw['date'] != day or summary['missing'] or
             summary['expected'] != summary['covered'] or raw['collected_at'] != summary['collected_at'] or
@@ -64,7 +75,7 @@ def members(code):
         return [(r['symbol'], r['name']) for r in rows]
     if re.fullmatch(r'BK\d+', code):
         params = dict(fs='b:'+code,pn=1,pz=40,po=1,np=1,fltt=2,fid='f6',fields='f12,f13,f14')
-        rows = json.loads(get(sector_flow.URL+'?'+urlencode(params)))['data']['diff']
+        rows = json.loads(get(sector_flow.URL_DELAY+'?'+urlencode(params)))['data']['diff']
         return [(('sh' if r['f13']==1 else 'sz')+r['f12'], r['f14']) for r in rows if r['f13'] in (0,1)]
     raise ValueError('板块成分代码无效')
 
@@ -143,6 +154,9 @@ def produce(store, now):
     exclusions = {t['code']:t['error'] for t in themes if 'error' in t}
     universe = industry['sectors'] + concept['sectors'] + custom
     ranked = ranked_sectors(universe, feeds, exclusions)
+    # The board catalog can be 1000+ entries now; fetch constituents only for the
+    # leaders. Downstream only needs a ranked pool (top 8 becomes directions).
+    ranked = ranked[:RANK_LIMIT]
     kinds = {row['code']: kind for kind, rows in [('行业', industry['sectors']), ('概念', concept['sectors']), ('补充题材', custom)] for row in rows}
     ideas, used, groups, missed = [], set(), [], 0
     baskets={t['code']:[(m['code'],m['name']) for m in t['members']] for t in themes}
@@ -252,7 +266,17 @@ class OutlookScheduler:
             stamp = clock()
             if due_slot(stamp)!=slot: return
             issue.update(native_slot=slot,published_at=stamp.isoformat(),screen_version=SCREEN_VERSION)
+            # Internal maps are for scoring only; keep them out of the stored/served JSON.
+            pulse = issue.get('pulse')
+            if isinstance(pulse, dict):
+                for block, key in (('sentiment', '_days'), ('sentiment', 'by_code'), ('capital', 'by_code')):
+                    value = pulse.get(block)
+                    if isinstance(value, dict):
+                        value.pop(key, None)
             write_issue(folder,issue,stamp)
+            if getattr(self.app,'pool',None) is not None:
+                try:self.app.pool.sync_issue(issue)
+                except Exception:pass
             self.done=slot;self.state='本期已更新'
         except Exception:
             self.state='更新未完成，5 分钟后重试'

@@ -1,0 +1,12 @@
+/* 股票搜索（拼音首字母/代码/名称） */
+.stock-search{position:relative;min-width:0;flex:1}
+.stock-search>input{width:100%}
+.stock-search-panel{position:absolute;z-index:40;left:0;right:0;top:calc(100% + 4px);max-height:300px;overflow-y:auto;background:#111d2e;border:1px solid #304058;border-radius:8px;box-shadow:0 12px 36px #050b16cc;padding:4px;min-width:220px}
+.stock-search-note{padding:7px 9px;font-size:11px;line-height:1.5;color:#8fa6c4}
+.stock-search-note.error{color:#ffada4}
+.stock-search-option{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;border:0;border-radius:5px;background:transparent;padding:6px 9px;font-size:12px;color:#d7e1f3}
+.stock-search-option b{font-weight:600;color:#e9f1fb}
+.stock-search-option span{color:#8fa6c4;font-size:11px}
+.stock-search-option small{margin-left:auto;color:#7e93b0;font-size:10px;letter-spacing:.5px}
+.stock-search-option.active,.focus-pool .stock-search-option:hover,.market-workspace .stock-search-option:hover{background:#1c3049}
+.stock-search-option[aria-selected=true]{background:#1c3049;box-shadow:inset 2px 0 #80beff}

@@ -12,6 +12,13 @@ const day={
   last_quote:'2026-11-06T15:01:00+08:00',source:'测试全市场广度',
 };
 
+const LIVE_NOW='2026-11-09T09:39:00+08:00';
+const liveDay={
+  date:'2026-11-09',status:'provisional',advance:2100,decline:2600,flat:431,suspended:0,
+  advance_volume:0,decline_volume:0,flat_volume:0,advancing_percent:40.93,advancing_volume_percent:null,
+  expected:5131,covered:5131,missing:0,collected_at:'2026-11-09T09:39:00+08:00',
+  first_quote:'2026-11-09T09:37:00+08:00',last_quote:'2026-11-09T09:39:00+08:00',source:'测试盘中广度',
+};
 const levels=(ma5:number,ma10:number,ma20:number,high20:number,low20:number)=>({ma5,ma10,ma20,high20,low20});
 const entry=(buy_low:number,buy_high:number,stop:number,chase:number,target1:number,target2:number,trail:number,note:string,sell_note:string)=>
   ({buy_low,buy_high,stop,chase,target1,target2,trail,note,sell_note});
@@ -248,26 +255,28 @@ const issue={
   directions,
 };
 
-const report={issue,quotes,sectors,day:DAY,batch:BATCH,schedule:'',completed_slot:null};
+const report={issue,quotes,sectors,day:DAY,batch:BATCH,day_info:day,schedule:'',completed_slot:null};
 
-async function boot(page:Page,data:unknown,now=NOW){
-  await page.clock.setFixedTime(new Date(now));
-  await page.addInitScript(({day,data})=>{
+async function boot(page:Page,data:unknown,options:{now?:string}={}){
+  await page.clock.setFixedTime(new Date(options.now??NOW));
+  await page.addInitScript(({data})=>{
+    (window as any).__rpcCalls=[];
     Object.assign(window,{isTauri:true,__TAURI_EVENT_PLUGIN_INTERNALS__:{unregisterListener(){}},__TAURI_INTERNALS__:{
       metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,unregisterCallback(){},
       async invoke(command:string,args:{method:string}){
         if(command!=='rpc')return 0;
+        (window as any).__rpcCalls.push(args.method);
         switch(args.method){
           case 'snapshot':return {watch:[],events:[],config:{},now:new Date().toISOString(),market_open:true};
           case 'market':case 'market_overview':return {quotes:[],minute:null};
-          case 'breadth':return {days:[day],running:false,error:''};
           case 'daily_outlook':return data;
           default:throw Error('测试未提供 '+args.method);
         }
       }
     }});
-  },{day,data});
+  },{data});
   await page.goto('/');
+  await page.evaluate(()=>{(window as any).__rpcCalls=[];});
   await page.getByRole('button',{name:'市场机会',exact:true}).click();
   await expect(page.getByRole('region',{name:'市场机会研判'})).toBeVisible();
 }
@@ -276,6 +285,8 @@ const foldOpen=(page:Page,selector:string)=>page.locator(selector).evaluate(elem
 
 test('首屏聚焦：定调、首选行、建仓清单与默认方向详情',async({page})=>{
   await boot(page,report);
+  const rpc=await page.evaluate(()=>(window as any).__rpcCalls as string[]);
+  expect(rpc).not.toContain('breadth');
   const root=page.getByRole('region',{name:'市场机会研判'});
   await expect(root).toContainText('普涨修复 · 可跟随强势');
   await expect(root).toContainText('总仓 5–6 成');
@@ -376,7 +387,8 @@ test('炒作雷达：4 条主题/阶段/标的/结论，点击展开买卖点与
   const radar=page.getByRole('region',{name:'炒作雷达'});
   await expect(radar).toBeVisible();
   await expect(radar.locator('.mo-radar-head')).toContainText('识别 4 个 · 启动初期 1 个 · 名称/玄学 2 个');
-  await expect(radar.locator('.mo-radar-head')).toContainText('风险高，只宜小仓或观察');
+  await expect(radar.locator('.mo-radar-head')).toContainText('炒作雷达');
+  await expect(radar.locator('.mo-radar-head')).not.toContainText('风险高，只宜小仓或观察');
   const rows=radar.locator('.mo-radar-row');
   await expect(rows).toHaveCount(4);
   const first=rows.first();
@@ -414,7 +426,8 @@ test('炒作雷达为空时显示未识别提示并保留风险说明',async({pa
   await boot(page,empty);
   const radar=page.getByRole('region',{name:'炒作雷达'});
   await expect(radar).toContainText('本期没有识别到新的炒作/概念信号');
-  await expect(radar).toContainText('风险高，只宜小仓或观察');
+  await expect(radar).toContainText('本期没有识别到新的炒作/概念信号');
+  await expect(radar).not.toContainText('风险高，只宜小仓或观察');
 });
 
 test('研判为 null 时显示今日研判尚未生成',async({page})=>{
@@ -448,6 +461,63 @@ test('旧格式研判（无 pulse/directions/focus/top_picks）不崩溃并提�
   await expect(page.getByRole('region',{name:'方向排名'})).toContainText('方向排名待取得');
 });
 
+test('盘中未核对：警示横幅、研判价标注与“数据未核对”操作提示',async({page})=>{
+  const stale=JSON.parse(JSON.stringify(report));
+  stale.day='2026-11-09';
+  stale.day_info={...liveDay};
+  stale.batch='2026-11-09T09:31:00+08:00';
+  stale.quotes=stale.quotes.map((quote:any)=>({...quote,timestamp:'2026-11-06T15:00:00+08:00'}));
+  stale.issue.quote_date='2026-11-06';
+  await boot(page,stale,{now:LIVE_NOW});
+  const alert=page.getByRole('region',{name:'数据未核对警示'});
+  await expect(alert).toBeVisible();
+  await expect(alert).toContainText('数据未核对，先不要按此价格操作');
+  await expect(alert).toContainText('当前研判基准 2026-11-06');
+  await expect(alert).toContainText('行情批次与全市场广度快照未对齐');
+  await expect(alert).toContainText('今日盘中：上涨 2100 / 下跌 2600');
+  await expect(alert).toContainText('等待面板自动刷新（每 15 秒检查、研判每 30 分钟更新）；核对前不要下单。');
+  const picks=page.getByRole('region',{name:'建仓清单'});
+  await expect(picks.locator('.mo-p-fresh').first()).toHaveText('研判时');
+  await expect(picks.locator('.mo-pick-row').first()).toContainText('128.40');
+  await expect(page.locator('.mo-next-step')).toContainText('数据未核对，暂不操作；继续等本机更新');
+  await expect(page.locator('.mo-next-step')).toHaveClass(/is-warn/);
+  await expect(page.locator('.mo-meta')).toContainText('行情批次 2026-11-09 09:39');
+  await expect(page.locator('.mo-meta')).toContainText('研判生成 2026-11-06 16:20');
+  await expect(page.locator('.mo-meta')).toContainText('数据未核对');
+  await page.setViewportSize({width:1000,height:900});
+  await expect(alert).toBeVisible();
+  const dimensions=await page.evaluate(()=>({
+    scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,
+    body:document.body.scrollWidth,
+  }));
+  expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
+  expect(dimensions.body).toBeLessThanOrEqual(dimensions.client+1);
+});
+
+test('盘中已核对：无警示横幅、实时价格与可建仓操作提示',async({page})=>{
+  const live=JSON.parse(JSON.stringify(report));
+  live.day='2026-11-09';
+  live.day_info={...liveDay};
+  live.batch=liveDay.collected_at;
+  live.quotes=live.quotes.map((quote:any)=>quote.code==='sh600438'?quote:{...quote,timestamp:'2026-11-09T09:38:30+08:00'});
+  live.sectors=Object.fromEntries(Object.entries(live.sectors).map(([code,sector]:any)=>[code,{...sector,time:'2026-11-09T09:38:00+08:00'}]));
+  live.issue.quote_date='2026-11-09';
+  live.issue.published_at='2026-11-09T09:30:00+08:00';
+  await boot(page,live,{now:LIVE_NOW});
+  await expect(page.getByRole('region',{name:'数据未核对警示'})).toHaveCount(0);
+  const picks=page.getByRole('region',{name:'建仓清单'});
+  const row=(name:string)=>picks.locator('.mo-pick-row').filter({hasText:name});
+  await expect(row('兆易创新').locator('.mo-p-fresh')).toHaveText('实时 09:38');
+  await expect(row('兆易创新')).toContainText('128.40');
+  await expect(row('兆易创新')).toContainText('+2.31%');
+  await expect(row('兆易创新')).toContainText('可考虑建仓');
+  await expect(row('通威股份').locator('.mo-p-fresh')).toHaveText('研判时');
+  await expect(row('通威股份')).toContainText('行情待核对');
+  await expect(page.locator('.mo-next-step')).toContainText('可考虑建仓：兆易创新、江波龙（按买点区间分批，单方向 ≤2 成）');
+  await expect(page.locator('.mo-meta')).toContainText('盘中已核对 · 行情 09:39');
+  await expect(page.locator('.mo-meta')).toContainText('行情批次 2026-11-09 09:39');
+});
+
 test('1000px 桌面宽度无横向溢出，建仓清单折叠为卡片',async({page})=>{
   await boot(page,report);
   await page.getByRole('region',{name:'建仓清单'}).locator('.mo-pick-row').first().click();
@@ -465,4 +535,16 @@ test('1000px 桌面宽度无横向溢出，建仓清单折叠为卡片',async({p
   }));
   expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client+1);
   expect(dimensions.body).toBeLessThanOrEqual(dimensions.client+1);
+});
+
+test('首屏顺序：炒作雷达位于建仓清单上方',async({page})=>{
+  await boot(page,report);
+  const radar=page.getByRole('region',{name:'炒作雷达'});
+  const picks=page.getByRole('region',{name:'建仓清单'});
+  await expect(radar).toBeVisible();
+  await expect(picks).toBeVisible();
+  const radarBox=await radar.boundingBox(),picksBox=await picks.boundingBox();
+  expect(radarBox).not.toBeNull();
+  expect(picksBox).not.toBeNull();
+  expect(radarBox!.y).toBeLessThan(picksBox!.y);
 });

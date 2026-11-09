@@ -19,10 +19,27 @@ class Store:
         CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT);
         CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,dedupe_key TEXT UNIQUE,category TEXT,title TEXT,body TEXT,event_key TEXT,payload TEXT,created_at TEXT,read_at TEXT);
         CREATE INDEX IF NOT EXISTS messages_created ON messages(created_at DESC);
+        CREATE TABLE IF NOT EXISTS pool(code TEXT PRIMARY KEY,name TEXT,added_day TEXT NOT NULL,added_price REAL,source TEXT NOT NULL,
+          sector TEXT,role TEXT,reason TEXT,state TEXT NOT NULL,plan TEXT,updated_at TEXT,
+          category TEXT,group_name TEXT,entry_tag TEXT,added_at TEXT,groups_json TEXT,archived INTEGER DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS pool_day(code TEXT,day TEXT,price REAL,percent REAL,high REAL,low REAL,state TEXT,
+          hit_buy INTEGER DEFAULT 0,hit_stop INTEGER DEFAULT 0,hit_target INTEGER DEFAULT 0,collected_at TEXT,
+          PRIMARY KEY(code,day));
+        CREATE INDEX IF NOT EXISTS pool_day_day ON pool_day(day);
+        CREATE TABLE IF NOT EXISTS pool_alerts(code TEXT,day TEXT,kind TEXT,created_at TEXT,PRIMARY KEY(code,day,kind));
         CREATE TABLE IF NOT EXISTS broker_accounts(id TEXT PRIMARY KEY,broker TEXT NOT NULL,account TEXT NOT NULL,label TEXT,enabled INTEGER DEFAULT 1,is_default INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(broker,account));
         CREATE TABLE IF NOT EXISTS broker_requests(request_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL,result TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS broker_requests_account ON broker_requests(account_id,created_at);
         PRAGMA user_version=3;''')
+        for column in ('category', 'group_name', 'entry_tag', 'added_at', 'groups_json'):
+            try:
+                self.db.execute(f'ALTER TABLE pool ADD COLUMN {column} TEXT')
+            except sqlite3.OperationalError:
+                pass
+        try:
+            self.db.execute('ALTER TABLE pool ADD COLUMN archived INTEGER DEFAULT 0')
+        except sqlite3.OperationalError:
+            pass
         self.db.execute('INSERT OR IGNORE INTO instruments SELECT code,name FROM watch')
         # An interrupted OS submission has an unknown outcome: never automatically duplicate it.
         self.db.execute("UPDATE local_delivery SET status='unknown',detail='上次发送时进程中断，请检查通知中心' WHERE status='sending'")

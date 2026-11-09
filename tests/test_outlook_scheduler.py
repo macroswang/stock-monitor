@@ -125,15 +125,25 @@ class NativeSchedule(unittest.TestCase):
             root=Path(folder);(root/'daily-outlook').mkdir()
             (root/'daily-outlook/2026-11-06_2000.json').write_text(json.dumps(issue))
             records=[dict(data=dict(date='2026-11-06',collected_at='batch',quotes=members))]
+            day_rows=[dict(data=dict(date='2026-11-06',status='closed',advance=3000,decline=2000,flat=100,
+                                expected=5100,covered=5100,missing=0,first_quote='2026-11-06T15:00:00+08:00',
+                                last_quote='2026-11-06T15:00:00+08:00',collected_at='batch'))]
             flow=Mock();flow.view.return_value={'topic_x':{'net':1}}
-            app=SimpleNamespace(dir=root,store=Mock(),live_theme_flow=flow,sector_flow=Mock())
-            app.store.getcache.return_value=records
+            app=SimpleNamespace(dir=root,store=Mock(),live_theme_flow=flow,sector_flow=Mock(),concept_flow=Mock())
+            app.store.getcache.side_effect=lambda code,kind,date=None: day_rows if kind=='breadth_day_v1' else records
             app.sector_flow.view.return_value={}
+            app.concept_flow.view.return_value={}
             report=daily_outlook.view(app,'2026-11-06','batch')
         self.assertEqual(report['issue']['bias'],'试错')
         self.assertEqual(report['issue']['directions'][0]['sector'],'新业务')
         self.assertEqual({q['code'] for q in report['quotes']},set(codes))
         self.assertIn('topic_x',report['sectors'])
+        # The RPC payload must stay slim: no constituents, no internal scoring maps.
+        self.assertNotIn('ideas',report['issue'])
+        self.assertNotIn('members',report['issue']['themes'][0])
+        self.assertIn('day_info',report)
+        self.assertIsNotNone(report['day_info'])
+        self.assertEqual(report['day_info']['date'],'2026-11-06')
 
     def test_intraday_flow_does_not_use_future_or_stale_minute(self):
         from core import disclosure_themes as dt

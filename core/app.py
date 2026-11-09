@@ -107,7 +107,10 @@ class App:
         from .disclosure_themes import LiveThemeFlow
         self.live_theme_flow=LiveThemeFlow()
         self.outlook_scheduler=OutlookScheduler(self)
+        from .pool import Pool
+        self.pool=Pool(self)
         if start_worker:
+            threading.Thread(target=self.pool.bootstrap,daemon=True).start()
             threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
@@ -266,6 +269,8 @@ class App:
                     if len(pending)>=4:break
                     if code in inflight or due.get(code,0)>time.monotonic():continue
                     pending[pool.submit(self.poll_one,code)]=code;initial.discard(code)
+                try:self.pool.poll()
+                except Exception as e:print('pool: '+type(e).__name__,file=sys.stderr,flush=True)
                 self.stop.wait(.25)
         finally:pool.shutdown(wait=False,cancel_futures=True)
 
@@ -512,6 +517,17 @@ class App:
             service=self.option_pcr if product=='510050' else self.option_pcr_300
             if method=='option_pcr':return service.view()
             return self.start_job(lambda:(service.refresh(),service.view())[1])
+        if method in ('pool','pool_view'):
+            return self.pool.view(args.get('days'),args.get('start'),args.get('end'),args.get('group'),
+                                  args.get('status'),args.get('limit'),args.get('offset'),
+                                  args.get('holding'),bool(args.get('include_archived')))
+        if method=='pool_export':
+            return self.start_job(lambda:self.pool.export(args.get('days'),args.get('start'),args.get('end'),
+                args.get('group'),args.get('status'),args.get('holding')))
+        if method=='pool_add':return self.pool.add_manual(args['code'])
+        if method=='pool_remove':return self.pool.remove(args['code'])
+        if method=='pool_mark':return self.pool.mark(args['code'],args['state'])
+        if method=='pool_sync':return self.start_job(lambda:(self.pool.bootstrap(),self.pool.view())[1])
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
@@ -524,7 +540,11 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.39',rule='running_max_inclusive_v1')
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.60',rule='running_max_inclusive_v1',
+                    pool_count=self.pool.count())
+        if method=='stock_search':
+            from .stock_search import search
+            return search(self.store,args.get('query',''),args.get('limit',20))
         if method=='add_job': return self.start_job(lambda:self.call('add',args))
         if method=='refresh':
             code=symbol(args['code'])

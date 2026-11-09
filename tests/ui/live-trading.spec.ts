@@ -426,7 +426,7 @@ test('one execution button switches state and feedback dismisses within five sec
 
 test('compact rules fit a 1280 by 800 window and navigation uses consistent SVG icons',async({page})=>{
  await setup(page);await page.setViewportSize({width:1280,height:800});
- for(const name of ['自选监控','大盘广度','市场机会','自动交易','数据管理','设置与通知']){
+ for(const name of ['自选监控','大盘广度','市场机会','股票池','自动交易','模拟交易','数据管理','设置与通知']){
   await expect(page.getByRole('button',{name,exact:true}).locator('svg')).toHaveCount(1);
  }
  await page.getByRole('region',{name:/华泰涨乐通 · 123/}).getByRole('button',{name:'配置规则'}).click();

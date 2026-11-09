@@ -1,0 +1,1551 @@
+{
+  "updated_at": "2026-11-09T13:20:30+08:00",
+  "quotes_time": "2026-11-09T13:18:00+08:00",
+  "trading": true,
+  "error": "",
+  "summary": {
+    "total": 15,
+    "sample": 14,
+    "wins": 6,
+    "losses": 5,
+    "flat": 3,
+    "win_rate": 42.86,
+    "avg_since_percent": 0.55,
+    "median_since_percent": 0.0,
+    "max_since_percent": 5.0,
+    "min_since_percent": -2.17,
+    "avg_today_percent": 3.41,
+    "avg_max_gain_percent": 1.55,
+    "avg_max_drawdown_percent": -1.92,
+    "ready": 2,
+    "limit_up": 2,
+    "above_chase": 2,
+    "waiting": 4,
+    "speculative": 4,
+    "manual": 1,
+    "bought": 1,
+    "exited": 1,
+    "in_zone": 1,
+    "target_hits": 5,
+    "stop_hits": 0,
+    "buy_zone_hits": 2
+  },
+  "groups": [
+    {
+      "category": "行业",
+      "count": 4,
+      "sample": 4,
+      "win_rate": 75.0,
+      "avg_since_percent": 0.98
+    },
+    {
+      "category": "概念",
+      "count": 3,
+      "sample": 3,
+      "win_rate": 66.67,
+      "avg_since_percent": 1.93
+    },
+    {
+      "category": "题材",
+      "count": 1,
+      "sample": 0,
+      "win_rate": null,
+      "avg_since_percent": null
+    },
+    {
+      "category": "事件",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 50.0,
+      "avg_since_percent": -0.09
+    },
+    {
+      "category": "名称辈",
+      "count": 3,
+      "sample": 3,
+      "win_rate": 33.33,
+      "avg_since_percent": 0.47
+    },
+    {
+      "category": "生肖玄学",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 0.0,
+      "avg_since_percent": -0.59
+    },
+    {
+      "category": "手动",
+      "count": 1,
+      "sample": 1,
+      "win_rate": 0.0,
+      "avg_since_percent": -0.61
+    }
+  ],
+  "entries": [
+    {
+      "code": "sz002436",
+      "name": "兴森科技",
+      "added_day": "2026-11-06",
+      "added_price": 12.3,
+      "source": "建仓清单",
+      "sector": "元件",
+      "role": "低吸候选",
+      "state": "可建仓",
+      "entry_tag": "可建仓",
+      "category": "行业",
+      "group_name": "元件",
+      "reason": "半导体封测与 PCB 需求回升，近 5 个采集日资金净流入 12.0 亿元；入选时回踩 5 日线附近。",
+      "plan": {
+        "buy_low": 12.4,
+        "buy_high": 12.8,
+        "chase": 13.1,
+        "stop": 11.6,
+        "target1": 13.9,
+        "target2": 14.7,
+        "trail": 12.4,
+        "note": "回踩 12.40–12.80 可分批；高开超过 13.10 不追；跌破 11.60 离场。",
+        "sell_note": "接近 13.90 分批减半；收盘跌破 12.40 或 11.60 离场；持有 1–3 个交易日。"
+      },
+      "quote": {
+        "price": 12.68,
+        "percent": 2.34,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 12.21,
+        "high": 12.75,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 2.34,
+      "since_add_percent": 3.09,
+      "distance_to_buy_percent": 2.26,
+      "zone": "已进入买区",
+      "hint": "现价位于买点上方，可分批；跌破 11.60 离场",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 12.1,
+          "percent": 1.2,
+          "high": 12.25,
+          "low": 11.95,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 12.3,
+          "percent": 1.65,
+          "high": 12.42,
+          "low": 12.08,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 12.68,
+          "percent": 2.34,
+          "high": 12.75,
+          "low": 12.21,
+          "hit_buy": true,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 3.66,
+      "max_drawdown_percent": -1.38,
+      "hold_days": 2,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-06T16:20:00+08:00",
+      "groups": [
+        "行业"
+      ],
+      "group_rank": 1,
+      "group_size": 4,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-09",
+          "close": 12.68,
+          "return_percent": 3.09,
+          "benchmark_return": 0.42,
+          "excess_percent": 2.67
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz300136",
+      "name": "信维通信",
+      "added_day": "2026-11-06",
+      "added_price": 28.6,
+      "source": "建仓清单",
+      "sector": "消费电子",
+      "role": "龙头",
+      "state": "可建仓",
+      "entry_tag": "涨停待回踩",
+      "category": "概念",
+      "group_name": "消费电子",
+      "reason": "消费电子订单排产环比改善，天线与射频模组出货回升；入选当日接近涨停，等待回踩。",
+      "plan": {
+        "buy_low": 28.1,
+        "buy_high": 28.9,
+        "chase": 29.6,
+        "stop": 26.8,
+        "target1": 31.2,
+        "target2": 33.1,
+        "trail": 28.2,
+        "note": "回踩 28.10–28.90 可分批；高开超过 29.60 不追；跌破 26.80 离场。",
+        "sell_note": "接近 31.20 分批减半；跌破 28.20 或 26.80 离场。"
+      },
+      "quote": {
+        "price": 28.42,
+        "percent": 1.14,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 27.95,
+        "high": 28.66,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 1.14,
+      "since_add_percent": -0.63,
+      "distance_to_buy_percent": 1.14,
+      "zone": "等待回踩",
+      "hint": "涨停后回踩中，等待 28.10–28.90",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 28.1,
+          "percent": 0.72,
+          "high": 28.35,
+          "low": 27.8,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 28.1,
+          "percent": 0,
+          "high": 28.52,
+          "low": 27.9,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 28.42,
+          "percent": 1.14,
+          "high": 28.66,
+          "low": 27.95,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0.21,
+      "max_drawdown_percent": -2.1,
+      "hold_days": 2,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-06T16:20:00+08:00",
+      "groups": [
+        "概念"
+      ],
+      "group_rank": 2,
+      "group_size": 2,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-09",
+          "close": 28.42,
+          "return_percent": -0.63,
+          "benchmark_return": 0.42,
+          "excess_percent": -1.05
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz002086",
+      "name": "东方海洋",
+      "added_day": "2026-11-09",
+      "added_price": 3.97,
+      "source": "炒作雷达",
+      "sector": "海洋养殖",
+      "role": "龙头",
+      "state": "题材观察",
+      "entry_tag": "高于追高上限",
+      "category": "名称辈",
+      "group_name": "东方",
+      "reason": "“东方”名称族扩散，今日 6 家涨停；纯情绪炒作无基本面证据，只观察不追高。",
+      "plan": {
+        "buy_low": 3.67,
+        "buy_high": 3.79,
+        "chase": 3.86,
+        "stop": 3.6,
+        "target1": 4.29,
+        "target2": 4.57,
+        "trail": null,
+        "note": "回踩 3.67–3.79 可分批；高开超过 3.86 不追；跌破 3.60 离场。",
+        "sell_note": "接近 4.29 分批减半；跌破 3.60 离场。"
+      },
+      "quote": {
+        "price": 3.97,
+        "percent": 9.97,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 3.65,
+        "high": 3.97,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 9.97,
+      "since_add_percent": 0.0,
+      "distance_to_buy_percent": null,
+      "zone": "高于追高上限",
+      "hint": "已涨停且高于追高上限，不追；退潮回避",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 3.42,
+          "percent": 2.1,
+          "high": 3.55,
+          "low": 3.3,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 3.61,
+          "percent": 5.56,
+          "high": 3.75,
+          "low": 3.38,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 3.97,
+          "percent": 9.97,
+          "high": 3.97,
+          "low": 3.65,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0,
+      "max_drawdown_percent": 0,
+      "hold_days": 0,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-09T08:11:30+08:00",
+      "groups": [
+        "名称辈"
+      ],
+      "group_rank": 2,
+      "group_size": 3,
+      "holding_days": 0,
+      "holding_bucket": "0",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh600261",
+      "name": "阳光照明",
+      "added_day": "2026-11-09",
+      "added_price": 5.4,
+      "source": "炒作雷达",
+      "sector": "照明设备",
+      "role": "跟风",
+      "state": "题材观察",
+      "entry_tag": "题材观察",
+      "category": "生肖玄学",
+      "group_name": "2027 羊年（跨年）",
+      "reason": "“羊”字辈生肖玄学扩散，今日 4 家涨停；事件驱动无业绩证据，只做观察。",
+      "plan": {
+        "buy_low": 4.93,
+        "buy_high": 5.01,
+        "chase": 5.06,
+        "stop": 4.83,
+        "target1": 5.83,
+        "target2": 6.21,
+        "trail": null,
+        "note": "回踩 4.93–5.01 可分批；跌破 4.83 离场。",
+        "sell_note": "接近 5.83 分批减半；跌破 4.83 离场。"
+      },
+      "quote": {
+        "price": 5.4,
+        "percent": 9.98,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 4.92,
+        "high": 5.4,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 9.98,
+      "since_add_percent": 0.0,
+      "distance_to_buy_percent": null,
+      "zone": "高于追高上限",
+      "hint": "涨停观察，不追高",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 5.02,
+          "percent": 3.1,
+          "high": 5.1,
+          "low": 4.88,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 4.91,
+          "percent": -2.19,
+          "high": 5.05,
+          "low": 4.86,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 5.4,
+          "percent": 9.98,
+          "high": 5.4,
+          "low": 4.92,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0,
+      "max_drawdown_percent": 0,
+      "hold_days": 0,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-09T08:11:30+08:00",
+      "groups": [
+        "生肖玄学"
+      ],
+      "group_rank": 2,
+      "group_size": 2,
+      "holding_days": 0,
+      "holding_bucket": "0",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh601139",
+      "name": "深圳燃气",
+      "added_day": "2026-11-05",
+      "added_price": 7.85,
+      "source": "建仓清单",
+      "sector": "燃气",
+      "role": "低吸候选",
+      "state": "观察",
+      "entry_tag": "条件未达",
+      "category": "行业",
+      "group_name": "燃气",
+      "reason": "燃气需求旺季临近，资金连续 3 日净流入；入选后回落，等待回到买点上方。",
+      "plan": {
+        "buy_low": 7.72,
+        "buy_high": 7.9,
+        "chase": 7.98,
+        "stop": 7.42,
+        "target1": 8.36,
+        "target2": 8.72,
+        "trail": 7.78,
+        "note": "回踩 7.72–7.90 可分批；高开超过 7.98 不追；跌破 7.42 离场。",
+        "sell_note": "接近 8.36 分批减半；跌破 7.78 或 7.42 离场。"
+      },
+      "quote": {
+        "price": 7.68,
+        "percent": -1.16,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 7.62,
+        "high": 7.84,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": -1.16,
+      "since_add_percent": -2.17,
+      "distance_to_buy_percent": -0.52,
+      "zone": "低于买区",
+      "hint": "低于买点区间，等待回到 7.72 上方",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 7.72,
+          "percent": 0.65,
+          "high": 7.88,
+          "low": 7.6,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 7.77,
+          "percent": 0.65,
+          "high": 7.92,
+          "low": 7.68,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 7.68,
+          "percent": -1.16,
+          "high": 7.84,
+          "low": 7.62,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": true
+        }
+      ],
+      "max_gain_percent": 0.89,
+      "max_drawdown_percent": -3.06,
+      "hold_days": 3,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-05T08:11:30+08:00",
+      "groups": [
+        "行业"
+      ],
+      "group_rank": 4,
+      "group_size": 4,
+      "holding_days": 2,
+      "holding_bucket": "2",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-06",
+          "close": 7.77,
+          "return_percent": -1.02,
+          "benchmark_return": 0.42,
+          "excess_percent": -1.44
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh688981",
+      "name": "中芯国际",
+      "added_day": "2026-11-06",
+      "added_price": 96.8,
+      "source": "建仓清单",
+      "sector": "半导体",
+      "role": "中军",
+      "state": "已买入",
+      "entry_tag": "可建仓",
+      "category": "行业",
+      "group_name": "半导体",
+      "reason": "半导体代工景气回升，回踩 5 日线分批；已手动标记买入观察。",
+      "plan": {
+        "buy_low": 93.1,
+        "buy_high": 94.35,
+        "chase": 97.13,
+        "stop": 86.83,
+        "target1": 97.2,
+        "target2": 111.78,
+        "trail": 93.1,
+        "note": "回踩 93.10–94.35 可分批；高开超过 97.13 不追；跌破 86.83 离场。",
+        "sell_note": "接近 97.20 分批减半；跌破 93.10 或 86.83 离场。"
+      },
+      "quote": {
+        "price": 98.4,
+        "percent": 0.92,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 96.95,
+        "high": 98.66,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 0.92,
+      "since_add_percent": 1.65,
+      "distance_to_buy_percent": 4.3,
+      "zone": "等待回踩",
+      "hint": "已买入；移动止损 93.10，跌破离场",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 97.2,
+          "percent": 1.8,
+          "high": 98.1,
+          "low": 95.8,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 98.1,
+          "percent": 0.93,
+          "high": 99.2,
+          "low": 96.8,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 98.4,
+          "percent": 0.92,
+          "high": 98.66,
+          "low": 96.95,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": true
+        }
+      ],
+      "max_gain_percent": 1.85,
+      "max_drawdown_percent": -1.24,
+      "hold_days": 2,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-06T16:20:00+08:00",
+      "groups": [
+        "行业"
+      ],
+      "group_rank": 2,
+      "group_size": 4,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-09",
+          "close": 98.4,
+          "return_percent": 1.65,
+          "benchmark_return": 0.42,
+          "excess_percent": 1.23
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz002242",
+      "name": "九阳股份",
+      "added_day": "2026-11-04",
+      "added_price": 25.4,
+      "source": "炒作雷达",
+      "sector": "家电行业",
+      "role": "低吸候选",
+      "state": "观察",
+      "entry_tag": "高于追高上限",
+      "category": "生肖玄学",
+      "group_name": "2027 羊年（跨年）",
+      "reason": "生肖名称族扩散时的低吸候选，入选后冲高回落，仅保留观察记录。",
+      "plan": {
+        "buy_low": 24.05,
+        "buy_high": 24.86,
+        "chase": 25.1,
+        "stop": 23.57,
+        "target1": 27.11,
+        "target2": 28.86,
+        "trail": 24.1,
+        "note": "回踩 24.05–24.86 可分批；跌破 23.57 离场。",
+        "sell_note": "接近 27.11 分批减半；跌破 23.57 离场。"
+      },
+      "quote": {
+        "price": 25.1,
+        "percent": 3,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 24.6,
+        "high": 25.32,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 3,
+      "since_add_percent": -1.18,
+      "distance_to_buy_percent": 4.37,
+      "zone": "等待回踩",
+      "hint": "冲高回落，等待回踩",
+      "history": [
+        {
+          "day": "2026-11-04",
+          "price": 25.4,
+          "percent": 4.2,
+          "high": 26.1,
+          "low": 25,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 24.36,
+          "percent": -4.09,
+          "high": 25.6,
+          "low": 24.2,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 25.1,
+          "percent": 3,
+          "high": 25.32,
+          "low": 24.6,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 2.76,
+      "max_drawdown_percent": -5.75,
+      "hold_days": 4,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-04T16:20:00+08:00",
+      "groups": [
+        "生肖玄学"
+      ],
+      "group_rank": 1,
+      "group_size": 2,
+      "holding_days": 3,
+      "holding_bucket": "3-5",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-06",
+          "close": 24.36,
+          "return_percent": -4.09,
+          "benchmark_return": 0.42,
+          "excess_percent": -4.51
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh600327",
+      "name": "大东方",
+      "added_day": "2026-11-09",
+      "added_price": 4.91,
+      "source": "炒作雷达",
+      "sector": "百货零售",
+      "role": "跟风",
+      "state": "题材观察",
+      "entry_tag": "涨停待回踩",
+      "category": "名称辈",
+      "group_name": "东方",
+      "reason": "“东方”名称族涨停跟风股，入选时已涨停；只观察回踩承接。",
+      "plan": {
+        "buy_low": 4.12,
+        "buy_high": 4.55,
+        "chase": 4.59,
+        "stop": 4.04,
+        "target1": 5.3,
+        "target2": 5.65,
+        "trail": null,
+        "note": "回踩 4.12–4.55 可分批；跌破 4.04 离场。",
+        "sell_note": "接近 5.30 分批减半；跌破 4.04 离场。"
+      },
+      "quote": {
+        "price": 4.91,
+        "percent": 10.09,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 4.3,
+        "high": 4.91,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 10.09,
+      "since_add_percent": 0.0,
+      "distance_to_buy_percent": null,
+      "zone": "高于追高上限",
+      "hint": "涨停待回踩，不追高",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 4.05,
+          "percent": 1.25,
+          "high": 4.12,
+          "low": 3.98,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 4.46,
+          "percent": 10.12,
+          "high": 4.46,
+          "low": 4.2,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 4.91,
+          "percent": 10.09,
+          "high": 4.91,
+          "low": 4.3,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0,
+      "max_drawdown_percent": 0,
+      "hold_days": 0,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-09T08:11:30+08:00",
+      "groups": [
+        "名称辈"
+      ],
+      "group_rank": 3,
+      "group_size": 3,
+      "holding_days": 0,
+      "holding_bucket": "0",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh600967",
+      "name": "内蒙一机",
+      "added_day": "2026-11-08",
+      "added_price": 13.2,
+      "source": "炒作雷达",
+      "sector": "军工装备",
+      "role": "龙头",
+      "state": "观察",
+      "entry_tag": "题材观察",
+      "category": "事件",
+      "group_name": "军工订单",
+      "reason": "军工订单事件驱动，周日研判入选；次日冲高回落，继续观察。",
+      "plan": {
+        "buy_low": 12.6,
+        "buy_high": 13,
+        "chase": 13.6,
+        "stop": 12.1,
+        "target1": 14.3,
+        "target2": 15.1,
+        "trail": null,
+        "note": "回踩 12.60–13.00 可分批；跌破 12.10 离场。",
+        "sell_note": "接近 14.30 分批减半；跌破 12.10 离场。"
+      },
+      "quote": {
+        "price": 13.42,
+        "percent": 1.6,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 13.1,
+        "high": 13.55,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 1.6,
+      "since_add_percent": 1.67,
+      "distance_to_buy_percent": 3.23,
+      "zone": "等待回踩",
+      "hint": "事件驱动，等回踩确认",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 12.9,
+          "percent": -0.8,
+          "high": 13.2,
+          "low": 12.7,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 13,
+          "percent": 0.78,
+          "high": 13.3,
+          "low": 12.85,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 13.42,
+          "percent": 1.6,
+          "high": 13.55,
+          "low": 13.1,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": true
+        }
+      ],
+      "max_gain_percent": 2.65,
+      "max_drawdown_percent": -1.52,
+      "hold_days": 1,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-08T16:20:00+08:00",
+      "groups": [
+        "事件"
+      ],
+      "group_rank": 1,
+      "group_size": 2,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-09",
+          "close": 13.42,
+          "return_percent": 1.67,
+          "benchmark_return": 0.42,
+          "excess_percent": 1.25
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz000524",
+      "name": "岭南控股",
+      "added_day": "2026-11-08",
+      "added_price": 9.8,
+      "source": "炒作雷达",
+      "sector": "旅游酒店",
+      "role": "跟风",
+      "state": "观察",
+      "entry_tag": "题材观察",
+      "category": "事件",
+      "group_name": "冰雪经济",
+      "reason": "冰雪经济新闻热度 72 小时 3 条，事件题材入选；回落后观察。",
+      "plan": {
+        "buy_low": 9.4,
+        "buy_high": 9.7,
+        "chase": 10.1,
+        "stop": 9.1,
+        "target1": 10.6,
+        "target2": 11.2,
+        "trail": null,
+        "note": "回踩 9.40–9.70 可分批；跌破 9.10 离场。",
+        "sell_note": "接近 10.60 分批减半；跌破 9.10 离场。"
+      },
+      "quote": {
+        "price": 9.62,
+        "percent": -1.8,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 9.55,
+        "high": 9.85,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": -1.8,
+      "since_add_percent": -1.84,
+      "distance_to_buy_percent": 2.29,
+      "zone": "等待回踩",
+      "hint": "回落后等待企稳",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 9.3,
+          "percent": 1.2,
+          "high": 9.48,
+          "low": 9.18,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 9.55,
+          "percent": 2.69,
+          "high": 9.72,
+          "low": 9.36,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 9.62,
+          "percent": -1.8,
+          "high": 9.85,
+          "low": 9.55,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0.82,
+      "max_drawdown_percent": -2.55,
+      "hold_days": 1,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-08T16:20:00+08:00",
+      "groups": [
+        "事件"
+      ],
+      "group_rank": 2,
+      "group_size": 2,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-09",
+          "close": 9.62,
+          "return_percent": -1.84,
+          "benchmark_return": 0.42,
+          "excess_percent": -2.26
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh600371",
+      "name": "万向德农",
+      "added_day": "2026-11-03",
+      "added_price": 11.8,
+      "source": "建仓清单",
+      "sector": "种业",
+      "role": "龙头",
+      "state": "观察",
+      "entry_tag": "条件未达",
+      "category": "概念",
+      "group_name": "种业",
+      "reason": "种业主线龙头，入选后连续涨停；入选价已低于最新价，用于胜率样本。",
+      "plan": {
+        "buy_low": 11.15,
+        "buy_high": 11.82,
+        "chase": 12.05,
+        "stop": 10.21,
+        "target1": 13.38,
+        "target2": 14.25,
+        "trail": 10.84,
+        "note": "回踩 11.15–11.82 可分批；跌破 10.21 离场。",
+        "sell_note": "接近 13.38 分批减半；跌破 10.21 离场。"
+      },
+      "quote": {
+        "price": 12.39,
+        "percent": 10.04,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 11.6,
+        "high": 12.39,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 10.04,
+      "since_add_percent": 5.0,
+      "distance_to_buy_percent": null,
+      "zone": "高于追高上限",
+      "hint": "连续涨停，观察不追",
+      "history": [
+        {
+          "day": "2026-11-03",
+          "price": 11.8,
+          "percent": 9.97,
+          "high": 11.8,
+          "low": 11.2,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": true
+        },
+        {
+          "day": "2026-11-06",
+          "price": 11.26,
+          "percent": -4.58,
+          "high": 11.6,
+          "low": 11.1,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 12.39,
+          "percent": 10.04,
+          "high": 12.39,
+          "low": 11.6,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 5,
+      "max_drawdown_percent": -5.93,
+      "hold_days": 4,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-03T08:11:30+08:00",
+      "groups": [
+        "概念"
+      ],
+      "group_rank": 1,
+      "group_size": 2,
+      "holding_days": 4,
+      "holding_bucket": "3-5",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-06",
+          "close": 11.26,
+          "return_percent": -4.58,
+          "benchmark_return": 0.42,
+          "excess_percent": -5.0
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz300750",
+      "name": "宁德时代",
+      "added_day": "2026-11-06",
+      "added_price": 245,
+      "source": "建仓清单",
+      "sector": "固态电池",
+      "role": "低吸候选",
+      "state": "观察",
+      "entry_tag": "题材观察",
+      "category": "题材",
+      "group_name": "固态电池",
+      "reason": "固态电池题材方向候选，入选后尚无有效行情快照，等待补齐。",
+      "plan": {
+        "buy_low": 238,
+        "buy_high": 242,
+        "chase": 250,
+        "stop": 228,
+        "target1": 260,
+        "target2": 275,
+        "trail": 240,
+        "note": "回踩 238–242 可分批；跌破 228 离场。",
+        "sell_note": "接近 260 分批减半；跌破 228 离场。"
+      },
+      "quote": null,
+      "today_percent": null,
+      "since_add_percent": null,
+      "distance_to_buy_percent": null,
+      "zone": "行情待取得",
+      "hint": "行情待取得，等待报价",
+      "history": [
+        {
+          "day": "2026-11-05",
+          "price": 242,
+          "percent": 1.1,
+          "high": 246,
+          "low": 240,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 245,
+          "percent": 1.24,
+          "high": 248,
+          "low": 241.5,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": null,
+      "max_drawdown_percent": null,
+      "hold_days": 2,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-06T16:20:00+08:00",
+      "groups": [
+        "题材"
+      ],
+      "group_rank": 1,
+      "group_size": 1,
+      "holding_days": 1,
+      "holding_bucket": "1",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh601318",
+      "name": "中国平安",
+      "added_day": "2026-10-30",
+      "added_price": 52.4,
+      "source": "建仓清单",
+      "sector": "保险",
+      "role": "中军",
+      "state": "已退出",
+      "entry_tag": "条件未达",
+      "category": "行业",
+      "group_name": "保险",
+      "reason": "保险方向中军，早期入选记录；已手动标记退出，保留复盘样本。",
+      "plan": {
+        "buy_low": 51.6,
+        "buy_high": 52.1,
+        "chase": 52.9,
+        "stop": 50.2,
+        "target1": 54.6,
+        "target2": 56.2,
+        "trail": 51.8,
+        "note": "回踩 51.60–52.10 可分批；跌破 50.20 离场。",
+        "sell_note": "接近 54.60 分批减半；跌破 50.20 离场。"
+      },
+      "quote": {
+        "price": 53.1,
+        "percent": 0.8,
+        "time": "2026-11-06T15:00:00+08:00",
+        "low": 52.46,
+        "high": 53.28,
+        "basis": "last",
+        "fresh": false
+      },
+      "today_percent": 0.8,
+      "since_add_percent": 1.34,
+      "distance_to_buy_percent": 2.87,
+      "zone": "等待回踩",
+      "hint": "收盘快照，非实时",
+      "history": [
+        {
+          "day": "2026-10-30",
+          "price": 52.4,
+          "percent": 0.6,
+          "high": 52.8,
+          "low": 52,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-06",
+          "price": 53.1,
+          "percent": 0.8,
+          "high": 53.28,
+          "low": 52.46,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": true
+        }
+      ],
+      "max_gain_percent": 1.68,
+      "max_drawdown_percent": -0.95,
+      "hold_days": 5,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-10-30T16:20:00+08:00",
+      "groups": [
+        "行业"
+      ],
+      "group_rank": 3,
+      "group_size": 4,
+      "holding_days": 6,
+      "holding_bucket": "6-10",
+      "windows": {
+        "T+1": {
+          "n": 1,
+          "date": "2026-11-06",
+          "close": 53.1,
+          "return_percent": 1.34,
+          "benchmark_return": 0.42,
+          "excess_percent": 0.92
+        },
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sh600000",
+      "name": "浦发银行",
+      "added_day": "2026-11-09",
+      "added_price": 8.2,
+      "source": "手动",
+      "sector": "银行",
+      "role": "低吸候选",
+      "state": "观察",
+      "entry_tag": "观察",
+      "category": "手动",
+      "group_name": "手动观察",
+      "reason": "手动加入观察：银行板块低估值防御，跟踪 1–3 日表现。",
+      "plan": {
+        "buy_low": 8.05,
+        "buy_high": 8.18,
+        "chase": 8.28,
+        "stop": 7.86,
+        "target1": 8.55,
+        "target2": 8.8,
+        "trail": 8.1,
+        "note": "回踩 8.05–8.18 可分批；跌破 7.86 离场。",
+        "sell_note": "接近 8.55 分批减半；跌破 7.86 离场。"
+      },
+      "quote": {
+        "price": 8.15,
+        "percent": -0.6,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 8.12,
+        "high": 8.24,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": -0.6,
+      "since_add_percent": -0.61,
+      "distance_to_buy_percent": 1.23,
+      "zone": "等待回踩",
+      "hint": "手动观察，等待回踩",
+      "history": [
+        {
+          "day": "2026-11-06",
+          "price": 8.2,
+          "percent": 0.49,
+          "high": 8.28,
+          "low": 8.12,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 8.15,
+          "percent": -0.6,
+          "high": 8.24,
+          "low": 8.12,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 0,
+      "max_drawdown_percent": -1.1,
+      "hold_days": 0,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "added_at": "2026-11-09T08:11:30+08:00",
+      "groups": [
+        "手动"
+      ],
+      "group_rank": 1,
+      "group_size": 1,
+      "holding_days": 0,
+      "holding_bucket": "0",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    },
+    {
+      "code": "sz002310",
+      "name": "东方新能",
+      "added_day": "2026-11-09",
+      "added_at": "2026-11-09T08:11:30+08:00",
+      "added_price": 21.79,
+      "source": "建仓清单",
+      "sector": "电力设备",
+      "role": "龙头",
+      "state": "观察",
+      "entry_tag": "条件未达",
+      "category": "名称辈",
+      "group_name": "东方",
+      "reason": "08:11 研判中“东方”方向龙头，名称含“东方”自动归入名称辈；方向当日继续等，记录跟踪。",
+      "plan": {
+        "buy_low": 21.2,
+        "buy_high": 21.79,
+        "chase": 22.45,
+        "stop": 20.3,
+        "target1": 23.6,
+        "target2": 25.1,
+        "trail": 21.3,
+        "note": "回踩 21.20–21.79 可分批；高开超过 22.45 不追；跌破 20.30 离场。",
+        "sell_note": "接近 23.60 分批减半；收盘跌破 21.30 或 20.30 离场。"
+      },
+      "quote": {
+        "price": 22.1,
+        "percent": 1.42,
+        "time": "2026-11-09T13:18:00+08:00",
+        "low": 21.52,
+        "high": 22.26,
+        "basis": "live",
+        "fresh": true
+      },
+      "today_percent": 1.42,
+      "since_add_percent": 1.42,
+      "distance_to_buy_percent": 1.42,
+      "zone": "等待回踩",
+      "hint": "方向龙头，名称辈跟踪；等回踩",
+      "history": [
+        {
+          "day": "2026-11-06",
+          "price": 21.3,
+          "percent": 0.8,
+          "high": 21.6,
+          "low": 21.1,
+          "hit_buy": false,
+          "hit_stop": false,
+          "hit_target": false
+        },
+        {
+          "day": "2026-11-09",
+          "price": 22.1,
+          "percent": 1.42,
+          "high": 22.26,
+          "low": 21.52,
+          "hit_buy": true,
+          "hit_stop": false,
+          "hit_target": false
+        }
+      ],
+      "max_gain_percent": 2.16,
+      "max_drawdown_percent": -1.24,
+      "hold_days": 0,
+      "updated_at": "2026-11-09T13:20:00+08:00",
+      "groups": [
+        "名称辈",
+        "概念"
+      ],
+      "group_rank": 1,
+      "group_size": 3,
+      "holding_days": 0,
+      "holding_bucket": "0",
+      "windows": {
+        "T+1": null,
+        "T+3": null,
+        "T+5": null
+      }
+    }
+  ],
+  "filters": {},
+  "counts": {
+    "total": 15,
+    "ready": 2,
+    "limit_up": 2,
+    "above_chase": 2,
+    "waiting": 4,
+    "speculative": 4,
+    "manual": 1,
+    "bought": 1,
+    "exited": 1,
+    "ignored": 0
+  },
+  "tag_stats": [
+    {
+      "entry_tag": "可建仓",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 100.0,
+      "avg_since_percent": 2.37
+    },
+    {
+      "entry_tag": "涨停待回踩",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 0.0,
+      "avg_since_percent": -0.32
+    },
+    {
+      "entry_tag": "高于追高上限",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 0.0,
+      "avg_since_percent": -0.59
+    },
+    {
+      "entry_tag": "条件未达",
+      "count": 4,
+      "sample": 4,
+      "win_rate": 75.0,
+      "avg_since_percent": 1.4
+    },
+    {
+      "entry_tag": "题材观察",
+      "count": 4,
+      "sample": 3,
+      "win_rate": 33.33,
+      "avg_since_percent": -0.06
+    },
+    {
+      "entry_tag": "观察",
+      "count": 1,
+      "sample": 1,
+      "win_rate": 0.0,
+      "avg_since_percent": -0.61
+    }
+  ],
+  "filtered_total": 15,
+  "has_more": false,
+  "offset": 0,
+  "limit": 60,
+  "windows": {
+    "T+1": {
+      "sample": 9,
+      "win_rate": 44.44,
+      "avg_return_percent": -0.49,
+      "beat_rate": 44.44,
+      "avg_excess_percent": -0.91
+    },
+    "T+3": {
+      "sample": 0,
+      "win_rate": null,
+      "avg_return_percent": null,
+      "beat_rate": null,
+      "avg_excess_percent": null
+    },
+    "T+5": {
+      "sample": 0,
+      "win_rate": null,
+      "avg_return_percent": null,
+      "beat_rate": null,
+      "avg_excess_percent": null
+    }
+  },
+  "holding": [
+    {
+      "bucket": "0",
+      "label": "0日",
+      "count": 5,
+      "sample": 5,
+      "win_rate": 20.0,
+      "avg_since_percent": 0.16
+    },
+    {
+      "bucket": "1",
+      "label": "1日",
+      "count": 6,
+      "sample": 5,
+      "win_rate": 60.0,
+      "avg_since_percent": 0.79
+    },
+    {
+      "bucket": "2",
+      "label": "2日",
+      "count": 1,
+      "sample": 1,
+      "win_rate": 0.0,
+      "avg_since_percent": -2.17
+    },
+    {
+      "bucket": "3-5",
+      "label": "3–5日",
+      "count": 2,
+      "sample": 2,
+      "win_rate": 50.0,
+      "avg_since_percent": 1.91
+    },
+    {
+      "bucket": "6-10",
+      "label": "6–10日",
+      "count": 1,
+      "sample": 1,
+      "win_rate": 100.0,
+      "avg_since_percent": 1.34
+    }
+  ],
+  "benchmark": "上证指数",
+  "daily_ready": true,
+  "archived_count": 2
+}

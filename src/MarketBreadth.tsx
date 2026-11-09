@@ -65,7 +65,7 @@ export const sessionWindow=(days:BreadthDay[],count:number)=>{
  return {rows:days.filter(d=>d.date>=start!&&d.date<=end),start,known:true};
 };
 
-export default function MarketBreadth({request,market,preview=false,mode,setMode,watch=[],onOpenStock}:{request:Request;market:MarketData;preview?:boolean;mode:'volume'|'amount';setMode:(mode:'volume'|'amount')=>void;watch?:{code:string;name:string}[];onOpenStock?:(code:string)=>void}){
+export default function MarketBreadth({request,market,preview=false,mode,setMode,watch=[],onOpenStock,active=true}:{request:Request;market:MarketData;preview?:boolean;mode:'volume'|'amount';setMode:(mode:'volume'|'amount')=>void;watch?:{code:string;name:string}[];onOpenStock?:(code:string)=>void;active?:boolean}){
  const [report,setReport]=useState<Report>({days:[],running:false,error:'',history_note:''});
  const [error,setError]=useState(''),[busy,setBusy]=useState(false),[span,setSpan]=useState(30),[selected,setSelected]=useState('');
  const [stage,setStage]=useState<'unknown'|'early'|'late'>('unknown');
@@ -74,7 +74,11 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),15000);return()=>clearInterval(timer);},[]);
  const ref=useRef<HTMLDivElement>(null),chart=useRef<echarts.ECharts|null>(null),alive=useRef(true),reading=useRef(false);
  const load=async()=>{if(reading.current)return;reading.current=true;try{const r=await request<Report>('breadth');if(alive.current){setReport(r);setError('');}}catch(e){if(alive.current)setError(String(e));}finally{reading.current=false;}};
- useEffect(()=>{alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request]);
+ useEffect(()=>{
+  if(!active)return;
+  alive.current=true;void load();const timer=setInterval(load,30000);
+  return()=>{alive.current=false;clearInterval(timer);};
+ },[request,active]);
  const refresh=async()=>{setBusy(true);setError('');try{const job=await request<{job:string}>('breadth_refresh');for(;;){const r=await request<{status:string;error?:string;result?:Report}>('job',{job:job.job});if(!alive.current)return;if(r.status==='failed')throw Error(r.error);if(r.status==='done'){if(r.result)setReport(r.result);break;}await new Promise(resolve=>setTimeout(resolve,500));}}catch(e){if(alive.current)setError(String(e));}finally{if(alive.current)setBusy(false);}};
  const countMismatch=(d:BreadthDay)=>(d.status==='closed'||d.status==='provisional')&&d.missing===0&&d.expected>0&&d.covered===d.expected&&!breadthCountsConsistent(d);
  const dateWindow=sessionWindow(report.days,span);

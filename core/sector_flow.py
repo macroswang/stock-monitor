@@ -182,12 +182,136 @@ def fetch_sina(now,kind='industry'):
 
 
 
+
+
+URL_DELAY = 'https://push2delay.eastmoney.com/api/qt/clist/get'
+CONCEPT_SOURCE = '东方财富概念板块资金流'
+CONCEPT_PAGE = 'https://data.eastmoney.com/bkzj/gn.html'
+CONCEPT_CODE = 'eastmoney-concept'
+
+
+def _page_payload(host, fs, page, size=100):
+    # Order by board code: ranking by a changing flow value makes page boundaries unstable.
+    params = {'pn': page, 'pz': size, 'po': 0, 'np': 1, 'fltt': 2, 'fid': 'f12', 'fs': fs,
+              'fields': 'f3,f12,f14,f62,f66,f72,f124,f128,f136,f140,f141'}
+    req = Request(host + '?' + urlencode(params), headers={'User-Agent': 'Mozilla/5.0',
+                                                           'Referer': 'https://data.eastmoney.com/'})
+    with urlopen(req, timeout=10) as response:
+        raw = response.read(2_000_001)
+    if len(raw) > 2_000_000:
+        raise ValueError('板块数据过大')
+    data = json.loads(raw).get('data')
+    if not isinstance(data, dict) or not isinstance(data.get('diff'), list):
+        raise ValueError('板块数据为空')
+    return data
+
+
+def _parse_paged(rows, expected, now, total):
+    """The single-page parser needs the full board list; page mode rebuilds the same snapshot."""
+    if not isinstance(total, int) or not 70 <= total <= 1200 or len(rows) != total:
+        raise ValueError('板块数据不完整，暂不展示排行')
+    now = now.astimezone(CN)
+    out, stamps, seen = [], [], set()
+    for row in rows:
+        try:
+            code, name = row['f12'], row['f14']
+            net, large, extra, change, stamp = row['f62'], row['f72'], row['f66'], row['f3'], row['f124']
+            nums = (net, large, extra, change, stamp)
+            if not isinstance(code, str) or not re.fullmatch(r'BK\d{4}', code) or code in seen \
+                    or not isinstance(name, str) or not name or len(name) > 40:
+                raise ValueError()
+            if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
+                   for value in nums):
+                raise ValueError()
+            if abs(net - large - extra) > max(100, abs(net) * 0.00001):
+                raise ValueError()
+            ts = datetime.fromtimestamp(stamp, CN)
+            if ts.date().isoformat() != expected or ts > now + timedelta(seconds=5):
+                raise ValueError()
+            seen.add(code)
+            stamps.append(ts)
+            sector = dict(code=code, name=name, net_yuan=net, change_percent=change, source_time=ts.isoformat())
+            symbol, label, pct = row.get('f140'), row.get('f128'), row.get('f136')
+            if (isinstance(symbol, str) and re.fullmatch(r'\d{6}', symbol) and row.get('f141') in (0, 1)
+                    and isinstance(label, str) and label.strip() and isinstance(pct, (int, float))
+                    and math.isfinite(pct)):
+                sector['representative'] = dict(code=('sh' if row['f141'] == 1 else 'sz') + symbol,
+                                                name=label, change_percent=pct, time=ts.isoformat())
+            out.append(sector)
+        except (KeyError, TypeError, ValueError, OverflowError, OSError):
+            raise ValueError('板块字段、日期或资金分项无法核对') from None
+    if (max(stamps) - min(stamps)).total_seconds() > 180:
+        raise ValueError('板块数据时间不一致')
+    is_session = (trading_day(now.date()) is True and
+                  (clock_time(9, 30) <= now.time() <= clock_time(11, 30)
+                   or clock_time(13) <= now.time() < clock_time(15)))
+    if is_session and (now - max(stamps)).total_seconds() > 180:
+        raise ValueError('盘中板块数据已过期')
+    ranked = sorted(out, key=lambda row: row['net_yuan'], reverse=True)
+    return ranked, max(stamps)
+
+
+def fetch_eastmoney_paged(now, kind='industry'):
+    """Both Eastmoney hosts may cap a page at 100 rows; walk pages so the full board list is complete."""
+    if kind not in ('industry', 'concept'):
+        raise ValueError('不支持的板块类型')
+    started = time.monotonic()
+    expected = expected_day(now)
+    if not expected:
+        raise ValueError('交易日历不足，无法核对板块日期')
+    fs = 'm:90+t:2' if kind == 'industry' else 'm:90+t:3'
+    hosts = (URL_DELAY, URL)
+    first = None
+    error = None
+    for host in hosts:
+        try:
+            first = _page_payload(host, fs, 1)
+            break
+        except Exception as exc:
+            error = exc
+    if first is None:
+        raise ValueError('板块数据为空') from error
+    total = int(first['total'])
+    pages = (total + 99) // 100
+    if total < 70 or total > 1200 or pages > 20:
+        raise ValueError('板块总数异常')
+    rows = list(first['diff'])
+    if len(rows) != min(100, total):
+        raise ValueError('板块分页长度异常')
+    for page in range(2, pages + 1):
+        data = None
+        for host in hosts:
+            try:
+                data = _page_payload(host, fs, page)
+                break
+            except Exception as exc:
+                error = exc
+        if data is None:
+            raise ValueError('板块后续分页未取得') from error
+        if int(data['total']) != total or len(data['diff']) != min(100, total - (page - 1) * 100):
+            raise ValueError('板块分页在读取中变动')
+        rows.extend(data['diff'])
+    parsed, stamp = _parse_paged(rows, expected, now + timedelta(seconds=time.monotonic() - started), total)
+    source = SOURCE if kind == 'industry' else CONCEPT_SOURCE
+    page_url = SOURCE_PAGE if kind == 'industry' else CONCEPT_PAGE
+    return dict(date=expected, source=source, source_url=page_url, quote_time=stamp.isoformat(),
+                collected_at=now_cn().isoformat(), total=total, measure='大单及超大单净额',
+                observations=parsed, sectors=parsed,
+                inflow=[row for row in parsed if row['net_yuan'] > 0][:3],
+                outflow=[row for row in reversed(parsed) if row['net_yuan'] < 0][:3])
+
+
 def fetch(now,kind='industry'):
-    if kind=='concept':return fetch_sina(now,'concept')
-    if kind!='industry':raise ValueError('不支持的板块类型')
+    if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
     started=time.monotonic()
-    try:return fetch_eastmoney(now)
-    except Exception:return fetch_sina(now+timedelta(seconds=time.monotonic()-started))
+    # push2 is frequently WAF-blocked; both live hosts cap pages at 100 rows,
+    # so the complete-list fallback walks pages before trying Sina.
+    if kind=='industry':
+        try:return fetch_eastmoney(now)
+        except Exception:pass
+    try:return fetch_eastmoney_paged(now+timedelta(seconds=time.monotonic()-started),kind)
+    except Exception:pass
+    return fetch_sina(now+timedelta(seconds=time.monotonic()-started),kind)
 
 
 class SectorFlow:
@@ -219,7 +343,7 @@ class SectorFlow:
         rows=self.store.getcache(self.code,KIND)
         now=now_cn();wanted=expected_day(now)
         latest=rows[-1]['data'] if rows else None
-        allowed=(SOURCE,SINA_SOURCE) if self.kind=='industry' else (SINA_CONCEPT_SOURCE,)
+        allowed=(SOURCE,SINA_SOURCE) if self.kind=='industry' else (CONCEPT_SOURCE,SINA_CONCEPT_SOURCE)
         usable=bool(latest and latest.get('source') in allowed and latest.get('date')==wanted)
         checked=usable
         if usable:

@@ -7,6 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -23,6 +24,7 @@ MA_CLOSE_REFERENCE = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().pare
 MA_CLOSE_REFERENCE_1030 = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent)) / 'fixtures/ma-reference-2026-10-30.json.gz'
 
 
+@lru_cache(maxsize=512)
 def _next_verified_trading_day(previous):
     """Return the next exchange session only when its calendar is available."""
     for offset in range(1, 41):

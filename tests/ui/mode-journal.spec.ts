@@ -86,7 +86,10 @@ const previewFixture={
           gates:[{kind:'candidate_pct_max',value:5}]},
         evidence:[]}
     ]},
-  quotes:[],sectors:{},day:'2026-11-06',batch:'2026-11-06T15:31:00+08:00',schedule:'',completed_slot:null
+  quotes:[],sectors:{},day:'2026-11-06',batch:'2026-11-06T15:31:00+08:00',
+  day_info:{date:'2026-11-06',status:'closed',advance:3421,decline:1568,flat:142,expected:5131,covered:5131,missing:0,
+    first_quote:'2026-11-06T14:58:00+08:00',last_quote:'2026-11-06T15:01:00+08:00',collected_at:'2026-11-06T15:31:00+08:00'},
+  schedule:'',completed_slot:null
 };
 
 test('模式计划保留原始依据与状态，防守计划只可观察',async({page})=>{

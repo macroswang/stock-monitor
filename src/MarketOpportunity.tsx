@@ -1,7 +1,6 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import './marketOpportunity.css';
-import type {BreadthDay} from './MarketBreadth';
-import {breadthView,currentStamp} from './marketOverview';
+import {currentStamp} from './marketOverview';
 import {requestWithTimeout} from './requestTimeout';
 
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
@@ -46,9 +45,10 @@ type Issue={screen_version?:number;horizon?:string;verdict?:string;bias?:string;
   exclusions?:Record<string,string>;directory?:Record<string,string>;themes?:PoolTheme[];ideas?:Idea[];news_counts?:Record<string,number>};
 type Quote={code:string;price:string;previous_close:string;day_low:string;timestamp:string;amount_yuan?:string;volume?:number;day_high?:string};
 type SectorFlow={change:number;net:number;time:string;inferred?:boolean};
+type DayInfo={date:string;status?:string;advance:number;decline:number;flat:number;expected?:number;covered?:number;missing?:number;
+  first_quote:string|null;last_quote:string|null;collected_at:string};
 type Report={schedule?:string;completed_slot?:string|null;issue:Issue|null;quotes:Quote[];sectors?:Record<string,SectorFlow>;
-  day:string|null;batch:string|null;preview_note?:string};
-type BreadthReport={days:BreadthDay[];error?:string};
+  day:string|null;batch:string|null;preview_note?:string;day_info?:DayInfo|null};
 type LiveQuote={price:number;previous:number;low:number;pct:number;time:string;amount:number|null};
 type LiveSector={change:number;net:number;time:string};
 type LiveCtx={valid:boolean;reason:string;quotes:Map<string,LiveQuote>;sectors:Map<string,LiveSector>};
@@ -118,11 +118,12 @@ const targetPercent=(price:number|null|undefined,target:number|null|undefined)=>
 const stateClass=(kind:LiveKind)=>kind==='可考虑建仓'?'ready':kind==='已转弱'?'weak':kind==='行情待核对'?'unknown':kind==='回避'?'avoid':kind==='观察'?'watch':'wait';
 
 /** Only quotes from the current, verified breadth batch may drive live states. */
-function liveContext(report:Report,day:BreadthDay|undefined,now:number):LiveCtx{
+function liveContext(report:Report,day:DayInfo|undefined,now:number):LiveCtx{
   const quotes=new Map<string,LiveQuote>(),sectors=new Map<string,LiveSector>();
   const missing=(reason:string):LiveCtx=>({valid:false,reason,quotes,sectors});
   if(!report.day||!report.batch)return missing('本轮没有可核对的行情批次，等待更新。');
-  if(day&&(report.day!==day.date||report.batch!==day.collected_at))return missing('行情批次与全市场广度快照未对齐，等待下一轮核对。');
+  if(day&&report.day&&report.day!==day.date)return missing('行情批次与全市场广度快照未对齐，等待下一轮核对。');
+  if(day&&report.batch&&report.batch!==day.collected_at)return missing('行情批次与全市场广度快照未对齐，等待下一轮核对。');
   const times=report.quotes.map(q=>q.timestamp).filter(t=>typeof t==='string'&&t.length>=16).sort();
   const first=day?.first_quote??times[0]??null,last=day?.last_quote??times[times.length-1]??null;
   const fresh=(time:string|undefined)=>{
@@ -178,7 +179,7 @@ function checkGate(gate:Gate,cq:LiveQuote,candidate:Stock,sector:LiveSector,peer
   return null;
 }
 
-function assess(direction:Direction,ctx:LiveCtx,day:BreadthDay|undefined,report:Report):Assessment{
+function assess(direction:Direction,ctx:LiveCtx,day:DayInfo|undefined,report:Report):Assessment{
   const pulse=report.issue?.pulse;
   if(direction.state==='回避'){
     return {kind:'回避',why:direction.why||'命中本机回避规则，等待下一轮研判。',checks:[],live:ctx.valid};
@@ -383,8 +384,8 @@ function pickAssessment(pick:TopPick,assessments:Map<string,Assessment>,preview:
   return {kind:'行情待核对' as LiveKind,why:'行情待核对。',static:false};
 }
 
-function BuildList({picks,assessments,selected,onSelect,preview,enhanced}:{
-  picks:TopPick[];assessments:Map<string,Assessment>;selected:string;onSelect:(code:string)=>void;preview:boolean;enhanced:boolean;
+function BuildList({picks,assessments,selected,onSelect,preview,enhanced,ctx}:{
+  picks:TopPick[];assessments:Map<string,Assessment>;selected:string;onSelect:(code:string)=>void;preview:boolean;enhanced:boolean;ctx:LiveCtx;
 }){
   if(!picks.length){
     return <p className="mo-wait">{enhanced?'本期没有可执行的建仓清单，等待下一轮研判。':'研判增强尚未生成（等待本机每 30 分钟更新）；建仓清单待取得。'}</p>;
@@ -405,6 +406,9 @@ function BuildList({picks,assessments,selected,onSelect,preview,enhanced}:{
         <span>追高上限</span><span>止损</span><span>止盈目标</span><span>仓位</span><span>观察窗口</span>
       </div>
       {rows.map(({pick,status,targetPct})=>{
+        const live=preview?undefined:ctx.quotes.get(pick.code);
+        const shownPrice=live?live.price:pick.price;
+        const shownPercent=live?live.pct:pick.percent;
         const title=[pick.trigger?('触发条件：'+pick.trigger):'触发条件：待取得',pick.sell_note?('卖出：'+pick.sell_note):''].filter(Boolean).join('　');
         return <button type="button" key={pick.code+'|'+pick.sector_code} className="mo-pick-row"
           aria-pressed={pick.sector_code===selected} aria-controls="mo-direction-detail" title={title}
@@ -413,8 +417,9 @@ function BuildList({picks,assessments,selected,onSelect,preview,enhanced}:{
             {pick.limit_tag&&<span className="mo-chip">{pick.limit_tag}</span>}</span>
           <span className="mo-p-sector"><b>{pick.sector||'待取得'}</b><span className="mo-chip mo-kind">{pick.sector_kind||'类型待核实'}</span>
             <span className="mo-role">{pick.role||'角色待取得'}</span></span>
-          <span className="mo-p-price"><i className="mo-p-label">现价</i><b>{numText(pick.price)}</b>
-            <span className={'mo-num'+tone(pick.percent)}>{pctText(pick.percent)}</span></span>
+          <span className="mo-p-price"><i className="mo-p-label">现价</i><b>{numText(shownPrice)}</b>
+            <span className={'mo-num'+tone(shownPercent)}>{pctText(shownPercent)}</span>
+            <span className={'mo-p-fresh'+(live?' is-live':'')}>{live?'实时 '+clockText(live.time):'研判时'}</span></span>
           <span className="mo-p-state"><i className="mo-p-label">状态</i><span className={'mo-state '+stateClass(status.kind)}>{status.kind}</span></span>
           <span className="mo-p-buy"><i className="mo-p-label">买点</i>
             {typeof pick.buy_low==='number'&&typeof pick.buy_high==='number'?numText(pick.buy_low)+'–'+numText(pick.buy_high):'待取得'}</span>
@@ -461,10 +466,9 @@ function DirectionTable({directions,assessments,activeCode,onSelect,enhanced}:{
 function RadarCard({radar,summary,preview}:{radar:Radar[];summary:string;preview:boolean}){
   const [open,setOpen]=useState<string|null>(null);
   const rows=radar.slice(0,5);
-  const riskNote='名称辈 / 生肖玄学 / 事件题材 · 风险高，只宜小仓或观察';
   return <section className="card mo-radar" aria-label="炒作雷达">
     <div className="mo-radar-head">
-      <h2>炒作雷达 <span className="mo-sub">{riskNote}</span></h2>
+      <h2>炒作雷达</h2>
       <span className="mo-sub">{summary||'识别结果待取得'}{preview?' · 预览静态':''}</span>
     </div>
     {!rows.length?<p className="mo-wait">本期没有识别到新的炒作/概念信号。名称/玄学与事件题材仅小仓或观察，不构成投资建议。</p>:<>
@@ -689,53 +693,89 @@ function Coverage({issue,report,preview,failed,ctx,directions,assessments}:{
   </section>;
 }
 
-export default function MarketOpportunity({request,preview}:{request:Request;preview:boolean}){
-  const [data,setData]=useState<{report:Report;day?:BreadthDay}>();
+const latestQuoteTime=(report:Report)=>[...report.quotes].map(quote=>quote.timestamp).filter(timestamp=>typeof timestamp==='string'&&timestamp.length>=16).sort().at(-1)??'';
+const sameBatch=(previous:Report,next:Report)=>
+  previous.issue?.published_at===next.issue?.published_at&&
+  (previous.day_info?.collected_at??previous.batch??'')===(next.day_info?.collected_at??next.batch??'')&&
+  latestQuoteTime(previous)===latestQuoteTime(next);
+const EMPTY_CTX:LiveCtx={valid:false,reason:'等待研判与行情批次。',quotes:new Map(),sectors:new Map()};
+
+export default function MarketOpportunity({request,preview,active}:{request:Request;preview:boolean;active:boolean}){
+  const [data,setData]=useState<{report:Report}>();
   const [failed,setFailed]=useState(false);
   const [now,setNow]=useState(()=>Date.now());
   const [selected,setSelected]=useState('');
   useEffect(()=>{
+    if(!active)return;
     let alive=true,pending=false;
     async function read(){
       if(pending)return;
       pending=true;
       try{
-        let report:Report,day:BreadthDay|undefined;
+        let report:Report;
         if(preview){
           const response=await fetch('/opportunity-preview.json');
           report=response.ok?await response.json() as Report:{issue:null,quotes:[],sectors:{},day:null,batch:null,schedule:'预览'};
         }else{
-          const breadth=await requestWithTimeout(request<BreadthReport>('breadth'));
-          const view=breadthView(breadth.days?.at(-1),breadth.error,Date.now());
-          day=view?.day;
-          report=await requestWithTimeout(request<Report>('daily_outlook',{day:day?.date,batch:day?.collected_at}));
+          report=await requestWithTimeout(request<Report>('daily_outlook'));
         }
-        if(alive){setData({report,day});setFailed(false);setNow(Date.now());}
+        if(!alive)return;
+        setData(previous=>previous&&sameBatch(previous.report,report)?previous:{report});
+        setFailed(false);setNow(Date.now());
       }catch{
         if(alive){setFailed(true);setNow(Date.now());}
       }finally{pending=false;}
     }
     void read();
-    const timer=setInterval(read,15000);
+    const timer=setInterval(read,20000);
     return ()=>{alive=false;clearInterval(timer);};
-  },[request,preview]);
+  },[request,preview,active]);
   const report=data?.report;
   const issue=report?.issue??null;
+  const dayInfo=report?.day_info??(report?.day?{date:report.day,collected_at:report.batch??'',first_quote:null,last_quote:null,advance:0,decline:0,flat:0}:undefined);
+  const ctx=useMemo(()=>report&&issue?liveContext(report,dayInfo,now):EMPTY_CTX,[report,dayInfo,now,issue]);
+  const directions=useMemo(()=>[...(issue?.directions??[])].sort((left,right)=>Number(left.rank)-Number(right.rank)),[issue]);
+  const assessments=useMemo(()=>{
+    if(!report||!issue)return new Map<string,Assessment>();
+    return new Map<string,Assessment>(directions.map(direction=>[direction.sector_code,preview?assessStatic(direction):assess(direction,ctx,dayInfo,report)]));
+  },[report,issue,directions,ctx,dayInfo,preview]);
   if(!report||!issue)return <section className="card market-opportunity mo-empty" aria-label="市场机会研判">
       <h2>市场机会</h2>
       <p className="mo-empty-title">今日研判尚未生成</p>
-      <p className="mo-sub">每 15 秒自动检查；生成后会显示定调、仓位与未来 1–3 个交易日的建仓方向。{preview?'当前为浏览器只读预览。':''}{failed?'最近一次读取失败，正在自动重试。':''}</p>
+      <p className="mo-sub">每 20 秒自动检查；生成后会显示定调、仓位与未来 1–3 个交易日的建仓方向。{preview?'当前为浏览器只读预览。':''}{failed?'最近一次读取失败，正在自动重试。':''}</p>
     </section>;
-  const ctx=liveContext(report,data?.day,now);
   const pulse=issue.pulse??null;
   const picks=issue.top_picks??[];
   const radar=issue.radar??[];
+  const quoteLatest=latestQuoteTime(report);
+  const asOf=dayInfo?.last_quote??(quoteLatest||null);
+  const dayDate=dayInfo?.date??report.day??null;
+  const aligned=preview?dayDate===issue.quote_date:Boolean(ctx.valid&&dayDate&&dayDate===issue.quote_date);
+  const showAlert=!aligned;
+  const alertReason=ctx.valid?'今日盘中的行情批次与研判基准不是同一交易日，等待新研判生成。':ctx.reason;
+  const todayBreadth=dayInfo&&dayInfo.date!==issue.quote_date?dayInfo:null;
   const enhanced=!!(pulse||issue.directions?.length||issue.focus||picks.length);
-  const directions=[...(issue.directions??[])].sort((left,right)=>Number(left.rank)-Number(right.rank));
-  const assessments=new Map<string,Assessment>(directions.map(direction=>[direction.sector_code,preview?assessStatic(direction):assess(direction,ctx,data?.day,report)]));
   const focus=issue.focus??null;
   const activeDirection=directions.find(direction=>direction.sector_code===selected)??directions.find(direction=>direction.sector_code===focus?.sector_code)??directions[0];
   const activeAssessment=activeDirection?assessments.get(activeDirection.sector_code):undefined;
+  const pickStatuses=picks.map(pick=>pickAssessment(pick,assessments,preview));
+  const readyPicks=picks.filter((pick,index)=>pickStatuses[index].kind==='可考虑建仓');
+  const missingPicks=picks.filter((pick,index)=>pickStatuses[index].kind==='行情待核对');
+  const directionLimit=issue.position?.match(/单方向\s*[≤<]?\s*[\d.]+\s*成/)?.[0].replace(/\s+/g,' ')??'按仓位建议';
+  let nextStep='';
+  let nextStepKind:'ready'|'warn'|'wait'='wait';
+  if(readyPicks.length){
+    nextStep='可考虑建仓：'+readyPicks.slice(0,4).map(pick=>pick.name).join('、')+'（按买点区间分批，'+directionLimit+'）';
+    nextStepKind='ready';
+  }else if(missingPicks.length){
+    nextStep='数据未核对，暂不操作；继续等本机更新。';
+    nextStepKind='warn';
+  }else{
+    const counts=new Map<string,number>();
+    for(const status of pickStatuses){const reason=status.why||'等待下一轮研判';counts.set(reason,(counts.get(reason)??0)+1);}
+    const common=[...counts].sort((left,right)=>right[1]-left[1])[0]?.[0]??'等待下一轮研判';
+    nextStep='当前无可考虑建仓，继续等：'+common;
+  }
   const kindCount=(kind:LiveKind)=>[...assessments.values()].filter(assessment=>assessment.kind===kind).length;
   const readyCount=kindCount('可考虑建仓'),waitCount=kindCount('继续等'),staleCount=kindCount('行情待核对'),weakCount=kindCount('已转弱');
   const otherCount=directions.length-readyCount-waitCount-staleCount-weakCount;
@@ -761,18 +801,26 @@ export default function MarketOpportunity({request,preview}:{request:Request;pre
       <div className="mo-meta">
         <span>研判窗口 {issue.horizon||'待取得'}</span>
         <span>行情日期 {report.day??issue.quote_date??'待取得'}</span>
-        <span>定调生成 {stampText(issue.published_at)}</span>
-        <span className="mo-data-state">数据更新状态 <b>{status}</b></span>
+        <span>研判生成 {stampText(issue.published_at)}</span>
+        <span>行情批次 {asOf?stampText(asOf):'待取得'}</span>
+        <span className="mo-data-state">数据更新状态 <b>{preview?'预览样本（静态状态）':aligned?'盘中已核对 · 行情 '+clockText(asOf):'数据未核对'}</b></span>
         {preview&&<span className="mo-chip mo-preview">浏览器只读预览</span>}
       </div>
       <p className="mo-focus-line">{enhanced?(focusLine||'本期没有首选方向，等待下一轮研判。'):'研判增强尚未生成（等待本机每 30 分钟更新）；首选方向与建仓清单待取得。'}</p>
+      {enhanced&&<p className={'mo-next-step'+(nextStepKind==='ready'?'':' is-warn')}>现在怎么操作：{nextStep}</p>}
       {!enhanced&&<p className="mo-wait mo-compat">旧格式研判：观测卡与方向排名收在下方折叠区，展开后显示待取得。</p>}
     </section>
+    {showAlert&&<section className="card mo-alert" aria-label="数据未核对警示">
+      <h3>数据未核对，先不要按此价格操作</h3>
+      <p>当前研判基准 {issue.quote_date||'待取得'}；原因：{alertReason}</p>
+      {todayBreadth&&<p>今日盘中：上涨 {todayBreadth.advance} / 下跌 {todayBreadth.decline}（采集 {clockText(todayBreadth.last_quote||todayBreadth.collected_at)}）</p>}
+      <p className="mo-alert-next">下一步：等待面板自动刷新（每 15 秒检查、研判每 30 分钟更新）；核对前不要下单。</p>
+    </section>}
+    <RadarCard radar={radar} summary={issue.radar_summary||''} preview={preview}/>
     <section className="card mo-picks" aria-label="建仓清单">
       <BuildList picks={picks} assessments={assessments} selected={activeDirection?.sector_code??''} onSelect={setSelected}
-        preview={preview} enhanced={enhanced}/>
+        preview={preview} enhanced={enhanced} ctx={ctx}/>
     </section>
-    <RadarCard radar={radar} summary={issue.radar_summary||''} preview={preview}/>
     <section className="card mo-detail" id="mo-direction-detail" aria-label="方向详情">
       <DirectionTabs directions={directions} assessments={assessments} activeCode={activeDirection?.sector_code??''} onSelect={setSelected}/>
       <DirectionBody direction={activeDirection} assessment={activeAssessment} ctx={ctx} enhanced={enhanced} preview={preview}/>

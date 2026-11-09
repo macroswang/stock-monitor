@@ -1,0 +1,184 @@
+/* 股票池复盘版（2026-11-09 v2）：胜率摘要 / 分组 / 入选基准与自入选涨幅 */
+.focus-pool{display:grid;gap:8px;min-width:0;font-variant-numeric:tabular-nums}
+.focus-pool .positive{color:#ffada4}
+.focus-pool .negative{color:#51c7aa}
+.fp-muted{color:#8fa6c4;font-size:11px}
+.fp-note{color:#8fa6c4;font-size:11px;line-height:1.5;margin:0}
+.fp-error{color:#ffada4;background:#3b2730;border:1px solid #6b3a44;border-radius:6px;padding:6px 10px;margin:0;font-size:12px;line-height:1.5}
+.fp-message{color:#9ee0c5;background:#1d3932;border:1px solid #2f6053;border-radius:6px;padding:6px 10px;margin:0;font-size:12px;line-height:1.5}
+.fp-readonly{margin:0}
+
+/* 顶部胜率摘要 */
+.fp-kpis{display:flex;flex-wrap:wrap;gap:8px 26px;align-items:flex-start;background:#111d2e;border:1px solid #27354c;border-radius:11px;padding:14px 18px;min-width:0}
+.fp-kpi{min-width:112px}
+.fp-kpi>span{display:block;font-size:11px;color:#8fa6c4;line-height:1.4;white-space:nowrap}
+.fp-kpi>b{display:block;font-size:24px;line-height:1.25;color:#e9f1fb;font-weight:650;margin-top:2px;white-space:nowrap}
+.fp-kpi-note{flex-basis:100%;margin:2px 0 0;font-size:11px;color:#8fa6c4;line-height:1.5}
+.fp-kpi-hits{flex-basis:100%;margin:0;font-size:11px;color:#a9c3e6;line-height:1.5}
+
+/* 状态 chips */
+.fp-status-chips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.fp-status-chips button{font-size:12px;padding:4px 10px;border-radius:14px;background:#101c2c;border:1px solid #304058;color:#c7d6e8}
+.focus-pool .fp-status-chips button[aria-pressed=true]{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
+
+/* 筛选工具条 */
+.fp-toolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 14px;background:#111d2e;border:1px solid #27354c;border-radius:11px;padding:10px 14px;min-width:0}
+.fp-add{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;min-width:0}
+.fp-add label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#8fa6c4}
+.fp-add input{width:140px;padding:5px 8px;font-size:12px}
+.fp-add button{font-size:12px;padding:5px 10px}
+.fp-filters{display:flex;flex-wrap:wrap;gap:3px;min-width:0}
+.fp-filters button{font-size:12px;padding:4px 9px;border-radius:5px;background:#101c2c;border:1px solid #304058;color:#c7d6e8}
+.focus-pool .fp-filters button[aria-pressed=true]{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
+.fp-sort{display:flex;align-items:center;gap:5px;font-size:11px;color:#8fa6c4}
+.fp-sort select{width:auto;padding:4px 7px;font-size:12px}
+.fp-custom-days{display:flex;align-items:flex-end;gap:8px}
+.fp-custom-days label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#8fa6c4}
+.fp-custom-days input{font-size:12px;padding:4px 6px;width:135px}
+
+/* 分组与行 */
+.fp-groups{display:grid;gap:8px;min-width:0}
+.fp-group{background:#111d2e;border:1px solid #27354c;border-radius:11px;padding:10px 14px;min-width:0}
+.fp-group-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 14px;padding:1px 2px 7px;border-bottom:1px solid #324159;margin-bottom:5px;font-size:12px;color:#b8c9de}
+.fp-group-head b{color:#e1e9f5;font-size:14px}
+.fp-group-head .positive,.fp-group-head .negative{font-weight:600}
+.fp-head-row,.fp-row{display:grid;grid-template-columns:minmax(92px,1fr) minmax(100px,1.05fr) minmax(92px,.95fr) minmax(84px,.9fr) minmax(100px,1fr) minmax(78px,.8fr) minmax(104px,1.05fr) minmax(188px,1.5fr);gap:4px 8px;align-items:center;text-align:left;min-width:0}
+.fp-head-row{padding:4px 6px;background:#142338;border-radius:4px;font-size:11px;color:#8298b5;white-space:nowrap}
+.fp-row{padding:7px 6px;border-bottom:1px solid #324159;cursor:pointer;min-width:0}
+.focus-pool .fp-row:hover{background:#26384c}
+.fp-row[aria-expanded=true]{background:#1c3049;box-shadow:inset 3px 0 #80beff}
+.fp-row:focus-visible{outline:2px solid #89c8ff;outline-offset:-2px}
+.fp-name,.fp-base,.fp-price,.fp-range,.fp-tag,.fp-meta{min-width:0}
+.fp-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 5px}
+.fp-name b{color:#e1e9f5}
+.fp-code{font-size:10px;color:#7e93b0}
+.fp-source-mini{flex-basis:100%;font-size:10px;color:#7e93b0;line-height:1.3}
+.fp-base{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 5px}
+.fp-base b{color:#f3ce88;font-size:14px}
+.fp-base .fp-muted{font-size:10px;color:#a9bdd6}
+.fp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}
+.fp-price b{color:#e1e9f5}
+.fp-time{flex-basis:100%;font-size:10px;color:#9ee0c5;line-height:1.3}
+.fp-since-big{font-size:17px;font-weight:650;line-height:1.25;white-space:nowrap;color:#c7d6e8}
+.fp-range{display:flex;flex-wrap:wrap;gap:1px 6px;font-size:12px;white-space:nowrap}
+.fp-tag{white-space:nowrap}
+.pool-tag{display:inline-block;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:600;line-height:1.6;white-space:nowrap}
+.pool-tag.ready{background:#1d3932;color:#9ee0c5}
+.pool-tag.limit{background:#432e30;color:#ffbbad}
+.pool-tag.chase{background:#352c20;color:#f3ce88}
+.pool-tag.wait{background:#2b3b52;color:#a9c3e6}
+.pool-tag.speculative{background:#3a2f1c;color:#e8c07a}
+.pool-tag.watch{background:#2c3345;color:#9aa7bd}
+.fp-meta{white-space:normal;overflow-wrap:anywhere;line-height:1.4;font-size:12px;color:#c7d6e8}
+.fp-actions{display:flex;flex-wrap:wrap;gap:3px;min-width:0}
+.fp-actions button{font-size:10px;padding:1px 5px;border-radius:4px;line-height:1.6}
+.fp-label{display:none}
+
+/* 详情 */
+.fp-detail{background:#0f1b2b;border-bottom:1px solid #324159;padding:8px 10px 10px;min-width:0}
+.fp-detail h3{font-size:13px;margin:7px 0 4px;color:#c6d6e8}
+.fp-detail h3:first-child{margin-top:0}
+.fp-detail p{margin:2px 0;font-size:12px;line-height:1.55;color:#b8c9de;overflow-wrap:anywhere}
+.fp-detail .fp-sell{color:#f0c9a8}
+.fp-detail-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:10px 16px;min-width:0}
+.fp-detail-cols>div{min-width:0}
+.fp-scroll{max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden}
+.fp-history{width:100%;border-collapse:collapse;font-size:12px;min-width:540px}
+.fp-history th,.fp-history td{padding:4px 6px;border-bottom:1px solid #27364b;text-align:right;white-space:nowrap}
+.fp-history th{background:#142338;color:#8298b5;font-weight:400;font-size:11px}
+.fp-history :is(th,td):first-child{text-align:left}
+.fp-history td.hit{color:#ffada4;font-weight:600}
+.fp-history td.hit-warn{color:#9ee0c5;font-weight:600}
+.fp-empty{color:#8fa6c4;font-size:13px;line-height:1.6;margin:6px 0}
+.fp-disclaimer{color:#7e93b0;font-size:11px;line-height:1.6;margin:0;padding:0 2px}
+@media(max-width:1100px){
+ .fp-kpis{gap:8px 18px;padding:12px 14px}
+ .fp-kpi{min-width:calc(33.33% - 18px)}
+ .fp-kpi>b{font-size:20px}
+ .fp-head-row{display:none}
+ .fp-row{display:flex;flex-wrap:wrap;gap:3px 12px;align-items:baseline;padding:8px 6px}
+ .fp-row .fp-name{flex:1 1 100%}
+ .fp-row .fp-base{order:0}
+ .fp-row .fp-price{order:0}
+ .fp-row .fp-since-big{order:0;margin-left:auto;font-size:19px}
+ .fp-row .fp-range,.fp-row .fp-tag{order:1}
+ .fp-row .fp-meta{flex:1 1 100%;order:2}
+ .fp-row .fp-actions{flex:1 1 100%;order:3;border-top:1px dashed #2b3b52;padding-top:2px}
+ .fp-label{display:inline;margin-right:3px;font-size:10px;font-style:normal;color:#7e93b0}
+ .fp-detail-cols{grid-template-columns:minmax(0,1fr)}
+ .fp-add input,.fp-custom-days input{width:118px}
+}.fp-tag-stats{flex-basis:100%;display:flex;flex-wrap:wrap;gap:3px 14px;align-items:baseline;font-size:11px;line-height:1.55;color:#a9c3e6}
+.fp-tag-stats b{color:#cfdcec;font-size:11px;font-weight:600}
+.fp-tag-stats em{font-style:normal;font-weight:600}
+.fp-tag-stats .fp-muted{flex-basis:100%;font-size:10px}
+/* ===== 专业版：9 列（入选时间/入选价格/自入选视觉组）、多标签、小样本、分页 ===== */
+.fp-head-row,.fp-row{grid-template-columns:minmax(96px,1fr) minmax(84px,.82fr) minmax(70px,.7fr) minmax(80px,.78fr) minmax(92px,.95fr) minmax(96px,.95fr) minmax(76px,.75fr) minmax(110px,1.1fr) minmax(150px,1.2fr);gap:4px 8px}
+.fp-cell-base{background:#15253b;padding:3px 6px;min-width:0;white-space:nowrap;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.fp-added-time{border-radius:5px 0 0 5px;font-size:12px;color:#c7d6e8}
+.fp-cell-base b{color:#f3ce88;font-size:13px}
+.fp-since-big{font-size:17px;font-weight:650;line-height:1.25;white-space:nowrap;color:#c7d6e8;border-radius:0 5px 5px 0;align-items:flex-start}
+.fp-name-button{border:0;background:transparent;padding:0;color:#e1e9f5;font:inherit;font-weight:600;cursor:pointer;text-align:left;display:inline-flex;gap:4px;align-items:baseline}
+.focus-pool .fp-name-button:hover b{text-decoration:underline}
+.fp-name-button:focus-visible{outline:2px solid #89c8ff;outline-offset:2px;border-radius:3px}
+.fp-warn-chip{display:inline-block;margin-left:5px;padding:0 5px;border-radius:8px;background:#4a3616;color:#ffd27a;font-size:10px;font-weight:600;line-height:16px;white-space:nowrap;vertical-align:1px}
+.fp-tag-extra{display:inline-block;margin:0 3px;padding:0 4px;border:1px solid #52657c;border-radius:3px;color:#a9c3e6;font-size:10px;background:#1c2c43;line-height:15px}
+.fp-rank{display:block;font-size:10px;color:#8fa6c4;margin-top:1px}
+.fp-more{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;padding:2px 2px 0;min-width:0}
+.fp-more button{font-size:12px;padding:5px 12px}
+.fp-tag-stats .fp-warn-chip{margin-left:2px}
+.fp-kpi>b .fp-warn-chip{vertical-align:3px}
+@media(max-width:1100px){
+ .fp-row{display:flex;flex-wrap:wrap;gap:3px 12px;align-items:baseline}
+ .fp-row .fp-name{flex:1 1 100%}
+ .fp-row .fp-cell-base{background:transparent;padding:0;border-radius:0;display:inline-flex;flex-direction:row;align-items:baseline;gap:2px}
+ .fp-row .fp-since-big{order:0;margin-left:auto;font-size:19px}
+ .fp-row .fp-added-time{order:0;font-size:12px;color:#c7d6e8}
+ .fp-row .fp-price{order:0}
+ .fp-row .fp-range,.fp-row .fp-tag{order:1}
+ .fp-row .fp-meta{flex:1 1 100%;order:2}
+ .fp-row .fp-actions{flex:1 1 100%;order:3;border-top:1px dashed #2b3b52;padding-top:2px}
+}
+/* ===== task-13：跨日窗口 / 持有交易日 / 导出 / 归档 / 提醒 / 区间表现 ===== */
+.fp-windows,.fp-holdings{background:#111d2e;border:1px solid #27354c;border-radius:11px;padding:10px 14px;min-width:0;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.fp-windows>b,.fp-holdings>b{font-size:13px;color:#e1e9f5;font-weight:600;flex-basis:100%}
+.fp-window-grid{flex:1 1 100%;display:grid;grid-template-columns:72px repeat(5,minmax(0,1fr));gap:3px 10px;font-size:12px;color:#c7d6e8;min-width:0}
+.fp-window-grid>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fp-window-head{color:#8298b5;font-size:11px}
+.fp-window-name{color:#a9c3e6;font-weight:600}
+.fp-windows .fp-note,.fp-holdings .fp-note{flex-basis:100%}
+.fp-holdings button{font-size:11px;padding:3px 8px;border-radius:12px;background:#101c2c;border:1px solid #304058;color:#c7d6e8;text-align:left}
+.focus-pool .fp-holdings button[aria-pressed=true]{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
+.fp-holdings button .fp-muted{font-size:10px}
+.fp-reminder{color:#8fa6c4;font-size:11px;line-height:1.5;margin:0;padding:0 2px}
+.fp-switch{display:flex;align-items:center;gap:5px;font-size:11px;color:#8fa6c4;white-space:nowrap}
+.fp-switch input{width:15px;height:15px}
+.fp-window-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:3px;min-width:0}
+.fp-window-table th,.fp-window-table td{padding:4px 6px;border-bottom:1px solid #27364b;text-align:right;white-space:nowrap}
+.fp-window-table th{background:#142338;color:#8298b5;font-weight:400;font-size:11px}
+.fp-window-table :is(th,td):first-child{text-align:left}
+@media(max-width:1100px){
+ .fp-window-grid{grid-template-columns:64px repeat(2,minmax(0,1fr));row-gap:2px}
+ .fp-window-head:nth-child(n){font-size:10px}
+ .fp-holdings button{flex:1 1 100%}
+ .fp-window-table th,.fp-window-table td{white-space:normal;overflow-wrap:anywhere}
+}
+/* ===== task-14：标题/小 i 信息/折叠/极小页脚 ===== */
+.fp-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.fp-title-row h2{margin:0;font-size:16px;stroke:none;color:#e8f0fb;letter-spacing:.2px}
+.fp-section-head{flex-basis:100%;display:flex;align-items:center;gap:8px;min-width:0}
+.fp-section-head>b{font-size:13px;color:#e1e9f5;font-weight:600}
+.focus-pool .fp-section-head>.fp-collapse{margin-left:auto;flex:0 0 auto;font-size:10px;line-height:1.3;padding:2px 6px;border-radius:10px;white-space:nowrap}
+.fp-holding-chips{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.fp-info{position:relative;display:inline-flex;align-items:center;flex:0 0 auto}
+.focus-pool .fp-info>button{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px;width:14px;min-width:14px;max-width:14px;height:14px;min-height:14px;max-height:14px;padding:0;margin:0;appearance:none;border-radius:50%;border:1px solid #364960;background:#132033;color:#8fa6c4;font-size:9px;font-weight:600;font-style:normal;line-height:1;user-select:none}
+.fp-info>button[aria-expanded=true]{background:#27466c;color:#eaf4ff;border-color:#6d9fd0}
+.fp-info-body{position:absolute;z-index:60;top:calc(100% + 6px);left:0;width:min(520px,86vw);max-height:420px;overflow:auto;background:#0f1c2e;border:1px solid #34507a;border-radius:9px;box-shadow:0 18px 48px #040a14dd;padding:10px 12px;font-size:11.5px;line-height:1.6;color:#b9cde7;text-align:left;white-space:normal}
+.fp-info-body p{margin:0 0 6px}
+.fp-info-body b{color:#e6eefb}
+.fp-info-table{width:100%;border-collapse:collapse;font-size:11px;margin:2px 0 8px}
+.fp-info-table th,.fp-info-table td{padding:3px 5px;border-bottom:1px solid #27364b;text-align:right;white-space:nowrap}
+.fp-info-table th{color:#8298b5;font-weight:400}
+.fp-info-table :is(th,td):first-child{text-align:left}
+.fp-readonly-chip{font-size:10px;color:#f3ce88;border:1px solid #5a4a2a;border-radius:8px;padding:0 5px}
+.fp-holdings button .fp-muted{display:inline}
+@media(max-width:1100px){.fp-holding-chips{flex-direction:column}}

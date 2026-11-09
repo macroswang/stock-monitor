@@ -11,11 +11,16 @@ type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 const codes=[['sh000001','上证指数'],['sz399001','深证成指'],['sz399006','创业板指']] as const;
 const emptyMarket:MarketData={quotes:[],minute:null,error:'市场行情暂不可用'};
 
-export default function HomeMarketDecision({request,onOpen,preview=false}:{request:Request;onOpen:()=>void;preview?:boolean}){
+export default function HomeMarketDecision({request,onOpen,preview=false,active=true}:{request:Request;onOpen:()=>void;preview?:boolean;active?:boolean}){
  const [collapsed,setCollapsed]=useState(()=>{try{return localStorage.getItem('stock-monitor-overview-collapsed')==='true';}catch{return false;}});
  const toggleCollapsed=()=>setCollapsed(old=>{const next=!old;try{localStorage.setItem('stock-monitor-overview-collapsed',String(next));}catch{}return next;});
  const [report,setReport]=useState<Report>({days:[],error:''}),[market,setMarket]=useState<MarketData>(emptyMarket),[,setClock]=useState(()=>Date.now());
- useEffect(()=>{let alive=true,reading=false;const load=async()=>{if(reading)return;reading=true;const [breadth,quotes]=await Promise.allSettled([requestWithTimeout(request<Report>('breadth')),requestWithTimeout(request<MarketData>('market_overview'))]);if(alive){setReport(breadth.status==='fulfilled'?breadth.value:{days:[],error:'市场数据更新失败'});setMarket(previous=>quotes.status==='fulfilled'?quotes.value:{...previous,error:'行情连接暂时中断，显示上次数据'});}reading=false;};void load();const timer=setInterval(load,15000);return()=>{alive=false;clearInterval(timer);};},[request]);
+ useEffect(()=>{
+  if(!active)return;
+  let alive=true,reading=false;
+  const load=async()=>{if(reading)return;reading=true;const [breadth,quotes]=await Promise.allSettled([requestWithTimeout(request<Report>('breadth')),requestWithTimeout(request<MarketData>('market_overview'))]);if(alive){setReport(breadth.status==='fulfilled'?breadth.value:{days:[],error:'市场数据更新失败'});setMarket(previous=>quotes.status==='fulfilled'?quotes.value:{...previous,error:'行情连接暂时中断，显示上次数据'});}reading=false;};
+  void load();const timer=setInterval(load,15000);return()=>{alive=false;clearInterval(timer);};
+ },[request,active]);
  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),15000);return()=>clearInterval(timer);},[]);
  const now=Date.now(),day=report.days.at(-1),breadth=breadthView(day,report.error,now);
  const indexes=codes.map(([code,name])=>({code,name,view:quoteView(market.quotes.find(q=>q.code===code),market.error,now)}));

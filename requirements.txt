@@ -2,3 +2,4 @@ keyring>=25,<26
 pyinstaller>=6.12,<7
 tzdata>=2025.1
 xlrd>=2.0.1,<3
+pypinyin>=0.53,<1

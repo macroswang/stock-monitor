@@ -654,8 +654,9 @@ def _history_sums(store, code, cutoff, allowed_sources):
 def capital(store, day, industry, concept, closed=False):
     warnings = []
     cutoff = day if closed else previous_trading_day(day)
+    from .sector_flow import CONCEPT_SOURCE as CONCEPT_FLOW_SOURCE
     industry_allowed = {'新浪行业资金流', '东方财富行业板块资金流'}
-    concept_allowed = {'新浪概念资金流'}
+    concept_allowed = {'新浪概念资金流', CONCEPT_FLOW_SOURCE}
     industry_snapshot = _valid_flow_snapshot(industry, day, industry_allowed)
     concept_snapshot = _valid_flow_snapshot(concept, day, concept_allowed)
     if not industry_snapshot:

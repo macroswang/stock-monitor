@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from core.provider import CN
-from core.sector_flow import SectorFlow,expected_day,parse,parse_sina,fetch,fetch_sina
+from core.sector_flow import SectorFlow,expected_day,parse,parse_sina,fetch,fetch_sina,fetch_eastmoney_paged
 from core.store import Store
 
 
@@ -122,7 +122,7 @@ class SectorFlowTests(unittest.TestCase):
             self.assertIsNone(concept.view()['snapshot'])
 
     def test_fallback_uses_time_after_slow_primary_attempt(self):
-        with patch('core.sector_flow.time.monotonic',side_effect=[100,112]),patch('core.sector_flow.fetch_eastmoney',side_effect=OSError()),patch('core.sector_flow.fetch_sina') as fallback:
+        with patch('core.sector_flow.time.monotonic',side_effect=[100,112,112]),              patch('core.sector_flow.fetch_eastmoney',side_effect=OSError()),              patch('core.sector_flow.fetch_eastmoney_paged',side_effect=OSError()),              patch('core.sector_flow.fetch_sina') as fallback:
             fetch(self.now)
         self.assertEqual(fallback.call_args.args[0],self.now+timedelta(seconds=12))
 
@@ -164,3 +164,52 @@ class SectorFlowTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class PagedFallbackTests(unittest.TestCase):
+    now=datetime(2026,11,9,10,0,tzinfo=CN)
+
+    def rows(self,start,count):
+        stamp=int((self.now-timedelta(seconds=10)).timestamp())
+        return [{'f12':f'BK{start+i:04d}','f14':f'板块{start+i}','f62':(i+1)*10000,
+                 'f66':(i+1)*5000,'f72':(i+1)*5000,'f3':0.5,'f124':stamp} for i in range(count)]
+
+    def pages(self,total=120,second_total=None):
+        first=self.rows(0,min(100,total))
+        second=self.rows(100,total-100) if total>100 else []
+        payloads=[{'total':total,'diff':first}]
+        if total>100:
+            payloads.append({'total':second_total if second_total is not None else total,'diff':second})
+        return payloads
+
+    def test_paged_rebuilds_complete_snapshot(self):
+        pages=self.pages()
+        with patch('core.sector_flow._page_payload',side_effect=pages):
+            result=fetch_eastmoney_paged(self.now,'industry')
+        self.assertEqual(result['date'],'2026-11-09')
+        self.assertEqual(result['source'],'东方财富行业板块资金流')
+        self.assertEqual(len(result['sectors']),120)
+        self.assertEqual({row['code'] for row in result['sectors']},{f'BK{i:04d}' for i in range(120)})
+        self.assertIsNotNone(result['quote_time'])
+
+    def test_concept_source_label_and_codes(self):
+        pages=self.pages()
+        with patch('core.sector_flow._page_payload',side_effect=pages):
+            result=fetch_eastmoney_paged(self.now,'concept')
+        self.assertEqual(result['source'],'东方财富概念板块资金流')
+        self.assertEqual(len(result['sectors']),120)
+
+    def test_page_identity_change_is_rejected(self):
+        pages=self.pages(second_total=119)
+        with patch('core.sector_flow._page_payload',side_effect=pages),self.assertRaises(ValueError):
+            fetch_eastmoney_paged(self.now,'industry')
+
+    def test_fetch_prefers_paged_after_single_page_failure(self):
+        with patch('core.sector_flow.fetch_eastmoney',side_effect=ValueError('blocked')), \
+             patch('core.sector_flow.fetch_eastmoney_paged',return_value={'date':'x'}):
+            self.assertEqual(fetch(self.now,'industry'),{'date':'x'})
+
+    def test_fetch_uses_sina_when_both_eastmoney_paths_fail(self):
+        with patch('core.sector_flow.fetch_eastmoney',side_effect=ValueError), \
+             patch('core.sector_flow.fetch_eastmoney_paged',side_effect=ValueError), \
+             patch('core.sector_flow.fetch_sina',return_value={'sina':1}):
+            self.assertEqual(fetch(self.now,'industry'),{'sina':1})
