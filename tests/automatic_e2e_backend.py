@@ -166,7 +166,12 @@ class Harness:
             rule=self.app.live_trading.rule(ident,'sz000981')
             self.app.live_trading.save_rule(ident,'sz000981',dict(buy_enabled=True,sell_enabled=True,buy_lots=lots,sell_lots=lots),rule['revision'])
         self.app.store.setconfig('monitor',True);self.app.live_trading.configure(dict(mode='live',confirm_live=True))
-        self.bars=json.loads((Path(__file__).parent/'ui/fixtures/turning-shapes.json').read_text())[2]['bars']
+        # Explicit R1 waves preserve the fixture's existing fill prices. The
+        # opening quote is RSI context; the signal emits on the next reversal.
+        from core.turning_q1 import TIMES
+        prices={'09:59':'2.20','10:00':'2.24','13:04':'2.31','13:05':'2.27'}
+        self.bars=[dict(time='09:30',close='2.24',average='2.25',volume=0,complete=True)]+[
+            dict(time=t,close=prices.get(t,'2.24'),average='2.25',volume=100000,complete=True) for t in TIMES]
     def tick(self,stamp):
         self.clock[0]=datetime.fromisoformat('2026-11-04T'+stamp+'+08:00');rows=[b for b in self.bars if b['time']<=stamp[:5]]
         quote=dict(code='sz000981',name='山子高科',date='2026-11-04',timestamp=self.clock[0].isoformat(),price=str(rows[-1]['close']),previous_close='2.24',limit_up='2.46',limit_down='2.02')

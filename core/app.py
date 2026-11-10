@@ -185,6 +185,9 @@ class App:
             self.health[code]='缺少当日分钟数据'; self.sessions.pop(code,None); return
         bars=[b for b in group['bars'] if b['time'] in MINUTES and b.get('complete') is True
               and (now-datetime.fromisoformat(today+'T'+b['time']+':00').replace(tzinfo=CN)).total_seconds()>=3]
+        # R1 uses the actual opening quote as RSI context. Keep it out of the
+        # existing high-volume Session, but include it in trading input.
+        trading_bars=[b for b in group['bars'] if b['time']=='09:30' and b.get('complete') is True]+bars
         session=Session(code[2:],today,quote['limit_up'])
         for b in bars: session.bar(b)
         for g in groups: self.cache_minutes(code,g)
@@ -194,6 +197,9 @@ class App:
         minutes_fresh=last_end is not None and 0<=observed_elapsed(last_end,now)<=93
         signature=[(b['time'],b['volume'],b['close'],b.get('high'),b.get('low')) for b in bars]
         revised=bool(previous and previous['day']==today and signature[:len(previous['bars'])]!=previous['bars'])
+        opening_signature=[b['close'] for b in trading_bars if b['time']=='09:30']
+        opening_revised=bool(previous and previous['day']==today and previous.get('trading_opening')!=opening_signature)
+        trading_revised=revised or opening_revised
         continuous=bool(previous and previous['day']==today and 0<=gap_seconds<=45
                         and previous['healthy'] and minutes_fresh and not revised)
         known=previous['keys'] if previous and previous['day']==today else set()
@@ -218,14 +224,14 @@ class App:
                     self.store.event(e,'recovered' if e['key'] in suppressed else 'live')
         keys=known | {e['key'] for e in session.events}
         if now.strftime('%H:%M')>='14:57': session.expire()
-        self.sessions[code]=dict(day=today,at=now,quote_at=stamp,keys=keys,suppressed_wait=suppressed,bars=signature,
+        self.sessions[code]=dict(day=today,at=now,quote_at=stamp,keys=keys,suppressed_wait=suppressed,bars=signature,trading_opening=opening_signature,
             healthy=minutes_fresh and not session.gap,candidates=session.candidates)
         self.health[code]=('分钟数据延迟，暂停实时判断' if not minutes_fresh else '数据缺口，规则已阻断' if session.gap
             else '分钟数据修订，已恢复历史状态' if revised else '实时采样监控' if continuous else '已恢复历史状态；开始实时采样')
         self.store.cache(code,'state',today,dict(candidates=session.candidates,observed_at=now.isoformat()))
         if hasattr(self,'live_trading'):
-            self.live_trading.ingest(code,bars,quote,now,continuous and not revised and minutes_fresh,
-                admission_reason='分钟数据修订，未补下旧信号' if revised else '分钟数据延迟，暂停执行' if not minutes_fresh else '采样中断或恢复，未补下旧信号' if not continuous else '')
+            self.live_trading.ingest(code,trading_bars,quote,now,continuous and not trading_revised and minutes_fresh,
+                admission_reason='分钟数据修订，未补下旧信号' if trading_revised else '分钟数据延迟，暂停执行' if not minutes_fresh else '采样中断或恢复，未补下旧信号' if not continuous else '')
 
     def poll_one(self,code):
         if self.stop.is_set(): return
@@ -540,7 +546,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.62',rule='running_max_inclusive_v1',
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.64',rule='running_max_inclusive_v1',
                     pool_count=self.pool.count())
         if method=='stock_search':
             from .stock_search import search

@@ -66,7 +66,9 @@ const renderPaperConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
   {type:'circle',shape:{cx:x,cy:y,r:1.5},style:{fill:color}}
  ]};
 };
-export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,benchmark,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice}:{stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string};volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean}){
+export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,benchmark,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice}:{stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string};volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean}){
+ // Opening quotes seed R1 only; plotted prices, volumes, MACD and Q1 keep their original input.
+ const shapeBars=shapeOpening?[...shapeOpening,...minute]:minute;
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
  const selectedCandle=candleDate(daily,selectedDay,view==='weekly');
  const [ma,setMa]=useState(readMovingAverages);
@@ -100,7 +102,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const visibleMarks=isCandleView(view)?[]:topVolumeMarks(minute,events,showOpening,showTriggered);
  const latestEvent=events.filter(e=>visibleMarks.some(m=>m.coord[0]===e.candidate_time)).sort((a,b)=>a.event_label.localeCompare(b.event_label)||a.candidate_time.localeCompare(b.candidate_time)).at(-1);
  const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
- const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?turningShapes(minute):[],showQuality?turningQualityQ1(minute):[],showShapes,showQuality);
+ const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?turningShapes(shapeBars):[],showQuality?turningQualityQ1(minute):[],showShapes,showQuality);
  const chosen=choice?.scope===scope&&(choice.kind==='位置'?minute.some(b=>b.time===choice.time&&b.complete):choice.kind?selectableTurns.some(m=>m.time===choice.time&&(m.kind==='bottom'?'底':'顶')===choice.kind):visibleMarks.some(m=>m.coord[0]===choice.time))?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const quotePrices=[...minute.map(b=>+b.close),...(currentPrice?[currentPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
@@ -122,7 +124,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  };
  const scopeRef=useRef(scope);scopeRef.current=scope;
  const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef('');
- const contentKey=JSON.stringify([minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Fit the comparison stack to the remaining viewport without reacting to scroll.
@@ -187,7 +189,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const tradeMarks=tradeAnchors.map(m=>({coord:[m.time,m.anchor],value:m.value,executionPrice:m.price,paperTrade:true,silent:true,symbol:'circle',symbolSize:10,
    symbolOffset:m.value==='B'?[0,18]:[0,-18],itemStyle:{color:paperTradeColors[m.value],borderColor:'#edf4ff',borderWidth:.7},label:{show:true,formatter:m.value,position:'inside',align:'center',verticalAlign:'middle',offset:tradeLabelOffset(m.value),padding:0,lineHeight:10,color:'#fff',fontFamily:'Arial, sans-serif',fontSize:8,fontWeight:'bold'}}));
 
-  const allShapes=isDay?[]:turningShapes(minute),shapes=showShapes?allShapes:[];
+  const allShapes=isDay?[]:turningShapes(shapeBars),shapes=showShapes?allShapes:[];
   const automatic=isDay?[]:autoTradeMarks(autoTrading,allShapes,selectedDay||'').filter(m=>labels.includes(m.time));
   const quality=isDay||!showQuality?[]:turningQualityQ1(minute);
   const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
