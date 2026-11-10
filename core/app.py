@@ -546,7 +546,7 @@ class App:
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
                     config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.64',rule='running_max_inclusive_v1',
+                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.65',rule='running_max_inclusive_v1',
                     pool_count=self.pool.count())
         if method=='stock_search':
             from .stock_search import search

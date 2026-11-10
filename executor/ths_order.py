@@ -66,7 +66,7 @@ def parse_confirmation(nodes):
 def parse_result(nodes):
     title=find_by_id(nodes,'dialog_title')
     if not title or parse_confirmation(nodes):return None
-    messages=[n.text for n in nodes if n.resource_id.rsplit('/',1)[-1] in ('dialog_message','message') and n.text]
+    messages=[n.text for n in nodes if n.resource_id.rsplit('/',1)[-1] in ('dialog_message','message','prompt_content') and n.text]
     if not messages:
         # Some Galaxy dialogs expose an unlabelled text body. Read only inside
         # a bounded modal containing its title and acknowledgement button.
@@ -89,7 +89,7 @@ def parse_result(nodes):
     elif success:status='accepted'
     else:status='unknown'
     result=dict(status=status,submitted=status=='accepted',message=text.strip())
-    orders=set(re.findall(r'(?:委托编号|委托号|合同编号|合同号)\s*[:：]?\s*([A-Za-z0-9_-]+)',text))
+    orders=set(re.findall(r'(?:委托编号|委托号|合同编号|合同号)\s*(?:为\s*)?[:：]?\s*([A-Za-z0-9_-]+)',text))
     if len(orders)>1:result.update(status='unknown',submitted=False)
     if status=='accepted' and len(orders)==1:result['order_id']=orders.pop()
     return result

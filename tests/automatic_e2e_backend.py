@@ -30,6 +30,8 @@ from tests.test_zhangle_preparation import InputDevice, poll
 from tests.test_executor_trade import DialogTests, TRADE_FOCUS
 from tests.test_executor_ths_order import form as ths_form, confirmation as ths_confirm, settings as ths_settings, n as ths_node
 
+THS_PROMPT_RECEIPT=(Path(__file__).parent/'fixtures/ths_receipt_prompt.xml').read_text()
+
 def forbidden(*_a,**_k):raise AssertionError('E2E simulator attempted real device IO')
 
 class NativeBroker:
@@ -75,7 +77,7 @@ class ThsDevice:
         if self.phase=='confirm':return ths_confirm(self.side,self.code,self.quantity,self.price)
         if self.phase=='receipt':
             if self.owner.lose_receipt:return [ths_node('系统信息','dialog_title')]
-            return [ths_node('委托成功','dialog_title'),ths_node('合同号:'+self.owner.orders[-1]['order_id'],'dialog_message')]
+            return parse_nodes(THS_PROMPT_RECEIPT.replace('910001',self.owner.orders[-1]['order_id']))
         if self.phase=='settings':return ths_settings()+[ths_node('','iv_close')]
         nodes=ths_form(self.side)
         nodes[2]=replace(nodes[2],text=self.code);nodes[4]=replace(nodes[4],text=self.price);nodes[5]=replace(nodes[5],text=self.quantity)

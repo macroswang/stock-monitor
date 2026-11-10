@@ -5,9 +5,10 @@ Temporary SQLite and simulated read-only reports; no device/order operations.
 import copy
 import json
 import unittest
+from pathlib import Path
 from datetime import datetime
 from unittest.mock import Mock,patch
-from executor.adb import Node
+from executor.adb import Node,parse_nodes
 from executor.ths_order import parse_result
 from executor.ths_report import discover
 from core.provider import CN
@@ -86,6 +87,9 @@ class DiscoveryTests(unittest.TestCase):
 
 
 class ModalReceiptTests(unittest.TestCase):
+    # Captured Galaxy modal-only hierarchy; the contract number is synthetic.
+    prompt_xml=(Path(__file__).parent/'fixtures/ths_receipt_prompt.xml').read_text()
+
     def node(self,text,bounds,rid='',cls='android.widget.TextView'):
         return Node(text,'com.hexin.plat.android:id/'+rid if rid else '',cls,bounds,True,True,False,False)
 
@@ -103,6 +107,25 @@ class ModalReceiptTests(unittest.TestCase):
         result=parse_result(self.screen('委托提交成功，合同号：TEST001'))
         self.assertEqual((result['status'],result['order_id']),('accepted','TEST001'))
         self.assertNotIn('BACKGROUND',result['message'])
+
+    def test_native_prompt_content_and_contract_number_with_wei_are_read(self):
+        result=parse_result(parse_nodes(self.prompt_xml))
+        self.assertIsNotNone(result)
+        self.assertEqual((result['status'],result['submitted'],result['order_id']),('accepted',True,'910001'))
+        self.assertNotIn('filled',result)
+
+    def test_prompt_receipt_does_not_relax_unknown_rejection_or_confirmation_guards(self):
+        for text in ('委托已提交，合同号为：910001，网络超时','委托已提交，合同号为：910001，但失败',
+                     '合同号为：910001','委托已提交，合同号为：910001，委托编号：910002'):
+            with self.subTest(text=text):
+                result=parse_result(parse_nodes(self.prompt_xml.replace('委托已提交，合同号为：910001',text)))
+                self.assertIsNotNone(result)
+                self.assertEqual((result['status'],result['submitted']),('unknown',False))
+                self.assertNotIn('order_id',result)
+        rejected=parse_result(parse_nodes(self.prompt_xml.replace('委托已提交，合同号为：910001','资金不足，委托失败')))
+        self.assertEqual((rejected['status'],rejected['submitted']),('rejected',False))
+        from tests.test_executor_ths_order import confirmation
+        self.assertIsNone(parse_result(confirmation()))
 
     def test_network_conflict_rejection_and_unscoped_success_are_not_accepted(self):
         for text in ('委托成功，网络超时','委托提交成功，但失败','合同号：TEST001','委托成功，合同号：A，委托号：B'):

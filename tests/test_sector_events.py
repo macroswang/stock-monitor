@@ -27,4 +27,13 @@ class SectorEventTests(unittest.TestCase):
   x=self.snap(-1,.5,200);r=build_observations([x,x],self.now,'2026-10-30')
   self.assertEqual(len(r['series']['BK0001']['points']),1)
 
+ def test_overlapping_snapshots_keep_first_values_per_sector_and_sort_times(self):
+  early=self.snap(-6,0,100);late=self.snap(-1,.5,200)
+  conflict=self.snap(-1,99,9999)
+  other=self.snap(-1,-.5,-200);other['observations'][0].update(code='BK0002',name='另一板块')
+  result=build_observations([late,early,conflict,other,late],self.now,'2026-10-30')
+  self.assertEqual(result,build_observations([early,late,other],self.now,'2026-10-30'))
+  self.assertEqual(result['series']['BK0001']['points'][-1]['change'],.5)
+  self.assertEqual(result['series']['BK0002']['points'][-1]['change'],-.5)
+
 if __name__=='__main__':unittest.main()
