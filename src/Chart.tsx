@@ -18,7 +18,7 @@ import {dailyPatternOverlay,dailyPatternColors} from './dailyPatternOverlay';
 import {selectDailyPatterns} from './dailyPatternSelection';
 import {DAILY_WINDOW,dailyViewport,zoomCandleWindow} from './dailyWindow';
 import CandleControls from './CandleControls';
-import {isCandleView,weeklyBars,candleDate,movingAverage,readMovingAverages,MA_COLORS,type MovingAverages} from './candleData';
+import {isCandleView,weeklyBars,candleDate,movingAverage,readMovingAverages,candleHistoryNeed,MA_COLORS,type MovingAverages} from './candleData';
 import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
 import TCostSettings from './TCostSettings';
@@ -79,7 +79,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [candleSizes,setCandleSizes]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:DAILY_WINDOW});
  const candleWindows=useRef(new Map<string,{dates:string[];lastDate:string}>());
  const candleSelections=useRef(new Map<string,string|undefined>());
- const updateMa=(next:MovingAverages)=>{setMa(next);try{localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify(next));}catch{}if(next.visible&&next.enabled.length)onHistoryNeed?.(Math.max(...next.enabled));};
+ const updateMa=(next:MovingAverages)=>{setMa(next);try{localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify(next));}catch{}};
+ const candleHistoryCount=candleHistoryNeed(candleSizes[view]||DAILY_WINDOW,ma);
+ // 首次进入、切换日/周K以及读取已保存的长周期均线时，都主动补足预热历史。
+ // onHistoryNeed 由父组件内联传入，不能放入依赖，否则会在每次渲染时重复请求。
+ useEffect(()=>{if(isCandleView(view))onHistoryNeed?.(candleHistoryCount);},[view,stockCode,candleHistoryCount]);
  const macdIndex=benchmarkForStock(stockCode),hasMacd=!isCandleView(view)&&!!macdIndex;
  const macdDataReady=!!macdIndex&&macdBenchmark?.code===macdIndex.code&&macdBenchmark.date===selectedDay&&macdBenchmark.bars.some(b=>minuteSlots.includes(b.time)&&Number(b.close)>0);
  const macdHeaders=useRef<(HTMLDivElement|null)[]>([]),volumeHeaders=useRef<(HTMLDivElement|null)[]>([]),refreshMacd=useRef<((index?:number)=>void)|null>(null);
@@ -150,7 +154,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const lo=Math.round(n*z.start/100),hi=Math.round(n*z.end/100),anchor=rows.findIndex(b=>b.date===selectedCandle);
   const next=zoomCandleWindow(rows.length,lo,hi,direction,anchor>=lo&&anchor<=hi?anchor:hi);
   candleWindows.current.set(stockCode+'|'+view,{dates:[rows[next.lo].date,rows[next.hi].date],lastDate:rows.at(-1)!.date});
-  pointer.current=null;setCandleSizes(old=>({...old,[view]:next.desired}));onHistoryNeed?.(next.desired);
+  pointer.current=null;setCandleSizes(old=>({...old,[view]:next.desired}));onHistoryNeed?.(candleHistoryNeed(next.desired,ma));
   ref.current?.focus({preventScroll:true});
  };
  useEffect(()=>{if(!ref.current)return;const chart=echarts.init(ref.current,undefined,{renderer:'canvas'});instance.current=chart;

@@ -24,6 +24,7 @@ test.beforeEach(async({page})=>{
  process.stderr.on('data',chunk=>console.error(String(chunk)));
  await page.exposeFunction('__auditRpc',async(cmd:string,args:any)=>{
   if(cmd==='plugin:autostart|is_enabled')return false;
+  if(cmd==='plugin:app|version')return '0.6.69';
   if(cmd==='rpc'){
    if(args.method==='paper_chart')paperChartRequests++;
    if(args.method==='daily_load')dailyLoadRequests.push(args.args);
@@ -471,6 +472,7 @@ test('intraday grid is sparse dark red and price/volume use identical time coord
 });
 
 test('sidebar collapses, keeps navigation usable and remembers state after reload',async({page})=>{
+ await expect(page.locator('.rail-bottom small')).toHaveText('v0.6.69 · 规则 running_max_inclusive_v1');
  const workspace=page.locator('.workspace');const before=(await workspace.boundingBox())!.x;
  await page.getByRole('button',{name:'折叠侧栏',exact:true}).click();
  await expect(page.getByRole('button',{name:'展开侧栏',exact:true})).toHaveAttribute('aria-expanded','false');
@@ -946,8 +948,8 @@ test('Wanxiang limits appear in minute tooltip without a header strip or status 
  await page.getByRole('button',{name:'日K',exact:true}).click();const linked=page.locator('.linked-minute');await expect(linked.getByLabel('当日涨跌停价格')).toHaveCount(0);const linkedMax=await linked.getByLabel('分时价格及分钟成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);return e.getInstanceByDom(el).getOption().yAxis[0].max;});expect(linkedMax).toBe(12.71);
 });
 
-function dailyHistoryFeed(){
- const rows=[];for(let stamp=Date.UTC(2024,0,1);stamp<=Date.UTC(2026,9,26);stamp+=86400000){const d=new Date(stamp);if(d.getUTCDay()===0||d.getUTCDay()===6)continue;const price=10+rows.length/100;rows.push({date:d.toISOString().slice(0,10),open:price.toFixed(2),close:(price+.1).toFixed(2),high:(price+.3).toFixed(2),low:(price-.2).toFixed(2),volume:'100000',volume_unit:'shares',source:'tencent',adjustment:'none'});}return rows;
+function dailyHistoryFeed(start='2023-01-01'){
+ const rows=[];for(let stamp=Date.parse(start+'T00:00:00Z');stamp<=Date.UTC(2026,9,26);stamp+=86400000){const d=new Date(stamp);if(d.getUTCDay()===0||d.getUTCDay()===6)continue;const price=10+rows.length/100;rows.push({date:d.toISOString().slice(0,10),open:price.toFixed(2),close:(price+.1).toFixed(2),high:(price+.3).toFixed(2),low:(price-.2).toFixed(2),volume:'100000',volume_unit:'shares',source:'tencent',adjustment:'none'});}return rows;
 }
 async function dailyWindowState(page:Page){
  return page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c?.getOption();if(!o?.xAxis?.[0]?.data?.length)return null;const labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {count:labels.length,visible:hi-lo+1,rendered:c.getModel().getSeriesByIndex(0).getData().count(),first:labels[0],last:labels.at(-1),visibleFirst:labels[lo],visibleLast:labels[hi],selected:document.querySelector('.linked-minute h3')?.textContent?.match(/\d{4}-\d{2}-\d{2}/)?.[0],zoomLock:z.zoomLock};});
@@ -1118,6 +1120,19 @@ test('weekly candles aggregate actual OHLC and total volume, support zoom and mo
  await chart.press('ArrowLeft');await expect(page.locator('.linked-minute h3')).toContainText(expected.at(-2)!.date);
  await chart.press('ArrowRight');await expect(page.locator('.linked-minute h3')).toContainText(last.date);
  await page.mouse.move(5,5);await page.screenshot({path:'outputs/kline-weekly-zoom-ma.png'});
+});
+test('persisted MA250 backfills warm-up history and is stable on both daily and weekly views',async({page})=>{
+ await page.evaluate(()=>localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify({periods:[250],enabled:[250],visible:true})));
+ const code='sh600519',feed=dailyHistoryFeed('2018-01-01');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.05});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ await expect.poll(async()=>{const state=await candleState(page),ma=state.mas.find((s:any)=>s.name==='MA250');return {count:state.labels.length,visible:state.visible,value:ma?.data[state.labels.indexOf(state.first)]};}).toMatchObject({count:expect.any(Number),visible:90,value:expect.any(Number)});
+ let state=await candleState(page);expect(state.labels.length).toBeGreaterThanOrEqual(339);const dailyValue=state.mas[0].data[state.labels.indexOf(state.first)];
+ await rpc('__audit_daily',{code,day:state.last,data:{date:state.last,open:'32',close:'32.1',low:'31.9',high:'32.2',volume:'123456',volume_unit:'shares',source:'test'}});
+ await expect.poll(async()=>{const next=await candleState(page);return next.mas[0].data[next.labels.indexOf(next.first)];}).toBe(dailyValue);
+ await page.getByRole('button',{name:'周K',exact:true}).click();const label='周K线及成交量';
+ await expect.poll(async()=>{const next=await candleState(page,label),ma=next.mas.find((s:any)=>s.name==='MA250');return {count:next.labels.length,visible:next.visible,value:ma?.data[next.labels.indexOf(next.first)]};},{timeout:15000}).toMatchObject({count:expect.any(Number),visible:90,value:expect.any(Number)});
+ state=await candleState(page,label);expect(state.labels.length).toBeGreaterThanOrEqual(339);expect(state.mas[0].data[state.labels.indexOf(state.first)]).not.toBeNull();
+ await page.screenshot({path:'outputs/kline-weekly-ma250-warmup.png'});
 });
 test('custom moving averages persist and can be hidden without changing candles or keyboard input behavior',async({page})=>{
  await seedCandleHistory(page);const control=page.getByRole('group',{name:'K线显示设置'});

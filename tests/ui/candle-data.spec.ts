@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {weeklyBars,candleDate,movingAverage,parsePeriods} from '../../src/candleData';
+import {weeklyBars,candleDate,movingAverage,parsePeriods,candleHistoryNeed} from '../../src/candleData';
 import {dailyViewport,zoomCandleWindow} from '../../src/dailyWindow';
 import type {Daily} from '../../src/models';
 const b=(date:string,open=10,close=11,volume=100):Daily=>({date,open:String(open),close:String(close),high:String(Math.max(open,close)+1),low:String(Math.min(open,close)-1),volume:String(volume),volume_unit:'shares'});
@@ -16,6 +16,12 @@ test('SMA warms up on full history, never substitutes short averages for missing
  const rows=Array.from({length:10},(_,i)=>b(`2026-11-${String(i+1).padStart(2,'0')}`,i+1,i+1));
  expect(movingAverage(rows,5)).toEqual([null,null,null,null,3,4,5,6,7,8]);expect(movingAverage(rows,20).every(v=>v===null)).toBe(true);
  expect(movingAverage(rows,5).slice(-3)).toEqual([6,7,8]);
+});
+test('daily and weekly history demand includes the visible window plus MA warm-up',()=>{
+ expect(candleHistoryNeed(90,{periods:[5,10,20,250],enabled:[250],visible:true})).toBe(339);
+ expect(candleHistoryNeed(120,{periods:[5,10,20,250],enabled:[20,250],visible:true})).toBe(369);
+ expect(candleHistoryNeed(90,{periods:[250],enabled:[250],visible:false})).toBe(90);
+ expect(candleHistoryNeed(90,{periods:[250],enabled:[],visible:true})).toBe(90);
 });
 test('manual periods accept Chinese separators and reject fractional, excessive or invalid values',()=>{
  expect(parsePeriods('5，10、20 30')).toEqual([5,10,20,30]);expect(parsePeriods('5,5,10')).toEqual([5,10]);

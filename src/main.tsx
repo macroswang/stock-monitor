@@ -1,6 +1,7 @@
 import React, {useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {invoke,isTauri} from '@tauri-apps/api/core';
+import {getVersion} from '@tauri-apps/api/app';
 import {enable,disable,isEnabled} from '@tauri-apps/plugin-autostart';
 import {isPermissionGranted,requestPermission} from '@tauri-apps/plugin-notification';
 import './style.css';
@@ -91,6 +92,9 @@ function App(){
  const [sidebarCollapsed,setSidebarCollapsed]=useState(()=>{try{return localStorage.getItem('stock-monitor-sidebar-collapsed')==='true';}catch{return false;}});
  const toggleSidebar=()=>setSidebarCollapsed(old=>{const next=!old;try{localStorage.setItem('stock-monitor-sidebar-collapsed',String(next));}catch{}return next;});
  const [autostart,setAutostart]=useState(false);
+ const [appVersion,setAppVersion]=useState(preview?'开发预览':'');
+ // 界面版本必须来自当前运行的 App 包，不能手写，否则升级后会继续显示旧版本。
+ useEffect(()=>{if(!preview)getVersion().then(setAppVersion).catch(()=>setAppVersion('未知'));},[]);
  const [buyReport,setBuyReport]=useState<BuyReport>();
  const [market,setMarket]=useState<MarketData>({quotes:[],minute:null});
  const [macdMarket,setMacdMarket]=useState<{code:string;day:string;data:MarketData}>();
@@ -265,7 +269,7 @@ function App(){
  const dayEvents=events.filter(e=>e.symbol===code.slice(2)&&e.trading_date===day&&e.mode!=='test');
  return <div className={'shell'+(sidebarCollapsed?' sidebar-collapsed':'')}>{removeTarget&&<div className="modal-overlay"><section className="card modal" role="dialog" aria-modal="true" aria-labelledby="remove-title"><h2 id="remove-title">移除自选股票</h2><p>确认移除 {removeTarget.name}（{removeTarget.code}）？</p><p className="muted">停止该股票监控，已有缓存和触发记录保留。</p><div className="form-row"><button disabled={busy} onClick={()=>setRemoveTarget(null)}>取消</button><button className="primary" disabled={busy} onClick={()=>action(async()=>{await api('remove',{code:removeTarget.code});setRemoveTarget(null);},'已移除自选，历史数据保留')}>确认移除</button></div></section></div>}<aside className="rail" id="primary-navigation" aria-label="主导航"><button className="rail-toggle" aria-label={sidebarCollapsed?'展开侧栏':'折叠侧栏'} title={sidebarCollapsed?'展开侧栏':'折叠侧栏'} aria-expanded={!sidebarCollapsed} aria-controls="primary-navigation" onClick={toggleSidebar}><span aria-hidden="true">{sidebarCollapsed?'›':'‹'}</span></button><div className="brand"><span className="logo">量</span><div>观量<small>STOCK MONITOR</small></div></div><p className="eyebrow">工作空间</p>
  {[['market','自选监控'],['breadth','大盘广度'],['modes','市场机会'],['pool','股票池'],['trading','自动交易'],['paper','模拟交易'],['data','数据管理'],['settings','设置与通知']].map(([id,name])=><button className={'nav '+(panel===id?'active':'')} key={id} aria-label={name} title={name} onClick={()=>setPanel(id)}><span className="nav-icon"><NavIcon name={id}/></span><span className="nav-label">{name}</span></button>)}
- <div className="rail-bottom" title={snapshot?.market_open?'交易时段':'非交易时段'}><i className={snapshot?.market_open?'dot':'dot idle'}/><span className="rail-state-label">{snapshot?.market_open?'交易时段':'非交易时段'}</span><p>本机独立监控<br/>{snapshot?.config.trading_paused===false?(snapshot.config.trading_mode==='live'?'自动实盘执行中':'自动策略试运行中'):'自动交易默认暂停'}</p><small>v0.6.64 · 规则 v1</small></div></aside>
+ <div className="rail-bottom" title={snapshot?.market_open?'交易时段':'非交易时段'}><i className={snapshot?.market_open?'dot':'dot idle'}/><span className="rail-state-label">{snapshot?.market_open?'交易时段':'非交易时段'}</span><p>本机独立监控<br/>{snapshot?.config.trading_paused===false?(snapshot.config.trading_mode==='live'?'自动实盘执行中':'自动策略试运行中'):'自动交易默认暂停'}</p><small>{preview?appVersion:`v${appVersion||'—'}`} · 规则 {snapshot?.rule||'—'}</small></div></aside>
  <div className={'workspace'+(panel==='market'?' market-workspace':panel==='modes'?' opportunity-workspace':'')}><header className={panel==='market'?'market-header':undefined}><div className="workspace-heading"><span className="eyebrow">个人行情工作台</span><h1>{({market:'自选监控',breadth:'大盘广度',modes:'市场机会',pool:'股票池',paper:'模拟交易',trading:'自动交易',buy:'买点历史研究',events:'触发记录',messages:'消息中心',data:'数据与缓存',settings:'设置与通知'} as Record<string,string>)[panel]}</h1></div>{panel==='market'&&<div className="market-inline-status">监控 {snapshot?.watch.filter(w=>w.enabled).length||0} / {snapshot?.watch.length||0} 只 · {connectionError?'连接中断':!snapshot?.config.monitor?'已暂停':snapshot?.market_open?'采样监控中':'休市'}</div>}<div className="header-right"><span className="chip">{preview?(panel==='modes'?'浏览器本地计划':'只读界面预览'):'本地运行'}</span><label className="switch"><input type="checkbox" checked={snapshot?.config.monitor||false} onChange={e=>action(()=>api('config',{monitor:e.target.checked}))}/>持续监控</label></div></header>
  {connectionError&&<div className="notice" role="alert">监控连接中断：{connectionError}。当前图表为缓存，请重启客户端恢复监控。</div>}
  {message&&<div className="toast" role="status">{message}<button onClick={()=>setMessage('')}>×</button></div>}

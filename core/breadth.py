@@ -215,16 +215,21 @@ def universe():
                     raise
                 time.sleep(.5)
 
-    def count():
-        return int(fetch_json(SINA + 'Market_Center.getHQNodeStockCount?node=hs_a'))
+    def count(node):
+        return int(fetch_json(SINA + 'Market_Center.getHQNodeStockCount?node=' + node))
 
-    total = count()
-    if not 1000 <= total <= 20000:
+    # hs_a 汇总节点的计数和分页口径偶尔不一致。直接采集上证、深证
+    # A 股节点，并分别校验计数、代码范围和采集前后总数，避免为了通过
+    # 校验而丢弃或补造任何股票。
+    nodes = (('sh_a', 'sh', '上证A股'), ('sz_a', 'sz', '深证A股'))
+    totals = {node: count(node) for node, _, _ in nodes}
+    if not 1000 <= sum(totals.values()) <= 20000 or any(total <= 0 for total in totals.values()):
         raise ValueError('全市场股票总数异常')
 
-    def page(n):
+    def page(task):
+        node, prefix, label, total, n = task
         time.sleep(.05)
-        args = dict(page=n, num=80, sort='symbol', asc=1, node='hs_a', symbol='', _s_r_a='page')
+        args = dict(page=n, num=80, sort='symbol', asc=1, node=node, symbol='', _s_r_a='page')
         expected = min(80, total - (n - 1) * 80)
         for attempt in range(3):
             # A short response can be cached by intermediaries; vary only the
@@ -240,20 +245,37 @@ def universe():
             if len(rows) >= expected or attempt == 2:
                 break
             time.sleep(.5)
-        return rows
+        return node, prefix, label, rows
 
+    tasks = [(node, prefix, label, totals[node], n)
+             for node, prefix, label in nodes
+             for n in range(1, (totals[node] + 79) // 80 + 1)]
     with ThreadPoolExecutor(max_workers=2) as pool:
-        pages = list(pool.map(page, range(1, (total + 79) // 80 + 1)))
-    rows = [row for group in pages for row in group]
-    codes = [r['symbol'] for r in rows]
-    if len(rows) != total:
-        raise ValueError(f'全市场代码表不完整：预计 {total} 条，分页返回 {len(rows)} 条，未生成大盘统计')
-    if len(set(codes)) != total:
-        raise ValueError(f'全市场代码表分页重复：{total} 条中仅 {len(set(codes))} 个不同代码，未生成大盘统计')
-    final_total = count()
-    if final_total != total:
-        raise ValueError(f'全市场代码表采集期间总数变化：{total} → {final_total}，未生成大盘统计')
-    return {r['symbol']: r for r in rows if is_a_share(r['symbol'])}
+        pages = list(pool.map(page, tasks))
+    rows_by_node = {node: [] for node, _, _ in nodes}
+    for node, _, _, rows in pages:
+        rows_by_node[node].extend(rows)
+
+    result = {}
+    for node, prefix, label in nodes:
+        rows, total = rows_by_node[node], totals[node]
+        codes = [r.get('symbol') for r in rows]
+        if len(rows) != total:
+            raise ValueError(f'{label}代码表不完整：预计 {total} 条，分页返回 {len(rows)} 条，未生成大盘统计')
+        if any(not isinstance(code, str) or not code.startswith(prefix) or not is_a_share(code) for code in codes):
+            raise ValueError(f'{label}代码表包含非目标证券，未生成大盘统计')
+        if len(set(codes)) != total:
+            raise ValueError(f'{label}代码表分页重复：{total} 条中仅 {len(set(codes))} 个不同代码，未生成大盘统计')
+        result.update(zip(codes, rows))
+
+    final_totals = {node: count(node) for node, _, _ in nodes}
+    if final_totals != totals:
+        before = sum(totals.values())
+        after = sum(final_totals.values())
+        raise ValueError(f'全市场代码表采集期间总数变化：{before} → {after}，未生成大盘统计')
+    if len(result) != sum(totals.values()):
+        raise ValueError('上证、深证A股代码表存在跨市场重复，未生成大盘统计')
+    return result
 
 
 def _quote_optional(f, index):
@@ -405,7 +427,9 @@ def collect():
             if day == started.date().isoformat() and '09:30' <= started.strftime('%H:%M') <= '15:00' and (anchor - datetime.fromisoformat(q['timestamp'])).total_seconds() > 300:
                 continue
             rows.append(q)
-        elif q and number(info.get('volume', -1)) == 0 and number(info.get('open', -1)) == 0:
+        # 停牌股可能不在腾讯批量报价中返回；新浪代码表同时明确给出
+        # 开盘价和成交量均为 0 时，才将其计为停牌，而不误报为行情缺失。
+        elif number(info.get('volume', -1)) == 0 and number(info.get('open', -1)) == 0:
             suspended.append(code)
     result = summarize(rows, codes, day, now_cn().isoformat(), suspended)
     result.update(collection_started=started.isoformat(), anchor_timestamp=anchor.isoformat())

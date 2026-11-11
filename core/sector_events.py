@@ -19,12 +19,15 @@ def build_observations(snapshots,now,day):
             try:
                 stamp=datetime.fromisoformat(row['source_time']);change=float(row['change_percent']);net=float(row['net_yuan'])
                 if stamp.tzinfo is None or stamp.astimezone(CN).date().isoformat()!=day or stamp>now+timedelta(seconds=5) or not session(stamp) or not math.isfinite(change) or not math.isfinite(net):continue
-                points=series.setdefault(row['code'],{'name':row['name'],'points':[]})['points']
-                if not any(p['time']==stamp.isoformat() for p in points):points.append(dict(time=stamp.isoformat(),change=change,net=net))
+                points=series.setdefault(row['code'],{'name':row['name'],'points':{}})['points']
+                # 历史采样反复包含同一来源时间。按时间直接查重，避免逐条扫描
+                # 已有点位阻塞主线程和通知心跳；重复值仍保留首次采样。
+                key=stamp.isoformat()
+                points.setdefault(key,dict(time=key,change=change,net=net))
             except (KeyError,TypeError,ValueError,OverflowError):continue
     events=[]
     for code,group in series.items():
-        pts=sorted(group['points'],key=lambda x:x['time']);group['points']=pts
+        pts=sorted(group['points'].values(),key=lambda x:x['time']);group['points']=pts
         if not pts:continue
         latest=pts[-1];end=datetime.fromisoformat(latest['time'])
         if end.date()!=now.date() or session(end)!=session(now) or session(now) is None or not 0<=(now-end).total_seconds()<=180:continue

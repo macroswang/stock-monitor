@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from core.breadth import Breadth, CODE, KIND, historical_available, is_a_share, parse_quotes, summarize
+from core.breadth import Breadth, CODE, KIND, collect, historical_available, is_a_share, parse_quotes, summarize
 from core.store import Store
 
 DAY = '2026-10-27'
@@ -112,6 +112,36 @@ class BreadthTests(unittest.TestCase):
         self.assertEqual(q['sh688001']['volume'],10000)
         self.assertEqual(parse_quotes(line('sh688001',100,10),{'sh688001'}),{})
 
+    def test_stock_absent_from_tencent_but_zero_at_sina_is_suspended(self):
+        def line(code, price='10', previous='9', volume='100', amount='10'):
+            fields = ['0'] * 49
+            for index, value in {2: code[2:], 3: price, 4: previous, 6: volume,
+                                 30: '20261027161400', 33: price, 34: price, 37: amount}.items():
+                fields[index] = value
+            return 'v_' + code + '="' + '~'.join(fields) + '";'
+
+        identifiers = {
+            'sh600000': {'symbol': 'sh600000', 'open': '10', 'volume': 100},
+            'sz300114': {'symbol': 'sz300114', 'open': '0.000', 'volume': 0},
+        }
+
+        def quote(url, encoding=None):
+            if url.endswith('q=sh000001'):
+                return line('sh000001')
+            if 'sh600000' in url:
+                return line('sh600000')
+            return 'v_pv_none_match="1";'
+
+        with patch('core.breadth.universe', return_value=identifiers), \
+             patch('core.breadth.get', side_effect=quote), \
+             patch('core.breadth.now_cn', return_value=datetime.fromisoformat('2026-10-27T16:15:00+08:00')), \
+             patch('core.breadth.time.sleep'):
+            result, raw = collect()
+        self.assertEqual(result['status'], 'closed')
+        self.assertEqual(result['missing'], 0)
+        self.assertEqual(result['suspended'], 1)
+        self.assertEqual(raw['suspended'], ['sz300114'])
+
     def test_failures_preserve_cache_and_do_not_change_watch_or_orders(self):
         with tempfile.TemporaryDirectory() as td:
             store=Store(td+'/monitor.sqlite3');store.initialize([('sh600000','示例')],[])
@@ -193,6 +223,31 @@ class BreadthTests(unittest.TestCase):
             self.assertEqual(after['events'],before['events'])
             self.assertFalse((app.dir/'paper.sqlite3').exists())
             app.store.db.close()
+
+    def test_slow_refresh_does_not_block_notification_heartbeat(self):
+        from core.app import App
+        import threading
+        with tempfile.TemporaryDirectory() as td:
+            app=App(td,False)
+            gate=threading.Event();started=threading.Event()
+            def collect_slowly():
+                started.set();gate.wait(2)
+                raise ValueError('模拟行情暂未完整，保留已有统计')
+            try:
+                with patch('core.breadth.collect',side_effect=collect_slowly):
+                    task=app.call('breadth_refresh',{})
+                    self.assertTrue(started.wait(1))
+                    self.assertEqual(app.call('job',task)['status'],'running')
+                    self.assertEqual(app.call('local_pending',{})['events'],[])
+                    self.assertFalse(gate.is_set(),'心跳不应等待全市场采集完成')
+                    gate.set()
+                    for _ in range(200):
+                        if app.call('job',task)['status']!='running':break
+                        time.sleep(.01)
+                    self.assertEqual(app.call('job',task)['status'],'done')
+                    self.assertIn('保留已有统计',app.call('job',task)['result']['error'])
+            finally:
+                gate.set();app.stop.set();app.store.db.close()
 
     def test_manual_force_does_not_start_second_concurrent_collection(self):
         with tempfile.TemporaryDirectory() as td:

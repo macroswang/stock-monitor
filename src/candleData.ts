@@ -39,3 +39,12 @@ export function readMovingAverages():MovingAverages{
 export function movingAverage(rows:ReadonlyArray<Daily>,period:number):(number|null)[]{
  let sum=0;return rows.map((b,i)=>{sum+=+b.close;if(i>=period)sum-=+rows[i-period].close;return i+1<period?null:Number((sum/period).toFixed(4));});
 }
+/**
+ * 均线必须使用可见窗口之前的完整历史预热；否则旧行情稍后补入时，
+ * 同一根K线的均线值会从空值变成数值，或随加载进度漂移。
+ */
+export function candleHistoryNeed(visibleCount:number,ma:MovingAverages){
+ const visible=Math.max(1,Math.floor(visibleCount)||1);
+ const enabled=ma.visible?ma.periods.filter(period=>ma.enabled.includes(period)):[];
+ return visible+(enabled.length?Math.max(...enabled)-1:0);
+}
