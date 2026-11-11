@@ -51,11 +51,39 @@
 .pt-add input{width:220px}
 .pt-add .pt-add-hint{display:none}
 
-/* 表格：容器横向滚动，不整页横滚 */
-.pt-scroll{min-width:0;max-width:100%;overflow-x:auto;background:#111d2e}
-.pt-table{display:flex;flex-direction:column;min-width:1068px}
-.pt-head,.pt-row{display:grid;grid-template-columns:64px 88px 92px 64px 64px 64px 64px 52px 56px 104px 104px 84px 88px 64px;
-  align-items:stretch;padding:0 8px;min-width:0;column-gap:0}
+/* 表格：卡片内紧凑固定列（10 列），未命中数值列不省略；极窄窗兜底 */
+.pt-scroll{min-width:0;max-width:100%;overflow-x:auto;background:transparent}
+.pt-table{display:flex;flex-direction:column;min-width:0}
+.pt-head,.pt-row{display:grid;grid-template-columns:46px 102px 72px 46px 46px 56px 52px 38px 48px minmax(0,1fr);
+  align-items:stretch;padding:0 6px;min-width:0;column-gap:0}
+/* 契约 §12.2：行 11px / 表头 10.5px；数值列与表头右对齐，文本列左对齐 */
+.pt-group .pt-head,.pt-group .pt-row{font-size:11px}
+.pt-group .pt-head{font-size:10.5px}
+.pt-group .pt-head-btn{font-size:10.5px!important}
+.pt-group .pt-row>span{padding-right:3px}
+.pt-group .pt-head>span{padding-right:2px}
+.pt-head-num{justify-content:flex-end;text-align:right}
+.pt-head-num .pt-head-btn{justify-content:flex-end}
+.pt-cell.pt-num{text-align:right}
+
+/* 契约 §12.3：瀑布流两列（JS masonry 分列：首行即资金 Top2，之后贪心放入较矮列；卡片间距 8px） */
+.pt-groups{display:flex;gap:8px;align-items:flex-start;padding:8px;background:#0b1220;min-width:0;line-height:0}
+.pt-group-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px}
+.pt-group{width:100%;min-width:0;margin:0;
+  background:#111d2e;border:1px solid #27354c;border-radius:8px;overflow:hidden;line-height:1.4}
+/* 契约 §12.2：组头严格单行（组名—N只 | 上涨X/下跌Y · 当前符合X · 资金净流入±X.XX亿 | 驱动：短原因） */
+.pt-group-head{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;min-width:0;
+  padding:4px 8px;background:linear-gradient(90deg,#3d1418 0%,#2a1013 100%);border-bottom:1px solid #1f2b3f}
+.pt-group-title{flex:0 0 auto;font-size:11px;font-weight:600;color:#f5e9e9;letter-spacing:.2px;white-space:nowrap}
+.pt-group-sep{flex:0 0 auto;color:#8a6a6a;font-size:10.5px;line-height:1}
+.pt-group-stats{display:flex;align-items:center;gap:0 8px;flex:0 1 auto;min-width:0;overflow:hidden;
+  font-size:10.5px;line-height:1.45;color:#d8b9b9;white-space:nowrap}
+.pt-group-stat{flex:0 0 auto;white-space:nowrap}
+.pt-group-stat+.pt-group-stat::before{content:'·';margin-right:6px;color:#8a6a6a}
+.pt-group-stat b{font-weight:600}
+.pt-group-driver{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:10.5px;color:#c9a9a9}
+.pt-driver-text{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .pt-head{height:24px;background:#142338;border-bottom:1px solid #27354c;color:#8298b5;font-size:11px;position:sticky;top:0;z-index:2}
 .pt-head>span{display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap}
 .pt-head-btn{background:none!important;border:none!important;height:auto!important;padding:0!important;border-radius:0!important;
@@ -68,7 +96,10 @@
 .pt-row:focus-visible{outline:1px solid #89c8ff;outline-offset:-1px}
 .pt-row>span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:23px;padding-right:4px}
 .pt-code{color:#c7d6e8;font-size:11px}
-.pt-name{color:#e9f1fb;font-weight:600}
+.pt-row>span.pt-name{display:flex;align-items:center;gap:3px;color:#e9f1fb;font-weight:600}
+.pt-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-count-badge{flex:0 0 auto;font-size:9.5px;line-height:14px;padding:0 3px;border-radius:6px;font-weight:400;
+  color:#8fa6c4;background:#1b2940;border:1px solid #2f4462}
 .pt-time{color:#f3ce88}
 .pt-num{text-align:right}
 .pt-tag{color:#9fb6d4;font-size:11px}
@@ -76,9 +107,10 @@
 .pt-count{color:#89c8ff;font-weight:600}
 .pt-yellow{color:#f3ce88}
 
-/* 行内详情 */
+/* 行内详情：卡片内宽度有限，统一单列（内容不变，避免卡片内横向滚动） */
 .pt-detail{background:#0f1b2b;border-bottom:1px solid #324159;padding:8px 10px 10px;font-size:11px;color:#b8c9de}
-.pt-detail-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.1fr) minmax(0,1.2fr);gap:10px 20px;min-width:0}
+.pt-detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:6px 20px;min-width:0}
+.pt-group .pt-detail-grid{grid-template-columns:minmax(0,1fr)}
 .pt-detail-col{min-width:0}
 .pt-detail h4{margin:8px 0 4px;font-size:11px;color:#c6d6e8;font-weight:600;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .pt-detail-col>h4:first-child{margin-top:0}
@@ -127,16 +159,16 @@
 .pt-hz.pt-pending{color:#f3ce88}
 .pt-hz.pt-missing{color:#8fa6c4}
 
-/* ≤1160：容器内横滚 + 隐藏「题材/事件/行业方向」三列；详情单列；回测分桶单列 */
+/* 契约 §10：≤1160 单列仍显示全部 10 列；卡片内不横向滚动；极窄 <600 卡片内横滚兜底 */
 @media(max-width:1160px){
  .pt-detail-grid{grid-template-columns:minmax(0,1fr)}
  .pt-bt-buckets{grid-template-columns:minmax(0,1fr)}
  .pt-titlebar{height:auto;flex:0 0 auto;flex-wrap:wrap;padding:4px 8px;gap:4px 10px}
  .pt-title-status{white-space:normal}
- .pt-head>span.pt-col-theme,.pt-head>span.pt-col-event,.pt-head>span.pt-col-other,
- .pt-row>span.pt-col-theme,.pt-row>span.pt-col-event,.pt-row>span.pt-col-other{display:none}
- .pt-table{min-width:792px}
- .pt-head,.pt-row{grid-template-columns:64px 88px 92px 64px 64px 64px 64px 52px 56px minmax(104px,1fr) 64px}
+ .pt-groups{padding:6px}
  .pt-detail{width:100%}
  .pt-bt-detail{min-width:640px}
+}
+@media(max-width:600px){
+ .pt-table{min-width:520px}
 }

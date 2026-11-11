@@ -4,11 +4,11 @@ import StockSearch from './StockSearch';
 import {
   BACKTEST_EPISODE_OPTIONS,BACKTEST_PERCENT_OPTIONS,backtestAnchor,backtestCoverageText,backtestSources,backtestSummary,
   bucketByEpisodes,bucketByFirstDay,bucketByPercent,clockText,dayShort,entryTime,episodesOf,episodesTitle,filterBacktestRows,
-  filterRows,fullStamp,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,num2,pctSigned,PERIOD_OPTIONS,planText,quantOf,
-  readStoredTerminal,rowCounts,shortStamp,sortFromOption,sortOptionValue,sortRows,SORT_OPTIONS,tagsOf,tagsTitle,toggleSort,
-  windowExcessText,windowOf,windowReturnText,writeStoredTerminal,
+  codeDigits,filterRows,fullStamp,groupEntries,groupFundText,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,layoutGroups,num2,
+  pctSigned,PERIOD_OPTIONS,planText,quantOf,readStoredTerminal,relatedTagsText,relatedTagsTitle,rowCounts,shortStamp,sortFromOption,
+  sortOptionValue,SORT_OPTIONS,tagsOf,tagsTitle,toggleSort,windowExcessText,windowOf,windowReturnText,writeStoredTerminal,
   DEFAULT_BACKTEST_FILTER,DEFAULT_ROW_FILTER,
-  type BacktestData,type BacktestFilter,type BacktestRow,type BucketStat,type Entry,type PoolData,type Request,
+  type BacktestData,type BacktestFilter,type BacktestRow,type BucketStat,type Entry,type EntryGroup,type PoolData,type Request,
   type RowFilter,type RowPeriod,type SortKey,type SortState,
 } from './poolTableModel';
 
@@ -16,6 +16,14 @@ const LIMIT=200;
 const POLL_LIVE=6000;
 const POLL_IDLE=30000;
 const DETAIL_ID=(code:string)=>'pt-detail-'+code;
+
+// 契约 §12.2：卡片内 10 列（名称完整显示 + ×N 徽标；代码去前缀；数值列右对齐，文本列左对齐）
+const COLUMNS:{key?:SortKey;label:string;cls?:string;num?:boolean}[]=[
+  {label:'代码',num:true},{label:'名称'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格',num:true},
+  {label:'现价',num:true},{key:'since',label:'入选后涨幅',num:true},{key:'today',label:'今日涨幅',num:true},
+  {key:'ratio',label:'量比',num:true},{key:'turnover',label:'换手(%)',num:true},{label:'相关概念·题材',cls:'pt-col-tags'},
+];
+const headClass=(column:{cls?:string;num?:boolean})=>[column.cls,column.num?'pt-head-num':''].filter(Boolean).join(' ')||undefined;
 
 const readError=(cause:unknown)=>{
   if(cause instanceof Error){
@@ -90,7 +98,18 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     return latest||new Date().toISOString().slice(0,10);
   },[data,entries]);
   const counts=useMemo(()=>rowCounts(entries,anchor),[entries,anchor]);
-  const rows=useMemo(()=>sortRows(filterRows(entries,filter,anchor),sort),[entries,filter,anchor,sort]);
+  // 契约 §7：先筛选/搜索，再分组（排序作用于组内），空组自然消失。
+  const filteredRows=useMemo(()=>filterRows(entries,filter,anchor),[entries,filter,anchor]);
+  const groups=useMemo(()=>groupEntries(filteredRows,sort),[filteredRows,sort]);
+  const [columnCount,setColumnCount]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(min-width:1108px)').matches?2:1);
+  useEffect(()=>{
+    const query=window.matchMedia('(min-width:1108px)');
+    const sync=()=>setColumnCount(query.matches?2:1);
+    sync();
+    query.addEventListener('change',sync);
+    return ()=>query.removeEventListener('change',sync);
+  },[]);
+  const groupColumns=useMemo(()=>layoutGroups(groups,columnCount),[groups,columnCount]);
   const readOnly=preview;
   const watched=useMemo(()=>new Set((watch||[]).map(code=>String(code).toLowerCase())),[watch]);
   const isWatched=(code:string)=>watched.has(String(code).toLowerCase());
@@ -144,12 +163,6 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   const onSort=(key:SortKey)=>setSort(current=>toggleSort(current,key));
   const resetFilter=()=>setFilter({...DEFAULT_ROW_FILTER});
 
-  const columns:{key?:SortKey;label:string;cls?:string}[]=[
-    {label:'代码'},{label:'名称'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格'},{key:'since',label:'入选收益'},
-    {label:'现价'},{key:'today',label:'涨幅'},{key:'ratio',label:'量比'},{key:'turnover',label:'换手'},
-    {label:'概念'},{label:'题材',cls:'pt-col-theme'},{label:'事件',cls:'pt-col-event'},{label:'行业/方向',cls:'pt-col-other'},{key:'episodes',label:'入选次数'},
-  ];
-
   return <section className="pool-terminal" aria-label="股票池" aria-busy={loading}>
     <div className="pt-titlebar">
       <span className="pt-title">股票池 - {entries.length}</span>
@@ -193,50 +206,81 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     {backtestOpen&&<BacktestPanel request={request} preview={preview}/>}
     {loading&&!data&&<p className="pt-empty">股票池读取中…</p>}
     {!loading&&!data&&!error&&<p className="pt-empty">股票池暂无数据。</p>}
-    {data&&rows.length===0&&<p className="pt-empty">{entries.length?'当前筛选条件下没有标的。点「清除筛选」恢复。':'股票池还没有标的。市场机会中可考虑建仓的标的、方向候选与题材启动信号会自动加入，也可点「添加」手动添加。'}</p>}
-    {rows.length>0&&<div className="pt-scroll">
-      <div className="pt-table" role="table" aria-label="股票池跟踪表">
+    {data&&filteredRows.length===0&&<p className="pt-empty">{entries.length?'当前筛选条件下没有标的。点「清除筛选」恢复。':'股票池还没有标的。市场机会中可考虑建仓的标的、方向候选与题材启动信号会自动加入，也可点「添加」手动添加。'}</p>}
+    {groups.length>0&&<div className="pt-groups">
+      {groupColumns.map((column,index)=><div className="pt-group-col" key={'col-'+(index+1)}>
+        {column.map(group=><GroupSection key={group.key} group={group} sort={sort} onSort={onSort} openCode={openCode} onToggle={toggleRow}
+          readOnly={readOnly} busy={busy} benchmark={data?.benchmark||'上证指数'} isWatched={isWatched}
+          onPick={pick} onWatch={addWatch} onDelete={remove} onOpenDaily={onOpenDaily}/>)}
+      </div>)}
+    </div>}
+    <div className="pt-footer">
+      <span>显示 {filteredRows.length} / 共 {entries.length} 只 · {groups.length} 个方向 · {readOnly?'静态预览':'行情每 6 秒刷新（休市 30 秒）'} · 不自动下单</span>
+      {data?.archived_count?<span>已归档 {data.archived_count} 只默认隐藏</span>:null}
+    </div>
+  </section>;
+}
+
+function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,benchmark,isWatched,onPick,onWatch,onDelete,onOpenDaily}:{
+  group:EntryGroup;sort:SortState;onSort:(key:SortKey)=>void;openCode:string;onToggle:(code:string)=>void;
+  readOnly:boolean;busy:boolean;benchmark:string;isWatched:(code:string)=>boolean;
+  onPick:(entry:Entry,side:'buy'|'sell')=>void;
+  onWatch:(entry:Entry)=>Promise<void>;
+  onDelete:(entry:Entry)=>Promise<void>;
+  onOpenDaily:(code:string,name:string)=>void;
+}){
+  const {stats}=group;
+  const fundTone=isNum(stats.fundYi)?(stats.fundYi>0?'pt-up':stats.fundYi<0?'pt-down':'pt-flat'):'pt-flat';
+  return <section className="pt-group" aria-label={'分组 '+group.label}>
+    <div className="pt-group-head">
+      <span className="pt-group-title">{group.label} — {stats.rows} 只</span>
+      <span className="pt-group-sep" aria-hidden="true">|</span>
+      <span className="pt-group-stats">
+        <span className="pt-group-stat">上涨 <b className="pt-up">{stats.up}</b>/下跌 <b className="pt-down">{stats.down}</b></span>
+        <span className="pt-group-stat" title="现价处于计划买区、当前仍符合入选条件，不代表建议买入">当前符合 <b>{stats.inBuy}</b></span>
+        <span className="pt-group-stat">资金净流入 <b className={fundTone}>{groupFundText(stats.fundYi)}</b></span>
+      </span>
+      <span className="pt-group-sep" aria-hidden="true">|</span>
+      <span className="pt-group-driver" title={stats.driverText||undefined}>驱动：<span className="pt-driver-text">{stats.driverText||'—'}</span></span>
+    </div>
+    <div className="pt-scroll">
+      <div className="pt-table" role="table" aria-label={group.label+' 标的'}>
         <div className="pt-head" role="row">
-          {columns.map(column=>column.key
-            ?<span key={column.label} role="columnheader" className={column.cls} aria-sort={sort.key===column.key?(sort.dir==='desc'?'descending':'ascending'):'none'}>
+          {COLUMNS.map(column=>column.key
+            ?<span key={column.label} role="columnheader" className={headClass(column)} aria-sort={sort.key===column.key?(sort.dir==='desc'?'descending':'ascending'):'none'}>
               <button type="button" className={'pt-head-btn'+(sort.key===column.key?' is-sorted':'')} onClick={()=>onSort(column.key as SortKey)}
                 aria-label={'按'+column.label+'排序'}>{column.label}{sort.key===column.key?(sort.dir==='desc'?'▾':'▴'):''}</button>
             </span>
-            :<span key={column.label} role="columnheader" className={column.cls}>{column.label}</span>)}
+            :<span key={column.label} role="columnheader" className={headClass(column)}>{column.label}</span>)}
         </div>
-        {rows.map(entry=>{
+        {group.entries.map(entry=>{
           const expanded=openCode===entry.code;
           const episodes=episodesOf(entry);
           const quant=quantOf(entry);
-          const tags=tagsOf(entry);
+          const related=relatedTagsText(entry);
           return <Fragment key={entry.code}>
             <div className={'pt-row'+(expanded?' is-open':'')} role="row" tabIndex={0} aria-expanded={expanded} aria-controls={DETAIL_ID(entry.code)}
-              onClick={()=>toggleRow(entry.code)}
-              onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRow(entry.code);}}}>
-              <span className="pt-cell pt-code" role="cell" title={entry.code}>{entry.code}</span>
-              <span className="pt-cell pt-name" role="cell" title={entry.name}>{entry.name}</span>
+              onClick={()=>onToggle(entry.code)}
+              onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onToggle(entry.code);}}}>
+              <span className="pt-cell pt-code pt-num" role="cell" title={entry.code}>{codeDigits(entry.code)}</span>
+              <span className="pt-cell pt-name" role="cell" title={entry.name}>
+                <span className="pt-name-text">{entry.name}</span>
+                <span className="pt-count-badge" title={episodesTitle(entry)} aria-label={'入选 '+episodes.total+' 天'}>×{episodes.total}</span>
+              </span>
               <span className="pt-cell pt-time" role="cell" title={'入选 '+fullStamp(entry.added_at||entry.added_day)}>{entryTime(entry)}</span>
               <span className="pt-cell pt-num" role="cell">{num2(entry.added_price)}</span>
-              <span className={'pt-cell pt-num '+ (isNum(entry.since_add_percent)?(entry.since_add_percent>0?'pt-up':entry.since_add_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="入选收益（自入选价至今）">{pctSigned(entry.since_add_percent)}</span>
               <span className="pt-cell pt-num" role="cell" title={entry.quote?'行情 '+clockText(entry.quote.time):'行情待取得'}>{entry.quote?num2(entry.quote.price):'—'}</span>
-              <span className={'pt-cell pt-num '+ (isNum(entry.today_percent)?(entry.today_percent>0?'pt-up':entry.today_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="涨幅（今日）">{pctSigned(entry.today_percent)}</span>
-              <span className="pt-cell pt-num pt-yellow" role="cell" title="量比">{isNum(quant.volume_ratio)?quant.volume_ratio.toFixed(2):'—'}</span>
-              <span className="pt-cell pt-num pt-yellow" role="cell" title="换手率">{isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2)+'%':'—'}</span>
-              <span className={'pt-cell pt-tag'+(tags.concept.length?'':' is-empty')} role="cell" title={tagsTitle(tags.concept)}>{tagsText(tags.concept)}</span>
-              <span className={'pt-cell pt-tag pt-col-theme'+(tags.theme.length?'':' is-empty')} role="cell" title={tagsTitle(tags.theme)}>{tagsText(tags.theme)}</span>
-              <span className={'pt-cell pt-tag pt-col-event'+(tags.event.length?'':' is-empty')} role="cell" title={tagsTitle(tags.event)}>{tagsText(tags.event)}</span>
-              <span className={'pt-cell pt-tag pt-col-other'+(tags.other.length?'':' is-empty')} role="cell" title={tagsTitle(tags.other)}>{tagsText(tags.other)}</span>
-              <span className="pt-cell pt-num pt-count" role="cell" title={episodesTitle(entry)}>{episodes.total}</span>
+              <span className={'pt-cell pt-num '+ (isNum(entry.since_add_percent)?(entry.since_add_percent>0?'pt-up':entry.since_add_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="入选后涨幅（自入选价至今）">{pctSigned(entry.since_add_percent)}</span>
+              <span className={'pt-cell pt-num '+ (isNum(entry.today_percent)?(entry.today_percent>0?'pt-up':entry.today_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="今日涨幅">{pctSigned(entry.today_percent)}</span>
+              <span className="pt-cell pt-num pt-yellow pt-col-ratio" role="cell" title="量比">{isNum(quant.volume_ratio)?quant.volume_ratio.toFixed(2):'—'}</span>
+              <span className="pt-cell pt-num pt-yellow pt-col-turnover" role="cell" title="换手率(%)">{isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2):'—'}</span>
+              <span className={'pt-cell pt-tag pt-col-tags'+(related==='—'?' is-empty':'')} role="cell" title={relatedTagsTitle(entry)}>{related}</span>
             </div>
-            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} benchmark={data?.benchmark||'上证指数'}
-              watched={isWatched(entry.code)} onPick={pick} onWatch={addWatch} onDelete={remove} onKline={(target)=>{void target;onOpenDaily(entry.code,entry.name);}}/>}
+            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} benchmark={benchmark}
+              watched={isWatched(entry.code)} onPick={onPick} onWatch={onWatch} onDelete={onDelete} onKline={(target)=>{void target;onOpenDaily(entry.code,entry.name);}}/>}
           </Fragment>;
         })}
       </div>
-    </div>}
-    <div className="pt-footer">
-      <span>显示 {rows.length} / 共 {entries.length} 只 · {readOnly?'静态预览':'行情每 6 秒刷新（休市 30 秒）'} · 不自动下单</span>
-      {data?.archived_count?<span>已归档 {data.archived_count} 只默认隐藏</span>:null}
     </div>
   </section>;
 }
@@ -280,7 +324,7 @@ function DetailRow({id,entry,readOnly,busy,benchmark,watched,onPick,onWatch,onDe
         {plan?.sell_note?<p className="pt-muted">离场：{plan.sell_note}</p>:null}
         <h4>入选统计</h4>
         <dl className="pt-kv">
-          <div><dt>累计</dt><dd>{episodes.total} 次 · 今日 {episodes.today} 次</dd></div>
+          <div><dt>累计</dt><dd>{episodes.total} 天 · 今日{episodes.today > 0 ? '已入选' : '未入选'}</dd></div>
           <div><dt>首次</dt><dd>{fullStamp(episodes.first_at)}</dd></div>
           <div><dt>最近</dt><dd>{fullStamp(episodes.last_at)}</dd></div>
           <div><dt>量比/换手</dt><dd className="pt-yellow">{isNum(quant.volume_ratio)?quant.volume_ratio.toFixed(2):'—'} / {isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2)+'%':'—'}</dd></div>
@@ -363,7 +407,7 @@ function BacktestPanel({request,preview}:{request:Request;preview:boolean}){
       +' · 已出结果 '+summary.done+' / 未到期 '+summary.pending+' / 缺数据 '+summary.missing
     :'筛选下无样本';
   const bucketTables:{title:string;buckets:BucketStat[]}[]=[
-    {title:'按入选次数',buckets:byEpisodes},
+    {title:'按入选天数',buckets:byEpisodes},
     {title:'按入选涨幅',buckets:byPercent},
     {title:'按入选时间（最近10个入选日）',buckets:byDay},
   ];
@@ -379,7 +423,7 @@ function BacktestPanel({request,preview}:{request:Request;preview:boolean}){
     <div className="pt-bt-filters" role="group" aria-label="回测筛选">
       <label className="pt-field">入选时间<select aria-label="回测入选时间" value={filter.period} onChange={event=>patch({period:event.target.value as RowPeriod})}>
         {PERIOD_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-      <label className="pt-field">入选次数<select aria-label="回测入选次数" value={filter.episodes} onChange={event=>patch({episodes:event.target.value as BacktestFilter['episodes']})}>
+      <label className="pt-field">入选天数<select aria-label="回测入选天数" value={filter.episodes} onChange={event=>patch({episodes:event.target.value as BacktestFilter['episodes']})}>
         {BACKTEST_EPISODE_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
       <label className="pt-field">入选涨幅<select aria-label="回测入选涨幅" value={filter.percent} onChange={event=>patch({percent:event.target.value as BacktestFilter['percent']})}>
         {BACKTEST_PERCENT_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
@@ -401,7 +445,7 @@ function BacktestPanel({request,preview}:{request:Request;preview:boolean}){
       </div>)}
     </div>
     {rows.length?<div className="pt-scroll"><table className="pt-mini pt-bt-table pt-bt-detail">
-      <thead><tr><th>代码</th><th>名称</th><th>首次入选</th><th>入选价格</th><th>入选次数</th><th>入选时涨幅</th><th>T+1</th><th>T+3</th><th>T+5</th></tr></thead>
+      <thead><tr><th>代码</th><th>名称</th><th>首次入选</th><th>入选价格</th><th>入选天数</th><th>入选时涨幅</th><th>T+1</th><th>T+3</th><th>T+5</th></tr></thead>
       <tbody>{detailRows.map(row=><tr key={row.code}>
         <td className="pt-code">{row.code}</td><td>{row.name}</td><td>{row.first_day?dayShort(row.first_day):'—'}</td>
         <td>{num2(row.first_price)}</td><td className="pt-count">{row.episodes??1}</td>

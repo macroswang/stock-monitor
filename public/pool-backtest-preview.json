@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-11T11:55:05.494524+08:00",
+ "updated_at": "2026-11-11T14:40:26.385975+08:00",
  "bench": "上证指数",
  "rows": [
   {
@@ -10,7 +10,7 @@
    "first_day": "2026-11-09",
    "first_price": 4.9,
    "first_percent": 0.41,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-09T12:30:53.664042+08:00",
    "latest_day": "2026-11-11",
@@ -62,19 +62,19 @@
    "first_day": "2026-11-09",
    "first_price": 6.56,
    "first_percent": 10.07,
-   "episodes": 6,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.03,
-   "latest_percent": -2.898550724637672,
+   "latest_price": 5.98,
+   "latest_percent": -3.703703703703698,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.03,
-    "percent": -2.898550724637672
+    "price": 5.98,
+    "percent": -3.703703703703698
    },
-   "since_percent": -8.079268292682917,
-   "since": -8.079268292682917,
+   "since_percent": -8.841463414634132,
+   "since": -8.841463414634132,
    "returns": {
     "T+1": {
      "n": 1,
@@ -104,7 +104,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sz000678",
@@ -114,7 +114,7 @@
    "first_day": "2026-11-09",
    "first_price": 17.93,
    "first_percent": 3.6,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "latest_day": "2026-11-11",
@@ -167,7 +167,7 @@
    "first_day": "2026-11-09",
    "first_price": 5.51,
    "first_percent": 10.11,
-   "episodes": 19,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T22:30:17.929318+08:00",
    "latest_day": "2026-11-11",
@@ -221,7 +221,7 @@
    "first_day": "2026-11-09",
    "first_price": 105.13,
    "first_percent": 0.31,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-09T12:30:53.664042+08:00",
    "latest_day": "2026-11-11",
@@ -275,19 +275,19 @@
    "first_day": "2026-11-09",
    "first_price": 175.02,
    "first_percent": 0.37,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 196.1,
-   "latest_percent": 5.14745308310991,
+   "latest_price": 209.84,
+   "latest_percent": 12.514745308311003,
    "latest": {
     "day": "2026-11-11",
-    "price": 196.1,
-    "percent": 5.14745308310991
+    "price": 209.84,
+    "percent": 12.514745308311003
    },
-   "since_percent": 12.044337789966853,
-   "since": 12.044337789966853,
+   "since_percent": 19.894869157810536,
+   "since": 19.894869157810536,
    "returns": {
     "T+1": {
      "n": 1,
@@ -327,19 +327,19 @@
    "first_day": "2026-11-09",
    "first_price": 49.05,
    "first_percent": 10.0,
-   "episodes": 8,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 47.99,
-   "latest_percent": -1.8609406952965202,
+   "latest_price": 47.42,
+   "latest_percent": -3.0265848670756546,
    "latest": {
     "day": "2026-11-11",
-    "price": 47.99,
-    "percent": -1.8609406952965202
+    "price": 47.42,
+    "percent": -3.0265848670756546
    },
-   "since_percent": -2.161060142711513,
-   "since": -2.161060142711513,
+   "since_percent": -3.323139653414875,
+   "since": -3.323139653414875,
    "returns": {
     "T+1": {
      "n": 1,
@@ -369,7 +369,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "高于追高上限"
+   "zone": "等待回踩"
   },
   {
    "code": "sh603660",
@@ -379,19 +379,19 @@
    "first_day": "2026-11-09",
    "first_price": 9.26,
    "first_percent": 9.98,
-   "episodes": 8,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T14:00:59.153904+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 10.11,
-   "latest_percent": 4.226804123711347,
+   "latest_price": 10.48,
+   "latest_percent": 8.041237113402078,
    "latest": {
     "day": "2026-11-11",
-    "price": 10.11,
-    "percent": 4.226804123711347
+    "price": 10.48,
+    "percent": 8.041237113402078
    },
-   "since_percent": 9.179265658747294,
-   "since": 9.179265658747294,
+   "since_percent": 13.174946004319654,
+   "since": 13.174946004319654,
    "returns": {
     "T+1": {
      "n": 1,
@@ -433,19 +433,19 @@
    "first_day": "2026-11-09",
    "first_price": 50.89,
    "first_percent": 10.01,
-   "episodes": 8,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T14:00:59.153904+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 49.76,
-   "latest_percent": 2.64026402640265,
+   "latest_price": 50.3,
+   "latest_percent": 3.7541254125412538,
    "latest": {
     "day": "2026-11-11",
-    "price": 49.76,
-    "percent": 2.64026402640265
+    "price": 50.3,
+    "percent": 3.7541254125412538
    },
-   "since_percent": -2.220475535468658,
-   "since": -2.220475535468658,
+   "since_percent": -1.1593633326783315,
+   "since": -1.1593633326783315,
    "returns": {
     "T+1": {
      "n": 1,
@@ -487,19 +487,19 @@
    "first_day": "2026-11-09",
    "first_price": 7.78,
    "first_percent": 10.04,
-   "episodes": 18,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T11:31:13.575753+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.88,
-   "latest_percent": -2.6874115983026914,
+   "latest_price": 6.91,
+   "latest_percent": -2.2630834512022635,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.88,
-    "percent": -2.6874115983026914
+    "price": 6.91,
+    "percent": -2.2630834512022635
    },
-   "since_percent": -11.568123393316199,
-   "since": -11.568123393316199,
+   "since_percent": -11.18251928020566,
+   "since": -11.18251928020566,
    "returns": {
     "T+1": {
      "n": 1,
@@ -539,19 +539,19 @@
    "first_day": "2026-11-09",
    "first_price": 38.54,
    "first_percent": 0.34,
-   "episodes": 36,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 38.6,
-   "latest_percent": -0.46415678184631437,
+   "latest_price": 40.34,
+   "latest_percent": 4.0226921093347245,
    "latest": {
     "day": "2026-11-11",
-    "price": 38.6,
-    "percent": -0.46415678184631437
+    "price": 40.34,
+    "percent": 4.0226921093347245
    },
-   "since_percent": 0.15568240788792487,
-   "since": 0.15568240788792487,
+   "since_percent": 4.67047223663728,
+   "since": 4.67047223663728,
    "returns": {
     "T+1": {
      "n": 1,
@@ -584,7 +584,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "已进入买区"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz002384",
@@ -594,19 +594,19 @@
    "first_day": "2026-11-09",
    "first_price": 82.8,
    "first_percent": 2.86,
-   "episodes": 22,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 89.7,
-   "latest_percent": 7.18126418926992,
+   "latest_price": 92.06,
+   "latest_percent": 10.001194885888399,
    "latest": {
     "day": "2026-11-11",
-    "price": 89.7,
-    "percent": 7.18126418926992
+    "price": 92.06,
+    "percent": 10.001194885888399
    },
-   "since_percent": 8.333333333333348,
-   "since": 8.333333333333348,
+   "since_percent": 11.183574879227054,
+   "since": 11.183574879227054,
    "returns": {
     "T+1": {
      "n": 1,
@@ -647,19 +647,19 @@
    "first_day": "2026-11-09",
    "first_price": 208.59,
    "first_percent": 3.43,
-   "episodes": 5,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 217.54,
-   "latest_percent": 4.486071085494725,
+   "latest_price": 229.02,
+   "latest_percent": 10.000000000000009,
    "latest": {
     "day": "2026-11-11",
-    "price": 217.54,
-    "percent": 4.486071085494725
+    "price": 229.02,
+    "percent": 10.000000000000009
    },
-   "since_percent": 4.2907138405484435,
-   "since": 4.2907138405484435,
+   "since_percent": 9.794333381274267,
+   "since": 9.794333381274267,
    "returns": {
     "T+1": {
      "n": 1,
@@ -699,19 +699,19 @@
    "first_day": "2026-11-09",
    "first_price": 460.33,
    "first_percent": 3.83,
-   "episodes": 5,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 509.89,
-   "latest_percent": 8.256900212314221,
+   "latest_price": 543.76,
+   "latest_percent": 15.447983014861988,
    "latest": {
     "day": "2026-11-11",
-    "price": 509.89,
-    "percent": 8.256900212314221
+    "price": 543.76,
+    "percent": 15.447983014861988
    },
-   "since_percent": 10.766189472769527,
-   "since": 10.766189472769527,
+   "since_percent": 18.12395455434146,
+   "since": 18.12395455434146,
    "returns": {
     "T+1": {
      "n": 1,
@@ -753,19 +753,19 @@
    "first_day": "2026-11-09",
    "first_price": 49.95,
    "first_percent": 1.13,
-   "episodes": 24,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 49.09,
-   "latest_percent": 0.5942622950819709,
+   "latest_price": 49.03,
+   "latest_percent": 0.4713114754098413,
    "latest": {
     "day": "2026-11-11",
-    "price": 49.09,
-    "percent": 0.5942622950819709
+    "price": 49.03,
+    "percent": 0.4713114754098413
    },
-   "since_percent": -1.721721721721725,
-   "since": -1.721721721721725,
+   "since_percent": -1.8418418418418403,
+   "since": -1.8418418418418403,
    "returns": {
     "T+1": {
      "n": 1,
@@ -805,7 +805,7 @@
    "first_day": "2026-11-09",
    "first_price": 9.89,
    "first_percent": 10.04,
-   "episodes": 60,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
@@ -861,15 +861,15 @@
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 61.74,
-   "latest_percent": 4.062025956514415,
+   "latest_price": 65.26,
+   "latest_percent": 9.994943536153734,
    "latest": {
     "day": "2026-11-11",
-    "price": 61.74,
-    "percent": 4.062025956514415
+    "price": 65.26,
+    "percent": 9.994943536153734
    },
-   "since_percent": 5.68298527901403,
-   "since": 5.68298527901403,
+   "since_percent": 11.708319068812045,
+   "since": 11.708319068812045,
    "returns": {
     "T+1": {
      "n": 1,
@@ -909,19 +909,19 @@
    "first_day": "2026-11-09",
    "first_price": 21.79,
    "first_percent": 2.25,
-   "episodes": 17,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 20.9,
-   "latest_percent": 0.5291005291005346,
+   "latest_price": 20.71,
+   "latest_percent": -0.3848003848003767,
    "latest": {
     "day": "2026-11-11",
-    "price": 20.9,
-    "percent": 0.5291005291005346
+    "price": 20.71,
+    "percent": -0.3848003848003767
    },
-   "since_percent": -4.084442404772837,
-   "since": -4.084442404772837,
+   "since_percent": -4.956402019274886,
+   "since": -4.956402019274886,
    "returns": {
     "T+1": {
      "n": 1,
@@ -965,15 +965,15 @@
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 8.47,
-   "latest_percent": 0.7134363852556502,
+   "latest_price": 8.46,
+   "latest_percent": 0.5945303210463715,
    "latest": {
     "day": "2026-11-11",
-    "price": 8.47,
-    "percent": 0.7134363852556502
+    "price": 8.46,
+    "percent": 0.5945303210463715
    },
-   "since_percent": 0.7134363852556502,
-   "since": 0.7134363852556502,
+   "since_percent": 0.5945303210463715,
+   "since": 0.5945303210463715,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1013,19 +1013,19 @@
    "first_day": "2026-11-09",
    "first_price": 177.88,
    "first_percent": 4.88,
-   "episodes": 6,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 200.51,
-   "latest_percent": 9.091403699673538,
+   "latest_price": 215.13,
+   "latest_percent": 17.04570184983676,
    "latest": {
     "day": "2026-11-11",
-    "price": 200.51,
-    "percent": 9.091403699673538
+    "price": 215.13,
+    "percent": 17.04570184983676
    },
-   "since_percent": 12.722059815606034,
-   "since": 12.722059815606034,
+   "since_percent": 20.94108387677085,
+   "since": 20.94108387677085,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1066,19 +1066,19 @@
    "first_day": "2026-11-09",
    "first_price": 4.32,
    "first_percent": 1.17,
-   "episodes": 16,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.31,
-   "latest_percent": -1.5981735159817378,
+   "latest_price": 4.26,
+   "latest_percent": -2.73972602739726,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.31,
-    "percent": -1.5981735159817378
+    "price": 4.26,
+    "percent": -2.73972602739726
    },
-   "since_percent": -0.23148148148149916,
-   "since": -0.23148148148149916,
+   "since_percent": -1.388888888888895,
+   "since": -1.388888888888895,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1118,19 +1118,19 @@
    "first_day": "2026-11-09",
    "first_price": 41.51,
    "first_percent": 9.99,
-   "episodes": 17,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 41.28,
-   "latest_percent": -3.9999999999999925,
+   "latest_price": 42.86,
+   "latest_percent": -0.32558139534883956,
    "latest": {
     "day": "2026-11-11",
-    "price": 41.28,
-    "percent": -3.9999999999999925
+    "price": 42.86,
+    "percent": -0.32558139534883956
    },
-   "since_percent": -0.5540833534088074,
-   "since": -0.5540833534088074,
+   "since_percent": 3.2522283787039363,
+   "since": 3.2522283787039363,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1170,7 +1170,7 @@
    "first_day": "2026-11-09",
    "first_price": 5.4,
    "first_percent": 10.09,
-   "episodes": 60,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
@@ -1226,15 +1226,15 @@
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 10.78,
-   "latest_percent": -6.988783433994827,
+   "latest_price": 11.0,
+   "latest_percent": -5.090595340811044,
    "latest": {
     "day": "2026-11-11",
-    "price": 10.78,
-    "percent": -6.988783433994827
+    "price": 11.0,
+    "percent": -5.090595340811044
    },
-   "since_percent": 0.3724394785847185,
-   "since": 0.3724394785847185,
+   "since_percent": 2.4208566108007368,
+   "since": 2.4208566108007368,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1274,19 +1274,19 @@
    "first_day": "2026-11-09",
    "first_price": 11.1,
    "first_percent": 10.01,
-   "episodes": 53,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.91,
-   "latest_percent": -2.4570024570024662,
+   "latest_price": 12.0,
+   "latest_percent": -1.7199017199017286,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.91,
-    "percent": -2.4570024570024662
+    "price": 12.0,
+    "percent": -1.7199017199017286
    },
-   "since_percent": 7.297297297297312,
-   "since": 7.297297297297312,
+   "since_percent": 8.108108108108114,
+   "since": 8.108108108108114,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1331,15 +1331,15 @@
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.08,
-   "latest_percent": -3.949447077409163,
+   "latest_price": 6.01,
+   "latest_percent": -5.055292259083732,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.08,
-    "percent": -3.949447077409163
+    "price": 6.01,
+    "percent": -5.055292259083732
    },
-   "since_percent": -1.6181229773462702,
-   "since": -1.6181229773462702,
+   "since_percent": -2.750809061488668,
+   "since": -2.750809061488668,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1379,19 +1379,19 @@
    "first_day": "2026-11-09",
    "first_price": 13.56,
    "first_percent": 2.26,
-   "episodes": 22,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 13.52,
-   "latest_percent": -1.3858497447118978,
+   "latest_price": 13.76,
+   "latest_percent": 0.3646973012399579,
    "latest": {
     "day": "2026-11-11",
-    "price": 13.52,
-    "percent": -1.3858497447118978
+    "price": 13.76,
+    "percent": 0.3646973012399579
    },
-   "since_percent": -0.2949852507374673,
-   "since": -0.2949852507374673,
+   "since_percent": 1.4749262536873031,
+   "since": 1.4749262536873031,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1421,7 +1421,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "已进入买区"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz002543",
@@ -1431,19 +1431,19 @@
    "first_day": "2026-11-09",
    "first_price": 7.18,
    "first_percent": 4.82,
-   "episodes": 16,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T14:00:59.153904+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 7.19,
-   "latest_percent": -0.1388888888888884,
+   "latest_price": 7.23,
+   "latest_percent": 0.4166666666666652,
    "latest": {
     "day": "2026-11-11",
-    "price": 7.19,
-    "percent": -0.1388888888888884
+    "price": 7.23,
+    "percent": 0.4166666666666652
    },
-   "since_percent": 0.1392757660167332,
-   "since": 0.1392757660167332,
+   "since_percent": 0.6963788300835771,
+   "since": 0.6963788300835771,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1483,7 +1483,7 @@
    "first_day": "2026-11-09",
    "first_price": 4.37,
    "first_percent": 9.97,
-   "episodes": 4,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
@@ -1537,19 +1537,19 @@
    "first_day": "2026-11-09",
    "first_price": 4.48,
    "first_percent": 1.79,
-   "episodes": 45,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.45,
-   "latest_percent": -1.1111111111111072,
+   "latest_price": 4.54,
+   "latest_percent": 0.8888888888888946,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.45,
-    "percent": -1.1111111111111072
+    "price": 4.54,
+    "percent": 0.8888888888888946
    },
-   "since_percent": -0.6696428571428603,
-   "since": -0.6696428571428603,
+   "since_percent": 1.3392857142856984,
+   "since": 1.3392857142856984,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1579,7 +1579,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "低于买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sz000525",
@@ -1589,19 +1589,19 @@
    "first_day": "2026-11-09",
    "first_price": 5.52,
    "first_percent": 9.96,
-   "episodes": 15,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T14:31:44.612416+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 5.26,
-   "latest_percent": -3.663003663003661,
+   "latest_price": 5.19,
+   "latest_percent": -4.945054945054938,
    "latest": {
     "day": "2026-11-11",
-    "price": 5.26,
-    "percent": -3.663003663003661
+    "price": 5.19,
+    "percent": -4.945054945054938
    },
-   "since_percent": -4.710144927536231,
-   "since": -4.710144927536231,
+   "since_percent": -5.978260869565199,
+   "since": -5.978260869565199,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1643,19 +1643,19 @@
    "first_day": "2026-11-09",
    "first_price": 34.91,
    "first_percent": 0.23,
-   "episodes": 9,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T14:31:44.612416+08:00",
    "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 36.95,
-   "latest_percent": 3.9381153305204197,
+   "latest_price": 36.48,
+   "latest_percent": 2.6160337552742607,
    "latest": {
     "day": "2026-11-11",
-    "price": 36.95,
-    "percent": 3.9381153305204197
+    "price": 36.48,
+    "percent": 2.6160337552742607
    },
-   "since_percent": 5.843597822973368,
-   "since": 5.843597822973368,
+   "since_percent": 4.497278716700093,
+   "since": 4.497278716700093,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1690,7 +1690,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "高于追高上限"
+   "zone": "等待回踩"
   },
   {
    "code": "sz000530",
@@ -1700,19 +1700,19 @@
    "first_day": "2026-11-09",
    "first_price": 9.57,
    "first_percent": 10.0,
-   "episodes": 27,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.04,
-   "latest_percent": 4.843304843304841,
+   "latest_price": 11.17,
+   "latest_percent": 6.077872744539414,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.04,
-    "percent": 4.843304843304841
+    "price": 11.17,
+    "percent": 6.077872744539414
    },
-   "since_percent": 15.3605015673981,
-   "since": 15.3605015673981,
+   "since_percent": 16.718913270637415,
+   "since": 16.718913270637415,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1810,15 +1810,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 12.82,
-   "latest_percent": -2.9523088569265776,
+   "latest_price": 12.72,
+   "latest_percent": -3.70931112793339,
    "latest": {
     "day": "2026-11-11",
-    "price": 12.82,
-    "percent": -2.9523088569265776
+    "price": 12.72,
+    "percent": -3.70931112793339
    },
-   "since_percent": 3.4705407586763437,
-   "since": 3.4705407586763437,
+   "since_percent": 2.6634382566586012,
+   "since": 2.6634382566586012,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1862,15 +1862,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 13.92,
-   "latest_percent": -0.1434720229555153,
+   "latest_price": 13.93,
+   "latest_percent": -0.0717360114777632,
    "latest": {
     "day": "2026-11-11",
-    "price": 13.92,
-    "percent": -0.1434720229555153
+    "price": 13.93,
+    "percent": -0.0717360114777632
    },
-   "since_percent": 0.28818443804032867,
-   "since": 0.28818443804032867,
+   "since_percent": 0.36023054755043304,
+   "since": 0.36023054755043304,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1910,19 +1910,19 @@
    "first_day": "2026-11-06",
    "first_price": 3.81,
    "first_percent": 10.12,
-   "episodes": 15,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.46,
-   "latest_percent": -3.2537960954446943,
+   "latest_price": 4.41,
+   "latest_percent": -4.338394793926248,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.46,
-    "percent": -3.2537960954446943
+    "price": 4.41,
+    "percent": -4.338394793926248
    },
-   "since_percent": 17.06036745406825,
-   "since": 17.06036745406825,
+   "since_percent": 15.748031496062985,
+   "since": 15.748031496062985,
    "returns": {
     "T+1": {
      "n": 1,
@@ -1968,15 +1968,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.07,
-   "latest_percent": -5.141388174807194,
+   "latest_price": 10.63,
+   "latest_percent": -8.911739502999138,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.07,
-    "percent": -5.141388174807194
+    "price": 10.63,
+    "percent": -8.911739502999138
    },
-   "since_percent": 0.09041591320071429,
-   "since": 0.09041591320071429,
+   "since_percent": -3.887884267631103,
+   "since": -3.887884267631103,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2006,7 +2006,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sz000333",
@@ -2020,15 +2020,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 88.26,
-   "latest_percent": -0.30498136225007855,
+   "latest_price": 87.87,
+   "latest_percent": -0.7455099966113155,
    "latest": {
     "day": "2026-11-11",
-    "price": 88.26,
-    "percent": -0.30498136225007855
+    "price": 87.87,
+    "percent": -0.7455099966113155
    },
-   "since_percent": -1.4955357142857006,
-   "since": -1.4955357142857006,
+   "since_percent": -1.9308035714285632,
+   "since": -1.9308035714285632,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2072,15 +2072,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 13.34,
-   "latest_percent": -0.521998508575694,
+   "latest_price": 13.2,
+   "latest_percent": -1.5659955257270708,
    "latest": {
     "day": "2026-11-11",
-    "price": 13.34,
-    "percent": -0.521998508575694
+    "price": 13.2,
+    "percent": -1.5659955257270708
    },
-   "since_percent": -2.8404952658412252,
-   "since": -2.8404952658412252,
+   "since_percent": -3.86016023306629,
+   "since": -3.86016023306629,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2124,15 +2124,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 44.6,
-   "latest_percent": 0.06730984967466824,
+   "latest_price": 44.15,
+   "latest_percent": -0.9423378954453665,
    "latest": {
     "day": "2026-11-11",
-    "price": 44.6,
-    "percent": 0.06730984967466824
+    "price": 44.15,
+    "percent": -0.9423378954453665
    },
-   "since_percent": 0.45045045045044585,
-   "since": 0.45045045045044585,
+   "since_percent": -0.5630630630630629,
+   "since": -0.5630630630630629,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2162,7 +2162,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sz003816",
@@ -2176,15 +2176,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.65,
-   "latest_percent": -0.6410256410256276,
+   "latest_price": 4.6,
+   "latest_percent": -1.7094017094017144,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.65,
-    "percent": -0.6410256410256276
+    "price": 4.6,
+    "percent": -1.7094017094017144
    },
-   "since_percent": -2.1052631578947323,
-   "since": -2.1052631578947323,
+   "since_percent": -3.157894736842115,
+   "since": -3.157894736842115,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2228,15 +2228,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 2.92,
-   "latest_percent": 3.9145907473309594,
+   "latest_price": 2.91,
+   "latest_percent": 3.558718861209975,
    "latest": {
     "day": "2026-11-11",
-    "price": 2.92,
-    "percent": 3.9145907473309594
+    "price": 2.91,
+    "percent": 3.558718861209975
    },
-   "since_percent": 25.86206896551724,
-   "since": 25.86206896551724,
+   "since_percent": 25.43103448275863,
+   "since": 25.43103448275863,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2280,15 +2280,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 21.08,
-   "latest_percent": -1.8164881229622787,
+   "latest_price": 21.05,
+   "latest_percent": -1.956217978574748,
    "latest": {
     "day": "2026-11-11",
-    "price": 21.08,
-    "percent": -1.8164881229622787
+    "price": 21.05,
+    "percent": -1.956217978574748
    },
-   "since_percent": -2.4976873265495025,
-   "since": -2.4976873265495025,
+   "since_percent": -2.6364477335800163,
+   "since": -2.6364477335800163,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2332,15 +2332,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.62,
-   "latest_percent": -0.8532423208191253,
+   "latest_price": 11.73,
+   "latest_percent": 0.08532423208191808,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.62,
-    "percent": -0.8532423208191253
+    "price": 11.73,
+    "percent": 0.08532423208191808
    },
-   "since_percent": -3.6484245439469376,
-   "since": -3.6484245439469376,
+   "since_percent": -2.736318407960203,
+   "since": -2.736318407960203,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2370,7 +2370,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "低于买区"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002388",
@@ -2384,15 +2384,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 7.08,
-   "latest_percent": 2.3121387283236983,
+   "latest_price": 7.12,
+   "latest_percent": 2.8901734104046284,
    "latest": {
     "day": "2026-11-11",
-    "price": 7.08,
-    "percent": 2.3121387283236983
+    "price": 7.12,
+    "percent": 2.8901734104046284
    },
-   "since_percent": 6.146926536731634,
-   "since": 6.146926536731634,
+   "since_percent": 6.746626686656665,
+   "since": 6.746626686656665,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2436,15 +2436,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 8.18,
-   "latest_percent": -2.270011947431294,
+   "latest_price": 8.28,
+   "latest_percent": -1.0752688172043001,
    "latest": {
     "day": "2026-11-11",
-    "price": 8.18,
-    "percent": -2.270011947431294
+    "price": 8.28,
+    "percent": -1.0752688172043001
    },
-   "since_percent": 1.2376237623762387,
-   "since": 1.2376237623762387,
+   "since_percent": 2.4752475247524774,
+   "since": 2.4752475247524774,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2484,19 +2484,19 @@
    "first_day": "2026-11-06",
    "first_price": 5.4,
    "first_percent": 9.98,
-   "episodes": 36,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.09,
-   "latest_percent": 4.10256410256411,
+   "latest_price": 5.92,
+   "latest_percent": 1.1965811965811923,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.09,
-    "percent": 4.10256410256411
+    "price": 5.92,
+    "percent": 1.1965811965811923
    },
-   "since_percent": 12.777777777777777,
-   "since": 12.777777777777777,
+   "since_percent": 9.62962962962961,
+   "since": 9.62962962962961,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2542,15 +2542,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 26.46,
-   "latest_percent": 0.4174573055028441,
+   "latest_price": 26.52,
+   "latest_percent": 0.6451612903225712,
    "latest": {
     "day": "2026-11-11",
-    "price": 26.46,
-    "percent": 0.4174573055028441
+    "price": 26.52,
+    "percent": 0.6451612903225712
    },
-   "since_percent": 5.418326693227082,
-   "since": 5.418326693227082,
+   "since_percent": 5.657370517928273,
+   "since": 5.657370517928273,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2594,15 +2594,15 @@
    "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 22.66,
-   "latest_percent": 3.5175879396984966,
+   "latest_price": 21.83,
+   "latest_percent": -0.2740977615349527,
    "latest": {
     "day": "2026-11-11",
-    "price": 22.66,
-    "percent": 3.5175879396984966
+    "price": 21.83,
+    "percent": -0.2740977615349527
    },
-   "since_percent": 9.257473481195767,
-   "since": 9.257473481195767,
+   "since_percent": 5.255544840887172,
+   "since": 5.255544840887172,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2636,7 +2636,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "高于追高上限"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002436",
@@ -2646,19 +2646,19 @@
    "first_day": "2026-11-09",
    "first_price": 26.58,
    "first_percent": 3.63,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 28.3,
-   "latest_percent": 2.573396158028274,
+   "latest_price": 29.73,
+   "latest_percent": 7.756433490395076,
    "latest": {
     "day": "2026-11-11",
-    "price": 28.3,
-    "percent": 2.573396158028274
+    "price": 29.73,
+    "percent": 7.756433490395076
    },
-   "since_percent": 6.471030850263371,
-   "since": 6.471030850263371,
+   "since_percent": 11.851015801354414,
+   "since": 11.851015801354414,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2698,19 +2698,19 @@
    "first_day": "2026-11-09",
    "first_price": 50.76,
    "first_percent": 20.0,
-   "episodes": 9,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 50.15,
-   "latest_percent": -1.3377926421404673,
+   "latest_price": 51.09,
+   "latest_percent": 0.5115089514066584,
    "latest": {
     "day": "2026-11-11",
-    "price": 50.15,
-    "percent": -1.3377926421404673
+    "price": 51.09,
+    "percent": 0.5115089514066584
    },
-   "since_percent": -1.2017336485421581,
-   "since": -1.2017336485421581,
+   "since_percent": 0.650118203309713,
+   "since": 0.650118203309713,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2756,15 +2756,15 @@
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 70.0,
-   "latest_percent": 4.446433900328262,
+   "latest_price": 73.71,
+   "latest_percent": 9.982094897045645,
    "latest": {
     "day": "2026-11-11",
-    "price": 70.0,
-    "percent": 4.446433900328262
+    "price": 73.71,
+    "percent": 9.982094897045645
    },
-   "since_percent": 5.788121505213839,
-   "since": 5.788121505213839,
+   "since_percent": 11.39489194499017,
+   "since": 11.39489194499017,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2804,19 +2804,19 @@
    "first_day": "2026-11-09",
    "first_price": 241.6,
    "first_percent": 0.88,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 247.48,
-   "latest_percent": 1.1898433986179846,
+   "latest_price": 259.44,
+   "latest_percent": 6.080058878848593,
    "latest": {
     "day": "2026-11-11",
-    "price": 247.48,
-    "percent": 1.1898433986179846
+    "price": 259.44,
+    "percent": 6.080058878848593
    },
-   "since_percent": 2.4337748344370747,
-   "since": 2.4337748344370747,
+   "since_percent": 7.384105960264908,
+   "since": 7.384105960264908,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2856,19 +2856,19 @@
    "first_day": "2026-11-09",
    "first_price": 94.35,
    "first_percent": 3.34,
-   "episodes": 6,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 98.78,
-   "latest_percent": 4.551227773073663,
+   "latest_price": 103.93,
+   "latest_percent": 10.002116850127019,
    "latest": {
     "day": "2026-11-11",
-    "price": 98.78,
-    "percent": 4.551227773073663
+    "price": 103.93,
+    "percent": 10.002116850127019
    },
-   "since_percent": 4.695283518812943,
-   "since": 4.695283518812943,
+   "since_percent": 10.153683094859577,
+   "since": 10.153683094859577,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2910,19 +2910,19 @@
    "first_day": "2026-11-09",
    "first_price": 216.02,
    "first_percent": 20.0,
-   "episodes": 8,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 229.98,
-   "latest_percent": 5.080873617837867,
+   "latest_price": 236.02,
+   "latest_percent": 7.840628712418907,
    "latest": {
     "day": "2026-11-11",
-    "price": 229.98,
-    "percent": 5.080873617837867
+    "price": 236.02,
+    "percent": 7.840628712418907
    },
-   "since_percent": 6.462364595870751,
-   "since": 6.462364595870751,
+   "since_percent": 9.258401999814826,
+   "since": 9.258401999814826,
    "returns": {
     "T+1": {
      "n": 1,
@@ -2965,19 +2965,19 @@
    "first_day": "2026-11-09",
    "first_price": 53.8,
    "first_percent": 10.0,
-   "episodes": 4,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 61.58,
-   "latest_percent": 7.469458987783595,
+   "latest_price": 63.03,
+   "latest_percent": 10.000000000000009,
    "latest": {
     "day": "2026-11-11",
-    "price": 61.58,
-    "percent": 7.469458987783595
+    "price": 63.03,
+    "percent": 10.000000000000009
    },
-   "since_percent": 14.460966542750931,
-   "since": 14.460966542750931,
+   "since_percent": 17.1561338289963,
+   "since": 17.1561338289963,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3023,15 +3023,15 @@
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 109.3,
-   "latest_percent": 1.9589552238805874,
+   "latest_price": 114.58,
+   "latest_percent": 6.884328358208958,
    "latest": {
     "day": "2026-11-11",
-    "price": 109.3,
-    "percent": 1.9589552238805874
+    "price": 114.58,
+    "percent": 6.884328358208958
    },
-   "since_percent": 2.5328330206378924,
-   "since": 2.5328330206378924,
+   "since_percent": 7.485928705440914,
+   "since": 7.485928705440914,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3071,19 +3071,19 @@
    "first_day": "2026-11-09",
    "first_price": 146.0,
    "first_percent": 3.11,
-   "episodes": 16,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 151.88,
-   "latest_percent": 3.8850889192886484,
+   "latest_price": 158.85,
+   "latest_percent": 8.652530779753764,
    "latest": {
     "day": "2026-11-11",
-    "price": 151.88,
-    "percent": 3.8850889192886484
+    "price": 158.85,
+    "percent": 8.652530779753764
    },
-   "since_percent": 4.027397260273968,
-   "since": 4.027397260273968,
+   "since_percent": 8.801369863013697,
+   "since": 8.801369863013697,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3122,23 +3122,23 @@
    "code": "sh600498",
    "name": "烽火通信",
    "source": "方向候选",
-   "category": "名称辈",
+   "category": "概念",
    "first_day": "2026-11-09",
    "first_price": 29.7,
    "first_percent": 10.0,
-   "episodes": 8,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
-   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 29.49,
-   "latest_percent": 0.61412487205732,
+   "latest_price": 30.29,
+   "latest_percent": 3.3435687478676313,
    "latest": {
     "day": "2026-11-11",
-    "price": 29.49,
-    "percent": 0.61412487205732
+    "price": 30.29,
+    "percent": 3.3435687478676313
    },
-   "since_percent": -0.7070707070707116,
-   "since": -0.7070707070707116,
+   "since_percent": 1.9865319865319808,
+   "since": 1.9865319865319808,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3159,15 +3159,17 @@
    ],
    "missing": [],
    "tags": {
-    "concept": [],
+    "concept": [
+     "F5G概念"
+    ],
     "theme": [
      "通信"
     ],
     "event": [],
     "other": []
    },
-   "entry_tag": "涨停待回踩",
-   "state": "涨停待回踩",
+   "entry_tag": "可建仓",
+   "state": "可建仓",
    "zone": "高于追高上限"
   },
   {
@@ -3178,19 +3180,19 @@
    "first_day": "2026-11-09",
    "first_price": 124.68,
    "first_percent": 2.2,
-   "episodes": 8,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
    "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 133.86,
-   "latest_percent": 5.893521082192876,
+   "latest_price": 143.91,
+   "latest_percent": 13.84384146823827,
    "latest": {
     "day": "2026-11-11",
-    "price": 133.86,
-    "percent": 5.893521082192876
+    "price": 143.91,
+    "percent": 13.84384146823827
    },
-   "since_percent": 7.362848893166518,
-   "since": 7.362848893166518,
+   "since_percent": 15.42348411934551,
+   "since": 15.42348411934551,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3230,19 +3232,19 @@
    "first_day": "2026-11-09",
    "first_price": 288.92,
    "first_percent": 2.82,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 302.64,
-   "latest_percent": 3.093064450197569,
+   "latest_price": 318.4,
+   "latest_percent": 8.461643275650621,
    "latest": {
     "day": "2026-11-11",
-    "price": 302.64,
-    "percent": 3.093064450197569
+    "price": 318.4,
+    "percent": 8.461643275650621
    },
-   "since_percent": 4.748719368683352,
-   "since": 4.748719368683352,
+   "since_percent": 10.203516544372127,
+   "since": 10.203516544372127,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3286,15 +3288,15 @@
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.42,
-   "latest_percent": 0.46948356807512415,
+   "latest_price": 6.39,
+   "latest_percent": 0.0,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.42,
-    "percent": 0.46948356807512415
+    "price": 6.39,
+    "percent": 0.0
    },
-   "since_percent": -1.5337423312883347,
-   "since": -1.5337423312883347,
+   "since_percent": -1.9938650306748462,
+   "since": -1.9938650306748462,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3324,7 +3326,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "低于买区"
   },
   {
    "code": "sh603706",
@@ -3334,7 +3336,7 @@
    "first_day": "2026-11-09",
    "first_price": 20.19,
    "first_percent": 10.03,
-   "episodes": 19,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "latest_day": "2026-11-11",
@@ -3388,19 +3390,19 @@
    "first_day": "2026-11-09",
    "first_price": 6.22,
    "first_percent": 4.89,
-   "episodes": 41,
+   "episodes": 3,
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.22,
-   "latest_percent": 0.9740259740259605,
+   "latest_price": 6.24,
+   "latest_percent": 1.2987012987013102,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.22,
-    "percent": 0.9740259740259605
+    "price": 6.24,
+    "percent": 1.2987012987013102
    },
-   "since_percent": 0.0,
-   "since": 0.0,
+   "since_percent": 0.3215434083601254,
+   "since": 0.3215434083601254,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3447,7 +3449,7 @@
    "first_day": "2026-11-09",
    "first_price": 21.97,
    "first_percent": 10.02,
-   "episodes": 9,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
    "last_episode_at": "2026-11-10T15:01:00.711191+08:00",
    "latest_day": "2026-11-11",
@@ -3503,15 +3505,15 @@
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.71,
-   "latest_percent": -2.079002079002068,
+   "latest_price": 4.68,
+   "latest_percent": -2.7027027027026973,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.71,
-    "percent": -2.079002079002068
+    "price": 4.68,
+    "percent": -2.7027027027026973
    },
-   "since_percent": -1.2578616352201144,
-   "since": -1.2578616352201144,
+   "since_percent": -1.8867924528301883,
+   "since": -1.8867924528301883,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3551,19 +3553,19 @@
    "first_day": "2026-11-09",
    "first_price": 32.5,
    "first_percent": 3.5,
-   "episodes": 15,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 34.08,
-   "latest_percent": 1.8225276366895748,
+   "latest_price": 35.59,
+   "latest_percent": 6.334030475052299,
    "latest": {
     "day": "2026-11-11",
-    "price": 34.08,
-    "percent": 1.8225276366895748
+    "price": 35.59,
+    "percent": 6.334030475052299
    },
-   "since_percent": 4.8615384615384505,
-   "since": 4.8615384615384505,
+   "since_percent": 9.507692307692327,
+   "since": 9.507692307692327,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3603,19 +3605,19 @@
    "first_day": "2026-11-09",
    "first_price": 41.06,
    "first_percent": 9.99,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
    "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 40.96,
-   "latest_percent": 0.9115545700911554,
+   "latest_price": 42.09,
+   "latest_percent": 3.695491500369541,
    "latest": {
     "day": "2026-11-11",
-    "price": 40.96,
-    "percent": 0.9115545700911554
+    "price": 42.09,
+    "percent": 3.695491500369541
    },
-   "since_percent": -0.243546030199715,
-   "since": -0.243546030199715,
+   "since_percent": 2.508524111056998,
+   "since": 2.508524111056998,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3655,19 +3657,19 @@
    "first_day": "2026-11-09",
    "first_price": 7.83,
    "first_percent": 9.97,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
    "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 7.72,
-   "latest_percent": -5.7387057387057405,
+   "latest_price": 8.02,
+   "latest_percent": -2.0757020757020794,
    "latest": {
     "day": "2026-11-11",
-    "price": 7.72,
-    "percent": -5.7387057387057405
+    "price": 8.02,
+    "percent": -2.0757020757020794
    },
-   "since_percent": -1.4048531289910682,
-   "since": -1.4048531289910682,
+   "since_percent": 2.4265644955300036,
+   "since": 2.4265644955300036,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3711,15 +3713,15 @@
    "first_episode_at": "2026-11-09T11:31:13.575753+08:00",
    "last_episode_at": "2026-11-09T11:31:13.575753+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 798.12,
-   "latest_percent": 6.312522478121285,
+   "latest_price": 838.16,
+   "latest_percent": 11.645997895381832,
    "latest": {
     "day": "2026-11-11",
-    "price": 798.12,
-    "percent": 6.312522478121285
+    "price": 838.16,
+    "percent": 11.645997895381832
    },
-   "since_percent": 3.113614635280748,
-   "since": 3.113614635280748,
+   "since_percent": 8.286607581199457,
+   "since": 8.286607581199457,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3759,19 +3761,19 @@
    "first_day": "2026-11-09",
    "first_price": 12.22,
    "first_percent": 9.99,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-09T12:02:16.011381+08:00",
    "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 12.11,
-   "latest_percent": -2.41740531829171,
+   "latest_price": 13.65,
+   "latest_percent": 9.991941982272357,
    "latest": {
     "day": "2026-11-11",
-    "price": 12.11,
-    "percent": -2.41740531829171
+    "price": 13.65,
+    "percent": 9.991941982272357
    },
-   "since_percent": -0.9001636661211232,
-   "since": -0.9001636661211232,
+   "since_percent": 11.702127659574458,
+   "since": 11.702127659574458,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3811,19 +3813,19 @@
    "first_day": "2026-11-09",
    "first_price": 16.4,
    "first_percent": 9.99,
-   "episodes": 17,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 16.1,
-   "latest_percent": -4.507710557532607,
+   "latest_price": 16.24,
+   "latest_percent": -3.677342823250307,
    "latest": {
     "day": "2026-11-11",
-    "price": 16.1,
-    "percent": -4.507710557532607
+    "price": 16.24,
+    "percent": -3.677342823250307
    },
-   "since_percent": -1.8292682926829062,
-   "since": -1.8292682926829062,
+   "since_percent": -0.9756097560975618,
+   "since": -0.9756097560975618,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3863,19 +3865,19 @@
    "first_day": "2026-11-09",
    "first_price": 4.73,
    "first_percent": 10.0,
-   "episodes": 14,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T15:01:29.808325+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.78,
-   "latest_percent": -4.016064257028118,
+   "latest_price": 4.76,
+   "latest_percent": -4.417670682730934,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.78,
-    "percent": -4.016064257028118
+    "price": 4.76,
+    "percent": -4.417670682730934
    },
-   "since_percent": 1.0570824524312794,
-   "since": 1.0570824524312794,
+   "since_percent": 0.6342494714587588,
+   "since": 0.6342494714587588,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3915,19 +3917,19 @@
    "first_day": "2026-11-09",
    "first_price": 11.3,
    "first_percent": 0.09,
-   "episodes": 13,
+   "episodes": 2,
    "first_episode_at": "2026-11-09T15:30:36.326366+08:00",
    "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.39,
-   "latest_percent": -1.5557476231633505,
+   "latest_price": 11.52,
+   "latest_percent": -0.4321521175453813,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.39,
-    "percent": -1.5557476231633505
+    "price": 11.52,
+    "percent": -0.4321521175453813
    },
-   "since_percent": 0.7964601769911539,
-   "since": 0.7964601769911539,
+   "since_percent": 1.9469026548672552,
+   "since": 1.9469026548672552,
    "returns": {
     "T+1": {
      "n": 1,
@@ -3962,24 +3964,24 @@
   {
    "code": "sh688017",
    "name": "绿的谐波",
-   "source": "方向候选",
-   "category": "题材",
+   "source": "建仓清单",
+   "category": "行业",
    "first_day": "2026-11-10",
    "first_price": 306.23,
    "first_percent": 3.39,
    "episodes": 2,
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
-   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 305.65,
-   "latest_percent": 0.9545514599022198,
+   "latest_price": 302.77,
+   "latest_percent": 0.003302946228034287,
    "latest": {
     "day": "2026-11-11",
-    "price": 305.65,
-    "percent": 0.9545514599022198
+    "price": 302.77,
+    "percent": 0.003302946228034287
    },
-   "since_percent": -0.18940012408974471,
-   "since": -0.18940012408974471,
+   "since_percent": -1.1298697057767204,
+   "since": -1.1298697057767204,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4013,19 +4015,19 @@
    "first_day": "2026-11-10",
    "first_price": 28.51,
    "first_percent": 9.99,
-   "episodes": 5,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 30.78,
-   "latest_percent": 7.962118554893016,
+   "latest_price": 30.16,
+   "latest_percent": 5.787443002455284,
    "latest": {
     "day": "2026-11-11",
-    "price": 30.78,
-    "percent": 7.962118554893016
+    "price": 30.16,
+    "percent": 5.787443002455284
    },
-   "since_percent": 7.962118554893016,
-   "since": 7.962118554893016,
+   "since_percent": 5.787443002455284,
+   "since": 5.787443002455284,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4057,19 +4059,19 @@
    "first_day": "2026-11-10",
    "first_price": 78.76,
    "first_percent": 1.17,
-   "episodes": 37,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 78.9,
-   "latest_percent": -0.8793969849246075,
+   "latest_price": 80.24,
+   "latest_percent": 0.8040201005025116,
    "latest": {
     "day": "2026-11-11",
-    "price": 78.9,
-    "percent": -0.8793969849246075
+    "price": 80.24,
+    "percent": 0.8040201005025116
    },
-   "since_percent": 0.17775520568816816,
-   "since": 0.17775520568816816,
+   "since_percent": 1.8791264601320412,
+   "since": 1.8791264601320412,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4092,7 +4094,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "已进入买区"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz300053",
@@ -4106,15 +4108,15 @@
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.79,
-   "latest_percent": -0.16934801016089684,
+   "latest_price": 11.8,
+   "latest_percent": -0.08467400508044287,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.79,
-    "percent": -0.16934801016089684
+    "price": 11.8,
+    "percent": -0.08467400508044287
    },
-   "since_percent": -2.23880597014926,
-   "since": -2.23880597014926,
+   "since_percent": -2.1558872305140975,
+   "since": -2.1558872305140975,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4150,15 +4152,15 @@
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 28.71,
-   "latest_percent": -1.1703958691910543,
+   "latest_price": 29.21,
+   "latest_percent": 0.5507745266781328,
    "latest": {
     "day": "2026-11-11",
-    "price": 28.71,
-    "percent": -1.1703958691910543
+    "price": 29.21,
+    "percent": 0.5507745266781328
    },
-   "since_percent": 4.704595185995619,
-   "since": 4.704595185995619,
+   "since_percent": 6.528081692195475,
+   "since": 6.528081692195475,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4194,15 +4196,15 @@
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 43.36,
-   "latest_percent": -4.640422256432808,
+   "latest_price": 44.04,
+   "latest_percent": -3.144930723553996,
    "latest": {
     "day": "2026-11-11",
-    "price": 43.36,
-    "percent": -4.640422256432808
+    "price": 44.04,
+    "percent": -3.144930723553996
    },
-   "since_percent": -6.025140875596014,
-   "since": -6.025140875596014,
+   "since_percent": -4.551365409622887,
+   "since": -4.551365409622887,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4238,15 +4240,15 @@
    "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 36.33,
-   "latest_percent": 2.7722772277227525,
+   "latest_price": 36.31,
+   "latest_percent": 2.7157001414427118,
    "latest": {
     "day": "2026-11-11",
-    "price": 36.33,
-    "percent": 2.7722772277227525
+    "price": 36.31,
+    "percent": 2.7157001414427118
    },
-   "since_percent": 2.5402201524131973,
-   "since": 2.5402201524131973,
+   "since_percent": 2.4837708156929317,
+   "since": 2.4837708156929317,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4278,19 +4280,19 @@
    "first_day": "2026-11-10",
    "first_price": 16.05,
    "first_percent": 3.62,
-   "episodes": 9,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-11T07:06:01.027759+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 16.52,
-   "latest_percent": 4.82233502538072,
+   "latest_price": 16.88,
+   "latest_percent": 7.106598984771573,
    "latest": {
     "day": "2026-11-11",
-    "price": 16.52,
-    "percent": 4.82233502538072
+    "price": 16.88,
+    "percent": 7.106598984771573
    },
-   "since_percent": 2.928348909657319,
-   "since": 2.928348909657319,
+   "since_percent": 5.171339563862909,
+   "since": 5.171339563862909,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4324,19 +4326,19 @@
    "first_day": "2026-11-10",
    "first_price": 793.99,
    "first_percent": 10.89,
-   "episodes": 1,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
-   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 757.6,
-   "latest_percent": -0.4480887241954723,
+   "latest_price": 761.5,
+   "latest_percent": 0.06438811579347892,
    "latest": {
     "day": "2026-11-11",
-    "price": 757.6,
-    "percent": -0.4480887241954723
+    "price": 761.5,
+    "percent": 0.06438811579347892
    },
-   "since_percent": -4.5831811483771805,
-   "since": -4.5831811483771805,
+   "since_percent": -4.091991083011126,
+   "since": -4.091991083011126,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4356,31 +4358,31 @@
      "机器人"
     ]
    },
-   "entry_tag": "高于追高上限",
-   "state": "高于追高上限",
-   "zone": "等待回踩"
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
   },
   {
    "code": "sz300433",
    "name": "蓝思科技",
    "source": "方向候选",
-   "category": "概念",
+   "category": "题材",
    "first_day": "2026-11-10",
    "first_price": 28.99,
    "first_percent": 0.62,
-   "episodes": 10,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
-   "last_episode_at": "2026-11-10T23:07:43.781274+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 28.63,
-   "latest_percent": -1.8512170037710107,
+   "latest_price": 29.12,
+   "latest_percent": -0.17140898183064524,
    "latest": {
     "day": "2026-11-11",
-    "price": 28.63,
-    "percent": -1.8512170037710107
+    "price": 29.12,
+    "percent": -0.17140898183064524
    },
-   "since_percent": -1.2418075198344258,
-   "since": -1.2418075198344258,
+   "since_percent": 0.4484304932735439,
+   "since": 0.4484304932735439,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4398,13 +4400,15 @@
      "英伟达概念",
      "苹果概念"
     ],
-    "theme": [],
+    "theme": [
+     "光通信"
+    ],
     "event": [],
     "other": []
    },
-   "entry_tag": "条件未达",
-   "state": "条件未达",
-   "zone": "低于买区"
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
   },
   {
    "code": "sz300508",
@@ -4418,15 +4422,15 @@
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 51.47,
-   "latest_percent": 3.498894027749855,
+   "latest_price": 50.75,
+   "latest_percent": 2.051075809370606,
    "latest": {
     "day": "2026-11-11",
-    "price": 51.47,
-    "percent": 3.498894027749855
+    "price": 50.75,
+    "percent": 2.051075809370606
    },
-   "since_percent": 1.2790240062967362,
-   "since": 1.2790240062967362,
+   "since_percent": -0.13774104683195176,
+   "since": -0.13774104683195176,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4462,15 +4466,15 @@
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 32.2,
-   "latest_percent": -6.0128429655574855,
+   "latest_price": 32.73,
+   "latest_percent": -4.465849387040288,
    "latest": {
     "day": "2026-11-11",
-    "price": 32.2,
-    "percent": -6.0128429655574855
+    "price": 32.73,
+    "percent": -4.465849387040288
    },
-   "since_percent": -6.585436611546259,
-   "since": -6.585436611546259,
+   "since_percent": -5.0478677110531,
+   "since": -5.0478677110531,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4492,7 +4496,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "低于买区"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002472",
@@ -4506,15 +4510,15 @@
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 44.35,
-   "latest_percent": 3.2596041909196627,
+   "latest_price": 44.55,
+   "latest_percent": 3.7252619324796177,
    "latest": {
     "day": "2026-11-11",
-    "price": 44.35,
-    "percent": 3.2596041909196627
+    "price": 44.55,
+    "percent": 3.7252619324796177
    },
-   "since_percent": -1.0486390004462276,
-   "since": -1.0486390004462276,
+   "since_percent": -0.6024096385542244,
+   "since": -0.6024096385542244,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4546,19 +4550,19 @@
    "first_day": "2026-11-10",
    "first_price": 24.73,
    "first_percent": 4.74,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 24.63,
-   "latest_percent": 1.3997529847673995,
+   "latest_price": 24.67,
+   "latest_percent": 1.5644298065047524,
    "latest": {
     "day": "2026-11-11",
-    "price": 24.63,
-    "percent": 1.3997529847673995
+    "price": 24.67,
+    "percent": 1.5644298065047524
    },
-   "since_percent": -0.4043671653861769,
-   "since": -0.4043671653861769,
+   "since_percent": -0.24262029923169948,
+   "since": -0.24262029923169948,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4594,15 +4598,15 @@
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 15.34,
-   "latest_percent": -0.19518542615484247,
+   "latest_price": 15.4,
+   "latest_percent": 0.19518542615486467,
    "latest": {
     "day": "2026-11-11",
-    "price": 15.34,
-    "percent": -0.19518542615484247
+    "price": 15.4,
+    "percent": 0.19518542615486467
    },
-   "since_percent": 0.8547008547008517,
-   "since": 0.8547008547008517,
+   "since_percent": 1.2491781722550943,
+   "since": 1.2491781722550943,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4634,19 +4638,19 @@
    "first_day": "2026-11-10",
    "first_price": 214.0,
    "first_percent": 0.94,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
    "last_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 231.1,
-   "latest_percent": -0.900514579759859,
+   "latest_price": 233.28,
+   "latest_percent": 0.03430531732420139,
    "latest": {
     "day": "2026-11-11",
-    "price": 231.1,
-    "percent": -0.900514579759859
+    "price": 233.28,
+    "percent": 0.03430531732420139
    },
-   "since_percent": 7.9906542056074725,
-   "since": 7.9906542056074725,
+   "since_percent": 9.00934579439252,
+   "since": 9.00934579439252,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4680,19 +4684,19 @@
    "first_day": "2026-11-10",
    "first_price": 856.52,
    "first_percent": 0.62,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 850.0,
-   "latest_percent": 1.4319809069212486,
+   "latest_price": 901.9,
+   "latest_percent": 7.625298329355612,
    "latest": {
     "day": "2026-11-11",
-    "price": 850.0,
-    "percent": 1.4319809069212486
+    "price": 901.9,
+    "percent": 7.625298329355612
    },
-   "since_percent": -0.7612198197356701,
-   "since": -0.7612198197356701,
+   "since_percent": 5.298183346565177,
+   "since": 5.298183346565177,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4716,7 +4720,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "高于追高上限"
   },
   {
    "code": "sh688279",
@@ -4730,15 +4734,15 @@
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "last_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 215.55,
-   "latest_percent": -0.4387990762124705,
+   "latest_price": 219.0,
+   "latest_percent": 1.1547344110854452,
    "latest": {
     "day": "2026-11-11",
-    "price": 215.55,
-    "percent": -0.4387990762124705
+    "price": 219.0,
+    "percent": 1.1547344110854452
    },
-   "since_percent": -7.1985189649976355,
-   "since": -7.1985189649976355,
+   "since_percent": -5.713178628320492,
+   "since": -5.713178628320492,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4760,7 +4764,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sh603920",
@@ -4770,19 +4774,19 @@
    "first_day": "2026-11-10",
    "first_price": 36.94,
    "first_percent": 10.01,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 38.26,
-   "latest_percent": 5.196590596645589,
+   "latest_price": 39.43,
+   "latest_percent": 8.413527632664298,
    "latest": {
     "day": "2026-11-11",
-    "price": 38.26,
-    "percent": 5.196590596645589
+    "price": 39.43,
+    "percent": 8.413527632664298
    },
-   "since_percent": 3.5733622089875405,
-   "since": 3.5733622089875405,
+   "since_percent": 6.740660530590148,
+   "since": 6.740660530590148,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4818,15 +4822,15 @@
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "last_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 17.09,
-   "latest_percent": 5.493827160493825,
+   "latest_price": 16.93,
+   "latest_percent": 4.506172839506184,
    "latest": {
     "day": "2026-11-11",
-    "price": 17.09,
-    "percent": 5.493827160493825
+    "price": 16.93,
+    "percent": 4.506172839506184
    },
-   "since_percent": 5.428747686613189,
-   "since": 5.428747686613189,
+   "since_percent": 4.441702652683532,
+   "since": 4.441702652683532,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4858,19 +4862,19 @@
    "first_day": "2026-11-10",
    "first_price": 43.21,
    "first_percent": 2.37,
-   "episodes": 7,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 43.76,
-   "latest_percent": 2.4584406462186736,
+   "latest_price": 45.49,
+   "latest_percent": 6.509014282369474,
    "latest": {
     "day": "2026-11-11",
-    "price": 43.76,
-    "percent": 2.4584406462186736
+    "price": 45.49,
+    "percent": 6.509014282369474
    },
-   "since_percent": 1.2728535061328428,
-   "since": 1.2728535061328428,
+   "since_percent": 5.276556352696127,
+   "since": 5.276556352696127,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4892,9 +4896,9 @@
      "通信线缆及配套"
     ]
    },
-   "entry_tag": "可建仓",
-   "state": "可建仓",
-   "zone": "等待回踩"
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
   },
   {
    "code": "sz002292",
@@ -4904,7 +4908,7 @@
    "first_day": "2026-11-10",
    "first_price": 9.73,
    "first_percent": 4.96,
-   "episodes": 31,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
    "last_episode_at": "2026-11-11T07:06:01.027759+08:00",
    "latest_day": "2026-11-11",
@@ -4954,15 +4958,15 @@
    "first_episode_at": "2026-11-10T11:01:05.078375+08:00",
    "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 21.81,
-   "latest_percent": 4.554170661553214,
+   "latest_price": 21.41,
+   "latest_percent": 2.6366251198465918,
    "latest": {
     "day": "2026-11-11",
-    "price": 21.81,
-    "percent": 4.554170661553214
+    "price": 21.41,
+    "percent": 2.6366251198465918
    },
-   "since_percent": 4.554170661553214,
-   "since": 4.554170661553214,
+   "since_percent": 2.6366251198465918,
+   "since": 2.6366251198465918,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -4998,15 +5002,15 @@
    "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "last_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.42,
-   "latest_percent": -0.43591979075850995,
+   "latest_price": 11.68,
+   "latest_percent": 1.8308631211856996,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.42,
-    "percent": -0.43591979075850995
+    "price": 11.68,
+    "percent": 1.8308631211856996
    },
-   "since_percent": 6.430568499534006,
-   "since": 6.430568499534006,
+   "since_percent": 8.853681267474368,
+   "since": 8.853681267474368,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5034,23 +5038,23 @@
    "code": "sz300418",
    "name": "昆仑万维",
    "source": "方向候选",
-   "category": "行业",
+   "category": "概念",
    "first_day": "2026-11-10",
    "first_price": 41.79,
    "first_percent": 4.14,
-   "episodes": 36,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
-   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 41.79,
-   "latest_percent": -0.28632784538296097,
+   "latest_price": 42.48,
+   "latest_percent": 1.3600572655690701,
    "latest": {
     "day": "2026-11-11",
-    "price": 41.79,
-    "percent": -0.28632784538296097
+    "price": 42.48,
+    "percent": 1.3600572655690701
    },
-   "since_percent": 0.0,
-   "since": 0.0,
+   "since_percent": 1.6511127063890907,
+   "since": 1.6511127063890907,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5065,7 +5069,8 @@
    "tags": {
     "concept": [
      "短剧互动游戏",
-     "网络游戏"
+     "网络游戏",
+     "游戏概念"
     ],
     "theme": [
      "短剧"
@@ -5075,9 +5080,9 @@
      "传媒"
     ]
    },
-   "entry_tag": "高于追高上限",
-   "state": "高于追高上限",
-   "zone": "高于追高上限"
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
   },
   {
    "code": "sh600373",
@@ -5087,19 +5092,19 @@
    "first_day": "2026-11-10",
    "first_price": 7.88,
    "first_percent": 1.81,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 7.91,
-   "latest_percent": 0.12658227848101333,
+   "latest_price": 7.92,
+   "latest_percent": 0.25316455696202667,
    "latest": {
     "day": "2026-11-11",
-    "price": 7.91,
-    "percent": 0.12658227848101333
+    "price": 7.92,
+    "percent": 0.25316455696202667
    },
-   "since_percent": 0.3807106598984866,
-   "since": 0.3807106598984866,
+   "since_percent": 0.50761421319796,
+   "since": 0.50761421319796,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5131,19 +5136,19 @@
    "first_day": "2026-11-10",
    "first_price": 7.66,
    "first_percent": 1.86,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 7.73,
-   "latest_percent": -0.5148005148005064,
+   "latest_price": 7.77,
+   "latest_percent": 0.0,
    "latest": {
     "day": "2026-11-11",
-    "price": 7.73,
-    "percent": -0.5148005148005064
+    "price": 7.77,
+    "percent": 0.0
    },
-   "since_percent": 0.9138381201044377,
-   "since": 0.9138381201044377,
+   "since_percent": 1.436031331592691,
+   "since": 1.436031331592691,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5165,7 +5170,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "等待回踩"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz300790",
@@ -5175,19 +5180,19 @@
    "first_day": "2026-11-10",
    "first_price": 16.72,
    "first_percent": 4.04,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
    "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 16.87,
-   "latest_percent": -1.5752625437572942,
+   "latest_price": 17.09,
+   "latest_percent": -0.29171528588098905,
    "latest": {
     "day": "2026-11-11",
-    "price": 16.87,
-    "percent": -1.5752625437572942
+    "price": 17.09,
+    "percent": -0.29171528588098905
    },
-   "since_percent": 0.8971291866028741,
-   "since": 0.8971291866028741,
+   "since_percent": 2.2129186602870776,
+   "since": 2.2129186602870776,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5219,19 +5224,19 @@
    "first_day": "2026-11-10",
    "first_price": 11.13,
    "first_percent": 14.74,
-   "episodes": 4,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T12:00:59.996592+08:00",
    "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.81,
-   "latest_percent": 4.605845881310899,
+   "latest_price": 11.95,
+   "latest_percent": 5.845881310894607,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.81,
-    "percent": 4.605845881310899
+    "price": 11.95,
+    "percent": 5.845881310894607
    },
-   "since_percent": 6.109613656783464,
-   "since": 6.109613656783464,
+   "since_percent": 7.367475292003589,
+   "since": 7.367475292003589,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5269,15 +5274,15 @@
    "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 31.73,
-   "latest_percent": -3.2621951219512058,
+   "latest_price": 31.53,
+   "latest_percent": -3.871951219512182,
    "latest": {
     "day": "2026-11-11",
-    "price": 31.73,
-    "percent": -3.2621951219512058
+    "price": 31.53,
+    "percent": -3.871951219512182
    },
-   "since_percent": -3.2621951219512058,
-   "since": -3.2621951219512058,
+   "since_percent": -3.871951219512182,
+   "since": -3.871951219512182,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5313,15 +5318,15 @@
    "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 534.27,
-   "latest_percent": -0.8186678547560611,
+   "latest_price": 547.47,
+   "latest_percent": 1.631766540432178,
    "latest": {
     "day": "2026-11-11",
-    "price": 534.27,
-    "percent": -0.8186678547560611
+    "price": 547.47,
+    "percent": 1.631766540432178
    },
-   "since_percent": -2.620978766062154,
-   "since": -2.620978766062154,
+   "since_percent": -0.21507336188826276,
+   "since": -0.21507336188826276,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5343,7 +5348,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "低于买区"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002565",
@@ -5353,19 +5358,19 @@
    "first_day": "2026-11-10",
    "first_price": 10.95,
    "first_percent": 3.89,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 10.66,
-   "latest_percent": -5.580159433126653,
+   "latest_price": 10.59,
+   "latest_percent": -6.200177147918506,
    "latest": {
     "day": "2026-11-11",
-    "price": 10.66,
-    "percent": -5.580159433126653
+    "price": 10.59,
+    "percent": -6.200177147918506
    },
-   "since_percent": -2.648401826484015,
-   "since": -2.648401826484015,
+   "since_percent": -3.28767123287671,
+   "since": -3.28767123287671,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5397,19 +5402,19 @@
    "first_day": "2026-11-10",
    "first_price": 88.23,
    "first_percent": 2.46,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
    "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 87.1,
-   "latest_percent": -0.887573964497046,
+   "latest_price": 87.13,
+   "latest_percent": -0.8534365043240788,
    "latest": {
     "day": "2026-11-11",
-    "price": 87.1,
-    "percent": -0.887573964497046
+    "price": 87.13,
+    "percent": -0.8534365043240788
    },
-   "since_percent": -1.280743511277349,
-   "since": -1.280743511277349,
+   "since_percent": -1.246741471154944,
+   "since": -1.246741471154944,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5447,15 +5452,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 27.63,
-   "latest_percent": 7.300970873786405,
+   "latest_price": 27.18,
+   "latest_percent": 5.5533980582524345,
    "latest": {
     "day": "2026-11-11",
-    "price": 27.63,
-    "percent": 7.300970873786405
+    "price": 27.18,
+    "percent": 5.5533980582524345
    },
-   "since_percent": 7.300970873786405,
-   "since": 7.300970873786405,
+   "since_percent": 5.5533980582524345,
+   "since": 5.5533980582524345,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5483,13 +5488,13 @@
    "code": "sh600715",
    "name": "文投控股",
    "source": "建仓清单",
-   "category": "题材",
+   "category": "行业",
    "first_day": "2026-11-10",
    "first_price": 2.85,
    "first_percent": 10.04,
-   "episodes": 34,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
-   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "last_episode_at": "2026-11-11T13:01:09.034705+08:00",
    "latest_day": "2026-11-11",
    "latest_price": 3.14,
    "latest_percent": 10.175438596491237,
@@ -5519,7 +5524,9 @@
      "IP"
     ],
     "event": [],
-    "other": []
+    "other": [
+     "游戏Ⅱ"
+    ]
    },
    "entry_tag": "涨停待回踩",
    "state": "涨停待回踩",
@@ -5533,19 +5540,19 @@
    "first_day": "2026-11-10",
    "first_price": 51.85,
    "first_percent": 2.11,
-   "episodes": 5,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 51.4,
-   "latest_percent": -0.5417956656346812,
+   "latest_price": 51.72,
+   "latest_percent": 0.07739938080495445,
    "latest": {
     "day": "2026-11-11",
-    "price": 51.4,
-    "percent": -0.5417956656346812
+    "price": 51.72,
+    "percent": 0.07739938080495445
    },
-   "since_percent": -0.8678881388621051,
-   "since": -0.8678881388621051,
+   "since_percent": -0.25072324011572444,
+   "since": -0.25072324011572444,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5569,7 +5576,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sz300624",
@@ -5579,19 +5586,19 @@
    "first_day": "2026-11-10",
    "first_price": 53.62,
    "first_percent": 4.3,
-   "episodes": 32,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 53.0,
-   "latest_percent": -0.07541478129713397,
+   "latest_price": 53.29,
+   "latest_percent": 0.4713423831070873,
    "latest": {
     "day": "2026-11-11",
-    "price": 53.0,
-    "percent": -0.07541478129713397
+    "price": 53.29,
+    "percent": 0.4713423831070873
    },
-   "since_percent": -1.1562849682954068,
-   "since": -1.1562849682954068,
+   "since_percent": -0.6154419992540072,
+   "since": -0.6154419992540072,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5628,15 +5635,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 145.49,
-   "latest_percent": -12.239112076245618,
+   "latest_price": 148.11,
+   "latest_percent": -10.65870430691277,
    "latest": {
     "day": "2026-11-11",
-    "price": 145.49,
-    "percent": -12.239112076245618
+    "price": 148.11,
+    "percent": -10.65870430691277
    },
-   "since_percent": -11.264942668943645,
-   "since": -11.264942668943645,
+   "since_percent": -9.666991949255909,
+   "since": -9.666991949255909,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5672,15 +5679,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 34.59,
-   "latest_percent": -0.6890611541774172,
+   "latest_price": 34.29,
+   "latest_percent": -1.5503875968992276,
    "latest": {
     "day": "2026-11-11",
-    "price": 34.59,
-    "percent": -0.6890611541774172
+    "price": 34.29,
+    "percent": -1.5503875968992276
    },
-   "since_percent": -0.8029825064525209,
-   "since": -0.8029825064525209,
+   "since_percent": -1.6633209062231091,
+   "since": -1.6633209062231091,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5702,7 +5709,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "低于买区"
   },
   {
    "code": "sh603019",
@@ -5716,15 +5723,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 78.33,
-   "latest_percent": -0.34351145038167274,
+   "latest_price": 79.5,
+   "latest_percent": 1.1450381679389388,
    "latest": {
     "day": "2026-11-11",
-    "price": 78.33,
-    "percent": -0.34351145038167274
+    "price": 79.5,
+    "percent": 1.1450381679389388
    },
-   "since_percent": -0.7350145735648184,
-   "since": -0.7350145735648184,
+   "since_percent": 0.7476872386262823,
+   "since": 0.7476872386262823,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5746,7 +5753,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "低于买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sh605598",
@@ -5760,15 +5767,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 29.15,
-   "latest_percent": 3.5523978685612745,
+   "latest_price": 29.56,
+   "latest_percent": 5.008880994671405,
    "latest": {
     "day": "2026-11-11",
-    "price": 29.15,
-    "percent": 3.5523978685612745
+    "price": 29.56,
+    "percent": 5.008880994671405
    },
-   "since_percent": 3.5523978685612745,
-   "since": 3.5523978685612745,
+   "since_percent": 5.008880994671405,
+   "since": 5.008880994671405,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5804,15 +5811,15 @@
    "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 5.68,
-   "latest_percent": 2.5270758122743597,
+   "latest_price": 5.61,
+   "latest_percent": 1.2635379061371799,
    "latest": {
     "day": "2026-11-11",
-    "price": 5.68,
-    "percent": 2.5270758122743597
+    "price": 5.61,
+    "percent": 1.2635379061371799
    },
-   "since_percent": 2.5270758122743597,
-   "since": 2.5270758122743597,
+   "since_percent": 1.2635379061371799,
+   "since": 1.2635379061371799,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5848,15 +5855,15 @@
    "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 15.96,
-   "latest_percent": -1.053936763794161,
+   "latest_price": 16.03,
+   "latest_percent": -0.6199628022318548,
    "latest": {
     "day": "2026-11-11",
-    "price": 15.96,
-    "percent": -1.053936763794161
+    "price": 16.03,
+    "percent": -0.6199628022318548
    },
-   "since_percent": -0.992555831265507,
-   "since": -0.992555831265507,
+   "since_percent": -0.5583126550868456,
+   "since": -0.5583126550868456,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5892,15 +5899,15 @@
    "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 17.52,
-   "latest_percent": 1.388888888888884,
+   "latest_price": 17.66,
+   "latest_percent": 2.19907407407407,
    "latest": {
     "day": "2026-11-11",
-    "price": 17.52,
-    "percent": 1.388888888888884
+    "price": 17.66,
+    "percent": 2.19907407407407
    },
-   "since_percent": 1.388888888888884,
-   "since": 1.388888888888884,
+   "since_percent": 2.19907407407407,
+   "since": 2.19907407407407,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5932,19 +5939,19 @@
    "first_day": "2026-11-10",
    "first_price": 23.69,
    "first_percent": 9.98,
-   "episodes": 33,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 22.63,
-   "latest_percent": -4.474461798227114,
+   "latest_price": 22.61,
+   "latest_percent": -4.558885605740826,
    "latest": {
     "day": "2026-11-11",
-    "price": 22.63,
-    "percent": -4.474461798227114
+    "price": 22.61,
+    "percent": -4.558885605740826
    },
-   "since_percent": -4.474461798227114,
-   "since": -4.474461798227114,
+   "since_percent": -4.558885605740826,
+   "since": -4.558885605740826,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -5966,7 +5973,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002343",
@@ -5976,19 +5983,19 @@
    "first_day": "2026-11-10",
    "first_price": 9.33,
    "first_percent": 10.02,
-   "episodes": 33,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 9.59,
-   "latest_percent": 2.7867095391211016,
+   "latest_price": 9.74,
+   "latest_percent": 4.394426580921751,
    "latest": {
     "day": "2026-11-11",
-    "price": 9.59,
-    "percent": 2.7867095391211016
+    "price": 9.74,
+    "percent": 4.394426580921751
    },
-   "since_percent": 2.7867095391211016,
-   "since": 2.7867095391211016,
+   "since_percent": 4.394426580921751,
+   "since": 4.394426580921751,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6020,19 +6027,19 @@
    "first_day": "2026-11-10",
    "first_price": 5.66,
    "first_percent": 1.98,
-   "episodes": 33,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 5.52,
-   "latest_percent": -2.127659574468088,
+   "latest_price": 5.45,
+   "latest_percent": -3.3687943262411313,
    "latest": {
     "day": "2026-11-11",
-    "price": 5.52,
-    "percent": -2.127659574468088
+    "price": 5.45,
+    "percent": -3.3687943262411313
    },
-   "since_percent": -2.473498233215554,
-   "since": -2.473498233215554,
+   "since_percent": -3.7102473498233257,
+   "since": -3.7102473498233257,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6054,7 +6061,7 @@
    },
    "entry_tag": "题材观察",
    "state": "题材观察",
-   "zone": "已进入买区"
+   "zone": "低于买区"
   },
   {
    "code": "sh601599",
@@ -6064,19 +6071,19 @@
    "first_day": "2026-11-10",
    "first_price": 5.64,
    "first_percent": 4.83,
-   "episodes": 31,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 5.37,
-   "latest_percent": -4.107142857142854,
+   "latest_price": 5.54,
+   "latest_percent": -1.0714285714285676,
    "latest": {
     "day": "2026-11-11",
-    "price": 5.37,
-    "percent": -4.107142857142854
+    "price": 5.54,
+    "percent": -1.0714285714285676
    },
-   "since_percent": -4.7872340425531785,
-   "since": -4.7872340425531785,
+   "since_percent": -1.773049645390068,
+   "since": -1.773049645390068,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6098,7 +6105,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sh603602",
@@ -6108,19 +6115,19 @@
    "first_day": "2026-11-10",
    "first_price": 12.41,
    "first_percent": 10.02,
-   "episodes": 24,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
    "last_episode_at": "2026-11-11T07:30:47.746955+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 12.37,
-   "latest_percent": -0.3223207091055724,
+   "latest_price": 12.25,
+   "latest_percent": -1.2892828364222453,
    "latest": {
     "day": "2026-11-11",
-    "price": 12.37,
-    "percent": -0.3223207091055724
+    "price": 12.25,
+    "percent": -1.2892828364222453
    },
-   "since_percent": -0.3223207091055724,
-   "since": -0.3223207091055724,
+   "since_percent": -1.2892828364222453,
+   "since": -1.2892828364222453,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6154,19 +6161,19 @@
    "first_day": "2026-11-10",
    "first_price": 15.2,
    "first_percent": 9.99,
-   "episodes": 24,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
    "last_episode_at": "2026-11-11T07:30:47.746955+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 15.1,
-   "latest_percent": -0.6578947368421018,
+   "latest_price": 15.27,
+   "latest_percent": 0.4605263157894779,
    "latest": {
     "day": "2026-11-11",
-    "price": 15.1,
-    "percent": -0.6578947368421018
+    "price": 15.27,
+    "percent": 0.4605263157894779
    },
-   "since_percent": -0.6578947368421018,
-   "since": -0.6578947368421018,
+   "since_percent": 0.4605263157894779,
+   "since": 0.4605263157894779,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6200,19 +6207,19 @@
    "first_day": "2026-11-10",
    "first_price": 41.63,
    "first_percent": 3.25,
-   "episodes": 7,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T17:00:28.106013+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 41.14,
-   "latest_percent": -1.1770357914965168,
+   "latest_price": 41.02,
+   "latest_percent": -1.4652894547201534,
    "latest": {
     "day": "2026-11-11",
-    "price": 41.14,
-    "percent": -1.1770357914965168
+    "price": 41.02,
+    "percent": -1.4652894547201534
    },
-   "since_percent": -1.1770357914965168,
-   "since": -1.1770357914965168,
+   "since_percent": -1.4652894547201534,
+   "since": -1.4652894547201534,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6234,7 +6241,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sz002241",
@@ -6244,19 +6251,19 @@
    "first_day": "2026-11-10",
    "first_price": 25.69,
    "first_percent": 3.84,
-   "episodes": 22,
+   "episodes": 2,
    "first_episode_at": "2026-11-10T17:00:28.106013+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 25.28,
-   "latest_percent": -1.595951732191514,
+   "latest_price": 25.15,
+   "latest_percent": -2.101985208252244,
    "latest": {
     "day": "2026-11-11",
-    "price": 25.28,
-    "percent": -1.595951732191514
+    "price": 25.15,
+    "percent": -2.101985208252244
    },
-   "since_percent": -1.595951732191514,
-   "since": -1.595951732191514,
+   "since_percent": -2.101985208252244,
+   "since": -2.101985208252244,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6280,7 +6287,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sh688213",
@@ -6294,15 +6301,15 @@
    "first_episode_at": "2026-11-10T21:00:20.752711+08:00",
    "last_episode_at": "2026-11-10T21:00:20.752711+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 108.79,
-   "latest_percent": 0.11042606055029491,
+   "latest_price": 108.71,
+   "latest_percent": 0.036808686850098304,
    "latest": {
     "day": "2026-11-11",
-    "price": 108.79,
-    "percent": 0.11042606055029491
+    "price": 108.71,
+    "percent": 0.036808686850098304
    },
-   "since_percent": 0.11042606055029491,
-   "since": 0.11042606055029491,
+   "since_percent": 0.036808686850098304,
+   "since": 0.036808686850098304,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6334,19 +6341,19 @@
    "first_day": "2026-11-10",
    "first_price": 34.63,
    "first_percent": 4.12,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-10T23:07:43.781274+08:00",
    "last_episode_at": "2026-11-10T23:31:18.465900+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 34.58,
-   "latest_percent": -0.14438348252960864,
+   "latest_price": 34.64,
+   "latest_percent": 0.028876696505908406,
    "latest": {
     "day": "2026-11-11",
-    "price": 34.58,
-    "percent": -0.14438348252960864
+    "price": 34.64,
+    "percent": 0.028876696505908406
    },
-   "since_percent": -0.14438348252960864,
-   "since": -0.14438348252960864,
+   "since_percent": 0.028876696505908406,
+   "since": 0.028876696505908406,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6426,15 +6433,15 @@
    "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 122.08,
-   "latest_percent": -2.2734550112071705,
+   "latest_price": 120.93,
+   "latest_percent": -3.194044188280498,
    "latest": {
     "day": "2026-11-11",
-    "price": 122.08,
-    "percent": -2.2734550112071705
+    "price": 120.93,
+    "percent": -3.194044188280498
    },
-   "since_percent": -2.2734550112071705,
-   "since": -2.2734550112071705,
+   "since_percent": -3.194044188280498,
+   "since": -3.194044188280498,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6456,7 +6463,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "低于买区"
+   "zone": "已跌破防守位"
   },
   {
    "code": "sz300209",
@@ -6470,15 +6477,15 @@
    "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 24.13,
-   "latest_percent": -0.041425020712515526,
+   "latest_price": 24.71,
+   "latest_percent": 2.3612261806130963,
    "latest": {
     "day": "2026-11-11",
-    "price": 24.13,
-    "percent": -0.041425020712515526
+    "price": 24.71,
+    "percent": 2.3612261806130963
    },
-   "since_percent": -0.041425020712515526,
-   "since": -0.041425020712515526,
+   "since_percent": 2.3612261806130963,
+   "since": 2.3612261806130963,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6500,7 +6507,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sz002181",
@@ -6514,15 +6521,15 @@
    "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 11.78,
-   "latest_percent": -1.8333333333333424,
+   "latest_price": 11.82,
+   "latest_percent": -1.5000000000000013,
    "latest": {
     "day": "2026-11-11",
-    "price": 11.78,
-    "percent": -1.8333333333333424
+    "price": 11.82,
+    "percent": -1.5000000000000013
    },
-   "since_percent": -1.8333333333333424,
-   "since": -1.8333333333333424,
+   "since_percent": -1.5000000000000013,
+   "since": -1.5000000000000013,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6558,15 +6565,15 @@
    "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 248.07,
-   "latest_percent": -0.7521504300860182,
+   "latest_price": 246.82,
+   "latest_percent": -1.25225045009002,
    "latest": {
     "day": "2026-11-11",
-    "price": 248.07,
-    "percent": -0.7521504300860182
+    "price": 246.82,
+    "percent": -1.25225045009002
    },
-   "since_percent": -0.7521504300860182,
-   "since": -0.7521504300860182,
+   "since_percent": -1.25225045009002,
+   "since": -1.25225045009002,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6588,7 +6595,7 @@
    },
    "entry_tag": "条件未达",
    "state": "条件未达",
-   "zone": "已进入买区"
+   "zone": "低于买区"
   },
   {
    "code": "sz300857",
@@ -6598,19 +6605,19 @@
    "first_day": "2026-11-10",
    "first_price": 150.16,
    "first_percent": 0.64,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T07:30:47.746955+08:00",
    "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 155.51,
-   "latest_percent": 3.5628662759722873,
+   "latest_price": 162.28,
+   "latest_percent": 8.071390516782095,
    "latest": {
     "day": "2026-11-11",
-    "price": 155.51,
-    "percent": 3.5628662759722873
+    "price": 162.28,
+    "percent": 8.071390516782095
    },
-   "since_percent": 3.5628662759722873,
-   "since": 3.5628662759722873,
+   "since_percent": 8.071390516782095,
+   "since": 8.071390516782095,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6646,15 +6653,15 @@
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 57.82,
-   "latest_percent": -2.57792754844145,
+   "latest_price": 58.12,
+   "latest_percent": -2.0724515585509806,
    "latest": {
     "day": "2026-11-11",
-    "price": 57.82,
-    "percent": -2.57792754844145
+    "price": 58.12,
+    "percent": -2.0724515585509806
    },
-   "since_percent": -4.144562334217506,
-   "since": -4.144562334217506,
+   "since_percent": -3.6472148541114136,
+   "since": -3.6472148541114136,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6690,15 +6697,15 @@
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 37.61,
-   "latest_percent": -4.446138211382111,
+   "latest_price": 37.99,
+   "latest_percent": -3.4806910569105676,
    "latest": {
     "day": "2026-11-11",
-    "price": 37.61,
-    "percent": -4.446138211382111
+    "price": 37.99,
+    "percent": -3.4806910569105676
    },
-   "since_percent": -5.951487871967998,
-   "since": -5.951487871967998,
+   "since_percent": -5.001250312578143,
+   "since": -5.001250312578143,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6730,19 +6737,19 @@
    "first_day": "2026-11-11",
    "first_price": 120.97,
    "first_percent": 2.37,
-   "episodes": 5,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:01:09.034705+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 120.92,
-   "latest_percent": 2.3271557925023334,
+   "latest_price": 127.56,
+   "latest_percent": 7.946179233307937,
    "latest": {
     "day": "2026-11-11",
-    "price": 120.92,
-    "percent": 2.3271557925023334
+    "price": 127.56,
+    "percent": 7.946179233307937
    },
-   "since_percent": -0.04133256179217337,
-   "since": -0.04133256179217337,
+   "since_percent": 5.4476316442093164,
+   "since": 5.4476316442093164,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6762,9 +6769,9 @@
      "通信网络设备及器件"
     ]
    },
-   "entry_tag": "高于追高上限",
-   "state": "高于追高上限",
-   "zone": "等待回踩"
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
   },
   {
    "code": "sz300570",
@@ -6778,15 +6785,15 @@
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 119.8,
-   "latest_percent": 12.182788650622701,
+   "latest_price": 125.59,
+   "latest_percent": 17.60464462964697,
    "latest": {
     "day": "2026-11-11",
-    "price": 119.8,
-    "percent": 12.182788650622701
+    "price": 125.59,
+    "percent": 17.60464462964697
    },
-   "since_percent": 3.347135955831604,
-   "since": 3.347135955831604,
+   "since_percent": 8.341959972394752,
+   "since": 8.341959972394752,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6866,15 +6873,15 @@
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 26.9,
-   "latest_percent": 2.3592085235920823,
+   "latest_price": 26.81,
+   "latest_percent": 2.0167427701674123,
    "latest": {
     "day": "2026-11-11",
-    "price": 26.9,
-    "percent": 2.3592085235920823
+    "price": 26.81,
+    "percent": 2.0167427701674123
    },
-   "since_percent": -1.5012815818381542,
-   "since": -1.5012815818381542,
+   "since_percent": -1.8308311973636027,
+   "since": -1.8308311973636027,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6896,7 +6903,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "等待回踩"
+   "zone": "已进入买区"
   },
   {
    "code": "sh688313",
@@ -6910,15 +6917,15 @@
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 96.45,
-   "latest_percent": 6.846128281821207,
+   "latest_price": 103.2,
+   "latest_percent": 14.323695579926898,
    "latest": {
     "day": "2026-11-11",
-    "price": 96.45,
-    "percent": 6.846128281821207
+    "price": 103.2,
+    "percent": 14.323695579926898
    },
-   "since_percent": 2.106711835697661,
-   "since": 2.106711835697661,
+   "since_percent": 9.252593690450993,
+   "since": 9.252593690450993,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6950,19 +6957,19 @@
    "first_day": "2026-11-11",
    "first_price": 43.36,
    "first_percent": 0.42,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 43.94,
-   "latest_percent": 1.7600741083835025,
+   "latest_price": 45.6,
+   "latest_percent": 5.604446503010663,
    "latest": {
     "day": "2026-11-11",
-    "price": 43.94,
-    "percent": 1.7600741083835025
+    "price": 45.6,
+    "percent": 5.604446503010663
    },
-   "since_percent": 1.3376383763837651,
-   "since": 1.3376383763837651,
+   "since_percent": 5.166051660516602,
+   "since": 5.166051660516602,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -6982,9 +6989,9 @@
     "event": [],
     "other": []
    },
-   "entry_tag": "可建仓",
-   "state": "可建仓",
-   "zone": "已进入买区"
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
   },
   {
    "code": "sh603421",
@@ -6994,19 +7001,19 @@
    "first_day": "2026-11-11",
    "first_price": 6.04,
    "first_percent": 10.02,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 5.82,
-   "latest_percent": 6.0109289617486406,
+   "latest_price": 5.92,
+   "latest_percent": 7.8324225865209485,
    "latest": {
     "day": "2026-11-11",
-    "price": 5.82,
-    "percent": 6.0109289617486406
+    "price": 5.92,
+    "percent": 7.8324225865209485
    },
-   "since_percent": -3.6423841059602613,
-   "since": -3.6423841059602613,
+   "since_percent": -1.9867549668874163,
+   "since": -1.9867549668874163,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7028,7 +7035,7 @@
    },
    "entry_tag": "涨停待回踩",
    "state": "涨停待回踩",
-   "zone": "等待回踩"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz301313",
@@ -7038,19 +7045,19 @@
    "first_day": "2026-11-11",
    "first_price": 78.26,
    "first_percent": 2.31,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 78.14,
-   "latest_percent": 2.1571447248006415,
+   "latest_price": 79.56,
+   "latest_percent": 4.013596548568454,
    "latest": {
     "day": "2026-11-11",
-    "price": 78.14,
-    "percent": 2.1571447248006415
+    "price": 79.56,
+    "percent": 4.013596548568454
    },
-   "since_percent": -0.1533350370559683,
-   "since": -0.1533350370559683,
+   "since_percent": 1.661129568106312,
+   "since": 1.661129568106312,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7072,7 +7079,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "等待回踩"
+   "zone": "高于追高上限"
   },
   {
    "code": "sz301488",
@@ -7086,15 +7093,15 @@
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 100.1,
-   "latest_percent": 4.292560950197943,
+   "latest_price": 101.9,
+   "latest_percent": 6.1679516565951165,
    "latest": {
     "day": "2026-11-11",
-    "price": 100.1,
-    "percent": 4.292560950197943
+    "price": 101.9,
+    "percent": 6.1679516565951165
    },
-   "since_percent": -0.42773301502040395,
-   "since": -0.42773301502040395,
+   "since_percent": 1.3627772804138072,
+   "since": 1.3627772804138072,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7116,7 +7123,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sh601869",
@@ -7126,19 +7133,19 @@
    "first_day": "2026-11-11",
    "first_price": 257.66,
    "first_percent": 2.11,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:01:09.034705+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 261.52,
-   "latest_percent": 3.6420560377283584,
+   "latest_price": 277.56,
+   "latest_percent": 9.99881108072762,
    "latest": {
     "day": "2026-11-11",
-    "price": 261.52,
-    "percent": 3.6420560377283584
+    "price": 277.56,
+    "percent": 9.99881108072762
    },
-   "since_percent": 1.4980982690367073,
-   "since": 1.4980982690367073,
+   "since_percent": 7.723356361096001,
+   "since": 7.723356361096001,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7155,7 +7162,8 @@
     "theme": [],
     "event": [],
     "other": [
-     "通信线缆及配套"
+     "通信线缆及配套",
+     "通信设备"
     ]
    },
    "entry_tag": "高于追高上限",
@@ -7174,15 +7182,15 @@
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 12.88,
-   "latest_percent": 5.228758169934644,
+   "latest_price": 12.86,
+   "latest_percent": 5.065359477124187,
    "latest": {
     "day": "2026-11-11",
-    "price": 12.88,
-    "percent": 5.228758169934644
+    "price": 12.86,
+    "percent": 5.065359477124187
    },
-   "since_percent": 1.497241922773851,
-   "since": 1.497241922773851,
+   "since_percent": 1.3396375098502666,
+   "since": 1.3396375098502666,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7218,15 +7226,15 @@
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.04,
-   "latest_percent": 3.6020583190394584,
+   "latest_price": 6.16,
+   "latest_percent": 5.660377358490565,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.04,
-    "percent": 3.6020583190394584
+    "price": 6.16,
+    "percent": 5.660377358490565
    },
-   "since_percent": 0.0,
-   "since": 0.0,
+   "since_percent": 1.9867549668874274,
+   "since": 1.9867549668874274,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7262,15 +7270,15 @@
    "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 3.4,
-   "latest_percent": -0.2932551319648202,
+   "latest_price": 3.39,
+   "latest_percent": -0.5865102639296182,
    "latest": {
     "day": "2026-11-11",
-    "price": 3.4,
-    "percent": -0.2932551319648202
+    "price": 3.39,
+    "percent": -0.5865102639296182
    },
-   "since_percent": -0.8746355685131268,
-   "since": -0.8746355685131268,
+   "since_percent": -1.1661807580174988,
+   "since": -1.1661807580174988,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7306,15 +7314,15 @@
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 6.17,
-   "latest_percent": 1.6474464579901094,
+   "latest_price": 6.2,
+   "latest_percent": 2.1416803953871577,
    "latest": {
     "day": "2026-11-11",
-    "price": 6.17,
-    "percent": 1.6474464579901094
+    "price": 6.2,
+    "percent": 2.1416803953871577
    },
-   "since_percent": -1.5948963317384268,
-   "since": -1.5948963317384268,
+   "since_percent": -1.1164274322168932,
+   "since": -1.1164274322168932,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7336,7 +7344,7 @@
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sz000407",
@@ -7350,15 +7358,15 @@
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 4.29,
-   "latest_percent": 8.607594936708862,
+   "latest_price": 4.35,
+   "latest_percent": 10.126582278481,
    "latest": {
     "day": "2026-11-11",
-    "price": 4.29,
-    "percent": 8.607594936708862
+    "price": 4.35,
+    "percent": 10.126582278481
    },
-   "since_percent": -1.3793103448275779,
-   "since": -1.3793103448275779,
+   "since_percent": 0.0,
+   "since": 0.0,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7385,24 +7393,24 @@
   {
    "code": "sz002747",
    "name": "埃斯顿",
-   "source": "建仓清单",
-   "category": "行业",
+   "source": "方向候选",
+   "category": "题材",
    "first_day": "2026-11-11",
    "first_price": 30.99,
    "first_percent": 1.41,
-   "episodes": 3,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 31.12,
-   "latest_percent": 1.832460732984309,
+   "latest_price": 31.16,
+   "latest_percent": 1.963350785340312,
    "latest": {
     "day": "2026-11-11",
-    "price": 31.12,
-    "percent": 1.832460732984309
+    "price": 31.16,
+    "percent": 1.963350785340312
    },
-   "since_percent": 0.4194901581155319,
-   "since": 0.4194901581155319,
+   "since_percent": 0.5485640529202973,
+   "since": 0.5485640529202973,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7416,7 +7424,9 @@
    "missing": [],
    "tags": {
     "concept": [],
-    "theme": [],
+    "theme": [
+     "物理AI"
+    ],
     "event": [],
     "other": [
      "机器人"
@@ -7429,24 +7439,24 @@
   {
    "code": "sh600522",
    "name": "中天科技",
-   "source": "方向候选",
-   "category": "题材",
+   "source": "建仓清单",
+   "category": "行业",
    "first_day": "2026-11-11",
    "first_price": 23.74,
    "first_percent": 0.17,
    "episodes": 1,
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
-   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 23.93,
-   "latest_percent": 0.9704641350211096,
+   "latest_price": 24.64,
+   "latest_percent": 3.9662447257384104,
    "latest": {
     "day": "2026-11-11",
-    "price": 23.93,
-    "percent": 0.9704641350211096
+    "price": 24.64,
+    "percent": 3.9662447257384104
    },
-   "since_percent": 0.8003369839932661,
-   "since": 0.8003369839932661,
+   "since_percent": 3.791069924178614,
+   "since": 3.791069924178614,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7464,11 +7474,14 @@
      "光通信"
     ],
     "event": [],
-    "other": []
+    "other": [
+     "通信设备",
+     "通信"
+    ]
    },
-   "entry_tag": "可建仓",
-   "state": "可建仓",
-   "zone": "等待回踩"
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
   },
   {
    "code": "sz002611",
@@ -7478,7 +7491,7 @@
    "first_day": "2026-11-11",
    "first_price": 15.23,
    "first_percent": 2.63,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
    "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
    "latest_day": "2026-11-11",
@@ -7517,24 +7530,24 @@
   {
    "code": "sh603236",
    "name": "移远通信",
-   "source": "方向候选",
-   "category": "行业",
+   "source": "建仓清单",
+   "category": "概念",
    "first_day": "2026-11-11",
    "first_price": 86.03,
    "first_percent": 4.79,
    "episodes": 1,
    "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
-   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 85.99,
-   "latest_percent": 4.7381242387332545,
+   "latest_price": 86.32,
+   "latest_percent": 5.140073081607799,
    "latest": {
     "day": "2026-11-11",
-    "price": 85.99,
-    "percent": 4.7381242387332545
+    "price": 86.32,
+    "percent": 5.140073081607799
    },
-   "since_percent": -0.046495408578406394,
-   "since": -0.046495408578406394,
+   "since_percent": 0.3370917121934047,
+   "since": 0.3370917121934047,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7547,7 +7560,9 @@
    ],
    "missing": [],
    "tags": {
-    "concept": [],
+    "concept": [
+     "英伟达概念"
+    ],
     "theme": [],
     "event": [],
     "other": [
@@ -7566,19 +7581,19 @@
    "first_day": "2026-11-11",
    "first_price": 38.63,
    "first_percent": 11.81,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 38.54,
-   "latest_percent": 11.548480463096977,
+   "latest_price": 38.34,
+   "latest_percent": 10.96960926193924,
    "latest": {
     "day": "2026-11-11",
-    "price": 38.54,
-    "percent": 11.548480463096977
+    "price": 38.34,
+    "percent": 10.96960926193924
    },
-   "since_percent": -0.23297954957287592,
-   "since": -0.23297954957287592,
+   "since_percent": -0.7507118819570224,
+   "since": -0.7507118819570224,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7610,19 +7625,19 @@
    "first_day": "2026-11-11",
    "first_price": 204.98,
    "first_percent": 5.87,
-   "episodes": 2,
+   "episodes": 1,
    "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
    "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 203.46,
-   "latest_percent": 5.082119615742187,
+   "latest_price": 203.0,
+   "latest_percent": 4.844540853217638,
    "latest": {
     "day": "2026-11-11",
-    "price": 203.46,
-    "percent": 5.082119615742187
+    "price": 203.0,
+    "percent": 4.844540853217638
    },
-   "since_percent": -0.741535759586287,
-   "since": -0.741535759586287,
+   "since_percent": -0.9659478973558344,
+   "since": -0.9659478973558344,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7649,24 +7664,24 @@
   {
    "code": "sh603318",
    "name": "水发燃气",
-   "source": "建仓清单",
+   "source": "方向候选",
    "category": "行业",
    "first_day": "2026-11-11",
    "first_price": 8.58,
    "first_percent": 4.76,
    "episodes": 1,
    "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
-   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T13:01:09.034705+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 8.46,
-   "latest_percent": 3.296703296703307,
+   "latest_price": 8.49,
+   "latest_percent": 3.663003663003672,
    "latest": {
     "day": "2026-11-11",
-    "price": 8.46,
-    "percent": 3.296703296703307
+    "price": 8.49,
+    "percent": 3.663003663003672
    },
-   "since_percent": -1.3986013986013845,
-   "since": -1.3986013986013845,
+   "since_percent": -1.0489510489510523,
+   "since": -1.0489510489510523,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7702,15 +7717,15 @@
    "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
    "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 3.86,
-   "latest_percent": 0.5208333333333259,
+   "latest_price": 3.88,
+   "latest_percent": 1.041666666666674,
    "latest": {
     "day": "2026-11-11",
-    "price": 3.86,
-    "percent": 0.5208333333333259
+    "price": 3.88,
+    "percent": 1.041666666666674
    },
-   "since_percent": 0.0,
-   "since": 0.0,
+   "since_percent": 0.5181347150259086,
+   "since": 0.5181347150259086,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7732,7 +7747,7 @@
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
    "code": "sz301486",
@@ -7744,17 +7759,457 @@
    "first_percent": 16.37,
    "episodes": 1,
    "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 154.49,
-   "latest_percent": 15.454749271354906,
+   "latest_price": 160.57,
+   "latest_percent": 19.998505343397355,
    "latest": {
     "day": "2026-11-11",
-    "price": 154.49,
-    "percent": 15.454749271354906
+    "price": 160.57,
+    "percent": 19.998505343397355
    },
-   "since_percent": -0.7898792704854829,
-   "since": -0.7898792704854829,
+   "since_percent": 3.114564603133818,
+   "since": 3.114564603133818,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002558",
+   "name": "巨人网络",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 21.43,
+   "first_percent": 0.52,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 21.8,
+   "latest_percent": 2.251407129455907,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 21.8,
+    "percent": 2.251407129455907
+   },
+   "since_percent": 1.7265515632291173,
+   "since": 1.7265515632291173,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "游戏Ⅱ"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002896",
+   "name": "中大力德",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 62.72,
+   "first_percent": 3.34,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 62.83,
+   "latest_percent": 3.5261163288844877,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 62.83,
+    "percent": 3.5261163288844877
+   },
+   "since_percent": 0.17538265306122902,
+   "since": 0.17538265306122902,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "精密减速器"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002636",
+   "name": "金安国纪",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 67.6,
+   "first_percent": 3.22,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T13:31:56.548413+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 69.79,
+   "latest_percent": 6.565887921820135,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 69.79,
+    "percent": 6.565887921820135
+   },
+   "since_percent": 3.239644970414224,
+   "since": 3.239644970414224,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "元件"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002284",
+   "name": "亚太股份",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 9.84,
+   "first_percent": 2.29,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T13:31:56.548413+08:00",
+   "last_episode_at": "2026-11-11T13:31:56.548413+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 9.84,
+   "latest_percent": 2.2869022869022926,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 9.84,
+    "percent": 2.2869022869022926
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "轮毂电机"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh688825",
+   "name": "长鑫科技",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 42.2,
+   "first_percent": 4.33,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:01:06.090388+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 42.08,
+   "latest_percent": 4.029666254635345,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 42.08,
+    "percent": 4.029666254635345
+   },
+   "since_percent": -0.28436018957347375,
+   "since": -0.28436018957347375,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "半导体"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688498",
+   "name": "源杰科技",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 763.69,
+   "first_percent": 18.27,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:01:06.090388+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 774.85,
+   "latest_percent": 19.999690263430956,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 774.85,
+    "percent": 19.999690263430956
+   },
+   "since_percent": 1.4613259306786697,
+   "since": 1.4613259306786697,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "半导体"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002837",
+   "name": "英维克",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 43.32,
+   "first_percent": 10.01,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:01:06.090388+08:00",
+   "last_episode_at": "2026-11-11T14:01:06.090388+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 43.32,
+   "latest_percent": 10.005078720162519,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 43.32,
+    "percent": 10.005078720162519
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "英伟达概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688322",
+   "name": "奥比中光-W",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 119.67,
+   "first_percent": 3.97,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 119.86,
+   "latest_percent": 4.135534317984368,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 119.86,
+    "percent": 4.135534317984368
+   },
+   "since_percent": 0.1587699506977458,
+   "since": 0.1587699506977458,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "英伟达概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300476",
+   "name": "胜宏科技",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 147.61,
+   "first_percent": 11.15,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 146.53,
+   "latest_percent": 10.338855421686732,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 146.53,
+    "percent": 10.338855421686732
+   },
+   "since_percent": -0.7316577467651353,
+   "since": -0.7316577467651353,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "英伟达概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300285",
+   "name": "国瓷材料",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 41.85,
+   "first_percent": 4.94,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 41.73,
+   "latest_percent": 4.638916750250743,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 41.73,
+    "percent": 4.638916750250743
+   },
+   "since_percent": -0.28673835125448965,
+   "since": -0.28673835125448965,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7779,26 +8234,26 @@
    "zone": "高于追高上限"
   },
   {
-   "code": "sz002558",
-   "name": "巨人网络",
-   "source": "建仓清单",
+   "code": "sz000823",
+   "name": "超声电子",
+   "source": "方向候选",
    "category": "行业",
    "first_day": "2026-11-11",
-   "first_price": 21.43,
-   "first_percent": 0.52,
+   "first_price": 18.91,
+   "first_percent": 2.55,
    "episodes": 1,
-   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "first_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 21.42,
-   "latest_percent": 0.46904315196998336,
+   "latest_price": 18.89,
+   "latest_percent": 2.440347071583515,
    "latest": {
     "day": "2026-11-11",
-    "price": 21.42,
-    "percent": 0.46904315196998336
+    "price": 18.89,
+    "percent": 2.440347071583515
    },
-   "since_percent": -0.046663555762938014,
-   "since": -0.046663555762938014,
+   "since_percent": -0.10576414595452333,
+   "since": -0.10576414595452333,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7815,34 +8270,34 @@
     "theme": [],
     "event": [],
     "other": [
-     "游戏Ⅱ"
+     "元件"
     ]
    },
    "entry_tag": "可建仓",
    "state": "可建仓",
-   "zone": "已进入买区"
+   "zone": "等待回踩"
   },
   {
-   "code": "sz002896",
-   "name": "中大力德",
+   "code": "sz301526",
+   "name": "国际复材",
    "source": "方向候选",
-   "category": "题材",
+   "category": "行业",
    "first_day": "2026-11-11",
-   "first_price": 62.72,
-   "first_percent": 3.34,
+   "first_price": 20.79,
+   "first_percent": 4.52,
    "episodes": 1,
-   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
-   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "first_episode_at": "2026-11-11T14:31:04.004897+08:00",
+   "last_episode_at": "2026-11-11T14:31:04.004897+08:00",
    "latest_day": "2026-11-11",
-   "latest_price": 62.75,
-   "latest_percent": 3.394298896029002,
+   "latest_price": 20.73,
+   "latest_percent": 4.2232277526395245,
    "latest": {
     "day": "2026-11-11",
-    "price": 62.75,
-    "percent": 3.394298896029002
+    "price": 20.73,
+    "percent": 4.2232277526395245
    },
-   "since_percent": 0.04783163265307255,
-   "since": 0.04783163265307255,
+   "since_percent": -0.28860028860028253,
+   "since": -0.28860028860028253,
    "returns": {
     "T+1": null,
     "T+3": null,
@@ -7856,11 +8311,11 @@
    "missing": [],
    "tags": {
     "concept": [],
-    "theme": [
-     "精密减速器"
-    ],
+    "theme": [],
     "event": [],
-    "other": []
+    "other": [
+     "玻璃玻纤"
+    ]
    },
    "entry_tag": "高于追高上限",
    "state": "高于追高上限",
@@ -7868,11 +8323,11 @@
   }
  ],
  "coverage": {
-  "rows": 163,
+  "rows": 173,
   "with_returns": 75,
   "bench": "上证指数",
-  "daily_codes": 135,
-  "episode_issues": 74,
+  "daily_codes": 136,
+  "episode_issues": 80,
   "episode_range": "2026-11-09~2026-11-11",
   "note": "T+N=首次入选日后第 N 个交易日收盘/入选价格−1，基准上证；未到期/缺数据不按 0 计；历史样本仅供研究，不构成投资建议。"
  }

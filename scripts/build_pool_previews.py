@@ -92,6 +92,13 @@ def main():
                 print('episode failed', issue.get('published_at'), type(exc).__name__, exc)
 
     codes = [row['code'] for row in app.store.query('SELECT code FROM pool')]
+    refresh_fund = getattr(pool, 'refresh_fund_flows', None)
+    if refresh_fund is not None and codes:
+        try:
+            refresh_fund(codes)
+            print('fund flows', len(getattr(pool, 'fund_flows', {}) or {}), '/', len(codes))
+        except Exception as exc:
+            print('fund flow failed', type(exc).__name__, exc)
     if not args.no_quotes and codes:
         quotes = fetch_quotes(codes)
         pool.quotes = quotes

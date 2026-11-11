@@ -31,7 +31,7 @@ class Store:
           code TEXT NOT NULL,issue_id TEXT NOT NULL,published_at TEXT NOT NULL,quote_date TEXT,
           source TEXT,entry_tag TEXT,price REAL,percent REAL,
           category TEXT,group_name TEXT,groups_json TEXT,sector TEXT,sector_kind TEXT,
-          reason TEXT,plan TEXT,created_at TEXT,PRIMARY KEY(code,issue_id));
+          reason TEXT,driver_short TEXT,plan TEXT,created_at TEXT,PRIMARY KEY(code,issue_id));
         CREATE INDEX IF NOT EXISTS pool_episode_code ON pool_episode(code);
         CREATE TABLE IF NOT EXISTS pool_alerts(code TEXT,day TEXT,kind TEXT,created_at TEXT,PRIMARY KEY(code,day,kind));
         CREATE TABLE IF NOT EXISTS broker_accounts(id TEXT PRIMARY KEY,broker TEXT NOT NULL,account TEXT NOT NULL,label TEXT,enabled INTEGER DEFAULT 1,is_default INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(broker,account));
@@ -51,7 +51,8 @@ class Store:
         # narrower pool_episode schema that must not make the terminal table unusable.
         for table, columns in (('pool_day', (('turnover_rate', 'REAL'), ('volume_ratio', 'REAL'))),
                                ('pool_episode', (('percent', 'REAL'), ('category', 'TEXT'),
-                                                 ('group_name', 'TEXT'), ('groups_json', 'TEXT')))):
+                                                 ('group_name', 'TEXT'), ('groups_json', 'TEXT'),
+                                                 ('driver_short', 'TEXT')))):
             for column, kind in columns:
                 try:
                     self.db.execute(f'ALTER TABLE {table} ADD COLUMN {column} {kind}')

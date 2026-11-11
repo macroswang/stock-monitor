@@ -9,9 +9,11 @@
 并按来源/板块类型/雷达类型分组，支持按入选时间段筛选与胜率统计。所有统计都注明样本数。
 """
 import json
+import re
 import statistics
 import threading
 import time
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 
@@ -31,6 +33,22 @@ BACKTEST_LIMIT = 200
 TAG_LIMIT = 4
 THEME_CATEGORIES = ('题材', '名称辈', '生肖玄学')
 TAG_BUCKETS = ('concept', 'theme', 'event', 'other')
+FUND_FLOW_URL = 'https://push2.eastmoney.com/api/qt/ulist.np/get'
+FUND_FLOW_FIELDS = 'f12,f13,f14,f62,f184'
+FUND_FLOW_BATCH = 80
+FUND_FLOW_SECONDS = 30
+DRIVER_SHORT_MESSAGE_LIMIT = 26
+DRIVER_SHORT_RADAR_LIMIT = 24
+DRIVER_SHORT_FALLBACK_LIMIT = 20
+_MESSAGE_DRIVER_RE = re.compile(r'消息面[：:]?\s*[「『“"]([^」』”"]+)[」』”"]')
+_SHORT_DRIVER_RULES = (
+    ('板块上涨且资金净流入', '板块上涨、资金净流入'),
+    ('只观察，不追高', '只观察不追高'),
+    ('回踩低吸', '回踩低吸'),
+    ('涨停待回踩', '涨停待回踩'),
+    ('加速/高潮', '加速期'),
+    ('发酵', '题材发酵'),
+)
 
 ALERT_KINDS = {'已进入买区': ('buy_zone', '进入买区'), '已跌破防守位': ('stop_break', '跌破防守位')}
 
@@ -123,6 +141,86 @@ def _tag_bucket(category):
     return 'other'
 
 
+def _secid(code):
+    """Eastmoney secid: Shanghai -> 1.xxxxxx, Shenzhen -> 0.xxxxxx."""
+    code = str(code or '')
+    if code.startswith('sh'):
+        return '1.' + code[2:]
+    if code.startswith('sz'):
+        return '0.' + code[2:]
+    return None
+
+
+def _fund_flow_url(secids):
+    return (FUND_FLOW_URL + '?fltt=2&secids=' + ','.join(secids)
+            + '&fields=' + FUND_FLOW_FIELDS)
+
+
+def _parse_fund_flow_payload(payload, captured_at):
+    """Parse one ulist.np fund-flow response into {code: {net, net_yi, rate, time}}.
+
+    f62 主力净流入(元), f184 主力净流入率(%). Rows without a finite net inflow are skipped.
+    """
+    flows = {}
+    data = payload.get('data') if isinstance(payload, dict) else None
+    items = data.get('diff') if isinstance(data, dict) else None
+    if not isinstance(items, list):
+        return flows
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        market, raw_code = item.get('f13'), str(item.get('f12') or '')
+        net = _float(item.get('f62'))
+        if net is None or not raw_code:
+            continue
+        if market == 1:
+            code = 'sh' + raw_code
+        elif market == 0:
+            code = 'sz' + raw_code
+        elif raw_code.startswith(('sh', 'sz')):
+            code = raw_code
+        else:
+            continue
+        flows[code] = dict(net=net, net_yi=round(net / 1e8, 4), rate=_float(item.get('f184')),
+                           time=captured_at)
+    return flows
+
+
+def _short_driver(text, limit=DRIVER_SHORT_FALLBACK_LIMIT):
+    """Compress a research reason into one short, concrete driver phrase (契约 §12.1)."""
+    value = str(text or '').strip()
+    for prefix in ('方向：', '方向:'):
+        if value.startswith(prefix):
+            value = value[len(prefix):].strip()
+            break
+    for keyword, short in _SHORT_DRIVER_RULES:
+        if keyword in value:
+            return short
+    segments = [segment.strip(' 。') for segment in value.split('；') if segment.strip(' 。')]
+    if not segments:
+        return ''
+    return segments[-1][:limit]
+
+
+def _message_driver(opportunity):
+    """Extract 消息面「标题」 from a direction opportunity text (quotes/whitespace removed)."""
+    match = _MESSAGE_DRIVER_RE.search(str(opportunity or ''))
+    if not match:
+        return ''
+    title = re.sub(r'\s+', '', match.group(1)).strip()
+    return title[:DRIVER_SHORT_MESSAGE_LIMIT]
+
+
+def _radar_driver(reason):
+    """Radar driver keeps the stage/verdict tail of the theme·stage·verdict reason."""
+    parts = [part.strip() for part in str(reason or '').split('·')
+             if part.strip() and part.strip() != 'None']
+    tail = '·'.join(parts[1:]) if len(parts) > 1 else ''
+    if not tail:
+        return _short_driver(reason)
+    return tail[:DRIVER_SHORT_RADAR_LIMIT]
+
+
 def _category(kind):
     return _GROUP_MAP.get(kind, '其他')
 
@@ -201,6 +299,8 @@ class Pool:
         self.running = False
         self.last_zones = {}
         self.prefetch_started = False
+        self.fund_flows = None
+        self.fund_at = 0.0
 
     # ---------- 报价 ----------
     def codes(self):
@@ -211,6 +311,41 @@ class Pool:
             return {}
         text = get(QUOTE_URL + ','.join(codes), 'gb18030')
         return parse_quotes(text, set(codes))
+
+    def refresh_fund_flows(self, codes=None):
+        """Refresh Eastmoney main-force net inflow for pool codes.
+
+        Bounded to pool codes, <=80 secids per request; a failed batch is skipped silently so the
+        previous values stay visible. Callers (poll/preview) own the >=30s throttling.
+        """
+        allowed = self.codes()
+        if not allowed:
+            return {}
+        allowed_set = set(allowed)
+        selected = [code for code in dict.fromkeys(codes or allowed) if code in allowed_set]
+        captured_at = _now()
+        self.fund_at = time.monotonic()
+        flows = dict(self.fund_flows or {})
+        for start in range(0, len(selected), FUND_FLOW_BATCH):
+            flows.update(self._fetch_fund_flows(selected[start:start + FUND_FLOW_BATCH], captured_at))
+        self.fund_flows = {code: value for code, value in flows.items() if code in allowed_set}
+        return dict(self.fund_flows)
+
+    def _fetch_fund_flows(self, codes, captured_at=None):
+        """Fetch one <=80 batch from Eastmoney; any network/parse failure returns {}."""
+        secids = [value for value in (_secid(code) for code in codes) if value]
+        if not secids:
+            return {}
+        request = urllib.request.Request(_fund_flow_url(secids), headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
+                          '(KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+            'Referer': 'https://quote.eastmoney.com/'})
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                payload = json.loads(response.read().decode('utf-8'))
+        except (OSError, ValueError, TypeError):
+            return {}
+        return _parse_fund_flow_payload(payload, captured_at or _now())
 
     def poll(self, force=False):
         live = trading(now_cn())
@@ -238,6 +373,11 @@ class Pool:
                 self.error = ''
             self._record(quotes, stamp)
             self._check_alerts(quotes, stamp)
+            if time.monotonic() - self.fund_at >= FUND_FLOW_SECONDS:
+                try:
+                    self.refresh_fund_flows(codes)
+                except Exception:
+                    pass
         except Exception as exc:
             with self.lock:
                 self.error = str(exc) if isinstance(exc, ValueError) else type(exc).__name__
@@ -410,7 +550,7 @@ class Pool:
         priority = {'建仓清单': 0, '方向候选': 1, '炒作雷达': 2}
 
         def consider(code, name, source, category, group_name, role, sector, reason, plan,
-                     price, percent, chase, tag, sector_kind=None):
+                     price, percent, chase, tag, sector_kind=None, driver_short=None):
             if not code:
                 return
             membership = (category, group_name)
@@ -419,14 +559,16 @@ class Pool:
                 candidates[code] = dict(code=code, name=name or code, source=source, category=category,
                                         group_name=group_name, role=role, sector=sector, reason=reason,
                                         plan=plan or {}, price=price, percent=percent, tag=tag,
-                                        sector_kind=sector_kind, memberships=[membership])
+                                        sector_kind=sector_kind, driver_short=driver_short or None,
+                                        memberships=[membership])
                 return
             if membership not in current['memberships']:
                 current['memberships'].append(membership)
             if priority.get(current['source'], 9) <= priority.get(source, 9):
                 return
             current.update(name=name or code, source=source, role=role, sector=sector, reason=reason,
-                           plan=plan or {}, price=price, percent=percent, tag=tag, sector_kind=sector_kind)
+                           plan=plan or {}, price=price, percent=percent, tag=tag, sector_kind=sector_kind,
+                           driver_short=driver_short or None)
 
         for pick in issue.get('top_picks') or []:
             code = pick.get('code')
@@ -443,13 +585,15 @@ class Pool:
                                                    'target2', 'trail', 'note', 'sell_note')}
             consider(code, pick.get('name'), '建仓清单', _category(pick.get('sector_kind')), pick.get('sector'),
                      pick.get('role'), pick.get('sector'), reason, plan, price, percent, chase, tag,
-                     pick.get('sector_kind'))
+                     pick.get('sector_kind'), _short_driver(pick.get('why') or pick.get('note')))
 
         tokens = _name_tokens(issue)
         for direction in issue.get('directions') or []:
             stocks = direction.get('stocks') or []
             candidate = direction.get('candidate') or {}
             candidate_code = candidate.get('code') or (stocks[0].get('code') if stocks else None)
+            # Topic/news headline first (消息面「…」), then compressed direction reason.
+            message_driver = _message_driver(direction.get('opportunity'))
             pool = list(stocks)
             if candidate and not any(s.get('code') == candidate.get('code') for s in pool):
                 pool.append(candidate)
@@ -469,9 +613,11 @@ class Pool:
                 if direction.get('state') != '可考虑建仓' and tag == '可建仓':
                     tag = '条件未达'
                 reason = f"方向：{direction.get('sector')}（{direction.get('state')}）；{(direction.get('why') or '')[:60]}"
+                driver_short = (message_driver or
+                                _short_driver(direction.get('why') or stock.get('reason')))
                 consider(code, stock.get('name'), '方向候选', _category(direction.get('sector_kind')),
                          direction.get('sector'), stock.get('role'), direction.get('sector'), reason, entry,
-                         price, percent, chase, tag, direction.get('sector_kind'))
+                         price, percent, chase, tag, direction.get('sector_kind'), driver_short)
 
         for item in issue.get('radar') or []:
             category = _radar_category(item)
@@ -484,7 +630,7 @@ class Pool:
                 reason = f"{item.get('theme')}·{item.get('stage')}·{item.get('verdict')}"
                 consider(code, stock.get('name'), '炒作雷达', category, item.get('theme'), stock.get('role'),
                          item.get('theme'), reason, entry, price, _float(stock.get('percent')),
-                         _float(entry.get('chase')), '题材观察', item.get('kind'))
+                         _float(entry.get('chase')), '题材观察', item.get('kind'), _radar_driver(reason))
 
         for item in candidates.values():
             memberships = item.pop('memberships')
@@ -521,20 +667,22 @@ class Pool:
             rows.append((item['code'], issue_id, issue_id, quote_date, item.get('source'), item.get('tag'),
                          item.get('price'), item.get('percent'), item.get('category'), item.get('group_name'),
                          json.dumps(groups, ensure_ascii=False), item.get('sector'), item.get('sector_kind'),
-                         item.get('reason'), json.dumps(item.get('plan') or {}, ensure_ascii=False), created))
+                         item.get('reason'), item.get('driver_short') or None,
+                         json.dumps(item.get('plan') or {}, ensure_ascii=False), created))
         if not rows:
             return dict(recorded=0, issue_id=issue_id)
         with self.store.lock:
             self.store.db.executemany(
                 'INSERT INTO pool_episode(code,issue_id,published_at,quote_date,source,entry_tag,price,percent,'
-                'category,group_name,groups_json,sector,sector_kind,reason,plan,created_at) '
-                'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '
+                'category,group_name,groups_json,sector,sector_kind,reason,driver_short,plan,created_at) '
+                'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '
                 'ON CONFLICT(code,issue_id) DO UPDATE SET '
                 'percent=COALESCE(pool_episode.percent,excluded.percent),'
                 'category=COALESCE(pool_episode.category,excluded.category),'
                 'group_name=COALESCE(pool_episode.group_name,excluded.group_name),'
                 'groups_json=COALESCE(pool_episode.groups_json,excluded.groups_json),'
-                'sector_kind=COALESCE(pool_episode.sector_kind,excluded.sector_kind)',
+                'sector_kind=COALESCE(pool_episode.sector_kind,excluded.sector_kind),'
+                'driver_short=COALESCE(pool_episode.driver_short,excluded.driver_short)',
                 rows)
             self.store.db.commit()
         return dict(recorded=len(rows), issue_id=issue_id)
@@ -804,7 +952,8 @@ class Pool:
                                basis=basis, fresh=fresh) if price is not None else None,
                     plan=plan, since_add_percent=since, today_percent=percent,
                     distance_to_buy_percent=distance, zone=zone, hint=hint, history=history,
-                    max_gain_percent=max_gain, max_drawdown_percent=max_drawdown, hold_days=hold_days)
+                    max_gain_percent=max_gain, max_drawdown_percent=max_drawdown, hold_days=hold_days,
+                    fund=(self.fund_flows or {}).get(row['code']))
 
     def _benchmark(self):
         rows = self.store.getcache(BENCHMARK_CODE, 'index_daily_v1')
@@ -919,21 +1068,36 @@ class Pool:
 
     # ---------- 入选事件 / 标签 / 回测 ----------
     def _episode_counts(self, codes, trading_today):
-        """One GROUP BY for episode counts (never one query per entry)."""
+        """One query for episode-day counts (never one query per entry).
+
+        total counts distinct natural selection days (substr(published_at,1,10)) so several issues
+        of the same code on one day count once; today is 1 when the current session is one of
+        those days, else 0; first_at/last_at stay the min/max published_at.
+        """
         unique = [code for code in dict.fromkeys(codes) if code]
         if not unique:
             return {}
         marks = ','.join('?' * len(unique))
         rows = self.store.query(
-            'SELECT code,COUNT(*) AS total,'
-            'SUM(CASE WHEN substr(published_at,1,10)=? THEN 1 ELSE 0 END) AS today,'
-            'MIN(published_at) AS first_at,MAX(published_at) AS last_at '
-            f'FROM pool_episode WHERE code IN ({marks}) GROUP BY code',
-            (trading_today,) + tuple(unique))
+            'SELECT code,substr(published_at,1,10) AS day,MIN(published_at) AS first_at,'
+            'MAX(published_at) AS last_at '
+            f'FROM pool_episode WHERE code IN ({marks}) GROUP BY code,day',
+            tuple(unique))
         counts = {}
         for row in rows:
-            counts[row['code']] = dict(total=int(row['total'] or 0), today=int(row['today'] or 0),
-                                       first_at=row['first_at'], last_at=row['last_at'])
+            code, day = row['code'], row['day']
+            item = counts.get(code)
+            if item is None:
+                counts[code] = dict(total=1, today=1 if day == trading_today else 0,
+                                    first_at=row['first_at'], last_at=row['last_at'])
+                continue
+            item['total'] += 1
+            if day == trading_today:
+                item['today'] = 1
+            if item['first_at'] is None or (row['first_at'] or '') < item['first_at']:
+                item['first_at'] = row['first_at']
+            if item['last_at'] is None or (row['last_at'] or '') > item['last_at']:
+                item['last_at'] = row['last_at']
         return counts
 
     def _episode_meta(self, codes):
@@ -942,8 +1106,8 @@ class Pool:
             return {}
         marks = ','.join('?' * len(unique))
         rows = self.store.query(
-            f'SELECT code,category,group_name,groups_json,sector,sector_kind FROM pool_episode '
-            f'WHERE code IN ({marks}) ORDER BY code,published_at', tuple(unique))
+            f'SELECT code,category,group_name,groups_json,sector,sector_kind,published_at,reason,driver_short '
+            f'FROM pool_episode WHERE code IN ({marks}) ORDER BY code,published_at', tuple(unique))
         meta = {}
         for row in rows:
             meta.setdefault(row['code'], []).append(row)
@@ -1014,8 +1178,39 @@ class Pool:
                 add(bucket, label)
         return tags
 
+    @staticmethod
+    def _entry_driver(episode_rows):
+        """Latest-episode reason for the group “驱动” line; None when the code has no episode."""
+        if not episode_rows:
+            return None
+        latest = episode_rows[-1]  # _episode_meta is ordered by published_at
+        text = str(latest.get('reason') or '').strip()
+        if not text:
+            return None
+        return dict(at=latest.get('published_at'), text=text[:80])
+
+    @staticmethod
+    def _entry_driver_short(episode_rows):
+        """Most recent specific driver_short (fallback: latest non-empty); returns (text, published_at) or None."""
+        generic = frozenset({
+            '板块上涨、资金净流入', '只观察不追高', '回踩低吸', '涨停待回踩', '加速期', '题材发酵',
+            '收盘时已走强，下一交易日开盘后再确认', '市场中至少三分之二的股票在跌，暂缓建仓',
+            '候选股回落后重新超过昨收、同行同步上涨的',
+        })
+        latest = None
+        for row in reversed(episode_rows or []):
+            text = str(row.get('driver_short') or '').strip()
+            if not text:
+                continue
+            at = row.get('published_at')
+            if latest is None:
+                latest = (text, at)
+            if text not in generic and len(text) >= 10:
+                return text, at
+        return latest
+
     def _attach_episode_view(self, entries, trading_today):
-        """Attach episodes/quant/tags to view entries with a single episode aggregation query."""
+        """Attach episodes/quant/tags/driver/driver_short to view entries with one episode query."""
         codes = [entry['code'] for entry in entries]
         counts = self._episode_counts(codes, trading_today)
         meta = self._episode_meta(codes)
@@ -1026,7 +1221,12 @@ class Pool:
                                   volume_ratio=quote.get('volume_ratio'),
                                   amplitude=quote.get('amplitude'),
                                   float_mcap_yi=quote.get('float_mcap_yi'))
-            entry['tags'] = self._entry_tags(entry, meta.get(entry['code']))
+            rows = meta.get(entry['code'])
+            entry['tags'] = self._entry_tags(entry, rows)
+            entry['driver'] = self._entry_driver(rows)
+            short = self._entry_driver_short(rows)
+            entry['driver_short'] = short[0] if short else None
+            entry['driver_short_at'] = short[1] if short else None
 
     def pool_backtest(self):
         """Read-only backtest of every non-archived pool row using the existing T+1/3/5 windows."""
@@ -1099,7 +1299,8 @@ class Pool:
                 code=entry['code'], name=entry['name'], source=entry['source'], category=entry['category'],
                 first_day=entry['added_day'], first_price=entry['added_price'],
                 first_percent=first_percent.get(entry['code']),
-                episodes=episode['total'], first_episode_at=episode['first_at'], last_episode_at=episode['last_at'],
+                episodes=episode['total'],  # 入选天数（同一天多期研判只计 1 天）
+                first_episode_at=episode['first_at'], last_episode_at=episode['last_at'],
                 latest_day=latest_day, latest_price=latest_price, latest_percent=latest_percent,
                 latest=dict(day=latest_day, price=latest_price, percent=latest_percent),
                 since_percent=entry['since_add_percent'], since=entry['since_add_percent'],
