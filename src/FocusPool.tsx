@@ -1,10 +1,11 @@
 import {Fragment,useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import './focusPool.css';
 import StockSearch from './StockSearch';
+import StockChartPanel from './StockChartPanel';
 import {
   BACKTEST_EPISODE_OPTIONS,BACKTEST_PERCENT_OPTIONS,backtestAnchor,backtestCoverageText,backtestSources,backtestSummary,
-  bucketByEpisodes,bucketByFirstDay,bucketByPercent,clockText,dayShort,entryTime,episodesOf,episodesTitle,filterBacktestRows,
-  codeDigits,filterRows,fullStamp,groupEntries,groupFundText,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,layoutGroups,num2,
+  bucketByEpisodes,bucketByFirstDay,bucketByPercent,clockText,currentMatchOf,dayShort,entryTime,episodesOf,episodesTitle,filterBacktestRows,
+  codeDigits,displayName,filterRows,fullStamp,groupEntries,groupFundText,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,layoutGroups,num2,pinGroups,readPinnedGroups,writePinnedGroups,
   pctSigned,PERIOD_OPTIONS,planText,quantOf,readStoredTerminal,relatedTagsText,relatedTagsTitle,rowCounts,shortStamp,sortFromOption,
   sortOptionValue,SORT_OPTIONS,tagsOf,tagsTitle,toggleSort,windowExcessText,windowOf,windowReturnText,writeStoredTerminal,
   DEFAULT_BACKTEST_FILTER,DEFAULT_ROW_FILTER,
@@ -19,8 +20,8 @@ const DETAIL_ID=(code:string)=>'pt-detail-'+code;
 
 // 契约 §12.2：卡片内 10 列（名称完整显示 + ×N 徽标；代码去前缀；数值列右对齐，文本列左对齐）
 const COLUMNS:{key?:SortKey;label:string;cls?:string;num?:boolean}[]=[
-  {label:'代码',num:true},{label:'名称'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格',num:true},
-  {label:'现价',num:true},{key:'since',label:'入选后涨幅',num:true},{key:'today',label:'今日涨幅',num:true},
+  {label:'代码',num:true},{label:'名称'},{label:'现价',num:true,cls:'pt-col-price'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格',num:true},
+  {key:'since',label:'入选后涨幅',num:true},{key:'today',label:'今日涨幅',num:true},
   {key:'ratio',label:'量比',num:true},{key:'turnover',label:'换手(%)',num:true},{label:'相关概念·题材',cls:'pt-col-tags'},
 ];
 const headClass=(column:{cls?:string;num?:boolean})=>[column.cls,column.num?'pt-head-num':''].filter(Boolean).join(' ')||undefined;
@@ -101,6 +102,12 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   // 契约 §7：先筛选/搜索，再分组（排序作用于组内），空组自然消失。
   const filteredRows=useMemo(()=>filterRows(entries,filter,anchor),[entries,filter,anchor]);
   const groups=useMemo(()=>groupEntries(filteredRows,sort),[filteredRows,sort]);
+  // 用户第七轮：置顶组排最前（保持钉住先后顺序，不随资金排序移动；筛选后不存在的置顶组忽略）
+  const [pinned,setPinned]=useState<string[]>(()=>readPinnedGroups());
+  useEffect(()=>{writePinnedGroups(pinned);},[pinned]);
+  const pinnedSet=useMemo(()=>new Set(pinned),[pinned]);
+  const togglePin=(label:string)=>setPinned(current=>current.includes(label)?current.filter(item=>item!==label):[...current,label]);
+  const orderedGroups=useMemo(()=>pinGroups(groups,pinned),[groups,pinned]);
   const [columnCount,setColumnCount]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(min-width:1108px)').matches?2:1);
   useEffect(()=>{
     const query=window.matchMedia('(min-width:1108px)');
@@ -109,7 +116,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     query.addEventListener('change',sync);
     return ()=>query.removeEventListener('change',sync);
   },[]);
-  const groupColumns=useMemo(()=>layoutGroups(groups,columnCount),[groups,columnCount]);
+  const groupColumns=useMemo(()=>layoutGroups(orderedGroups,columnCount),[orderedGroups,columnCount]);
   const readOnly=preview;
   const watched=useMemo(()=>new Set((watch||[]).map(code=>String(code).toLowerCase())),[watch]);
   const isWatched=(code:string)=>watched.has(String(code).toLowerCase());
@@ -210,8 +217,9 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     {groups.length>0&&<div className="pt-groups">
       {groupColumns.map((column,index)=><div className="pt-group-col" key={'col-'+(index+1)}>
         {column.map(group=><GroupSection key={group.key} group={group} sort={sort} onSort={onSort} openCode={openCode} onToggle={toggleRow}
-          readOnly={readOnly} busy={busy} benchmark={data?.benchmark||'上证指数'} isWatched={isWatched}
-          onPick={pick} onWatch={addWatch} onDelete={remove} onOpenDaily={onOpenDaily}/>)}
+          readOnly={readOnly} busy={busy} request={request} isWatched={isWatched}
+          pinned={pinnedSet.has(group.label)} onTogglePin={togglePin}
+          onPick={pick} onWatch={addWatch} onDelete={remove}/>)}
       </div>)}
     </div>}
     <div className="pt-footer">
@@ -221,13 +229,12 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   </section>;
 }
 
-function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,benchmark,isWatched,onPick,onWatch,onDelete,onOpenDaily}:{
+function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,isWatched,pinned,onTogglePin,onPick,onWatch,onDelete}:{
   group:EntryGroup;sort:SortState;onSort:(key:SortKey)=>void;openCode:string;onToggle:(code:string)=>void;
-  readOnly:boolean;busy:boolean;benchmark:string;isWatched:(code:string)=>boolean;
+  readOnly:boolean;busy:boolean;request:Request;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
-  onOpenDaily:(code:string,name:string)=>void;
 }){
   const {stats}=group;
   const fundTone=isNum(stats.fundYi)?(stats.fundYi>0?'pt-up':stats.fundYi<0?'pt-down':'pt-flat'):'pt-flat';
@@ -237,11 +244,14 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,benchma
       <span className="pt-group-sep" aria-hidden="true">|</span>
       <span className="pt-group-stats">
         <span className="pt-group-stat">上涨 <b className="pt-up">{stats.up}</b>/下跌 <b className="pt-down">{stats.down}</b></span>
-        <span className="pt-group-stat" title="现价处于计划买区、当前仍符合入选条件，不代表建议买入">当前符合 <b>{stats.inBuy}</b></span>
         <span className="pt-group-stat">资金净流入 <b className={fundTone}>{groupFundText(stats.fundYi)}</b></span>
       </span>
       <span className="pt-group-sep" aria-hidden="true">|</span>
       <span className="pt-group-driver" title={stats.driverText||undefined}>驱动：<span className="pt-driver-text">{stats.driverText||'—'}</span></span>
+      <button type="button" className={'pt-pin'+(pinned?' is-pinned':'')} aria-label={(pinned?'取消置顶 ':'置顶 ')+group.label} aria-pressed={pinned}
+        title={pinned?'取消置顶':'置顶该组'} onClick={event=>{event.preventDefault();event.stopPropagation();onTogglePin(group.label);}}>
+        <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" focusable="false"><path d="M16 9V4h1V2H7v2h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>
+      </button>
     </div>
     <div className="pt-scroll">
       <div className="pt-table" role="table" aria-label={group.label+' 标的'}>
@@ -263,21 +273,21 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,benchma
               onClick={()=>onToggle(entry.code)}
               onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onToggle(entry.code);}}}>
               <span className="pt-cell pt-code pt-num" role="cell" title={entry.code}>{codeDigits(entry.code)}</span>
-              <span className="pt-cell pt-name" role="cell" title={entry.name}>
-                <span className="pt-name-text">{entry.name}</span>
+              <span className="pt-cell pt-name" role="cell" title={entry.name} aria-label={entry.name}>
+                <span className="pt-name-text">{displayName(entry.name)}</span>
                 <span className="pt-count-badge" title={episodesTitle(entry)} aria-label={'入选 '+episodes.total+' 天'}>×{episodes.total}</span>
               </span>
+              <span className="pt-cell pt-num pt-col-price" role="cell" title={entry.quote?'行情 '+clockText(entry.quote.time):'行情待取得'}>{entry.quote?num2(entry.quote.price):'—'}</span>
               <span className="pt-cell pt-time" role="cell" title={'入选 '+fullStamp(entry.added_at||entry.added_day)}>{entryTime(entry)}</span>
               <span className="pt-cell pt-num" role="cell">{num2(entry.added_price)}</span>
-              <span className="pt-cell pt-num" role="cell" title={entry.quote?'行情 '+clockText(entry.quote.time):'行情待取得'}>{entry.quote?num2(entry.quote.price):'—'}</span>
               <span className={'pt-cell pt-num '+ (isNum(entry.since_add_percent)?(entry.since_add_percent>0?'pt-up':entry.since_add_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="入选后涨幅（自入选价至今）">{pctSigned(entry.since_add_percent)}</span>
               <span className={'pt-cell pt-num '+ (isNum(entry.today_percent)?(entry.today_percent>0?'pt-up':entry.today_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="今日涨幅">{pctSigned(entry.today_percent)}</span>
               <span className="pt-cell pt-num pt-yellow pt-col-ratio" role="cell" title="量比">{isNum(quant.volume_ratio)?quant.volume_ratio.toFixed(2):'—'}</span>
               <span className="pt-cell pt-num pt-yellow pt-col-turnover" role="cell" title="换手率(%)">{isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2):'—'}</span>
               <span className={'pt-cell pt-tag pt-col-tags'+(related==='—'?' is-empty':'')} role="cell" title={relatedTagsTitle(entry)}>{related}</span>
             </div>
-            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} benchmark={benchmark}
-              watched={isWatched(entry.code)} onPick={onPick} onWatch={onWatch} onDelete={onDelete} onKline={(target)=>{void target;onOpenDaily(entry.code,entry.name);}}/>}
+            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} watched={isWatched(entry.code)} request={request}
+              onPick={onPick} onWatch={onWatch} onDelete={onDelete}/>}
           </Fragment>;
         })}
       </div>
@@ -285,31 +295,21 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,benchma
   </section>;
 }
 
-function DetailRow({id,entry,readOnly,busy,benchmark,watched,onPick,onWatch,onDelete,onKline}:{
-  id:string;entry:Entry;readOnly:boolean;busy:boolean;benchmark:string;watched:boolean;
+function DetailRow({id,entry,readOnly,busy,watched,request,onPick,onWatch,onDelete}:{
+  id:string;entry:Entry;readOnly:boolean;busy:boolean;watched:boolean;request:Request;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
-  onKline:(entry:Entry)=>void;
 }){
   const plan=entry.plan;
   const episodes=episodesOf(entry);
-  const quant=quantOf(entry);
   const tags=tagsOf(entry);
+  const current=currentMatchOf(entry);
   return <section className="pt-detail" id={id} role="region" aria-label={'详情 '+entry.name}>
+    <div className="pt-detail-chart">
+      <StockChartPanel request={request} code={entry.code} name={entry.name}/>
+    </div>
     <div className="pt-detail-grid">
-      <div className="pt-detail-col">
-        <h4>入选信息</h4>
-        <p className="pt-detail-strong">{entry.reason||'入选理由待取得'}</p>
-        <dl className="pt-kv">
-          <div><dt>来源</dt><dd>{entry.source||'—'}</dd></div>
-          <div><dt>方向</dt><dd>{entry.sector||'—'}{entry.role?' · '+entry.role:''}</dd></div>
-          <div><dt>入选</dt><dd>{fullStamp(entry.added_at||entry.added_day)} · 入选价格 {num2(entry.added_price)}</dd></div>
-          <div><dt>状态</dt><dd>{entry.state||'—'} · {entry.entry_tag||'—'} · {entry.zone||'—'}</dd></div>
-          <div><dt>跟进</dt><dd>已跟踪 {entry.hold_days??'—'} 个交易日 · 最大浮盈 {pctSigned(entry.max_gain_percent)} · 最大回撤 {pctSigned(entry.max_drawdown_percent)}</dd></div>
-        </dl>
-        <p className="pt-detail-tags">概念 {tagsTitle(tags.concept)} · 题材 {tagsTitle(tags.theme)} · 事件 {tagsTitle(tags.event)}{tags.other.length?' · 其他 '+tagsTitle(tags.other):''}</p>
-      </div>
       <div className="pt-detail-col">
         <h4>计划与关键价位</h4>
         <dl className="pt-kv">
@@ -322,41 +322,40 @@ function DetailRow({id,entry,readOnly,busy,benchmark,watched,onPick,onWatch,onDe
         </dl>
         {plan?.note?<p className="pt-muted">计划：{plan.note}</p>:null}
         {plan?.sell_note?<p className="pt-muted">离场：{plan.sell_note}</p>:null}
+      </div>
+      <div className="pt-detail-col">
+        <h4>入选理由</h4>
+        <p className="pt-detail-reason" title={entry.reason||undefined}>{entry.reason||'入选理由待取得'}</p>
+        <p className="pt-detail-tags">概念 {tagsTitle(tags.concept)} · 题材 {tagsTitle(tags.theme)} · 事件 {tagsTitle(tags.event)}{tags.other.length?' · 其他 '+tagsTitle(tags.other):''}</p>
         <h4>入选统计</h4>
         <dl className="pt-kv">
           <div><dt>累计</dt><dd>{episodes.total} 天 · 今日{episodes.today > 0 ? '已入选' : '未入选'}</dd></div>
           <div><dt>首次</dt><dd>{fullStamp(episodes.first_at)}</dd></div>
           <div><dt>最近</dt><dd>{fullStamp(episodes.last_at)}</dd></div>
-          <div><dt>量比/换手</dt><dd className="pt-yellow">{isNum(quant.volume_ratio)?quant.volume_ratio.toFixed(2):'—'} / {isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2)+'%':'—'}</dd></div>
-          <div><dt>振幅/流通</dt><dd>{isNum(quant.amplitude)?quant.amplitude.toFixed(2)+'%':'—'} / {isNum(quant.float_mcap_yi)?quant.float_mcap_yi.toFixed(1)+'亿':'—'}</dd></div>
         </dl>
-        <h4>窗口表现 <span className="pt-muted">基准 {benchmark}</span></h4>
-        <table className="pt-mini"><thead><tr><th>窗口</th><th>日期</th><th>收益</th><th>超额</th></tr></thead>
-          <tbody>{HORIZONS.map(key=>{
+        <h4>当前状态</h4>
+        <div className={'pt-current'+(current.ok?' is-match':'')}>
+          <b>当前符合：{current.ok?'是':'否'}</b>
+          <span>{current.ok?'zone 已进入买区、现价处于计划买区且未破止损，仍符合入选条件':current.reason}</span>
+          <em>不代表买入建议</em>
+        </div>
+        <h4>窗口表现</h4>
+        <div className="pt-win-badges">
+          {HORIZONS.map(key=>{
             const window=windowOf(entry,key);
-            return <tr key={key}><td>{key}</td><td>{window?.date?dayShort(window.date):'待积累'}</td>
-              <td className={isNum(window?.return_percent)?(window!.return_percent!>0?'pt-up':window!.return_percent!<0?'pt-down':'pt-flat'):''}>{windowReturnText(entry,key)}</td>
-              <td className={isNum(window?.excess_percent)?(window!.excess_percent!>0?'pt-up':window!.excess_percent!<0?'pt-down':'pt-flat'):''}>{windowExcessText(entry,key)}</td></tr>;
-          })}</tbody></table>
-      </div>
-      <div className="pt-detail-col">
-        <h4>逐日快照 <span className="pt-muted">买点 / 止损 / 目标是否触及</span></h4>
-        {entry.history&&entry.history.length?<div className="pt-scroll"><table className="pt-mini">
-          <thead><tr><th>日期</th><th>收盘</th><th>涨跌</th><th>量比</th><th>换手</th><th>买</th><th>损</th><th>标</th></tr></thead>
-          <tbody>{entry.history.slice(-10).map(row=><tr key={row.day}>
-            <td>{dayShort(row.day)}</td><td>{num2(row.price)}</td>
-            <td className={isNum(row.percent)?(row.percent>0?'pt-up':row.percent<0?'pt-down':'pt-flat'):''}>{pctSigned(row.percent)}</td>
-            <td className="pt-yellow">{isNum(row.volume_ratio)?row.volume_ratio.toFixed(2):'—'}</td>
-            <td className="pt-yellow">{isNum(row.turnover_rate)?row.turnover_rate.toFixed(2)+'%':'—'}</td>
-            <td className={row.hit_buy?'pt-hit':''}>{row.hit_buy?'✓':'—'}</td>
-            <td className={row.hit_stop?'pt-hit-warn':''}>{row.hit_stop?'✓':'—'}</td>
-            <td className={row.hit_target?'pt-hit':''}>{row.hit_target?'✓':'—'}</td>
-          </tr>)}</tbody></table></div>:<p className="pt-muted">逐日快照待积累。</p>}
+            const ret=window&&isNum(window.return_percent)?window.return_percent:null;
+            const excess=window&&isNum(window.excess_percent)?window.excess_percent:null;
+            return <span className="pt-win-badge" key={key} title={ret===null?key+' 尚未到期/待积累':key+' 收益 '+pctSigned(ret)+' · 超额 '+pctSigned(excess)}>
+              <b>{key}</b>
+              {ret===null?<em>待积累</em>:<span className={ret>0?'pt-up':ret<0?'pt-down':'pt-flat'}>{pctSigned(ret)}</span>}
+              {excess!==null&&<i className={excess>0?'pt-up':excess<0?'pt-down':'pt-flat'}>超额 {pctSigned(excess)}</i>}
+            </span>;
+          })}
+        </div>
         <h4>操作</h4>
         <div className="pt-ops">
           <button type="button" className="pt-primary" disabled={readOnly} title={readOnly?'只读预览不可交易':'打开本机人工委托票据'} onClick={()=>onPick(entry,'buy')}>买入</button>
           <button type="button" disabled={readOnly} title={readOnly?'只读预览不可交易':'打开本机人工委托票据'} onClick={()=>onPick(entry,'sell')}>卖出</button>
-          <button type="button" onClick={()=>onKline(entry)}>K线</button>
           <button type="button" disabled={readOnly||busy||watched} onClick={()=>void onWatch(entry)}>{watched?'已在自选':'加自选'}</button>
           <button type="button" className="pt-danger" disabled={readOnly||busy} onClick={()=>void onDelete(entry)}>删除</button>
           {readOnly&&<span className="pt-muted">只读预览：添加/删除/自选/交易请在桌面客户端操作。</span>}

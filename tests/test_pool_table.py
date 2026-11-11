@@ -7,8 +7,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from core.breadth import parse_quotes
-from core.pool import (FUND_FLOW_SECONDS, Pool, _fund_flow_url, _message_driver,
-                       _parse_fund_flow_payload, _radar_driver, _secid, _short_driver)
+from core.pool import (FUND_FLOW_SECONDS, SINA_FUND_FLOW_URL, Pool, _fund_flow_url,
+                       _message_driver, _news_driver, _news_sentence, _parse_fund_flow_payload,
+                       _parse_sina_fund_flow_payload, _radar_driver, _secid, _short_driver)
 from core.provider import CN
 from core.store import Store
 
@@ -53,6 +54,20 @@ def tencent_line(code, fields=None):
     for index, value in (fields or {}).items():
         values[index] = value
     return 'v_' + code + '="' + '~'.join(values) + '";'
+
+
+class FakeResponse:
+    def __init__(self, body):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def read(self):
+        return self.body
 
 
 class FakeApp:
@@ -466,7 +481,8 @@ class PoolTableTests(unittest.TestCase):
         issue['directions'][0]['why'] = '收盘时已走强，下一交易日开盘后再确认。'
         candidates = self.pool._collect(issue)
         self.assertEqual(candidates['sh600001']['driver_short'], '板块上涨、资金净流入')
-        self.assertEqual(candidates['sz000003']['driver_short'], '钧达股份早盘涨超10%公司商业')
+        # 截断的「消息面」标题不再作为 driver，回退完整的 why 短句。
+        self.assertEqual(candidates['sz000003']['driver_short'], '收盘时已走强，下一交易日开盘后再确认')
         self.assertEqual(candidates['sz000005']['driver_short'], '发酵·回踩低吸')
         self.assertEqual(candidates['sh600006']['driver_short'], '加速/高潮·只观察，不追高')
 
@@ -536,7 +552,8 @@ class PoolTableTests(unittest.TestCase):
             fetched.append(list(codes))
             return {code: dict(net=1e8, net_yi=1.0, rate=1.0, time=captured_at) for code in codes}
 
-        with patch.object(self.pool, '_fetch_fund_flows', side_effect=fake):
+        with patch.object(self.pool, '_fetch_sina_fund_flows', return_value={}), \
+                patch.object(self.pool, '_fetch_fund_flows', side_effect=fake):
             flows = self.pool.refresh_fund_flows(['sh600001', 'sh999999'])
         self.assertEqual(fetched, [['sh600001']])
         self.assertEqual(set(flows), {'sh600001'})
@@ -553,8 +570,9 @@ class PoolTableTests(unittest.TestCase):
                      '2026-11-09T08:00:00+08:00'))
             self.app.store.db.commit()
         batches = []
-        with patch.object(self.pool, '_fetch_fund_flows',
-                          side_effect=lambda codes, captured_at=None: batches.append(len(codes)) or {}):
+        with patch.object(self.pool, '_fetch_sina_fund_flows', return_value={}), \
+                patch.object(self.pool, '_fetch_fund_flows',
+                             side_effect=lambda codes, captured_at=None: batches.append(len(codes)) or {}):
             self.pool.refresh_fund_flows()
         self.assertEqual(batches, [80, 10])
 
@@ -583,6 +601,106 @@ class PoolTableTests(unittest.TestCase):
         with patch('core.pool.urllib.request.urlopen', return_value=FakeResponse(b'not-json')):
             self.assertEqual(self.pool._fetch_fund_flows(['sh600293']), {})
 
+
+    def test_fetch_sina_fund_flows_parses_and_swallows_failures(self):
+        payload = [
+            {'symbol': 'sz002747', 'netamount': '32242504.0000', 'ratioamount': '0.163914'},
+            {'symbol': 'sh600293', 'netamount': '-103805542.0000', 'ratioamount': '-0.2'},
+            {'symbol': 'sh999999', 'netamount': '1.0000', 'ratioamount': '0.0001'},
+            {'symbol': 'sz000001', 'netamount': '--', 'ratioamount': '-'},
+        ]
+        with patch('core.pool.urllib.request.urlopen',
+                   return_value=FakeResponse(json.dumps(payload).encode('utf-8'))):
+            flows = self.pool._fetch_sina_fund_flows(['sz002747', 'sh600293'], '2026-11-11T21:00:00+08:00')
+        self.assertEqual(set(flows), {'sz002747', 'sh600293'})
+        self.assertEqual(flows['sz002747'], dict(net=32242504.0, net_yi=0.3224, rate=16.39,
+                                                 time='2026-11-11T21:00:00+08:00'))
+        self.assertEqual(flows['sh600293']['net_yi'], -1.0381)
+        self.assertEqual(flows['sh600293']['rate'], -20.0)
+        self.assertIn('num=6000', SINA_FUND_FLOW_URL)
+        self.assertIn('bankuai=hs_a', SINA_FUND_FLOW_URL)
+        with patch('core.pool.urllib.request.urlopen', side_effect=OSError('network down')):
+            self.assertEqual(self.pool._fetch_sina_fund_flows(['sz002747']), {})
+        with patch('core.pool.urllib.request.urlopen', return_value=FakeResponse(b'not-json')):
+            self.assertEqual(self.pool._fetch_sina_fund_flows(['sz002747']), {})
+
+    def test_refresh_fund_flows_prefers_sina_and_skips_eastmoney(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        sina = {'sh600001': dict(net=1e8, net_yi=1.0, rate=2.5, time='2026-11-11T21:00:00+08:00')}
+        with patch.object(self.pool, '_fetch_sina_fund_flows', return_value=sina) as sina_call, \
+                patch.object(self.pool, '_fetch_fund_flows',
+                             side_effect=AssertionError('Sina 成功时不应再请求 EM')):
+            flows = self.pool.refresh_fund_flows()
+        sina_call.assert_called_once()
+        self.assertEqual(flows['sh600001'], sina['sh600001'])
+        self.assertGreater(self.pool.fund_at, 0)
+
+    def test_refresh_fund_flows_falls_back_to_eastmoney_when_sina_empty(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        em_calls = []
+
+        def fake_em(codes, captured_at=None):
+            em_calls.append(list(codes))
+            return {code: dict(net=2e8, net_yi=2.0, rate=1.0, time=captured_at) for code in codes}
+
+        with patch.object(self.pool, '_fetch_sina_fund_flows', return_value={}), \
+                patch.object(self.pool, '_fetch_fund_flows', side_effect=fake_em):
+            flows = self.pool.refresh_fund_flows(['sh600001'])
+        self.assertEqual(em_calls, [['sh600001']])
+        self.assertEqual(flows['sh600001']['net_yi'], 2.0)
+
+    def test_refresh_fund_flows_keeps_old_values_when_all_sources_fail(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        old = dict(net=32242504.0, net_yi=0.3224, rate=2.0, time='2026-11-11T20:00:00+08:00')
+        self.pool.fund_flows = {'sh600001': old}
+        with patch.object(self.pool, '_fetch_sina_fund_flows', return_value={}), \
+                patch.object(self.pool, '_fetch_fund_flows', return_value={}):
+            flows = self.pool.refresh_fund_flows()
+        self.assertEqual(flows['sh600001'], old)
+
+    def test_collect_uses_news_driver_for_sources(self):
+        issue = self.issue()
+        issue['top_picks'][0]['why'] = '收盘时已走强，下一交易日开盘后再确认。'
+        issue['pulse'] = {'hotspots': {'news': [
+            {'title': '甲股份早盘涨超10% 公司获大额订单'},
+            {'title': '丙电子午后涨停 获政策支持'},
+            {'title': '戊航空今日涨停 军工订单落地'},
+            {'title': '港股午评：恒指跌0.83% 科指跌1.36%'},
+        ]}}
+        candidates = self.pool._collect(issue)
+        self.assertEqual(candidates['sh600001']['driver_short'], '甲股份早盘涨超10%')
+        self.assertEqual(candidates['sz000003']['driver_short'], '丙电子午后涨停')
+        self.assertEqual(candidates['sz000005']['driver_short'], '戊航空今日涨停')
+        # 无新闻命中的雷达候选回退 stage/verdict 短句。
+        self.assertEqual(candidates['sh600006']['driver_short'], '加速/高潮·只观察，不追高')
+
+    def test_collect_news_driver_rejects_long_half_sentence(self):
+        issue = self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[])
+        issue['top_picks'][0]['why'] = '板块上涨且资金净流入。'
+        issue['pulse'] = {'hotspots': {'news': [
+            {'title': '甲股份早盘涨超12%公司获大额订单并签署战略合作协议推进人形机器人商业化落地进程'},
+        ]}}
+        candidates = self.pool._collect(issue)
+        self.assertEqual(candidates['sh600001']['driver_short'], '板块上涨、资金净流入')
+
+    def test_record_episodes_overwrites_legacy_driver_short(self):
+        issue = self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[])
+        issue['pulse'] = {'hotspots': {'news': [{'title': '甲股份早盘涨超10% 公司获大额订单'}]}}
+        with self.app.store.lock:
+            self.app.store.db.execute(
+                'INSERT INTO pool_episode(code,issue_id,published_at,quote_date,source,entry_tag,price,'
+                'reason,sector,sector_kind,driver_short,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
+                ('sh600001', issue['published_at'], issue['published_at'], '2026-11-09', '建仓清单',
+                 '可建仓', 10.2, '旧记录', '元件', '行业', '旧驱动', '2026-11-09T08:00:00+08:00'))
+            self.app.store.db.commit()
+        self.sync(issue)
+        rows = self.app.store.query('SELECT driver_short,COUNT(*) OVER () AS n FROM pool_episode')
+        self.assertEqual(rows[0]['n'], 1)
+        self.assertEqual(rows[0]['driver_short'], '甲股份早盘涨超10%')
+        self.sync(issue)
+        rows = self.app.store.query('SELECT driver_short FROM pool_episode')
+        self.assertEqual(rows[0]['driver_short'], '甲股份早盘涨超10%')
+
     def test_poll_refreshes_fund_flows_with_throttle(self):
         self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
         calls = []
@@ -593,6 +711,7 @@ class PoolTableTests(unittest.TestCase):
 
         with patch.object(self.pool, '_batch',
                           return_value={'sh600001': quote('sh600001', 10.5, 10.2)}), \
+                patch.object(self.pool, '_fetch_sina_fund_flows', return_value={}), \
                 patch.object(self.pool, '_fetch_fund_flows', side_effect=fake):
             self.pool.fund_at = 0.0
             self.pool.poll(force=True)
@@ -620,6 +739,8 @@ class DriverShortHelperTests(unittest.TestCase):
         self.assertEqual(_short_driver('只有这一句。'), '只有这一句')
         long_segment = '；'.join(['前缀段', '一' * 40])
         self.assertEqual(_short_driver(long_segment), '一' * 20)
+        self.assertEqual(_short_driver('候选股回落后重新超过昨收、同行同步上涨的条件尚未齐备。'),
+                         '候选股回落后重新超过昨收')
         self.assertEqual(_short_driver(''), '')
         self.assertEqual(_short_driver(None), '')
 
@@ -638,6 +759,67 @@ class DriverShortHelperTests(unittest.TestCase):
                          '启动初期·先观察，等首批涨停或资金确认'[:24])
         self.assertEqual(_radar_driver('东方·' + '阶' * 30 + '·只观察'), ('阶' * 30)[:24])
         self.assertEqual(_radar_driver('东方'), '东方')
+
+
+
+class FundFlowSinaHelperTests(unittest.TestCase):
+    def test_parse_sina_fund_flow_payload(self):
+        payload = [
+            {'symbol': 'sz002747', 'netamount': '32242504.0000', 'ratioamount': '0.163914'},
+            {'symbol': 'sh600293', 'netamount': '-103805542.0000', 'ratioamount': '-0.2'},
+            {'symbol': 'sh999999', 'netamount': '1.0000', 'ratioamount': '0.0001'},
+            {'symbol': 'bad', 'netamount': '1.0000', 'ratioamount': '0'},
+            {'symbol': 'sz000002', 'netamount': '--', 'ratioamount': '--'},
+        ]
+        flows = _parse_sina_fund_flow_payload(payload, ['sz002747', 'sh600293'],
+                                              '2026-11-11T21:00:00+08:00')
+        self.assertEqual(set(flows), {'sz002747', 'sh600293'})
+        self.assertEqual(flows['sz002747'], dict(net=32242504.0, net_yi=0.3224, rate=16.39,
+                                                 time='2026-11-11T21:00:00+08:00'))
+        self.assertEqual(flows['sh600293']['net_yi'], -1.0381)
+        self.assertEqual(flows['sh600293']['rate'], -20.0)
+        self.assertEqual(_parse_sina_fund_flow_payload(payload, [], 'x'), {})
+        self.assertEqual(_parse_sina_fund_flow_payload({'data': []}, ['sz002747'], 'x'), {})
+
+
+class NewsDriverHelperTests(unittest.TestCase):
+    def test_news_driver_matches_name_before_sector(self):
+        news = [{'title': '半导体板块午后拉升，多股涨停'},
+                {'title': '甲股份早盘涨超12%，公司获大额订单'}]
+        self.assertEqual(_news_driver(news, '甲股份', '半导体', ''), '甲股份早盘涨超12%')
+
+    def test_news_driver_matches_sector_theme_keywords(self):
+        news = [{'title': '人形机器人板块午后拉升，多股涨停'}]
+        self.assertEqual(_news_driver(news, '', '机器人执行器', ''), '人形机器人板块午后拉升')
+        self.assertEqual(_news_driver([{'title': '大摩高喊抄底半导体！机构看好后市'}], '', '半导体', ''),
+                         '大摩高喊抄底半导体')
+
+    def test_news_driver_ignores_unrelated_titles(self):
+        news = [{'title': '今日比特币：跌至7.4万美元附近，现货ETF上周遭12.8亿美元资金撤出'}]
+        self.assertEqual(_news_driver(news, '甲股份', '半导体', ''), '')
+        self.assertEqual(_news_driver([{'title': '港股午评：恒指跌0.83% 科指跌1.36%'}],
+                                      '剑桥科技', '通信设备', ''), '')
+
+    def test_news_driver_requires_complete_clause(self):
+        news = [{'title': '甲股份早盘涨超12%公司获大额订单并签署战略合作协议推进人形机器人商业化落地进程'}]
+        self.assertEqual(_news_driver(news, '甲股份', '', ''), '')
+
+    def test_news_sentence_strips_media_prefix_and_keeps_complete_clause(self):
+        self.assertEqual(_news_sentence('智通财经：优必选早盘涨超5%', '优必选'), '优必选早盘涨超5%')
+        self.assertEqual(
+            _news_sentence('光又回来了！超116亿资金涌入，“易中天”、源杰科技、联讯仪器、剑桥科技等集体大涨', '剑桥科技'),
+            '剑桥科技等集体大涨')
+        self.assertEqual(_news_sentence('公司公告：签订5亿元订单，股价涨停'), '签订5亿元订单')
+
+    def test_news_ascii_tokens_need_word_boundary(self):
+        openai_title = {'title': '台积电批准向Anthropic和OpenAI合计投资10亿美元，10月营收同比大增60%'}
+        self.assertEqual(_news_driver([openai_title], '埃斯顿', '物理AI', ''), '')
+        physical = {'title': '物理AI概念股涨幅居前 凯乐士科技大涨超57%'}
+        self.assertEqual(_news_driver([physical], '埃斯顿', '物理AI', ''), '物理AI概念股涨幅居前')
+
+    def test_news_name_variants_match_full_width_suffix(self):
+        self.assertEqual(_news_driver([{'title': '京东方A午后涨超5%'}], '京东方Ａ', '', ''), '京东方A午后涨超5%')
+        self.assertEqual(_news_driver([{'title': '宇树科技盘中涨超8%'}], '宇树科技-W', '', ''), '宇树科技盘中涨超8%')
 
 
 class FundFlowHelperTests(unittest.TestCase):

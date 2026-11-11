@@ -1,0 +1,21 @@
+/* 可复用行情图表面板（股票池行详情内嵌；分时/日K/周K） */
+.stock-chart-panel{display:grid;gap:4px;min-width:0;background:#0b1422;border:1px solid #27354c;border-radius:6px;overflow:hidden}
+.scp-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;padding:3px 6px;background:#101c2c;border-bottom:1px solid #1f2b3f}
+.stock-chart-panel .tabs{display:flex;background:#0e1829;padding:2px;border-radius:5px;flex:0 0 auto}
+.stock-chart-panel .tabs button{border:0;background:none;padding:3px 10px;font-size:11px;color:#8198b8;border-radius:4px;line-height:16px}
+.stock-chart-panel .tabs button.chosen{color:#b1d0ff;background:#243a59}
+.stock-chart-panel .tabs button[role=tab][aria-selected=true]{color:#b1d0ff;background:#243a59}
+.scp-state{font-size:10px;color:#8fa6c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.scp-expand{flex:0 0 auto;font-size:10px;line-height:14px;padding:2px 8px;height:20px;border-radius:4px}
+.scp-message,.scp-error{margin:0;padding:10px 8px;font-size:11px;color:#8fa6c4}
+.scp-error{color:#f3ce88}
+.scp-chart{min-width:0;padding:0 2px 2px}
+.stock-chart-panel .scp-chart .chart{height:250px}
+.stock-chart-panel.is-expanded .scp-chart .chart{height:430px}
+/* 内嵌面板保持简洁：隐藏引擎自带的做T/均线/形态等高级控件（数据也未传入） */
+.stock-chart-panel .minute-chart-controls,.stock-chart-panel .candle-controls,.stock-chart-panel .t-cost-settings,
+.stock-chart-panel .daily-pattern-controls,.stock-chart-panel .chart-display-options{display:none}
+@media(max-width:1160px){
+ .stock-chart-panel .scp-chart .chart{height:220px}
+ .stock-chart-panel.is-expanded .scp-chart .chart{height:380px}
+}

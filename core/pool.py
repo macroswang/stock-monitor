@@ -13,6 +13,7 @@ import re
 import statistics
 import threading
 import time
+import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
@@ -36,10 +37,13 @@ TAG_BUCKETS = ('concept', 'theme', 'event', 'other')
 FUND_FLOW_URL = 'https://push2.eastmoney.com/api/qt/ulist.np/get'
 FUND_FLOW_FIELDS = 'f12,f13,f14,f62,f184'
 FUND_FLOW_BATCH = 80
-FUND_FLOW_SECONDS = 30
+FUND_FLOW_SECONDS = 60
+SINA_FUND_FLOW_URL = ('https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/'
+                      'MoneyFlow.ssl_bkzj_ssggzj?page=1&num=6000&sort=symbol&asc=1&bankuai=hs_a')
 DRIVER_SHORT_MESSAGE_LIMIT = 26
 DRIVER_SHORT_RADAR_LIMIT = 24
 DRIVER_SHORT_FALLBACK_LIMIT = 20
+NEWS_DRIVER_LIMIT = 28
 _MESSAGE_DRIVER_RE = re.compile(r'消息面[：:]?\s*[「『“"]([^」』”"]+)[」』”"]')
 _SHORT_DRIVER_RULES = (
     ('板块上涨且资金净流入', '板块上涨、资金净流入'),
@@ -49,6 +53,22 @@ _SHORT_DRIVER_RULES = (
     ('加速/高潮', '加速期'),
     ('发酵', '题材发酵'),
 )
+_NEWS_SPLIT_RE = re.compile(r'[！!。；;：:，,、？?\s]+')
+_NEWS_PREFIX_RE = re.compile(r'^[^：:]{1,6}[：:]')
+_NEWS_QUOTES = "「」『』“”\"'"
+NEWS_EVENT_WORDS = (
+    '订单', '发射', '获批', '政策', '签约', '大涨', '涨停', '资金', '发布', '收购', '业绩',
+    '突破', '合作', '中标', '走强', '走高', '涨超', '净流入', '利好', '并购', '扩产', '投产',
+    '封板', '增持', '减持', '涨价', '融资', '上市', 'IPO', '拉升', '反弹', '签署', '获批',
+)
+NEWS_THEME_KEYWORDS = (
+    '机器人', '人形机器人', '物理AI', 'AI', '算力', '半导体', '芯片', '光通信', '通信',
+    '商业航天', '卫星', '低空经济', '短剧', '游戏', '传媒', '固态电池', '光伏', '燃气',
+    '煤炭', '军工', '数据中心', 'CPO', '存储', '消费电子', '智能穿戴', '汽车', '电力',
+    '核聚变', '冰雪', '化工', '农业', '稀土', '黄金', '医药', '证券', '银行', '保险',
+    '地产', '钢铁', '有色', '石油', '天然气', '创新药',
+)
+NEWS_NOISE_SECTORS = {'昨日首板', '题材股', '东方财富热股', '东方', '名称辈', '生肖玄学', '手动', '其他'}
 
 ALERT_KINDS = {'已进入买区': ('buy_zone', '进入买区'), '已跌破防守位': ('stop_break', '跌破防守位')}
 
@@ -186,6 +206,36 @@ def _parse_fund_flow_payload(payload, captured_at):
     return flows
 
 
+def _parse_sina_fund_flow_payload(payload, codes, captured_at):
+    """Parse the Sina all-A-share MoneyFlow list into {code: {net, net_yi, rate, time}}.
+
+    symbol is like sz002747, netamount is net inflow in yuan, ratioamount is the net inflow ratio.
+    Only the requested pool codes are kept; invalid rows are skipped.
+    """
+    wanted = set(codes or ())
+    flows = {}
+    if not wanted or not isinstance(payload, list):
+        return flows
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        code = str(item.get('symbol') or '').strip().lower()
+        if not code or code not in wanted:
+            continue
+        net = _float(item.get('netamount'))
+        if net is None:
+            continue
+        ratio = _float(item.get('ratioamount'))
+        flows[code] = dict(net=net, net_yi=round(net / 1e8, 4),
+                           rate=round(ratio * 100, 2) if ratio is not None else None,
+                           time=captured_at)
+    return flows
+
+
+def _news_text(value):
+    return unicodedata.normalize('NFKC', str(value or '')).strip()
+
+
 def _short_driver(text, limit=DRIVER_SHORT_FALLBACK_LIMIT):
     """Compress a research reason into one short, concrete driver phrase (契约 §12.1)."""
     value = str(text or '').strip()
@@ -199,7 +249,16 @@ def _short_driver(text, limit=DRIVER_SHORT_FALLBACK_LIMIT):
     segments = [segment.strip(' 。') for segment in value.split('；') if segment.strip(' 。')]
     if not segments:
         return ''
-    return segments[-1][:limit]
+    last = segments[-1]
+    if len(last) <= limit:
+        return last
+    # Prefer a complete clause over a hard cut that could leave a half sentence.
+    clipped = last[:limit]
+    boundary = max(clipped.rfind(separator) for separator in ('，', '、', '；', '：', ' '))
+    if boundary >= 4:
+        clipped = clipped[:boundary]
+    clipped = clipped.rstrip('的了和与及等或，、；： ')
+    return clipped or last[:limit]
 
 
 def _message_driver(opportunity):
@@ -219,6 +278,113 @@ def _radar_driver(reason):
     if not tail:
         return _short_driver(reason)
     return tail[:DRIVER_SHORT_RADAR_LIMIT]
+
+def _issue_news(issue):
+    """Full news headlines attached to one issue (issue.pulse.hotspots.news)."""
+    pulse = issue.get('pulse') if isinstance(issue, dict) else None
+    hotspots = pulse.get('hotspots') if isinstance(pulse, dict) else None
+    news = hotspots.get('news') if isinstance(hotspots, dict) else None
+    return news if isinstance(news, list) else []
+
+
+def _news_name_variants(name):
+    base = re.sub(r'\s+', '', _news_text(name))
+    if len(base) < 2:
+        return ()
+    variants = [base]
+    stripped = re.sub(r'-[A-Za-z]+$', '', base)
+    if stripped and stripped not in variants:
+        variants.append(stripped)
+    for value in list(variants):
+        if len(value) > 3 and value[-1] in 'A':
+            short = value[:-1]
+            if short not in variants:
+                variants.append(short)
+    return tuple(value for value in variants if len(value) >= 2)
+
+
+def _news_sector_tokens(sector):
+    """Candidate-specific sector/theme tokens: full sector name plus theme words it contains."""
+    raw = re.sub(r'\s+', '', _news_text(sector))
+    if len(raw) < 2 or raw in NEWS_NOISE_SECTORS:
+        return ()
+    tokens = [raw]
+    stripped = re.sub(r'[ⅡⅢ]+$', '', raw)
+    if stripped and stripped != raw:
+        tokens.append(stripped)
+    tokens.extend(word for word in NEWS_THEME_KEYWORDS if word in raw)
+    return tuple(dict.fromkeys(value for value in tokens if len(value) >= 2))
+
+
+def _news_hit(text, variants):
+    """Substring match; ASCII tokens must stand alone so e.g. AI never matches inside OpenAI."""
+    for variant in variants:
+        if re.search(r'[A-Za-z0-9]', variant):
+            if re.search(r'(?<![A-Za-z0-9])' + re.escape(variant) + r'(?![A-Za-z0-9])', text):
+                return True
+        elif variant in text:
+            return True
+    return False
+
+
+def _news_sentence(title, name='', sector=''):
+    """Extract one complete clause from a full news headline; '' when it would be a half sentence."""
+    text = _news_text(title).strip(_NEWS_QUOTES)
+    if not text:
+        return ''
+    text = _NEWS_PREFIX_RE.sub('', text, count=1).strip(_NEWS_QUOTES)
+    if not text:
+        return ''
+    # Never cut a headline that has no punctuation/whitespace separators at all.
+    clauses = [clause.strip(_NEWS_QUOTES) for clause in _NEWS_SPLIT_RE.split(text)]
+    clauses = [clause for clause in clauses if 4 <= len(clause) <= NEWS_DRIVER_LIMIT]
+    if not clauses:
+        return ''
+    names = _news_name_variants(name)
+    sectors = _news_sector_tokens(sector)
+
+    def score(clause):
+        value = 3 if _news_hit(clause, names) else 0
+        if _news_hit(clause, sectors):
+            value += 2
+        if any(word in clause for word in NEWS_EVENT_WORDS):
+            value += 1
+        return value
+
+    best = max(clauses, key=score)
+    if score(best) > 0:
+        return best[:NEWS_DRIVER_LIMIT]
+    short = next((clause for clause in clauses if len(clause) <= 20), '')
+    return short[:NEWS_DRIVER_LIMIT]
+
+
+def _news_driver(news, name, sector, why=''):
+    """Best matching full-news clause for a candidate; '' falls back to the existing short reason."""
+    items = news if isinstance(news, list) else []
+    if not items:
+        return ''
+    names = _news_name_variants(name)
+    sectors = _news_sector_tokens(sector)
+    scored = []
+    for index, item in enumerate(items):
+        title = item.get('title') if isinstance(item, dict) else item
+        if not title:
+            continue
+        text = re.sub(r'\s+', '', _news_text(title))
+        name_hit = _news_hit(text, names)
+        sector_hit = _news_hit(text, sectors)
+        if not (name_hit or sector_hit):
+            continue
+        score = (3 if name_hit else 0) + (2 if sector_hit else 0)
+        if any(word in text for word in NEWS_EVENT_WORDS):
+            score += 1
+        scored.append((score, index, str(title)))
+    scored.sort(key=lambda entry: (-entry[0], entry[1]))
+    for _, _, title in scored:
+        sentence = _news_sentence(title, name, sector)
+        if sentence:
+            return sentence
+    return ''
 
 
 def _category(kind):
@@ -313,10 +479,10 @@ class Pool:
         return parse_quotes(text, set(codes))
 
     def refresh_fund_flows(self, codes=None):
-        """Refresh Eastmoney main-force net inflow for pool codes.
+        """Refresh main-force net inflow for pool codes: Sina all-market first, Eastmoney fallback.
 
-        Bounded to pool codes, <=80 secids per request; a failed batch is skipped silently so the
-        previous values stay visible. Callers (poll/preview) own the >=30s throttling.
+        Sina returns every A share in one response, so a success never triggers Eastmoney batches;
+        any failure keeps the previous values visible. Callers (poll/preview) own the throttling.
         """
         allowed = self.codes()
         if not allowed:
@@ -326,10 +492,29 @@ class Pool:
         captured_at = _now()
         self.fund_at = time.monotonic()
         flows = dict(self.fund_flows or {})
-        for start in range(0, len(selected), FUND_FLOW_BATCH):
-            flows.update(self._fetch_fund_flows(selected[start:start + FUND_FLOW_BATCH], captured_at))
+        sina = self._fetch_sina_fund_flows(selected, captured_at) if selected else {}
+        if sina:
+            flows.update(sina)
+        else:
+            for start in range(0, len(selected), FUND_FLOW_BATCH):
+                flows.update(self._fetch_fund_flows(selected[start:start + FUND_FLOW_BATCH], captured_at))
         self.fund_flows = {code: value for code, value in flows.items() if code in allowed_set}
         return dict(self.fund_flows)
+
+    def _fetch_sina_fund_flows(self, codes, captured_at=None):
+        """Fetch the Sina all-A-share money-flow list in one request; failures return {}."""
+        if not codes:
+            return {}
+        request = urllib.request.Request(SINA_FUND_FLOW_URL, headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
+                          '(KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+            'Referer': 'https://finance.sina.com.cn/'})
+        try:
+            with urllib.request.urlopen(request, timeout=25) as response:
+                payload = json.loads(response.read().decode('utf-8'))
+        except (OSError, ValueError, TypeError):
+            return {}
+        return _parse_sina_fund_flow_payload(payload, codes, captured_at or _now())
 
     def _fetch_fund_flows(self, codes, captured_at=None):
         """Fetch one <=80 batch from Eastmoney; any network/parse failure returns {}."""
@@ -548,6 +733,7 @@ class Pool:
         """Build the candidate map for one issue, keeping every source membership for multi-label groups."""
         candidates = {}
         priority = {'建仓清单': 0, '方向候选': 1, '炒作雷达': 2}
+        news = _issue_news(issue)
 
         def consider(code, name, source, category, group_name, role, sector, reason, plan,
                      price, percent, chase, tag, sector_kind=None, driver_short=None):
@@ -583,17 +769,17 @@ class Pool:
                 reason += '；' + str(pick['why'])[:60]
             plan = {key: pick.get(key) for key in ('buy_low', 'buy_high', 'chase', 'stop', 'target1',
                                                    'target2', 'trail', 'note', 'sell_note')}
+            driver_short = (_news_driver(news, pick.get('name'), pick.get('sector'), pick.get('why'))
+                            or _short_driver(pick.get('why') or pick.get('note')))
             consider(code, pick.get('name'), '建仓清单', _category(pick.get('sector_kind')), pick.get('sector'),
                      pick.get('role'), pick.get('sector'), reason, plan, price, percent, chase, tag,
-                     pick.get('sector_kind'), _short_driver(pick.get('why') or pick.get('note')))
+                     pick.get('sector_kind'), driver_short)
 
         tokens = _name_tokens(issue)
         for direction in issue.get('directions') or []:
             stocks = direction.get('stocks') or []
             candidate = direction.get('candidate') or {}
             candidate_code = candidate.get('code') or (stocks[0].get('code') if stocks else None)
-            # Topic/news headline first (消息面「…」), then compressed direction reason.
-            message_driver = _message_driver(direction.get('opportunity'))
             pool = list(stocks)
             if candidate and not any(s.get('code') == candidate.get('code') for s in pool):
                 pool.append(candidate)
@@ -613,8 +799,10 @@ class Pool:
                 if direction.get('state') != '可考虑建仓' and tag == '可建仓':
                     tag = '条件未达'
                 reason = f"方向：{direction.get('sector')}（{direction.get('state')}）；{(direction.get('why') or '')[:60]}"
-                driver_short = (message_driver or
-                                _short_driver(direction.get('why') or stock.get('reason')))
+                driver_short = (
+                    _news_driver(news, stock.get('name'), direction.get('sector') or stock.get('sector'),
+                                 direction.get('why') or stock.get('reason'))
+                    or _short_driver(direction.get('why') or stock.get('reason')))
                 consider(code, stock.get('name'), '方向候选', _category(direction.get('sector_kind')),
                          direction.get('sector'), stock.get('role'), direction.get('sector'), reason, entry,
                          price, percent, chase, tag, direction.get('sector_kind'), driver_short)
@@ -628,9 +816,11 @@ class Pool:
                 price = _float(stock.get('price'))
                 entry = stock.get('entry') or {}
                 reason = f"{item.get('theme')}·{item.get('stage')}·{item.get('verdict')}"
+                driver_short = (_news_driver(news, stock.get('name'), item.get('theme'), reason)
+                                or _radar_driver(reason))
                 consider(code, stock.get('name'), '炒作雷达', category, item.get('theme'), stock.get('role'),
                          item.get('theme'), reason, entry, price, _float(stock.get('percent')),
-                         _float(entry.get('chase')), '题材观察', item.get('kind'), _radar_driver(reason))
+                         _float(entry.get('chase')), '题材观察', item.get('kind'), driver_short)
 
         for item in candidates.values():
             memberships = item.pop('memberships')
@@ -682,7 +872,8 @@ class Pool:
                 'group_name=COALESCE(pool_episode.group_name,excluded.group_name),'
                 'groups_json=COALESCE(pool_episode.groups_json,excluded.groups_json),'
                 'sector_kind=COALESCE(pool_episode.sector_kind,excluded.sector_kind),'
-                'driver_short=COALESCE(pool_episode.driver_short,excluded.driver_short)',
+                "driver_short=CASE WHEN excluded.driver_short IS NOT NULL AND excluded.driver_short<>'' "
+                "THEN excluded.driver_short ELSE pool_episode.driver_short END",
                 rows)
             self.store.db.commit()
         return dict(recorded=len(rows), issue_id=issue_id)

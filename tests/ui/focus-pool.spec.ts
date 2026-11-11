@@ -11,6 +11,18 @@ type Json=Record<string,any>;
 try{mkdirSync('/tmp/pool-table-verify',{recursive:true});}catch{}
 const SHOTS='/tmp/pool-table-verify';
 
+// 置顶相关用例：每个用例首次导航前清空置顶 localStorage；同一用例内 reload 时保留（用于持久化断言）
+test.beforeEach(async({page})=>{
+  await page.addInitScript(()=>{
+    try{
+      if(!sessionStorage.getItem('pool-test-pin-inited')){
+        localStorage.removeItem('stock-monitor-pool-pinned-v1');
+        sessionStorage.setItem('pool-test-pin-inited','1');
+      }
+    }catch{}
+  });
+});
+
 const QUOTES_TIME='2026-11-11T12:45:00+08:00';
 const UPDATED_AT='2026-11-11T12:46:00+08:00';
 
@@ -187,6 +199,7 @@ type BootOptions={
   failPoolTimes?:number;
   failBacktestTimes?:number;
   delayPoolMs?:number;
+  emptyChart?:boolean;
 };
 
 // Tauri rpc mock：pool / pool_backtest 为主，其余为主应用启动所需的最小响应。
@@ -200,6 +213,7 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
     failPoolTimes:options.failPoolTimes??0,
     failBacktestTimes:options.failBacktestTimes??0,
     delayPoolMs:options.delayPoolMs??0,
+    emptyChart:Boolean(options.emptyChart),
   };
   await page.addInitScript((config:Json)=>{
     try{
@@ -209,6 +223,23 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
     }catch{}
     const w=window as any;
     w.__poolCalls=[];
+    // 行详情内嵌图表所需的最小行情：分时 4 根 + 日K 60 根（可被 emptyChart 覆盖分时）
+    const minuteBars=[
+      {time:'09:30',close:'10.00',volume:100,complete:true,average:'10.00'},
+      {time:'09:31',close:'10.01',volume:120,complete:true,average:'10.005'},
+      {time:'09:32',close:'10.02',volume:90,complete:true,average:'10.01'},
+      {time:'09:33',close:'10.03',volume:80,complete:true,average:'10.015'},
+      {time:'09:34',close:'10.04',volume:70,complete:true,average:'10.02'},
+    ];
+    const dailyRows=(()=>{
+      const base=new Date(Date.UTC(2026,10,11));
+      return Array.from({length:60},(_,index)=>{
+        const day=new Date(base);day.setUTCDate(day.getUTCDate()-(59-index));
+        const value=(9.5+index*0.01).toFixed(2);
+        return {date:day.toISOString().slice(0,10),open:value,close:(Number(value)+0.05).toFixed(2),
+          high:(Number(value)+0.1).toFixed(2),low:(Number(value)-0.1).toFixed(2),volume:String(1000+index)};
+      });
+    })();
     let poolFailures=Number(config.failPoolTimes||0);
     let backtestFailures=Number(config.failBacktestTimes||0);
     const clone=(value:any)=>JSON.parse(JSON.stringify(value));
@@ -218,7 +249,7 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
         if(command!=='rpc')return 0;
         w.__poolCalls.push({method:params.method,args:params.args??{}});
         switch(params.method){
-          case 'snapshot':return {watch:[],events:[],config:{monitor:false},now:config.updatedAt,market_open:false,data_dir:'/tmp',rule:'r1'};
+          case 'snapshot':return {watch:[{code:'sh603002',name:'甲科技',enabled:1,health:'正常',candidates:[],quote:null,broker_sources:[]}],events:[],config:{monitor:false},now:config.updatedAt,market_open:false,data_dir:'/tmp',rule:'r1'};
           case 'market':case 'market_overview':case 'index_minute':return {quotes:[],minute:null};
           case 'daily_outlook':return {issue:null,quotes:[],sectors:{},day:null,batch:null,schedule:''};
           case 'sector_flow':return {snapshot:null,running:false,error:''};
@@ -240,8 +271,16 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
           case 'paper_quote':return {code:params.args?.code,name:'甲机器人',stamp:params.args?.stamp,price:1268,volume:0,source:'测试',token:'t',order_mode:'paper'};
           case 'paper_chart':return {points:[]};
           case 'trading_chart':return {code:'',day:'',accounts:[],points:[]};
-          case 'chart':return [];
-          case 'history':return {daily:[],days:[],events:[],source:{}};
+          case 'chart':{
+            const kind=params.args?.kind;
+            if(kind==='minute')return config.emptyChart?[]:[{day:'2026-11-11',data:{bars:minuteBars,previous_close:'10'}}];
+            if(kind==='daily')return [{day:'2026-11-11',data:dailyRows[dailyRows.length-1]}];
+            return [];
+          }
+          case 'history':return {code:params.args?.code,daily:dailyRows,days:[],events:[],source:{},minute_days:[]};
+          case 'minute_ensure':return {job:'mock-minute'};
+          case 'daily_load':return {job:'mock-daily'};
+          case 'job':return {status:'done',result:null};
           case 'volume_flow':return {code:params.args?.code,day:'',status:'unavailable',minutes:[],message:''};
           case 'events':case 'messages':return {items:[],total:0};
           case 'config':return {};
@@ -272,13 +311,13 @@ const columnTitles=async(page:Page)=>columnsLoc(page).evaluateAll(columns=>colum
   return (title?.textContent||'').trim();
 })));
 const columnFundValues=async(page:Page)=>columnsLoc(page).evaluateAll(columns=>columns.map(column=>[...column.querySelectorAll('.pt-group')].map(group=>{
-  const text=(group.querySelector('.pt-group-stats .pt-group-stat:nth-child(3) b')?.textContent||'').trim();
+  const text=(group.querySelector('.pt-group-stats .pt-group-stat:nth-child(2) b')?.textContent||'').trim();
   const match=text.match(/^([+-]?\d+\.\d{2})亿/);
   return match?parseFloat(match[1]):null;
 })));
 const firstColumnFundTexts=async(page:Page)=>columnsLoc(page).evaluateAll(columns=>columns.map(column=>{
   const group=column.querySelector('.pt-group');
-  return (group?.querySelector('.pt-group-stats .pt-group-stat:nth-child(3) b')?.textContent||'').trim();
+  return (group?.querySelector('.pt-group-stats .pt-group-stat:nth-child(2) b')?.textContent||'').trim();
 }));
 const firstNameOf=async(group:Locator)=>(await group.locator('.pt-row').first().locator('.pt-name-text').innerText()).trim();
 const rowCellsIn=async(group:Locator,name:string)=>{
@@ -417,19 +456,41 @@ test('组头：严格单行（height<28/nowrap/overflow hidden）、统计、具
   expect(headStyle.whiteSpace).toBe('nowrap');
   expect(headStyle.flexWrap).toBe('nowrap');
   expect(headStyle.overflow).toBe('hidden');
-  expect(headStyle.height).toBeLessThan(28);
+  expect(headStyle.height).toBeLessThan(40);
   expect(headStyle.height).toBeGreaterThan(20);
+  // 仍为单行：组名/统计/驱动/置顶按钮顶边基本对齐（无换行）
+  const headRows=await head.evaluate(element=>{const boxes=['.pt-group-title','.pt-group-stats','.pt-group-driver','.pt-pin'].map(selector=>element.querySelector(selector)?.getBoundingClientRect().top??-1);return {tops:boxes,height:element.getBoundingClientRect().height};});
+  for(const top of headRows.tops.slice(1))expect(Math.abs(top-headRows.tops[0])).toBeLessThanOrEqual(6);
   await expect(human.locator('.pt-group-title')).toHaveText('人形机器人 — 3 只');
   const stats=head.locator('.pt-group-stats');
-  await expect(stats.locator('.pt-group-stat')).toHaveCount(3);
+  // 组头不再有「当前符合」统计：只剩 上涨/下跌、资金净流入
+  await expect(stats.locator('.pt-group-stat')).toHaveCount(2);
+  await expect(head).not.toContainText('当前符合');
   await expect(stats.locator('.pt-group-stat').nth(0)).toHaveText('上涨 2/下跌 1');
   await expect(stats.locator('.pt-group-stat').nth(0).locator('b.pt-up')).toHaveText('2');
   await expect(stats.locator('.pt-group-stat').nth(0).locator('b.pt-down')).toHaveText('1');
-  const inBuy=stats.locator('.pt-group-stat').nth(1);
-  await expect(inBuy).toHaveText('当前符合 2');
-  await expect(inBuy).toHaveAttribute('title','现价处于计划买区、当前仍符合入选条件，不代表建议买入');
-  await expect(stats.locator('.pt-group-stat').nth(2)).toHaveText('资金净流入 +8.60亿');
-  await expect(stats.locator('.pt-group-stat').nth(2).locator('b')).toHaveClass(/pt-up/);
+  await expect(stats.locator('.pt-group-stat').nth(1)).toHaveText('资金净流入 +8.60亿');
+  await expect(stats.locator('.pt-group-stat').nth(1).locator('b')).toHaveClass(/pt-up/);
+  // 组头末尾置顶按钮：svg + aria-label/aria-pressed
+  const pin=head.locator('.pt-pin');
+  await expect(pin).toHaveCount(1);
+  await expect(pin.locator('svg')).toHaveCount(1);
+  await expect(pin).toHaveAttribute('aria-label','置顶 人形机器人');
+  await expect(pin).toHaveAttribute('aria-pressed','false');
+  // 新 pin 样式：20×20、圆角 6、1px 边框、svg viewBox 24 且 12×12
+  const pinStyle=await pin.evaluate(element=>{
+    const style=getComputedStyle(element);
+    const svg=element.querySelector('svg');
+    return {width:style.width,height:style.height,radius:style.borderRadius,borderWidth:style.borderTopWidth,
+      viewBox:svg?.getAttribute('viewBox'),svgWidth:svg?.getAttribute('width'),svgHeight:svg?.getAttribute('height')};
+  });
+  expect(pinStyle.width).toBe('20px');
+  expect(pinStyle.height).toBe('20px');
+  expect(pinStyle.radius).toBe('6px');
+  expect(pinStyle.borderWidth).toBe('1px');
+  expect(pinStyle.viewBox).toBe('0 0 24 24');
+  expect(pinStyle.svgWidth).toBe('12');
+  expect(pinStyle.svgHeight).toBe('12');
   // 驱动：即使组内存在更晚的泛化短句（乙减速器 12:40「回踩低吸」），也优先具体新闻短句
   const driver=human.locator('.pt-group-driver');
   await expect(driver).toHaveText('驱动：人形机器人订单落地，产业加速');
@@ -437,31 +498,58 @@ test('组头：严格单行（height<28/nowrap/overflow hidden）、统计、具
   await expect(driverText).toHaveText('人形机器人订单落地，产业加速');
   await expect(driver).toHaveAttribute('title','人形机器人订单落地，产业加速');
   expect((await driverText.innerText()).length).toBeLessThanOrEqual(40);
+  expect((await driverText.innerText()).endsWith('…')).toBe(false);
 
-  // 其它组统计/驱动
+  // 其它组统计/驱动（资金净流入显示数值）
   const spaceStats=groupOf(page,'商业航天').locator('.pt-group-stats');
+  await expect(spaceStats.locator('.pt-group-stat')).toHaveCount(2);
   await expect(spaceStats.locator('.pt-group-stat').nth(0)).toHaveText('上涨 1/下跌 1');
-  await expect(spaceStats.locator('.pt-group-stat').nth(1)).toHaveText('当前符合 1');
-  await expect(spaceStats.locator('.pt-group-stat').nth(2)).toHaveText('资金净流入 +2.50亿');
+  await expect(spaceStats.locator('.pt-group-stat').nth(1)).toHaveText('资金净流入 +2.50亿');
   await expect(groupOf(page,'商业航天').locator('.pt-group-driver')).toHaveText('驱动：卫星互联网订单确认，发射排期密集');
+  expect((await groupOf(page,'商业航天').locator('.pt-driver-text').innerText()).endsWith('…')).toBe(false);
 
   const comm=groupOf(page,'通信光通信');
-  await expect(comm.locator('.pt-group-stats .pt-group-stat').nth(1)).toHaveText('当前符合 1');
-  await expect(comm.locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 +0.80亿');
+  await expect(comm.locator('.pt-group-stats .pt-group-stat')).toHaveCount(2);
+  await expect(comm.locator('.pt-group-stats .pt-group-stat').nth(1)).toHaveText('资金净流入 +0.80亿');
   await expect(comm.locator('.pt-group-driver')).toHaveText('驱动：光通信股今早逆市走高');
 
   const semi=groupOf(page,'半导体电子');
-  await expect(semi.locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 -2.00亿');
-  await expect(semi.locator('.pt-group-stats .pt-group-stat').nth(2).locator('b')).toHaveClass(/pt-down/);
-  // 同一组内两条短句：带新闻关键词+标点的「大摩…」优先于更晚的「芯片股午后逆市拉升」
-  await expect(semi.locator('.pt-group-driver')).toHaveText('驱动：大摩高喊抄底半导体：资金回流');
+  await expect(semi.locator('.pt-group-stats .pt-group-stat').nth(1)).toHaveText('资金净流入 -2.00亿');
+  await expect(semi.locator('.pt-group-stats .pt-group-stat').nth(1).locator('b')).toHaveClass(/pt-down/);
+  // 驱动相关性：半导体组的关键词为「半导体电子 / 芯片 / OLED」，「大摩高喊抄底半导体」不含关键词→不作为组头驱动；含「芯片」的短句保留
+  await expect(semi.locator('.pt-group-driver')).toHaveText('驱动：芯片股午后逆市拉升');
+  expect((await semi.locator('.pt-driver-text').innerText()).endsWith('…')).toBe(false);
 
   // 无同义词命中的标签组（东方）只有泛化短句时回退展示
-  await expect(groupOf(page,'东方').locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 —');
+  await expect(groupOf(page,'东方').locator('.pt-group-stats .pt-group-stat').nth(1)).toHaveText('资金净流入 —');
   await expect(groupOf(page,'东方').locator('.pt-group-driver')).toHaveText('驱动：只观察不追高');
   // 无驱动 → —
   await expect(groupOf(page,'其他').locator('.pt-group-driver')).toHaveText('驱动：—');
-  await expect(groupOf(page,'其他').locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 +0.50亿');
+  await expect(groupOf(page,'其他').locator('.pt-group-stats .pt-group-stat').nth(1)).toHaveText('资金净流入 +0.50亿');
+  // 每个组头都有置顶按钮
+  await expect(page.locator('.pt-group .pt-pin')).toHaveCount(6);
+  for(const group of await groupsLoc(page).all()){
+    await expect(group.locator('.pt-group-head .pt-pin')).toHaveCount(1);
+  }
+  // 组头资金净流入 = 组内成员 fund.net_yi 之和（缺失不计，2 位小数；无有效值显示 —）
+  const fundByFullName=new Map<string,number|null>();
+  for(const entry of ENTRIES){
+    const net=entry.fund&&typeof entry.fund.net_yi==='number'?entry.fund.net_yi:null;
+    fundByFullName.set(String(entry.name),net);
+  }
+  for(const label of ['人形机器人','商业航天','通信光通信','其他','半导体电子','东方']){
+    const group=groupOf(page,label);
+    const memberNames=await group.locator('.pt-row .pt-name').evaluateAll(elements=>elements.map(element=>element.getAttribute('title')));
+    let sum=0;
+    let seen=false;
+    for(const name of memberNames){
+      const value=fundByFullName.get(name||'');
+      if(typeof value==='number'){sum+=value;seen=true;}
+    }
+    const total=Math.round(sum*100)/100;
+    const expected=seen?(total>0?'+':'')+total.toFixed(2)+'亿':'—';
+    await expect(group.locator('.pt-group-stats .pt-group-stat').nth(1).locator('b')).toHaveText(expected);
+  }
 });
 
 // ===== 2b. 同义词分组回归：泛化 token 不被更靠前分组的长关键词吸走 =====
@@ -535,7 +623,10 @@ test('分组修复：首标签优先——东方同组、2027 羊年（跨年）
   const mediaGroup=groupOf(page,'传媒娱乐');
   const goatGroup=groupOf(page,'2027 羊年（跨年）');
   const eastNames=(await eastGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
-  expect(eastNames).toEqual(['京东方A','大东方'].sort());
+  expect(eastNames).toEqual(['京东方','大东方'].sort());
+  // 名称展示去掉尾部字母，title/aria 保留完整原名
+  await expect(eastGroup.locator('.pt-name[title="京东方A"] .pt-name-text')).toHaveText('京东方');
+  await expect(eastGroup.locator('.pt-name[title="京东方A"]')).toHaveAttribute('aria-label','京东方A');
   await expect(mediaGroup.locator('.pt-name-text')).toHaveText('游戏样本');
   const goatNames=(await goatGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
   expect(goatNames).toEqual(['盛洋科技','阳光照明'].sort());
@@ -547,7 +638,7 @@ test('分组修复：首标签优先——东方同组、2027 羊年（跨年）
   // 传媒娱乐只含 C，不含带「东方」标签的 A/B
   const mediaNames=(await mediaGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim());
   expect(mediaNames).not.toContain('大东方');
-  expect(mediaNames).not.toContain('京东方A');
+  expect(mediaNames).not.toContain('京东方');
   await expect(page.locator('.pt-footer')).toContainText('显示 5 / 共 5 只 · 3 个方向');
 });
 
@@ -603,6 +694,136 @@ test('全量分组一致性：真实预览 auditGrouping=[]、相关标签无噪
   expect(tagsEntry({theme:['IP'],concept:['网络游戏'],event:[],other:[]},'游戏Ⅱ')).toBe('传媒娱乐');
 });
 
+// ===== 2f. 分组规则回归：物理AI 独立、最长关键词、噪声 token 跳过 =====
+test('分组规则回归：物理AI 独立成组、大模型/AI漫剧→传媒娱乐、汽车相关→汽车产业链、PCB→半导体电子、专精特新/百元股不作组键',async({page})=>{
+  const make=(code:string,name:string,theme:string[],concept:string[],sector='')=>makeEntry({code,name,sector,category:'概念',group_name:'',groups:[],
+    tags:{concept,theme,event:[],other:[]},added_day:'2026-11-11',added_at:'2026-11-11T10:00:00+08:00',
+    quote:quote(10,1),today_percent:1,since_add_percent:1,plan:planDefault(),history:[],windows:null,
+    episodes:{total:1,today:1,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'},
+    quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+    driver:null,driver_short:null,driver_short_at:null,fund:fund(1)});
+  const entries:Json[]=[
+    make('sz000b01','物理样本',['物理AI'],[],'AI算力'),
+    make('sz000b02','大模样本',['大模型'],[],'AI算力'),
+    make('sz000b03','漫剧样本',['AI漫剧'],[],'传媒'),
+    make('sz000b04','汽电样本',['汽车电子'],[]),
+    make('sz000b05','后视样本',['电子后视镜'],[]),
+    make('sz000b06','轮毂样本',['轮毂电机'],[]),
+    make('sz000b07','零件样本',['汽车零部件'],[]),
+    make('sz000b08','PCB样本',['PCB'],[]),
+    make('sz000b09','专精样本',['专精特新'],['半导体']),
+    make('sz000b10','百元样本',['百元股'],[],'汽车零部件'),
+  ];
+  await boot(page,{entries});
+  await waitGroups(page,4);
+  const labels=await groupLabels(page);
+  expect(labels.sort()).toEqual(['分组 物理AI','分组 传媒娱乐','分组 汽车产业链','分组 半导体电子'].sort());
+  expect(labels).not.toContain('分组 AI算力');
+  const namesIn=async(label:string)=>(await groupOf(page,label).locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
+  expect(await namesIn('物理AI')).toEqual(['物理样本']);
+  expect(await namesIn('传媒娱乐')).toEqual(['大模样本','漫剧样本'].sort());
+  expect(await namesIn('汽车产业链')).toEqual(['汽电样本','后视样本','轮毂样本','零件样本','百元样本'].sort());
+  expect(await namesIn('半导体电子')).toEqual(['PCB样本','专精样本'].sort());
+});
+
+// ===== 2g. 组头驱动相关性：成员次要题材新闻不得成为组头驱动 =====
+test('组头驱动相关性：成员次要题材新闻不成为组头驱动，相关新闻保留，无相关候选回退泛化短句',async({page})=>{
+  const make=(code:string,name:string,tag:string,driverShort:string,genericReason='')=>makeEntry({code,name,sector:'',category:'概念',group_name:'',groups:[],
+    tags:{concept:[tag],theme:[],event:[],other:[]},added_day:'2026-11-11',added_at:'2026-11-11T10:00:00+08:00',
+    quote:quote(10,1),today_percent:1,since_add_percent:1,plan:planDefault(),history:[],windows:null,
+    episodes:{total:1,today:1,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'},
+    quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+    reason:genericReason,driver:null,driver_short:driverShort||null,driver_short_at:'2026-11-11T10:00:00+08:00',fund:fund(1)});
+  const entries:Json[]=[
+    make('sz000c01','化工样本甲','化工','具身智能产业订单爆发'),
+    make('sz000c02','化工样本乙','化工','','板块上涨且资金净流入；化工品涨价'),
+    make('sz000c03','算力样本甲','AI算力','OpenAI发布新一代模型'),
+    make('sz000c04','算力样本乙','AI算力','','回踩低吸：算力需求增长'),
+    make('sz000c05','羊年样本甲','2027 羊年（跨年）','AI漫剧打开增长空间'),
+    make('sz000c06','羊年样本乙','2027 羊年（跨年）','','只观察，不追高'),
+    make('sz000c07','光通信样本','光通信','光通信股今早逆市走高'),
+    make('sz000c08','传媒样本','短剧','短剧与AI漫剧打开公司增长空间'),
+  ];
+  await boot(page,{entries});
+  await waitGroups(page,5);
+  // 无关新闻不得成为组头驱动，回退到泛化短句
+  await expect(groupOf(page,'化工材料').locator('.pt-group-driver')).toHaveText('驱动：板块上涨、资金净流入');
+  await expect(groupOf(page,'AI算力').locator('.pt-group-driver')).toHaveText('驱动：回踩低吸');
+  await expect(groupOf(page,'2027 羊年（跨年）').locator('.pt-group-driver')).toHaveText('驱动：只观察不追高');
+  // 相关新闻保留
+  await expect(groupOf(page,'通信光通信').locator('.pt-group-driver')).toHaveText('驱动：光通信股今早逆市走高');
+  await expect(groupOf(page,'传媒娱乐').locator('.pt-group-driver')).toHaveText('驱动：短剧与AI漫剧打开公司增长空间');
+  // 无关新闻文本不得出现在组头驱动
+  for(const label of ['化工材料','AI算力','2027 羊年（跨年）']){
+    const text=await groupOf(page,label).locator('.pt-group-driver').innerText();
+    expect(text).not.toContain('具身智能');
+    expect(text).not.toContain('OpenAI');
+    expect(text).not.toContain('AI漫剧');
+  }
+});
+
+// ===== 2e. 组置顶：pin 按钮、顺序、localStorage、刷新持久化、取消与筛选 =====
+test('组置顶：点击 .pt-pin 置顶到最前并保持点击顺序、localStorage 持久化、取消置顶与筛选保留记录',async({page})=>{
+  await page.setViewportSize({width:1440,height:980});
+  await boot(page,{});
+  await waitGroups(page);
+  const columns=columnsLoc(page);
+  const firstIn=(columnIndex:number)=>columns.nth(columnIndex).locator('.pt-group').first();
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 人形机器人');
+  await expect(firstIn(1)).toHaveAttribute('aria-label','分组 商业航天');
+  const storage=()=>page.evaluate(()=>localStorage.getItem('stock-monitor-pool-pinned-v1'));
+
+  // 初始：无置顶，置顶按钮 aria-pressed=false
+  const comm=groupOf(page,'通信光通信');
+  const commPin=comm.locator('.pt-group-head .pt-pin');
+  await expect(commPin).toHaveCount(1);
+  await expect(commPin).toHaveAttribute('aria-label','置顶 通信光通信');
+  await expect(commPin).toHaveAttribute('aria-pressed','false');
+  await commPin.click();
+  // 置顶后排到最前（第一列首卡=置顶组），按钮态/localStorage 更新，行未被展开
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 通信光通信');
+  await expect(commPin).toHaveAttribute('aria-pressed','true');
+  await expect(commPin).toHaveAttribute('aria-label','取消置顶 通信光通信');
+  expect(await storage()).toBe(JSON.stringify(['通信光通信']));
+  await expect(page.locator('.pt-detail')).toHaveCount(0);
+
+  // 再置顶第二组：保持点击顺序（第一列首卡=第一个置顶，第二列首卡=第二个置顶）
+  const semiPin=groupOf(page,'半导体电子').locator('.pt-group-head .pt-pin');
+  await semiPin.click();
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 通信光通信');
+  await expect(firstIn(1)).toHaveAttribute('aria-label','分组 半导体电子');
+  expect(await storage()).toBe(JSON.stringify(['通信光通信','半导体电子']));
+  await expect(groupOf(page,'通信光通信').locator('.pt-pin')).toHaveAttribute('aria-pressed','true');
+  await expect(groupOf(page,'半导体电子').locator('.pt-pin')).toHaveAttribute('aria-pressed','true');
+
+  // 刷新页面后仍置顶（localStorage 持久化）
+  await page.reload();
+  await page.getByRole('button',{name:'股票池',exact:true}).click();
+  await waitGroups(page);
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 通信光通信');
+  await expect(firstIn(1)).toHaveAttribute('aria-label','分组 半导体电子');
+  await expect(groupOf(page,'通信光通信').locator('.pt-pin')).toHaveAttribute('aria-pressed','true');
+  expect(await storage()).toBe(JSON.stringify(['通信光通信','半导体电子']));
+
+  // 取消一个置顶：剩余置顶仍在前
+  await groupOf(page,'通信光通信').locator('.pt-pin').click();
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 半导体电子');
+  expect(await storage()).toBe(JSON.stringify(['半导体电子']));
+  await expect(groupOf(page,'通信光通信').locator('.pt-pin')).toHaveAttribute('aria-pressed','false');
+
+  // 筛选掉置顶组：按钮不显示但记录保留；清除筛选后恢复置顶
+  const search=page.getByLabel('搜索代码/名称/标签');
+  await search.fill('卫星');
+  await waitGroups(page,1);
+  await expect(page.locator('.pt-pin')).toHaveCount(1);
+  await expect(page.locator('.pt-pin[aria-label="取消置顶 半导体电子"]')).toHaveCount(0);
+  expect(await storage()).toBe(JSON.stringify(['半导体电子']));
+  await page.getByRole('button',{name:'清除筛选'}).click();
+  await waitGroups(page);
+  await expect(firstIn(0)).toHaveAttribute('aria-label','分组 半导体电子');
+  await expect(groupOf(page,'半导体电子').locator('.pt-pin')).toHaveAttribute('aria-pressed','true');
+});
+
 // ===== 3. 卡片 10 列：代码 6 位/名称完整/换手无 %/右对齐/不省略/徽标 =====
 test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右对齐文本左对齐、表头与数值不省略、×N 徽标',async({page})=>{
   await page.setViewportSize({width:1440,height:980});
@@ -612,11 +833,18 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   const heads=human.locator('.pt-head > span');
   await expect(heads).toHaveCount(10);
   const labels=(await human.locator('.pt-head [role="columnheader"]').allInnerTexts()).map(text=>text.replace(/[▾▴]/g,'').trim());
-  expect(labels).toEqual(['代码','名称','入选时间','入选价格','现价','入选后涨幅','今日涨幅','量比','换手(%)','相关概念·题材']);
+  expect(labels).toEqual(['代码','名称','现价','入选时间','入选价格','入选后涨幅','今日涨幅','量比','换手(%)','相关概念·题材']);
+  // 名称列宽 72px；入选后涨幅列宽 61px；现价列表头/单元格 padding-right≈7px
+  const columnTracks=await human.locator('.pt-head').evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean));
+  expect(columnTracks[1]).toBe('72px');
+  const nameWidth=await human.locator('.pt-row').first().locator('.pt-name').evaluate(element=>element.getBoundingClientRect().width);
+  expect(Math.abs(nameWidth-72)).toBeLessThanOrEqual(2);
+  expect(await human.locator('.pt-head > span').nth(2).evaluate(element=>getComputedStyle(element).paddingRight)).toBe('7px');
+  expect(await human.locator('.pt-row').first().locator('.pt-cell.pt-col-price').evaluate(element=>getComputedStyle(element).paddingRight)).toBe('7px');
   await expect(human.getByRole('table',{name:'人形机器人 标的'})).toBeVisible();
 
   const jia=await rowCellsIn(human,'甲机器人');
-  expect(jia).toEqual(['000101','甲机器人','11-11 11:02','12.68','13.74','+8.40%','+4.20%','2.11','6.50','人形机器人 / 减速器 / 机器人']);
+  expect(jia).toEqual(['000101','甲机器人','13.74','11-11 11:02','12.68','+8.40%','+4.20%','2.11','6.50','人形机器人 / 减速器 / 机器人']);
   const jiaRow=human.locator('.pt-row').filter({hasText:'甲机器人'});
   await expect(jiaRow.locator('.pt-code')).toHaveAttribute('title','sz000101');
   await expect(jiaRow.locator('.pt-cell').nth(5)).toHaveClass(/pt-up/);
@@ -628,7 +856,8 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   await expect(jiaBadge).toHaveAttribute('title','累计 3 天 · 今日已入选 · 首次 2026-11-09 10:02 · 最近 2026-11-11 11:02');
 
   const yi=await rowCellsIn(human,'乙减速器');
-  expect(yi[3]).toBe('20.50');
+  expect(yi[2]).toBe('19.85');
+  expect(yi[4]).toBe('20.50');
   expect(yi[5]).toBe('-3.20%');
   expect(yi[6]).toBe('-2.10%');
   expect(yi[9]).toBe('减速器 / 订单 / 机械');
@@ -656,12 +885,12 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   // 对齐：数值列表头/单元格右对齐，文本列左对齐
   const headClasses=await heads.evaluateAll(elements=>elements.map(element=>element.className));
   const headJustify=await heads.evaluateAll(elements=>elements.map(element=>getComputedStyle(element).justifyContent));
-  const numIndexes=[0,3,4,5,6,7,8];
+  const numIndexes=[0,2,4,5,6,7,8];
   for(const index of numIndexes){
     expect(headClasses[index]).toContain('pt-head-num');
     expect(headJustify[index]).toBe('flex-end');
   }
-  for(const index of [1,2,9]){
+  for(const index of [1,3,9]){
     expect(headClasses[index]).not.toContain('pt-head-num');
     expect(headJustify[index]).toBe('normal');
   }
@@ -674,6 +903,41 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   expect(await inlineOverflowProblems(page)).toEqual([]);
 });
 
+// ===== 3b. 名称展示：去尾部字母，title/aria 保留原名，名称列 72px 不省略 =====
+test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保留完整原名，名称列 77px 且不省略',async({page})=>{
+  const cases:[string,string,string][]=[
+    ['sz000a01','奥比中光-W','奥比中光'],
+    ['sz000a02','宇树科技-W','宇树科技'],
+    ['sz000a03','埃夫特-U','埃夫特'],
+    ['sz000a04','京东方Ａ','京东方'],
+  ];
+  const entries=cases.map((item,index)=>makeEntry({code:item[0],name:item[1],sector:'名称测试'+index,group_name:'',groups:[],
+    tags:{concept:['名称测试'+index],theme:[],event:[],other:[]},category:'概念',
+    added_day:'2026-11-11',added_at:'2026-11-11T10:00:00+08:00',quote:quote(10,1),today_percent:1,since_add_percent:1,
+    plan:planDefault(),history:[],windows:null,
+    episodes:{total:1,today:1,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'},
+    quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+    driver:null,driver_short:null,driver_short_at:null,fund:fund(1)}));
+  await boot(page,{entries});
+  await waitGroups(page,4);
+  const rendered=await page.locator('.pt-name').evaluateAll(elements=>elements.map(element=>({
+    title:element.getAttribute('title'),
+    aria:element.getAttribute('aria-label'),
+    text:(element.querySelector('.pt-name-text')?.textContent||'').trim(),
+  })));
+  expect(rendered.length).toBe(4);
+  for(const [,full,shown] of cases){
+    const item=rendered.find(row=>row.title===full);
+    expect(item).toBeTruthy();
+    expect(item!.aria).toBe(full);
+    expect(item!.text).toBe(shown);
+  }
+  const overflow=await page.locator('.pt-name-text').evaluateAll(elements=>elements.filter(element=>element.scrollWidth>element.clientWidth+1).map(element=>element.textContent));
+  expect(overflow).toEqual([]);
+  const tracks=await groupOf(page,'名称测试0').locator('.pt-head').evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean));
+  expect(tracks[1]).toBe('72px');
+});
+
 // ===== 4. 组内排序（组间顺序固定按资金） =====
 test('组内排序：默认入选时间降序，6 个表头/下拉升降序只影响组内且组间资金顺序不变',async({page})=>{
   await page.setViewportSize({width:1440,height:980});
@@ -681,7 +945,7 @@ test('组内排序：默认入选时间降序，6 个表头/下拉升降序只�
   await waitGroups(page);
   const labelsBefore=await groupLabels(page);
   const human=groupOf(page,'人形机器人');
-  await expect(human.locator('.pt-head > span').nth(2)).toHaveAttribute('aria-sort','descending');
+  await expect(human.locator('.pt-head > span').nth(3)).toHaveAttribute('aria-sort','descending');
   expect(await firstNameOf(human)).toBe('甲机器人');
   expect(await firstNameOf(groupOf(page,'商业航天'))).toBe('己航天');
   expect(await firstNameOf(groupOf(page,'其他'))).toBe('子其他');
@@ -697,7 +961,7 @@ test('组内排序：默认入选时间降序，6 个表头/下拉升降序只�
   expect(await firstNameOf(human)).toBe('乙减速器');
 
   await human.getByRole('button',{name:'按入选价格排序'}).click();
-  await expect(human.locator('.pt-head > span').nth(3)).toHaveAttribute('aria-sort','descending');
+  await expect(human.locator('.pt-head > span').nth(4)).toHaveAttribute('aria-sort','descending');
   expect(await firstNameOf(human)).toBe('乙减速器');
   await human.getByRole('button',{name:'按入选价格排序'}).click();
   expect(await firstNameOf(human)).toBe('丙伺服');
@@ -801,57 +1065,181 @@ test('搜索：标签命中的股票重新分组（单只组保留），空结�
   await expect(page.getByRole('button',{name:'清除筛选'})).toHaveCount(0);
 });
 
-// ===== 8. 行展开详情 =====
-test('详情：行点击展开，含入选信息/计划/入选统计/窗口表现/逐日快照/操作',async({page})=>{
+// ===== 8. 行详情内嵌图表：tabs/默认分时/日K/周K/放大缩小/请求不重复 =====
+test('详情图表：内嵌 stock-chart-panel、分时/日K/周K tabs、默认分时、切换 aria-label、放大缩小、切换不重复请求',async({page})=>{
+  await boot(page,{});
+  await waitGroups(page);
+  const human=groupOf(page,'人形机器人');
+  await human.locator('.pt-row').filter({hasText:'甲机器人'}).click();
+  const detail=page.getByRole('region',{name:'详情 甲机器人'});
+  await expect(detail).toBeVisible();
+  const panel=detail.locator('section.stock-chart-panel[aria-label="行情图表 甲机器人"]');
+  await expect(panel).toBeVisible();
+  await expect(detail.locator('.pt-detail-chart')).toBeVisible();
+
+  const tablist=panel.locator('.tabs[role="tablist"]');
+  await expect(tablist).toHaveCount(1);
+  const tabs=tablist.getByRole('tab');
+  await expect(tabs).toHaveCount(3);
+  expect((await tabs.allInnerTexts()).map(text=>text.trim())).toEqual(['分时','日K','周K']);
+  await expect(tablist.getByRole('tab',{name:'分时'})).toHaveAttribute('aria-selected','true');
+  await expect(tablist.getByRole('tab',{name:'日K'})).toHaveAttribute('aria-selected','false');
+
+  // 默认分时
+  await expect(panel.locator('.scp-chart .chart')).toBeVisible({timeout:10000});
+  await expect(panel.locator('.scp-chart .chart')).toHaveAttribute('aria-label','分时价格及分钟成交量');
+  await expect(panel.locator('.scp-state')).toContainText('分时 2026-11-11');
+
+  // 切日K/周K
+  await tablist.getByRole('tab',{name:'日K'}).click();
+  await expect(tablist.getByRole('tab',{name:'日K'})).toHaveAttribute('aria-selected','true');
+  await expect(tablist.getByRole('tab',{name:'分时'})).toHaveAttribute('aria-selected','false');
+  await expect(panel.locator('.scp-chart .chart')).toHaveAttribute('aria-label','日K线及成交量',{timeout:10000});
+  await expect(panel.locator('.scp-state')).toContainText('日K 60根');
+  await tablist.getByRole('tab',{name:'周K'}).click();
+  await expect(tablist.getByRole('tab',{name:'周K'})).toHaveAttribute('aria-selected','true');
+  await expect(panel.locator('.scp-chart .chart')).toHaveAttribute('aria-label','周K线及成交量',{timeout:10000});
+
+  // 放大/缩小
+  const expand=panel.getByRole('button',{name:'放大图表'});
+  await expect(expand).toHaveAttribute('aria-pressed','false');
+  await expect(panel).not.toHaveClass(/is-expanded/);
+  await expand.click();
+  await expect(panel).toHaveClass(/is-expanded/);
+  const collapse=panel.getByRole('button',{name:'缩小图表'});
+  await expect(collapse).toHaveAttribute('aria-pressed','true');
+  await expect(panel.locator('.scp-chart .chart')).toHaveAttribute('aria-label','周K线及成交量');
+  await collapse.click();
+  await expect(panel).not.toHaveClass(/is-expanded/);
+  await expect(panel.getByRole('button',{name:'放大图表'})).toHaveAttribute('aria-pressed','false');
+
+  // 反复切换 tab 不重复请求：分时 chart / 日K history 各只请求一次（同一 code）
+  await tablist.getByRole('tab',{name:'分时'}).click();
+  await tablist.getByRole('tab',{name:'日K'}).click();
+  await tablist.getByRole('tab',{name:'分时'}).click();
+  const calls=await rpcCalls(page);
+  const minuteCalls=calls.filter(call=>call.method==='chart'&&call.args.code==='sz000101'&&call.args.kind==='minute');
+  const historyCalls=calls.filter(call=>call.method==='history'&&call.args.code==='sz000101');
+  expect(minuteCalls.length).toBe(1);
+  expect(historyCalls.length).toBe(1);
+  expect(calls.some(call=>call.method==='minute_ensure'&&call.args.code==='sz000101')).toBe(false);
+  await page.locator('.pool-terminal').screenshot({path:SHOTS+'/03-detail-1440.png'});
+});
+
+// ===== 9. 详情精简：保留计划/理由/标签/入选统计/窗口徽标/操作，删除旧区块 =====
+test('详情精简：保留计划与关键价位/入选理由/完整标签/入选统计/窗口徽标/操作，无入选信息/逐日快照/振幅流通/量比换手/K线按钮',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
   const human=groupOf(page,'人形机器人');
   const row=human.locator('.pt-row').filter({hasText:'甲机器人'});
-  await expect(row).toHaveAttribute('aria-expanded','false');
-  await expect(row).toHaveAttribute('aria-controls','pt-detail-sz000101');
   await row.click();
-  await expect(row).toHaveAttribute('aria-expanded','true');
   const detail=page.getByRole('region',{name:'详情 甲机器人'});
   await expect(detail).toBeVisible();
-  await expect(detail).toHaveAttribute('id','pt-detail-sz000101');
-  for(const heading of ['入选信息','计划与关键价位','入选统计','窗口表现','逐日快照','操作']){
+  await expect(detail.locator('.pt-detail-chart')).toBeVisible();
+  for(const heading of ['计划与关键价位','入选理由','入选统计','当前状态','窗口表现','操作']){ 
     await expect(detail.getByRole('heading',{name:new RegExp(heading)})).toBeVisible();
   }
-  await expect(detail.locator('.pt-detail-strong')).toContainText('资金净流入、回踩买点；人形机器人产业订单落地。');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'来源'})).toContainText('建仓清单');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'方向'})).toContainText('人形机器人 · 低吸候选');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'入选价格'})).toContainText('2026-11-11 11:02 · 入选价格 12.68');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'状态'})).toContainText('已进入买区');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'跟进'})).toContainText('已跟踪 2 个交易日');
-  await expect(detail.locator('.pt-detail-tags')).toContainText('概念 机器人 · 题材 人形机器人 · 减速器 · 事件 产业订单 · 其他 高端制造');
+  // 已删除的旧区块
+  for(const removed of ['入选信息','逐日快照']){
+    await expect(detail.getByRole('heading',{name:new RegExp(removed)})).toHaveCount(0);
+  }
+  await expect(detail.locator('.pt-detail-strong')).toHaveCount(0);
+  await expect(detail.locator('table.pt-mini')).toHaveCount(0);
+  // 计划与关键价位
   for(const text of ['11.80–12.40','13.00','11.20','14.20','15.60','12.60','回踩 11.80–12.40 分批；跌破 11.20 离场。']){
     await expect(detail).toContainText(text);
   }
+  // 入选理由 + 完整标签
+  await expect(detail.locator('.pt-detail-reason')).toContainText('资金净流入、回踩买点；人形机器人产业订单落地。');
+  await expect(detail.locator('.pt-detail-tags')).toContainText('概念 机器人 · 题材 人形机器人 · 减速器 · 事件 产业订单 · 其他 高端制造');
+  // 入选统计：累计天数/今日/首次/最近
   await expect(detail.locator('.pt-kv > div').filter({hasText:'累计'})).toContainText('3 天 · 今日已入选');
   await expect(detail.locator('.pt-kv > div').filter({hasText:'首次'})).toContainText('2026-11-09 10:02');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'量比/换手'})).toContainText('2.11 / 6.50%');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'振幅/流通'})).toContainText('3.20% / 123.4亿');
-  const windowTable=detail.locator('table.pt-mini').first();
-  await expect(windowTable.locator('thead th')).toHaveText(['窗口','日期','收益','超额']);
-  const windowCells=(await windowTable.locator('tbody tr').first().locator('td').allInnerTexts()).map(text=>text.trim());
-  expect(windowCells).toEqual(['T+1','11-10','+2.50%','+1.50%']);
-  await expect(windowTable.locator('tbody tr').first().locator('td').nth(2)).toHaveClass(/pt-up/);
-  const historyTable=detail.locator('table.pt-mini').nth(1);
-  await expect(historyTable.locator('thead th')).toHaveText(['日期','收盘','涨跌','量比','换手','买','损','标']);
-  const historyCells=(await historyTable.locator('tbody tr').first().locator('td').allInnerTexts()).map(text=>text.trim());
-  expect(historyCells).toEqual(['11-10','13.20','+2.40%','2.50','7.20%','✓','—','—']);
-  await expect(detail.getByRole('button',{name:'买入',exact:true})).toBeEnabled();
-  await expect(detail.getByRole('button',{name:'卖出',exact:true})).toBeEnabled();
-  await expect(detail.getByRole('button',{name:'K线',exact:true})).toBeEnabled();
-  await expect(detail.getByRole('button',{name:'加自选',exact:true})).toBeEnabled();
-  await expect(detail.getByRole('button',{name:'删除',exact:true})).toBeEnabled();
-  await page.locator('.pool-terminal').screenshot({path:SHOTS+'/03-detail-1440.png'});
+  await expect(detail.locator('.pt-kv > div').filter({hasText:'最近'})).toContainText('2026-11-11 11:02');
+  const kvJoined=(await detail.locator('.pt-kv').allInnerTexts()).join(' ');
+  for(const removed of ['来源','方向','状态','跟进','量比/换手','振幅/流通']){
+    expect(kvJoined).not.toContain(removed);
+  }
+  // 当前符合：甲机器人 zone=已进入买区但现价 13.74 不在计划买区 11.80–12.40 → 否
+  const current=detail.locator('.pt-current');
+  await expect(current).toBeVisible();
+  await expect(current.locator('b')).toHaveText('当前符合：否');
+  await expect(current.locator('span')).toContainText('现价不在计划买区');
+  await expect(current.locator('em')).toHaveText('不代表买入建议');
+  await expect(current).not.toHaveClass(/is-match/);
+  // 窗口表现：3 个 pt-win-badge（T+1 有值，T+3/T+5 待积累）
+  const badges=detail.locator('.pt-win-badge');
+  await expect(badges).toHaveCount(3);
+  expect((await badges.allInnerTexts()).map(text=>text.replace(/\s+/g,' ').trim())).toEqual(['T+1 +2.50% 超额 +1.50%','T+3 待积累','T+5 待积累']);
+  await expect(badges.nth(0)).toHaveAttribute('title','T+1 收益 +2.50% · 超额 +1.50%');
+  await expect(badges.nth(1)).toHaveAttribute('title','T+3 尚未到期/待积累');
+  // 操作按钮：买入/卖出/加自选/删除；无 K线
+  for(const label of ['买入','卖出','加自选','删除']){
+    await expect(detail.getByRole('button',{name:label,exact:true})).toBeEnabled();
+  }
+  await expect(detail.getByRole('button',{name:'K线',exact:true})).toHaveCount(0);
   // 今日未入选的股票：累计行文案为「N 天 · 今日未入选」
   await row.click();
   await human.locator('.pt-row').filter({hasText:'乙减速器'}).click();
   const notToday=page.getByRole('region',{name:'详情 乙减速器'});
   await expect(notToday).toBeVisible();
   await expect(notToday.locator('.pt-kv > div').filter({hasText:'累计'})).toContainText('2 天 · 今日未入选');
+});
+
+// ===== 10. 分时空态：提示并降级查看日K =====
+test('详情图表：分时无数据时显示提示文案，可降级查看日K',async({page})=>{
+  await boot(page,{emptyChart:true});
+  await waitGroups(page);
+  await groupOf(page,'人形机器人').locator('.pt-row').filter({hasText:'甲机器人'}).click();
+  const panel=page.locator('.pt-detail section.stock-chart-panel[aria-label="行情图表 甲机器人"]');
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('.scp-message')).toContainText('该股暂无可用的分时数据（可稍后重试或查看日K）。',{timeout:10000});
+  const calls=await rpcCalls(page);
+  expect(calls.some(call=>call.method==='minute_ensure'&&call.args.code==='sz000101')).toBe(true);
+  expect(calls.some(call=>call.method==='job')).toBe(true);
+  await panel.locator('.tabs[role="tablist"]').getByRole('tab',{name:'日K'}).click();
+  await expect(panel.locator('.scp-chart .chart')).toHaveAttribute('aria-label','日K线及成交量',{timeout:10000});
+  await expect(panel.locator('.scp-message')).toHaveCount(0);
+});
+
+// ===== 10b. 行详情「当前符合」判定 =====
+test('详情当前符合：是=已进入买区+现价在买区+未破止损；否显示 zone/hint；均标注不代表买入建议',async({page})=>{
+  const entries:Json[]=[
+    makeEntry({code:'sz000901',name:'符合样本',sector:'测试方向A',group_name:'测试方向A',groups:[],
+      tags:{concept:['测试方向A'],theme:[],event:[],other:[]},zone:'已进入买区',hint:'提示A',
+      quote:quote(10,1.2),today_percent:1.2,since_add_percent:1.2,plan:planDefault(),
+      history:[],windows:null,
+      episodes:{total:1,today:1,first_at:'2026-11-09T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'},
+      quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+      driver:null,driver_short:null,driver_short_at:null,fund:fund(1)}),
+    makeEntry({code:'sz000902',name:'不符合样本',sector:'测试方向B',group_name:'测试方向B',groups:[],
+      tags:{concept:['测试方向B'],theme:[],event:[],other:[]},zone:'等待回踩',hint:'等待回踩提示B',
+      quote:quote(12,-1),today_percent:-1,since_add_percent:-1,plan:planDefault(),
+      history:[],windows:null,
+      episodes:{total:1,today:0,first_at:'2026-11-09T10:00:00+08:00',last_at:'2026-11-10T10:00:00+08:00'},
+      quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+      driver:null,driver_short:null,driver_short_at:null,fund:fund(2)}),
+  ];
+  await boot(page,{entries});
+  await waitGroups(page,2);
+  // 是：zone=已进入买区 + 现价 10 在买区 9.50–10.00 + 未破止损 9.00
+  await groupOf(page,'测试方向A').locator('.pt-row').filter({hasText:'符合样本'}).click();
+  let current=page.getByRole('region',{name:'详情 符合样本'}).locator('.pt-current');
+  await expect(current).toBeVisible();
+  await expect(current.locator('b')).toHaveText('当前符合：是');
+  await expect(current).toHaveClass(/is-match/);
+  await expect(current.locator('span')).toHaveText('zone 已进入买区、现价处于计划买区且未破止损，仍符合入选条件');
+  await expect(current.locator('em')).toHaveText('不代表买入建议');
+  // 否：zone=等待回踩 + hint
+  await groupOf(page,'测试方向A').locator('.pt-row').filter({hasText:'符合样本'}).click();
+  await groupOf(page,'测试方向B').locator('.pt-row').filter({hasText:'不符合样本'}).click();
+  current=page.getByRole('region',{name:'详情 不符合样本'}).locator('.pt-current');
+  await expect(current).toBeVisible();
+  await expect(current.locator('b')).toHaveText('当前符合：否');
+  await expect(current).not.toHaveClass(/is-match/);
+  await expect(current.locator('span')).toContainText('当前 等待回踩');
+  await expect(current.locator('span')).toContainText('等待回踩提示B');
+  await expect(current.locator('em')).toHaveText('不代表买入建议');
 });
 
 // ===== 9. 键盘展开 + 单行展开 =====
@@ -873,17 +1261,12 @@ test('详情：键盘 Enter 展开/收起，同一时间只展开一行',async({
   await expect(page.getByRole('region',{name:'详情 甲机器人'})).toHaveCount(0);
 });
 
-// ===== 10. 详情操作：K线/买入/加自选 =====
-test('详情操作：K线跳自选监控、买入跳模拟交易、加自选调用 add_job',async({page})=>{
+// ===== 12. 详情操作：买入跳模拟交易、加自选调用 add_job =====
+test('详情操作：买入跳模拟交易、加自选调用 add_job（K线按钮已移除）',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
   await groupOf(page,'人形机器人').locator('.pt-row').filter({hasText:'甲机器人'}).click();
   let detail=page.getByRole('region',{name:'详情 甲机器人'});
-  await expect(detail).toBeVisible();
-  await detail.getByRole('button',{name:'K线',exact:true}).click();
-  await expect(page.locator('.workspace-heading h1')).toHaveText('自选监控');
-  await page.getByRole('button',{name:'股票池',exact:true}).click();
-  detail=page.getByRole('region',{name:'详情 甲机器人'});
   await expect(detail).toBeVisible();
   await detail.getByRole('button',{name:'买入',exact:true}).click();
   await expect(page.locator('.workspace-heading h1')).toHaveText('模拟交易');
@@ -1155,7 +1538,7 @@ test('响应式：1440 JS masonry 两列（首行 Top1/Top2、等宽、间距 8p
   await expect(human.locator('.pt-head > span')).toHaveCount(10);
   for(let index=0;index<10;index+=1)await expect(human.locator('.pt-head > span').nth(index)).toBeVisible();
   const headHeight1440=await human.locator('.pt-group-head').evaluate(element=>element.getBoundingClientRect().height);
-  expect(headHeight1440).toBeLessThan(28);
+  expect(headHeight1440).toBeLessThan(40);
   const innerScroll1440=await groupsLoc(page).evaluateAll(groups=>groups.map(group=>{
     const scroller=group.querySelector(':scope > .pt-scroll') as HTMLElement;
     return {scrollWidth:scroller.scrollWidth,clientWidth:scroller.clientWidth};
@@ -1171,7 +1554,7 @@ test('响应式：1440 JS masonry 两列（首行 Top1/Top2、等宽、间距 8p
   await expect(human.locator('.pt-head > span')).toHaveCount(10);
   for(let index=0;index<10;index+=1)await expect(human.locator('.pt-head > span').nth(index)).toBeVisible();
   const headHeight1000=await human.locator('.pt-group-head').evaluate(element=>element.getBoundingClientRect().height);
-  expect(headHeight1000).toBeLessThan(28);
+  expect(headHeight1000).toBeLessThan(40);
   const innerScroll1000=await groupsLoc(page).evaluateAll(groups=>groups.map(group=>{
     const scroller=group.querySelector(':scope > .pt-scroll') as HTMLElement;
     return {scrollWidth:scroller.scrollWidth,clientWidth:scroller.clientWidth};
@@ -1224,7 +1607,7 @@ test('只读预览：route 两个静态 JSON 渲染，交易/添加/删除禁用
   for(const label of ['买入','卖出','加自选','删除']){
     await expect(detail.getByRole('button',{name:label,exact:true})).toBeDisabled();
   }
-  await expect(detail.getByRole('button',{name:'K线',exact:true})).toBeEnabled();
+  await expect(detail.locator('.pt-detail-chart section.stock-chart-panel')).toBeVisible();
   await expect(detail.locator('.pt-muted').filter({hasText:'只读预览'})).toContainText('只读预览：添加/删除/自选/交易请在桌面客户端操作。');
   await page.locator('.pool-terminal').screenshot({path:SHOTS+'/05-preview-readonly.png'});
   const panel=await openBacktest(page);
@@ -1234,7 +1617,30 @@ test('只读预览：route 两个静态 JSON 渲染，交易/添加/删除禁用
   expect((await rpcCalls(page)).length).toBe(0);
 });
 
-// ===== 23. console 无 error =====
+// ===== 24. 自选监控共用 ChartViewTabs smoke =====
+test('自选监控共用 tabs：chart-toolbar 的分时/日K/周K 三按钮可切换',async({page})=>{
+  await boot(page,{});
+  await waitGroups(page);
+  await page.getByRole('button',{name:'自选监控',exact:true}).click();
+  await expect(page.locator('.workspace-heading h1')).toHaveText('自选监控');
+  const toolbar=page.locator('.chart-toolbar');
+  await expect(toolbar).toBeVisible();
+  const tabs=toolbar.locator('.tabs');
+  await expect(tabs).toHaveCount(1);
+  const buttons=tabs.locator('button');
+  await expect(buttons).toHaveCount(3);
+  expect((await buttons.allInnerTexts()).map(text=>text.trim())).toEqual(['分时','日K','周K']);
+  await expect(buttons.nth(0)).toHaveClass(/chosen/);
+  await buttons.nth(1).click();
+  await expect(buttons.nth(1)).toHaveClass(/chosen/);
+  await expect(buttons.nth(0)).not.toHaveClass(/chosen/);
+  await expect(toolbar).toBeVisible();
+  await buttons.nth(2).click();
+  await expect(buttons.nth(2)).toHaveClass(/chosen/);
+  await expect(page.locator('.chart-toolbar')).toBeVisible();
+});
+
+// ===== 25. console 无 error =====
 test('console：瀑布流浏览/排序/筛选/详情/回测无 console error 与 pageerror',async({page})=>{
   const consoleErrors:string[]=[];
   const pageErrors:string[]=[];

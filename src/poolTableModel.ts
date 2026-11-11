@@ -233,7 +233,8 @@ export function shortDriverOf(entry: Entry) {
   const direct = typeof entry.driver_short === 'string' ? entry.driver_short.trim() : '';
   const text = direct || compressDriverText(driverOf(entry).text) || compressDriverText(entry.reason) || '';
   if (!text) return null;
-  return text.length > 28 ? text.slice(0, 28) + '…' : text;
+  // 后端 driver_short 已更完整：组头直接显示，仅在过长（>40 字）时截断。
+  return text.length > 40 ? text.slice(0, 40) + '…' : text;
 }
 /** 泛化驱动短句：组头优先展示更具体的 driver_short（如新闻标题），没有具体原因时才回退。 */
 export const GENERIC_DRIVER_SHORTS = new Set([
@@ -261,24 +262,35 @@ export function codeDigits(code: string | null | undefined) {
   return String(code || '').replace(/^[A-Za-z]{2}/, '');
 }
 
+/** 名称显示：去掉尾部 -W/-U/-UW/… 与末尾 ASCII/全角字母（title/aria 仍用完整原名）。 */
+export function displayName(name: string | null | undefined) {
+  const raw = String(name || '').trim();
+  if (!raw) return '—';
+  const stripped = raw
+    .replace(/[\u2010-\u2015\-—–_][A-Za-z]{1,2}$/, '')
+    .replace(/[A-Za-zＡ-Ｚａ-ｚ]+$/, '')
+    .trim();
+  return stripped || raw;
+}
+
 // ===== 契约 §12.2：按「相关概念/题材」规范归并分组 =====
 export const FALLBACK_GROUP = '其他';
 export const FALLBACK_NAME_GROUP = '名称辈/生肖';
 /** 噪声 token：不作为组键；名称辈/生肖仅作最后兜底。 */
-export const NOISE_TOKENS = ['昨日首板', '题材股', '东方财富热股', '热门', '名称', '生肖', '概念'];
+export const NOISE_TOKENS = ['昨日首板', '题材股', '东方财富热股', '热门', '名称', '生肖', '概念', '专精特新', '百元股'];
 export type SynonymGroup = {name: string; keywords: string[]};
 /** 同义词组表（顺序即匹配优先级；包含匹配）。 */
 export const SYNONYM_GROUPS: SynonymGroup[] = [
   {name: '人形机器人', keywords: ['人形机器人', '机器人', '工业机器人', '机器人执行器', '机器人零部件', '减速器', '精密减速器', '机器视觉', '伺服', '同步磁阻电机', '灵巧手']},
   {name: '商业航天', keywords: ['商业航天', '卫星互联网', '卫星通信', '卫星导航', '航天']},
-  {name: 'AI算力', keywords: ['AI硬件', 'AI算力', 'AI服务器', '算力', '数据中心', '存储', '英伟达', '大模型', '物理AI', 'AI']},
+  {name: 'AI算力', keywords: ['AI硬件', 'AI算力', 'AI服务器', '算力', '数据中心', '存储', '英伟达', 'AI']},
   {name: '通信光通信', keywords: ['光通信', '光通信模块', 'CPO', 'F5G', '6G', '通信设备', '通信网络设备及器件', '通信线缆及配套', '通信网络', '通信']},
-  {name: '半导体电子', keywords: ['半导体', '芯片', 'OLED', '印制电路板', '元件', '电子']},
-  {name: '传媒娱乐', keywords: ['传媒', '传媒娱乐', '游戏', '网络游戏', '影视', '短剧', 'IP', '数字阅读', 'AI漫剧', '快手', '抖音', '超清视频', '在线教育']},
+  {name: '半导体电子', keywords: ['半导体', '芯片', 'OLED', '印制电路板', 'PCB', '元件', '电子']},
+  {name: '传媒娱乐', keywords: ['传媒', '传媒娱乐', '游戏', '网络游戏', '影视', '短剧', 'IP', '数字阅读', 'AI漫剧', '大模型', '快手', '抖音', '超清视频', '在线教育']},
   {name: '低空经济', keywords: ['低空经济']},
   {name: '固态电池', keywords: ['固态电池', '锂电', '电池']},
   {name: '光伏新能源', keywords: ['光伏', '新能源']},
-  {name: '汽车产业链', keywords: ['汽车', '智能驾驶']},
+  {name: '汽车产业链', keywords: ['汽车', '智能驾驶', '汽车电子', '电子后视镜', '轮毂电机', '汽车热管理', '汽车零部件']},
   {name: '消费电子', keywords: ['智能穿戴', '虚拟现实', '苹果概念']},
   {name: '化工材料', keywords: ['化工', '钛白粉', '磷肥', '新材', '涤纶', '纳米银', '生物燃料', '玻璃']},
   {name: '能源电力', keywords: ['燃气', '煤炭', '电力', '能源']},
@@ -293,13 +305,31 @@ export const SYNONYM_GROUPS: SynonymGroup[] = [
 ];
 /** 名称辈/生肖仅当其余 token 都未命中时兜底。 */
 export const FALLBACK_SYNONYM: SynonymGroup = {name: FALLBACK_NAME_GROUP, keywords: ['名称辈', '生肖', '东方', '羊年']};
-/** 单向包含：token 必须包含分组关键词；避免泛化短词被其它分组的长关键词反向吸走（通信≠卫星通信、能源≠新能源、电机≠同步磁阻电机）。 */
-const matchesKeyword = (token: string, keyword: string) => token.includes(keyword);
+/**
+ * 单向包含匹配，但取「最长命中关键词」优先（同长度按表内先后）：
+ * - 电子后视镜 → 汽车产业链（5字）而不是 半导体电子（电子，2字）
+ * - AI漫剧 → 传媒娱乐（AI漫剧，4字）而不是 AI算力（AI，2字）
+ * - 物理AI 不再被泛化关键词「AI」吸走，独立成组（通用 AI 仅匹配独立 AI 标签）
+ * - 通信/卫星通信、能源/新能源 等同长度机制保持稳定（长词优先，避免短泛词反向吸走）
+ */
 function matchSynonym(token: string, groups: SynonymGroup[]): string | null {
-  for (const group of groups) {
-    if (group.keywords.some(keyword => matchesKeyword(token, keyword))) return group.name;
+  let bestName: string | null = null;
+  let bestLength = -1;
+  let bestOrder = Infinity;
+  for (let order = 0; order < groups.length; order += 1) {
+    const group = groups[order];
+    for (const keyword of group.keywords) {
+      if (!token.includes(keyword)) continue;
+      if (keyword === 'AI' && token !== 'AI') continue;
+      const length = keyword.length;
+      if (length > bestLength || (length === bestLength && order < bestOrder)) {
+        bestName = group.name;
+        bestLength = length;
+        bestOrder = order;
+      }
+    }
   }
-  return null;
+  return bestName;
 }
 /** 标签 token 顺序与表格「相关概念·题材」完全一致（同一个 relatedTagsOf，已过滤噪声标签）。 */
 function groupTokens(entry: Entry) {
@@ -364,43 +394,88 @@ export type GroupStats = {
   driverAt: string | null; driverText: string | null;
 };
 export type EntryGroup = {key: string; label: string; entries: Entry[]; stats: GroupStats};
+/** 组头驱动相关性：组关键词 = 组名 + 组内每只股票首个显示标签（过滤长度/泛化词）。 */
+const GENERIC_DRIVER_KEYWORDS = new Set(['AI', '电子', '新材', '概念', '元件', '存储', '题材', '行业', '百元股', '专精特新']);
+export function isValidDriverKeyword(word: string | null | undefined) {
+  const value = String(word || '').trim();
+  if (!value) return false;
+  if (GENERIC_DRIVER_KEYWORDS.has(value)) return false;
+  const cjk = (value.match(/[\u4e00-\u9fa5]/g) || []).length;
+  if (cjk >= 2) return true;
+  const ascii = (value.match(/[A-Za-z0-9]/g) || []).length;
+  return cjk === 0 && ascii >= 3;
+}
+export function groupDriverKeywords(label: string, entries: Entry[]) {
+  const words = new Set<string>();
+  const add = (word?: string | null) => {
+    const value = String(word || '').trim();
+    if (!value || !isValidDriverKeyword(value)) return;
+    words.add(value);
+  };
+  add(label);
+  for (const entry of entries) add(relatedTagsOf(entry)[0]);
+  return [...words];
+}
+/** 相关性：先剔除组内成员名称，再要求文本包含组名或某个组关键词。 */
+export function driverIsRelevant(text: string | null | undefined, keywords: string[], memberNames: string[]) {
+  let value = String(text || '').trim();
+  if (!value || !keywords.length) return false;
+  for (const name of memberNames) {
+    const clean = String(name || '').trim();
+    if (clean) value = value.split(clean).join('');
+  }
+  if (!value) return false;
+  return keywords.some(keyword => keyword && value.includes(keyword));
+}
+/** 组资金净流入 = 组内成员 fund 净额之和（缺失不计，四舍五入 2 位；无有效值返回 null）。 */
+export function groupFundSum(entries: Entry[]): number | null {
+  let sum = 0;
+  let seen = false;
+  for (const entry of entries) {
+    const yi = fundYiOf(entry);
+    if (yi !== null) { sum += yi; seen = true; }
+  }
+  return seen ? Math.round(sum * 100) / 100 : null;
+}
+const isGenericDriverText = (text: string | null | undefined) => {
+  const value = String(text || '').trim();
+  if (!value) return false;
+  return GENERIC_DRIVER_SHORTS.has(value) || /板块上涨|只观察|回踩低吸|涨停待回踩|加速期|加速\/高潮|题材发酵|收盘时已走强|市场中至少|候选股回落/.test(value);
+};
+
 function buildGroup(label: string, entries: Entry[], sort: SortState): EntryGroup {
   let up = 0;
   let down = 0;
   let inBuy = 0;
-  let fundSum = 0;
-  let fundSeen = false;
-  let driverAt: string | null = null;
-  let driverEntry: Entry | null = null;
-  let bestScore = -Infinity;
-  let bestAt = '';
-  let bestEntry: Entry | null = null;
+  const memberNames = entries.map(entry => entry.name).filter(Boolean);
+  const keywords = groupDriverKeywords(label, entries);
+  type Candidate = {text: string; score: number; at: string};
+  const candidates: Candidate[] = [];
+  const genericCandidates: Candidate[] = [];
   for (const entry of entries) {
     if (isNum(entry.today_percent)) {
       if (entry.today_percent > 0) up += 1;
       else if (entry.today_percent < 0) down += 1;
     }
     if (entry.zone === '已进入买区') inBuy += 1;
-    const yi = fundYiOf(entry);
-    if (yi !== null) { fundSum += yi; fundSeen = true; }
-    const at = entry.driver_short_at || driverOf(entry).at;
-    if (at && (!driverAt || at > driverAt)) { driverAt = at; driverEntry = entry; }
-    const short = shortDriverOf(entry);
-    if (short) {
-      const score = driverScore(entry);
-      const shortAt = entry.driver_short_at || driverOf(entry).at || '';
-      if (score > bestScore || (score === bestScore && shortAt > bestAt)) {
-        bestScore = score; bestAt = shortAt; bestEntry = entry;
-      }
-    }
+    const text = shortDriverOf(entry);
+    if (!text) continue;
+    const at = entry.driver_short_at || driverOf(entry).at || '';
+    const candidate = {text, score: driverScore(entry), at};
+    if (driverIsRelevant(text, keywords, memberNames)) candidates.push(candidate);
+    else if (isGenericDriverText(text)) genericCandidates.push(candidate);
   }
-  const driverSource = bestEntry || driverEntry || entries[0] || null;
-  const driverText = driverSource ? shortDriverOf(driverSource) : null;
-  const finalAt = bestEntry ? (bestEntry.driver_short_at || driverOf(bestEntry).at) : driverAt;
+  // 相关候选按 driverScore + 最新时间选择；无相关候选时只回退到泛化短句，绝不展示无关新闻。
+  const pool = candidates.length ? candidates : genericCandidates;
+  let best: Candidate | null = null;
+  for (const candidate of pool) {
+    if (!best || candidate.score > best.score || (candidate.score === best.score && candidate.at > best.at)) best = candidate;
+  }
+  const driverText = best ? best.text : null;
   return {
     key: label, label,
     entries: sortRows(entries, sort),
-    stats: {rows: entries.length, up, down, inBuy, fundYi: fundSeen ? Math.round(fundSum * 100) / 100 : null, driverAt: finalAt, driverText},
+    stats: {rows: entries.length, up, down, inBuy, fundYi: groupFundSum(entries), driverAt: best ? best.at : null, driverText},
   };
 }
 /**
@@ -448,6 +523,57 @@ export function layoutGroups(groups: EntryGroup[], columns: number): EntryGroup[
 export function groupFundText(value: number | null | undefined) {
   if (!isNum(value)) return '—';
   return (value > 0 ? '+' : '') + value.toFixed(2) + '亿';
+}
+
+// ===== 用户第七轮：组置顶（localStorage 数组，存组名；多个置顶保持钉住先后顺序） =====
+export const PINNED_STORAGE_KEY = 'stock-monitor-pool-pinned-v1';
+export function readPinnedGroups(): string[] {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())) : [];
+  } catch {
+    return [];
+  }
+}
+export function writePinnedGroups(labels: string[]) {
+  try {
+    localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(labels));
+  } catch {
+    /* 隐私模式忽略 */
+  }
+}
+/** 置顶组排到最前（保持置顶先后顺序）；未命中的置顶组（被筛选掉）自动忽略。 */
+export function pinGroups(groups: EntryGroup[], pinned: string[]): EntryGroup[] {
+  const byLabel = new Map(groups.map(group => [group.label, group]));
+  const pinnedGroups: EntryGroup[] = [];
+  for (const label of pinned) {
+    const group = byLabel.get(label);
+    if (group && !pinnedGroups.includes(group)) pinnedGroups.push(group);
+  }
+  const pinnedLabels = new Set(pinnedGroups.map(group => group.label));
+  return [...pinnedGroups, ...groups.filter(group => !pinnedLabels.has(group.label))];
+}
+
+// ===== 用户第七轮：行详情「当前符合」判定（是 = zone 已进入买区 + 现价在计划买区 + 未破止损） =====
+export type CurrentMatch = {ok: boolean; reason: string; zone: string; hint: string};
+export function currentMatchOf(entry: Entry): CurrentMatch {
+  const plan = entry.plan;
+  const price = entry.quote?.price;
+  const zone = entry.zone || '';
+  const hint = entry.hint || '';
+  const inBuyZone = zone === '已进入买区';
+  const withinBuy = isNum(price) && Boolean(plan) && isNum(plan?.buy_low) && isNum(plan?.buy_high)
+    && price! >= (plan!.buy_low as number) && price! <= (plan!.buy_high as number);
+  const aboveStop = isNum(price) && isNum(plan?.stop) ? price! > (plan!.stop as number) : true;
+  const ok = inBuyZone && withinBuy && aboveStop;
+  if (ok) return {ok: true, reason: 'zone 已进入买区、现价处于计划买区且未破止损，仍符合入选条件', zone, hint};
+  let reason: string;
+  if (!isNum(price)) reason = '行情待取得，暂无法判断';
+  else if (!inBuyZone) reason = '当前 ' + (zone || '—') + (hint ? ' · ' + hint : '');
+  else if (!withinBuy) reason = '现价不在计划买区';
+  else reason = '现价已跌破止损';
+  return {ok: false, reason, zone, hint};
 }
 // ===== 时间范围（按入选日，跳周末） =====
 export function previousTradingDay(anchor: string, offset: number) {

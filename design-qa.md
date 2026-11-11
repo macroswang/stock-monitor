@@ -412,7 +412,7 @@ final result: passed
   - 回测：168 行；T+1 75/未到期 93/缺数据 0；74.7%/+2.24%/+2.10%；分桶 1 次 69/23、2 次 16/2、3+ 83/50；0–3% 63/27、3–7% 46/16、7%+ 59/32；11-11 33/0、11-10 60/0、11-09 58/58、11-06 17/17；覆盖 168/75/136 只、79 期。
   - 构建：tsc 通过；vite build 通过（669 modules，`index-D_SEFaol.js` 1,803.46 kB / gzip 569.12 kB、`index-Cs87hIN8.css` 120.27 kB）；后端 `.venv/bin/python -m unittest tests.test_pool_table` → **Ran 36 tests, OK**（含 driver_short 用例）。
   - **Playwright 正式用例状态**：`tests/ui/focus-pool.spec.ts` 现 24 项（第四轮用例）；本次 JS masonry 变更后，列数/首行/Top1-Top2 的断言待 verifier 更新并复跑（变更前 24/24 通过）。
-- **截图清单（已被第五轮替换）**：第四轮 group4-*.png 已删除，第五轮截图见下一节（group5-*.png）；本轮布局/归并结论保留文字记录。
+- **截图清单（已被第五轮替换）**：第四轮截图已删除，第五轮截图见下一节；本轮布局/归并结论保留文字记录。
 - **已知**：名称列按最长 6 字核算（当前 168 行 0 省略；更长名称少见且 title 全量）；相关概念·题材最多显示 3 个（title 全量）；同义词表为包含匹配启发式，可能仍需按新题材补充；残余「其他」= 全部 token 均噪声/未命中（当前 5 只）；driver_short 来自本机研判存档（非实时新闻）；fund 为外部接口、失败/停牌显示 —；Playwright 正式用例待按第四轮更新。
 - **P0/P1/P2**：无未解决 P0/P1；Playwright 用例更新为 P2。
 
@@ -435,7 +435,7 @@ final result: passed
   - 回测：**173 行**；T+1 有值 75 / 未到期 **98** / 缺数据 0；74.7%/+2.24%/+2.10%；按入选天数分桶（条数/样本）：1 天 121/42（73.8%/+2.02%/+1.86%）、2 天 39/20（75.0%/+1.02%/+0.94%）、3 天及以上 13/13（76.9%/+4.80%/+4.67%）；按入选涨幅 0–3% 64/27、3–7% 49/16、7%+ 60/32；按入选时间 11-11 38/0、11-10 60/0、11-09 58/58、11-06 17/17；明细表头含「入选天数」、筛选「入选天数」；覆盖 173/75/136 只、80 期。
   - 构建：tsc 通过；vite build 通过（669 modules，`index-yJfosRaq.js` 1,804.18 kB / gzip 569.33 kB、`index-CsI_7jNk.css` 120.19 kB）；后端 `.venv/bin/python -m unittest tests.test_pool_table` → **Ran 39 tests, OK**（含入选天数/旧行兼容用例）。
   - **Playwright 正式用例**：`tests/ui/focus-pool.spec.ts` 已更新为 **25 项**（JS masonry/同标签归并/入选天数/徽标 title/回测文案等），本地复跑 **25/25 通过**（13.6s，2026-11-11 14:44）。
-- **截图清单（已被第六轮替换）**：第五轮 group5-*.png 已删除，第六轮截图见下一节（group6-*.png）；本轮结论（同标签归并 + 入选天数）保留文字记录。
+- **截图清单（已被第六轮替换）**：第五轮截图已删除，第六轮截图见下一节；本轮结论（同标签归并 + 入选天数）保留文字记录。
 - **已知**：入选天数按自然日去重（同一天多期只 1 天），不是期数；东方系全部归入名称辈/生肖后传媒娱乐组规模下降（属修复结果）；同义词表仍为包含匹配启发式；fund 外部接口失败/停牌仍 —；driver_short 来自本机研判存档；事件标签覆盖约 7%；Playwright 用例已随第五轮更新并 25/25 通过。
 - **P0/P1/P2**：无未解决 P0/P1；同义词表可持续补充（P2）。
 
@@ -458,16 +458,7 @@ final result: passed
   - 1000×980：单列 25 组、10 列全显、页面无整页横滚。
   - 构建：tsc 通过；vite build 通过（669 modules，`index-BKNpCSeM.js` 1,804.02 kB / gzip 569.24 kB、`index-CsI_7jNk.css` 120.19 kB）；后端 `.venv/bin/python -m unittest tests.test_pool_table` → **Ran 39 tests, OK**。
   - **Playwright**：`tests/ui/focus-pool.spec.ts` 已更新为 **25 项**（含第六轮首标签归并用例：东方同组、2027 羊年（跨年）不被通信/商业航天吸走、IP→传媒娱乐），本地复跑 **25/25 通过**（13.8s，2026-11-11 14:54）。
-- **截图清单**（`docs/pool-table/screenshots/`，均为 2026-11-11 14:53 第六轮口径 + 173 只真实预览重截；上一轮 group5-* 已删除）：
-  - [group6-1440.png](docs/pool-table/screenshots/group6-1440.png) 1440 JS masonry 两列首屏（首标签归并：东方/2027 羊年（跨年）/通信光通信；×N 天数；组头单行）
-  - [group6-detail-1440.png](docs/pool-table/screenshots/group6-detail-1440.png) 卡片内行详情（累计 N 天）
-  - [group6-filter-1440.png](docs/pool-table/screenshots/group6-filter-1440.png) 筛选=多次入选（52 只）+排序=入选后涨幅 ↓
-  - [group6-backtest-1440.png](docs/pool-table/screenshots/group6-backtest-1440.png) 回测面板（173 样本 / T+1 75 / 未到期 98；入选天数）
-  - [group6-backtest-tables-1440.png](docs/pool-table/screenshots/group6-backtest-tables-1440.png) 回测分桶与明细特写
-  - [group6-1000.png](docs/pool-table/screenshots/group6-1000.png) 1000 单列：10 列全显、页面无整页横滚
-  - [group6-detail-1000.png](docs/pool-table/screenshots/group6-detail-1000.png) 1000 宽详情单列
-  - [group6-backtest-1000.png](docs/pool-table/screenshots/group6-backtest-1000.png) 1000 宽回测
-  - [group6-empty-1440.png](docs/pool-table/screenshots/group6-empty-1440.png) 空态（注入空数据）
+- **截图清单（已被第七轮替换）**：第六轮截图已删除，最新截图见第七轮/图表章节；本轮结论保留文字记录。
 - **已知**：首标签规则可能新增“单标签组”（如 东方 / 2027 羊年（跨年） / 传感器），这是同标签同组的直接结果；同义词表只规范已知组名，其余标签原样成组；无标签才回退 sector；fund 外部接口失败/停牌 —；driver_short 来自本机研判；事件标签覆盖约 7%；Playwright 用例已随第六轮更新并 25/25 通过。
 - **P0/P1/P2**：无未解决 P0/P1；同义词表可持续补充（P2）。
 
@@ -484,8 +475,88 @@ final result: passed
 - 已覆盖的同类修复：①「东方」组（日出东方/大东方/京东方Ａ 同组，不再因 sector=快手概念 进传媒娱乐）；②「2027 羊年（跨年）」组（盛洋科技/阳光照明 同组，不再被通信设备/商业航天吸走）；③ 次要标签不再吸走股票（首标签决定组，后续标签只展示）；④ 真实 XX概念 标签不被误过滤——42 行相关概念·题材含「概念」字样，示例 F5G概念 / CPO概念 / 英伟达概念 / 6G概念 / 影视概念 / 快手概念 / 半导体概念，且对应股票仍在正确规范组（如 仕佳光子 F5G概念 → 通信光通信、工业富联 CPO概念 → 通信光通信、新媒股份 快手概念 → 传媒娱乐）。
 - 数据变化（2026-11-11 14:57 DOM，以当前真实预览为准）：仍 173 只/25 组；通信光通信 22→21 只（+118.38→+119.67亿）、AI算力 19→20 只（+6.62→+5.33亿），其余组只数/资金不变（半导体电子 12/+61.16亿、人形机器人 16/+20.45亿、商业航天 3/+8.44亿、东方 13/-6.23亿、2027 羊年（跨年）7/-3.90亿、传媒娱乐 23/-13.97亿、其他 5/+1.93亿等）；chips 173/78/52；回测仍 173/75/98/0、80 期、按入选天数分桶 121/42、39/20、13/13。
 - 验证：独立 Playwright 脚本核对 25 组/首标签归属/东方与羊年同组/XX概念标签展示/1000 单列；console 无报错。构建：tsc 通过；vite build 通过（669 modules，index-CzNEHvHH.js 1,803.99 kB / gzip 569.27 kB、index-CsI_7jNk.css 120.19 kB）；Python .venv/bin/python -m unittest tests.test_pool_table → Ran 39 tests, OK；Playwright tests/ui/focus-pool.spec.ts 更新为 26 项（含全量审计用例），复跑 26/26 通过（13.5s，2026-11-11 14:58）。
-- 截图：沿用 group6-* 文件名，已于 2026-11-11 14:57 用当前 1420 + 173 只真实预览重截覆盖（group6-1440/1000/detail/filter/backtest 等 9 张），相关概念列不再错误隐藏 XX概念；旧 group5-* 已删除。
+- 截图：已随第七轮更新为 group7/pin/chart-*；旧表格/回测组截图已删除。
 - 已知：噪声过滤只精确匹配完整噪声 token（如「概念」被过滤、但「CPO概念」保留）；未命中同义词的标签原样成组；无标签才回退 sector；fund 外部接口失败/停牌 —；driver_short 来自本机研判；事件标签覆盖约 7%；全量审计覆盖分组一致性（不覆盖资金/行情外部数据）。
 - P0/P1/P2：无未解决 P0/P1；同义词表可持续补充（P2）。
+
+final result: passed
+
+---
+
+# Design QA — 股票池行详情图表 + 精简详情 + 模块复用（2026-11-11 晚）
+
+> 用户要求：股票池点击行内嵌 分时/日K/周K 图表（默认 250px、可放大 430px 适应窗口）；行详情精简（去掉重复信息）；抽出可复用模块 StockChartPanel + 共享 ChartViewTabs（自选监控 chart-toolbar 已复用）。
+> 实现文件：新增 src/StockChartPanel.tsx（173 行）+ src/stockChartPanel.css（21 行）；src/FocusPool.tsx 行详情接入；src/main.tsx 自选监控 chart-toolbar 复用 ChartViewTabs；两处共用 src/Chart.tsx 引擎（自选 linked-minute 原高级功能保留）。
+
+- 图表设计：展开行后，详情顶部为「分时 / 日K / 周K」三 tab（role=tablist/tab、aria-selected、aria-label 图表视图）；右侧状态文本（如「分时 2026-11-11」「日K 160根 · 日期」「周K 160根 · 日期」）与「放大/缩小」按钮（aria-pressed）。图表默认紧凑 250px，放大 430px；≤1160px 为 220px / 380px；Chart ResizeObserver 自适应容器宽度。数据来源：分时读 chart 缓存、日K读 history、周K由引擎聚合；本地无分时/日K时自动尝试 minute_ensure/daily_load 各一次，失败/无数据显示空态提示（「该股暂无可用的分时数据（可稍后重试或查看日K）。」/「该股暂无可用的日K数据。」）。内嵌面板隐藏引擎自带做T/均线/形态等高级控件（数据也未传入，stockCode 用 MACD 中性前缀）。
+- 精简详情：图表下方仅 5 块——计划与关键价位（买区/不追/止损/目标1/目标2/移动止损/计划/离场）、入选理由 + 完整四类标签、入选统计（累计 N 天 · 今日已入选/未入选、首次、最近）、窗口表现 T+1/T+3/T+5 徽标、操作（买入/卖出/加自选/删除；K线按钮已移除）；删除与行重复的入选信息/量比换手/振幅流通、逐日快照表、窗口大表。
+- 模块复用：src/StockChartPanel.tsx 自包含（内部复用 Chart.tsx，股票池行内嵌用）；导出 ChartViewTabs 共享给自选监控 chart-toolbar（普通 button 形态保持既有测试依赖；股票池传 asTabs 输出 tablist/tab）。
+- 验证（2026-11-11 20:0x，独立 Playwright 脚本 + 真实 1420 预览）：
+  - 展开行后 .stock-chart-panel 存在，aria-label「行情图表 <股票名>」；3 个 tab（分时/日K/周K，默认分时 aria-selected=true）；「放大」按钮 aria-label=放大图表，点击后变缩小图表、aria-pressed 正确。
+  - 详情标题仅 5 个（计划与关键价位/入选理由/入选统计/窗口表现/操作），操作按钮为买入/卖出/加自选/删除（无 K线）。
+  - 浏览器只读预览无本地分时/日K缓存时，图表列显示空态文案（日K在静态预览下会提示读取错误，属预览数据限制；桌面本地运行态有真实图表，见截图）。
+  - 自选监控 chart-toolbar 的三按钮分时/日K/周K 可切换（共用 ChartViewTabs，Playwright 有 smoke 用例）。
+  - Playwright：tests/ui/focus-pool.spec.ts 已更新为 29 项（新增：详情图表面板/tabs/默认分时/切换/放大缩小/空态降级/操作无K线/自选共用 tabs smoke），复跑 29/29 通过（15.5s，2026-11-11 20:14）。构建：tsc 通过；vite build 通过（673 modules，index-Cza3tbjH.js 1,806.09 kB / gzip 570.54 kB、index-Csb2s0vC.css 122.31 kB）；Python tests.test_pool_table 39 tests OK。
+- 截图清单（docs/pool-table/screenshots/，chart-* 由前端本地运行态生成、8 只样本；表格/回测历史截图已删除）：
+  - [chart-detail-1440.png](docs/pool-table/screenshots/chart-detail-1440.png) 1440 展开行：分时图表（默认 250px）+ 精简详情 5 块
+  - [chart-detail-1000.png](docs/pool-table/screenshots/chart-detail-1000.png) 1000 单列：分时图表（≤1160 为 220px）+ 精简详情
+  - [chart-daily-1440.png](docs/pool-table/screenshots/chart-daily-1440.png) 1440 日K tab（K 线 + MA/成交量 + 数据说明浮层）
+  - [chart-weekly-1440.png](docs/pool-table/screenshots/chart-weekly-1440.png) 1440 周K tab（引擎聚合）
+  - [chart-empty-1000.png](docs/pool-table/screenshots/chart-empty-1000.png) 1000 空态：无分时数据提示（可切日K）
+  - [chart-pool-1000.png](docs/pool-table/screenshots/chart-pool-1000.png) 1000 展开行整体（图表+精简详情）
+- 已知：浏览器只读预览使用静态 JSON，无本地分时/日K缓存时图表显示空态（真实图表需桌面本地运行/有缓存；日K在静态预览会报读取错误，属预览限制）；截图 chart-* 为前端本地运行态 8 只样本，不是 173 只实时预览；图表依赖本机 minute/daily 缓存与 minute_ensure/daily_load 补取；自选监控仍保留 linked-minute 等原高级功能（仅在股票池内嵌面板隐藏高级控件）。
+- P0/P1/P2：无未解决 P0/P1；浏览器预览图表空态为已知限制（P2）。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第七轮：资金接口修复 + 列序/置顶/当前状态 + 驱动升级（2026-11-11 晚）
+
+> 用户 5 点反馈：① 资金净流入 bug（东财 ulist 失效）② 表格列顺序 ③ 组头移除「当前符合」并改到行详情 ④ 组头置顶按钮 ⑤ 驱动原因升级为完整新闻短句。
+> 实现文件：core/pool.py（资金/驱动）；src/FocusPool.tsx + poolTableModel.ts + focusPool.css（列序/置顶/当前状态）；tests/test_pool_table.py / focus-pool.spec.ts 同步。
+
+- **资金净流入修复**：原东方财富 ulist.np 批量接口失效（返回 000/rc102）；后端改以**新浪全 A 股资金流批量接口为主**（netamount/ratioamount，全量约 5500 条按池过滤），东方财富仅 fallback；刷新周期改为 **60 秒**。真实预览 **188/188 只有值**，组头资金不再显示 —（示例 通信光通信 +153.30亿、半导体电子 +73.88亿、AI算力 +56.60亿）。
+- **表格列顺序**：代码 | 名称（列宽 **92px**） | **现价** | 入选时间 | 入选价格 | 入选后涨幅 | 今日涨幅 | 量比 | 换手(%) | 相关概念·题材；数值列/数值表头右对齐且不省略；行 11px/表头 10.5px；徽标 ×N=入选天数不变。
+- **组头 + 置顶**：组头严格单行，仅「组名—N只 | 上涨X/下跌Y · 资金净流入±X.XX亿 | 驱动：当日驱动」；**已移除「当前符合 X」**。组头最右侧新增 **SVG pin 置顶按钮**（aria-label「置顶 <组名>」/「取消置顶 <组名>」、aria-pressed）：置顶组固定瀑布流最前，多个置顶保持**点击顺序**、不随资金排序移动；localStorage `stock-monitor-pool-pinned-v1` 持久化；筛选后置顶组可能被隐藏但记录保留，清除筛选恢复置顶顺序。
+- **行详情「当前状态」**：精简详情新增**当前状态**块，显示「当前符合：是/否」+ 解释（现价处于计划买区、未破止损、仍符合入选条件；不代表买入建议）；为「否」时显示 zone/hint（如「高于追高上限 · 高于追高上限，不追，等回踩」）。详情标题最终为 6 块：计划与关键价位 / 入选理由 / 入选统计 / 当前状态 / 窗口表现 / 操作（无 K线按钮）。
+- **驱动升级**：取 issue.pulse.hotspots.news 的**完整新闻标题**，按股票名/板块关键词命中，按标点切分提取**完整简短分句（4–28 字，避免半句）**，无匹配回退完整短句。真实样例：「光通信股今早逆市走高」「机器人概念股早盘全线走高」「具身智能标准化工作提速」「OpenAI收购AI旅行服务商Odessia」「三星电子称已支持1000家初创公司」；不再出现半句截断。
+- **验证（2026-11-11 21:1x，独立 Playwright 脚本 + 真实 1420 预览）**：
+  - 标题条 股票池 - **188** / 行情 **16:15:00 · 快照** / 上涨 **134** / 下跌 **53**；chips 188/98/56；footer 显示 188 / 共 188 只 · **29 个方向**。
+  - 表头顺序：代码/名称/现价/入选时间/入选价格/入选后涨幅/今日涨幅/量比/换手(%)/相关概念·题材；名称列宽 92px；首行「300285 国瓷材料×1 41.70 11-11 14:31 41.85 -0.36% +4.56% 0.90 5.50 光通信」。
+  - 组头无「当前符合」；pin 按钮 aria「置顶 通信光通信」/pressed；置顶第 2 组后其移动到第一（首个=人形机器人），多个置顶顺序 [人形机器人, 化工材料] 且资金排序不覆盖；localStorage 持久化；筛选多次入选后置顶组隐藏但记录保留，清除后恢复。
+  - 展开行详情 6 块，当前状态显示「当前符合：否 / 当前 高于追高上限 · 高于追高上限，不追，等回踩 / 不代表买入建议」；操作按钮无 K线。
+  - 回测：188 行；T+1 135/未到期 53/缺数据 0；65.2%/+1.75%/+1.47%；按入选天数 132/79（63.3%/+1.51%/+1.20%）、42/42（64.3%/+1.04%/+0.77%）、14/14（78.6%/+5.17%/+5.04%）；按涨幅 67/49、55/34、66/52；按时间 11-11 53/0、11-10 60/60、11-09 58/58、11-06 17/17；覆盖 188/135/138 只、88 期。
+  - 1000 单列 29 组、10 列全显、页面无整页横滚、29 个 pin 按钮。
+  - 构建/测试：tsc 通过；vite build 通过（673 modules，`index-BgW15Seq.js` 1,808.11 kB / gzip 571.33 kB、`index-BVgEriJV.css` 123.10 kB）；Python `tests.test_pool_table` **54 tests OK**；Playwright spec 已更新为 **31 项**（第七轮：资金/列序/置顶/当前状态/驱动 + 图表/分组），**串行复跑 31/31 通过**（18.8s，2026-11-11 21:19；并行全量跑曾出现 3 项时序 flaky，单测/串行复跑通过，最终以 verifier 复跑为准）。
+- **截图清单（已被第八轮替换）**：第七轮 group7/pin-* 截图已删除，最新截图见第八轮章节（group8-1440/1000/pin-1440 与 chart-*）；本轮结论保留文字记录。
+- **已知**：资金为新浪/东财外部接口，失败时 —；driver 依赖 issue.pulse.hotspots.news，缺失回退短句；置顶仅本机 localStorage；浏览器只读预览为静态 JSON，图表无缓存时显示空态；截图 group7/pin/chart 为前端本地运行态样本，数字以 188 只真实预览为准；Playwright 最终以 verifier 复跑结果为准（当前串行 31/31）。
+- **P0/P1/P2**：无未解决 P0/P1；并行测试 flaky 为 P2（串行通过）。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第八轮：专业 pin/名称收尾/列距/分组与驱动 review/资金复核（2026-11-11 晚）
+
+> 用户 6 点反馈：① pin 改专业图标 ② 名称列 72px/去尾部字母 ③ 现价与入选时间 7px 间距 ④ 分组 review 修正 ⑤ 驱动 review（与组相关）⑥ 资金统计复核（组头=成员 net_yi 之和）。
+> 实现文件：src/FocusPool.tsx、src/focusPool.css、src/poolTableModel.ts、core/pool.py、tests/test_pool_table.py 等。
+
+- **专业 pin（第八轮）**：组头最右 Material push_pin SVG 圆角小按钮，实测 20×20、圆角 6px、1px 边框、深红底（rgb(58,43,43)）淡红图标（rgb(230,169,169)）；置顶态金色 #ffd27a 图标 + #d0b16a 边框（bg rgb(70,54,32)、color rgb(255,227,168)）；aria-label「置顶 <组名>」/「取消置顶 <组名>」、aria-pressed 切换；置顶组最前、多置顶点击顺序、localStorage stock-monitor-pool-pinned-v1、筛选隐藏但记录保留。
+- **名称列（第八轮）**：宽度 92→72px；显示去掉尾部 -W/-U/-UW/-A/-B/-N/-S 等与末尾字母——奥比中光-W→奥比中光、宇树科技-W→宇树科技、埃夫特-U→埃夫特、京东方Ａ→京东方；title/aria 保留完整原名；188 只名称无省略。
+- **现价间距（第八轮）**：现价列与入选时间之间 7px（.pt-col-price{padding-right:7px}，实测 row/head 现价单元格 padding-right 7px）。
+- **分组 review（第八轮）**：物理AI 独立成组（4 只）；大模型/AI漫剧并入传媒娱乐（27 只）；汽车电子/电子后视镜/轮毂电机/汽车热管理/汽车零部件并入汽车产业链（8 只）；PCB 并入半导体电子（10 只）；专精特新/百元股不作组键；同义词改为最长关键词优先。当前 28 组：通信光通信21、人形机器人14、传媒娱乐27、2027羊年（跨年）8、低空经济6、绿色照明1、物理AI4、其他6、印刷包装2、家电电机3、可控核聚变1、固态电池2、农业4、半导体电子10、AI算力18、化工材料16、消费零售4、汽车产业链8、商业航天3、东方13、小米概念1、能源电力7、传感器1、消费电子1、基建1、冰雪经济2、核污防治1、光伏新能源3。auditGrouping 188/188 通过（0 条不一致）。
+- **驱动 review（第八轮）**：驱动必须与组相关——组名或成员第一个显示标签命中新闻标题才采用（剔除成员名称/泛化词）；无关新闻回退完整泛化短句。实测：通信光通信「光通信股今早逆市走高」、人形机器人「机器人概念股早盘全线走高」、传媒娱乐「短剧与AI漫剧打开公司增长空间」、商业航天「公司商业航天布局持续推进」保留；化工材料/半导体/AI算力/2027羊年 的无关新闻已不再显示（改为「收盘时已走强，下一交易日开盘后再确认」「分歧·只观察，等重新一致」等）。
+- **资金复核（第八轮）**：组头金额=成员 net_yi 之和（缺失不计、2 位小数）；用真实预览逐组求和与页面组头比对 **28/28 一致**（通信 153.3029→+153.30、半导体 72.9211→+72.92、AI 55.713→+55.71、传媒 16.2882→+16.29）；资金 188/188 有值。
+- **验证**：独立 Playwright 脚本 + 真实 1420 预览：28 组/188 只；footer 28 个方向；名称/列距/pin 样式/置顶顺序/localStorage/驱动/资金求和均与上述一致；1000 单列 28 组、10 列全显、页面无横滚；回测 188/135/53/0、65.2%/+1.75%/+1.47%、按天数 132/79、42/42、14/14、88 期不变。
+- **构建/测试**：tsc 通过；vite build 通过（673 modules，index-BPOfAhKv.js 1,809.55 kB / gzip 571.89 kB、index-BWKk_gIm.css 123.60 kB）；Python tests.test_pool_table **54 tests OK**；Playwright spec 现 31 项（第七轮+图表），**第八轮 review 用例待 verifier 更新后复跑**（last-run 为更新前通过，以 verifier 最终结果为准）。
+- **截图清单**（docs/pool-table/screenshots/，2026-11-11 21:42）：
+  - [group8-1440.png](docs/pool-table/screenshots/group8-1440.png) 真实 188：28 组、名称 72px、专业 pin、列序、组头资金/驱动
+  - [group8-1000.png](docs/pool-table/screenshots/group8-1000.png) 真实 188：1000 单列、10 列全显、pin、无横滚
+  - [group8-pin-1440.png](docs/pool-table/screenshots/group8-pin-1440.png) 置顶金色态（Material push_pin，前端本地运行态）
+  - chart-detail-1440/1000、chart-daily-1440、chart-weekly-1440、chart-empty-1000、chart-pool-1000（21:42 更新，前端本地运行态）
+  - 旧 group7/pin 截图已删除。
+- **已知**：资金外部接口（新浪为主/东财 fallback，60s，失败 —）；驱动依赖 issue.pulse.hotspots.news 关键词匹配；pin 仅本机 localStorage；浏览器静态预览图表无缓存为空态；group8-pin/chart 为前端本地运行态样本，数字以真实 188 预览为准；Playwright 第八轮用例待 verifier 更新复跑。
+- **P0/P1/P2**：无未解决 P0/P1；Playwright 用例更新为 P2。
 
 final result: passed

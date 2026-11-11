@@ -54,7 +54,7 @@
 /* 表格：卡片内紧凑固定列（10 列），未命中数值列不省略；极窄窗兜底 */
 .pt-scroll{min-width:0;max-width:100%;overflow-x:auto;background:transparent}
 .pt-table{display:flex;flex-direction:column;min-width:0}
-.pt-head,.pt-row{display:grid;grid-template-columns:46px 102px 72px 46px 46px 56px 52px 38px 48px minmax(0,1fr);
+.pt-head,.pt-row{display:grid;grid-template-columns:46px 72px 46px 72px 46px 61px 52px 38px 48px minmax(0,1fr);
   align-items:stretch;padding:0 6px;min-width:0;column-gap:0}
 /* 契约 §12.2：行 11px / 表头 10.5px；数值列与表头右对齐，文本列左对齐 */
 .pt-group .pt-head,.pt-group .pt-row{font-size:11px}
@@ -63,6 +63,9 @@
 .pt-group .pt-row>span{padding-right:3px}
 .pt-group .pt-head>span{padding-right:2px}
 .pt-head-num{justify-content:flex-end;text-align:right}
+/* 用户第八轮：现价与入选时间之间留 4–6px 呼吸位（在列内 padding，不改变总宽） */
+.pt-head>span.pt-col-price{padding-right:7px}
+.pt-row>span.pt-cell.pt-col-price{padding-right:7px}
 .pt-head-num .pt-head-btn{justify-content:flex-end}
 .pt-cell.pt-num{text-align:right}
 
@@ -84,6 +87,22 @@
 .pt-group-driver{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-size:10.5px;color:#c9a9a9}
 .pt-driver-text{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* 用户第八轮：组头尾部置顶按钮（Material push_pin，20×20 圆角 6，单行内不触发行/组其它点击） */
+.pool-terminal .pt-pin{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;min-width:20px;
+  padding:0;margin-left:3px;border:1px solid #4d3838;border-radius:6px;background:#3a2b2b;color:#e6a9a9;line-height:1;
+  box-sizing:border-box;transition:background .12s,color .12s,border-color .12s}
+.pool-terminal .pt-pin svg{fill:currentColor;display:block}
+.pool-terminal .pt-pin:hover:not(:disabled){background:#4a3434;color:#ffc0c0;border-color:#6a4a4a}
+.pool-terminal .pt-pin.is-pinned{color:#ffd27a;border-color:#d0b16a;background:#3a2b2b}
+.pool-terminal .pt-pin.is-pinned:hover:not(:disabled){color:#ffe3a8;border-color:#ffd27a;background:#463620}
+.pool-terminal .pt-group-head .pt-pin{height:20px;min-height:20px;width:20px;min-width:20px;padding:0}
+.pool-terminal .pt-group-head{padding:3px 8px}
+/* 行详情「当前符合」 */
+.pt-current{display:flex;flex-direction:column;gap:1px;padding:3px 6px;border:1px solid #2b3d57;border-radius:4px;background:#132033;font-size:10.5px;line-height:1.5}
+.pt-current b{color:#f3ce88;font-weight:600}
+.pt-current.is-match b{color:#9ee0c5}
+.pt-current span{color:#b8c9de}
+.pt-current em{font-style:normal;color:#8fa6c4;font-size:10px}
 .pt-head{height:24px;background:#142338;border-bottom:1px solid #27354c;color:#8298b5;font-size:11px;position:sticky;top:0;z-index:2}
 .pt-head>span{display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap}
 .pt-head-btn{background:none!important;border:none!important;height:auto!important;padding:0!important;border-radius:0!important;
@@ -97,8 +116,8 @@
 .pt-row>span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:23px;padding-right:4px}
 .pt-code{color:#c7d6e8;font-size:11px}
 .pt-row>span.pt-name{display:flex;align-items:center;gap:3px;color:#e9f1fb;font-weight:600}
-.pt-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pt-count-badge{flex:0 0 auto;font-size:9.5px;line-height:14px;padding:0 3px;border-radius:6px;font-weight:400;
+.pt-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
+.pt-count-badge{flex:0 0 auto;font-size:9px;line-height:13px;padding:0 2px;border-radius:6px;font-weight:400;
   color:#8fa6c4;background:#1b2940;border:1px solid #2f4462}
 .pt-time{color:#f3ce88}
 .pt-num{text-align:right}
@@ -107,10 +126,17 @@
 .pt-count{color:#89c8ff;font-weight:600}
 .pt-yellow{color:#f3ce88}
 
-/* 行内详情：卡片内宽度有限，统一单列（内容不变，避免卡片内横向滚动） */
-.pt-detail{background:#0f1b2b;border-bottom:1px solid #324159;padding:8px 10px 10px;font-size:11px;color:#b8c9de}
-.pt-detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:6px 20px;min-width:0}
-.pt-group .pt-detail-grid{grid-template-columns:minmax(0,1fr)}
+/* 行内详情：顶部行情图表面板 + 精简信息 2 列（窄卡片自适应单列） */
+.pt-detail{background:#0f1b2b;border-bottom:1px solid #324159;padding:6px 8px 10px;font-size:11px;color:#b8c9de}
+.pt-detail-chart{min-width:0;margin-bottom:6px}
+.pt-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;min-width:0}
+.pt-group .pt-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pt-detail-reason{margin:0 0 4px;color:#cfdcf0;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pt-win-badges{display:flex;gap:4px 6px;flex-wrap:wrap;min-width:0}
+.pt-win-badge{display:inline-flex;align-items:baseline;gap:4px;padding:1px 6px;border:1px solid #2b3d57;border-radius:4px;background:#132033;font-size:10.5px;white-space:nowrap}
+.pt-win-badge b{color:#9cc3ff;font-weight:600}
+.pt-win-badge em{color:#8fa6c4;font-style:normal}
+.pt-win-badge i{font-style:normal;color:#8fa6c4;font-size:10px}
 .pt-detail-col{min-width:0}
 .pt-detail h4{margin:8px 0 4px;font-size:11px;color:#c6d6e8;font-weight:600;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .pt-detail-col>h4:first-child{margin-top:0}
@@ -161,7 +187,7 @@
 
 /* 契约 §10：≤1160 单列仍显示全部 10 列；卡片内不横向滚动；极窄 <600 卡片内横滚兜底 */
 @media(max-width:1160px){
- .pt-detail-grid{grid-template-columns:minmax(0,1fr)}
+ .pt-detail-grid,.pt-group .pt-detail-grid{grid-template-columns:minmax(0,1fr)}
  .pt-bt-buckets{grid-template-columns:minmax(0,1fr)}
  .pt-titlebar{height:auto;flex:0 0 auto;flex-wrap:wrap;padding:4px 8px;gap:4px 10px}
  .pt-title-status{white-space:normal}
