@@ -169,11 +169,17 @@ export function tagsTitle(tags: string[]) {
 /** 契约 §7：相关概念/题材 = theme+concept+event+other 去重（显示前 3 个，title 全量）。 */
 export function relatedTagsOf(entry: Entry): string[] {
   const tags = tagsOf(entry);
-  return [...new Set([...tags.theme, ...tags.concept, ...tags.event, ...tags.other].filter(Boolean))];
+  const all = [...tags.theme, ...tags.concept, ...tags.event, ...tags.other]
+    .map(token => String(token || '').trim())
+    .filter(token => token && !NOISE_TOKENS.includes(token));
+  return [...new Set(all)];
 }
 export function relatedTagsText(entry: Entry) {
   const all = relatedTagsOf(entry);
-  return all.length ? all.slice(0, 3).join(' / ') : '—';
+  if (all.length) return all.slice(0, 3).join(' / ');
+  const sector = String(entry.sector || '').trim();
+  if (sector && !NOISE_TOKENS.includes(sector)) return sector;
+  return '—';
 }
 export function relatedTagsTitle(entry: Entry) {
   const all = relatedTagsOf(entry);
@@ -295,37 +301,61 @@ function matchSynonym(token: string, groups: SynonymGroup[]): string | null {
   }
   return null;
 }
-/** 标签 token 顺序与表格「相关概念·题材」一致：theme → concept → event → other（不含 sector）。 */
+/** 标签 token 顺序与表格「相关概念·题材」完全一致（同一个 relatedTagsOf，已过滤噪声标签）。 */
 function groupTokens(entry: Entry) {
-  const tags = tagsOf(entry);
-  const tokens = [...tags.theme, ...tags.concept, ...tags.event, ...tags.other];
-  return [...new Set(tokens.map(token => String(token || '').trim()).filter(Boolean))];
+  return relatedTagsOf(entry);
 }
 /**
- * 分组（用户第五轮修正）：
- * a) 标签 token 先按 SYNONYM_GROUPS 匹配，首命中即组名；
- * b) 标签里出现名称辈/生肖 fallback → 「名称辈/生肖」（不吃 sector 概念组）；
- * c) 再用 sector 做同义词匹配，再 sector fallback；
- * d) 再用未命中且非噪声的标签 token 自身；e) 最后「其他」。
+ * 分组（用户第六轮修正）：严格按表格「相关概念·题材」的**第一个有效标签**归组。
+ * a) 按 tagsOf 显示顺序（theme→concept→event→other）取第一个非噪声标签；
+ * b) 命中同义词表 → 规范组名（机器人/减速器→人形机器人、通信→通信光通信…）；
+ * c) 未命中 → 直接用该标签本身作组名（东方 / 2027 羊年（跨年）/ 传感器 / 可控核聚变…），
+ *    不再统一折叠成「名称辈/生肖」，保证同标签股票同组；
+ * d) 无有效标签时才回退 sector（同义词映射，未命中用 sector 本身），最后「其他」。
  */
 export function groupKey(entry: Entry): string {
-  const tags = groupTokens(entry);
-  for (const token of tags) {
-    const matched = matchSynonym(token, SYNONYM_GROUPS);
-    if (matched) return matched;
+  for (const token of groupTokens(entry)) {
+    if (NOISE_TOKENS.includes(token)) continue;
+    return matchSynonym(token, SYNONYM_GROUPS) || token;
   }
-  if (tags.some(token => matchSynonym(token, [FALLBACK_SYNONYM]))) return FALLBACK_NAME_GROUP;
   const sector = (entry.sector || '').trim();
   if (sector) {
     const matched = matchSynonym(sector, SYNONYM_GROUPS);
     if (matched) return matched;
-    if (matchSynonym(sector, [FALLBACK_SYNONYM])) return FALLBACK_NAME_GROUP;
-  }
-  for (const token of tags) {
-    if (NOISE_TOKENS.some(noise => token.includes(noise))) continue;
-    return token;
+    if (!NOISE_TOKENS.includes(sector)) return sector;
   }
   return FALLBACK_GROUP;
+}
+/** 分组一致性审计：逐只校验 groupKey 是否等于「首个显示标签」的规范映射；同一首标签不得分到两个组。 */
+export type GroupingIssue = {code: string; name: string; firstTag: string; group: string; expected: string; reason: string};
+export function auditGrouping(entries: Entry[]): GroupingIssue[] {
+  const issues: GroupingIssue[] = [];
+  const tagToGroups = new Map<string, string>();
+  for (const entry of entries) {
+    const tags = relatedTagsOf(entry);
+    const firstTag = tags[0] || '';
+    let expected: string;
+    if (firstTag) expected = matchSynonym(firstTag, SYNONYM_GROUPS) || firstTag;
+    else {
+      const sector = String(entry.sector || '').trim();
+      const matched = sector ? matchSynonym(sector, SYNONYM_GROUPS) : null;
+      expected = matched || (sector && !NOISE_TOKENS.includes(sector) ? sector : FALLBACK_GROUP);
+    }
+    const group = groupKey(entry);
+    if (group !== expected) {
+      issues.push({code: entry.code, name: entry.name, firstTag, group, expected, reason: 'group!=first-tag'});
+      continue;
+    }
+    if (firstTag) {
+      const previous = tagToGroups.get(firstTag);
+      if (previous && previous !== group) {
+        issues.push({code: entry.code, name: entry.name, firstTag, group, expected: previous, reason: 'same-tag-split'});
+      } else {
+        tagToGroups.set(firstTag, group);
+      }
+    }
+  }
+  return issues;
 }
 export type GroupStats = {
   rows: number; up: number; down: number;

@@ -1,5 +1,7 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
-import {mkdirSync} from 'node:fs';
+import {existsSync,mkdirSync,readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {auditGrouping,groupKey,NOISE_TOKENS,relatedTagsOf,relatedTagsText,type Entry} from '../../src/poolTableModel';
 
 // 股票池「瀑布流分组卡片 + 同义词归并 + 组头单行 + 回测」验收测试（2026-11-11 第四轮）。
 // 依据 docs/pool-table/contract.md §12-§12.3 与当前 src/FocusPool.tsx / src/poolTableModel.ts。
@@ -53,7 +55,7 @@ const makeEntry=(over:Json):Json=>({
 });
 
 // 11 只 / 6 组：同义词合并（机器人+人形机器人+工业机器人；光通信+通信设备；商业航天+卫星互联网；半导体+OLED），
-// 名称辈/生肖噪声组兜底为「名称辈/生肖」，无任何 token 的进入「其他」；每组数量不限。
+// 首标签（theme→concept→event→other，跳过噪声）即组键：命中同义词→规范组名，未命中→标签本身；无标签才回退 sector，全空进「其他」。每组数量不限。
 const ENTRIES:Json[]=[
   makeEntry({}),
   makeEntry({code:'sz000102',name:'乙减速器',sector:'机器人',added_at:'2026-11-11T10:15:00+08:00',added_price:20.5,
@@ -326,13 +328,13 @@ test('瀑布流分组：两列瀑布/间距 8px、同义词归并为 6 组且无
   await boot(page,{});
   await waitGroups(page);
   // 同义词合并：机器人/人形机器人/工业机器人 → 人形机器人；光通信+通信设备 → 通信光通信；
-  // 商业航天+卫星互联网 → 商业航天；半导体+OLED → 半导体电子；噪声只进「名称辈/生肖」；空标签进「其他」。
-  // JS masonry 列优先 DOM 顺序：左列 [人形机器人, 其他, 半导体电子]，右列 [商业航天, 通信光通信, 名称辈/生肖]
+  // 商业航天+卫星互联网 → 商业航天；半导体+OLED → 半导体电子；首标签「东方」未命中同义词表 → 组名直接用「东方」；空标签进「其他」。
+  // JS masonry 列优先 DOM 顺序：左列 [人形机器人, 其他, 半导体电子]，右列 [商业航天, 通信光通信, 东方]
   expect(await groupLabels(page)).toEqual([
-    '分组 人形机器人','分组 其他','分组 半导体电子','分组 商业航天','分组 通信光通信','分组 名称辈/生肖',
+    '分组 人形机器人','分组 其他','分组 半导体电子','分组 商业航天','分组 通信光通信','分组 东方',
   ]);
   expect(await groupTitles(page)).toEqual([
-    '人形机器人 — 3 只','其他 — 1 只','半导体电子 — 2 只','商业航天 — 2 只','通信光通信 — 2 只','名称辈/生肖 — 1 只',
+    '人形机器人 — 3 只','其他 — 1 只','半导体电子 — 2 只','商业航天 — 2 只','通信光通信 — 2 只','东方 — 1 只',
   ]);
   const human=groupOf(page,'人形机器人');
   const humanNames=(await human.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
@@ -341,7 +343,7 @@ test('瀑布流分组：两列瀑布/间距 8px、同义词归并为 6 组且无
   expect(commNames).toEqual(['丁光通信','戊通信'].sort());
   const spaceNames=(await groupOf(page,'商业航天').locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
   expect(spaceNames).toEqual(['庚卫星','己航天'].sort());
-  await expect(groupOf(page,'名称辈/生肖').locator('.pt-name-text')).toHaveText('癸东方');
+  await expect(groupOf(page,'东方').locator('.pt-name-text')).toHaveText('癸东方');
   await expect(groupOf(page,'其他').locator('.pt-name-text')).toHaveText('子其他');
   // 不再有「其他方向」/is-other 跨列逻辑
   await expect(page.locator('.pt-group.is-other')).toHaveCount(0);
@@ -358,11 +360,11 @@ test('瀑布流分组：两列瀑布/间距 8px、同义词归并为 6 组且无
   await expect(columnsLoc(page)).toHaveCount(2);
   expect(await columnLabels(page)).toEqual([
     ['分组 人形机器人','分组 其他','分组 半导体电子'],
-    ['分组 商业航天','分组 通信光通信','分组 名称辈/生肖'],
+    ['分组 商业航天','分组 通信光通信','分组 东方'],
   ]);
   expect(await columnTitles(page)).toEqual([
     ['人形机器人 — 3 只','其他 — 1 只','半导体电子 — 2 只'],
-    ['商业航天 — 2 只','通信光通信 — 2 只','名称辈/生肖 — 1 只'],
+    ['商业航天 — 2 只','通信光通信 — 2 只','东方 — 1 只'],
   ]);
   const columns=columnsLoc(page);
   await expect(columns.nth(0).locator('.pt-group').first()).toHaveAttribute('aria-label','分组 人形机器人');
@@ -454,9 +456,9 @@ test('组头：严格单行（height<28/nowrap/overflow hidden）、统计、具
   // 同一组内两条短句：带新闻关键词+标点的「大摩…」优先于更晚的「芯片股午后逆市拉升」
   await expect(semi.locator('.pt-group-driver')).toHaveText('驱动：大摩高喊抄底半导体：资金回流');
 
-  // 噪声组只有泛化短句时回退展示
-  await expect(groupOf(page,'名称辈/生肖').locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 —');
-  await expect(groupOf(page,'名称辈/生肖').locator('.pt-group-driver')).toHaveText('驱动：只观察不追高');
+  // 无同义词命中的标签组（东方）只有泛化短句时回退展示
+  await expect(groupOf(page,'东方').locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 —');
+  await expect(groupOf(page,'东方').locator('.pt-group-driver')).toHaveText('驱动：只观察不追高');
   // 无驱动 → —
   await expect(groupOf(page,'其他').locator('.pt-group-driver')).toHaveText('驱动：—');
   await expect(groupOf(page,'其他').locator('.pt-group-stats .pt-group-stat').nth(2)).toHaveText('资金净流入 +0.50亿');
@@ -500,47 +502,105 @@ test('分组回归：泛化 token 通信/能源/电机 归入正确组，不被�
   }
 });
 
-// ===== 2c. 分组修复：同标签归并（名称辈/生肖 fallback 先于 sector 概念；标签命中优先） =====
-test('分组修复：同「东方」标签的股票同组到名称辈/生肖，游戏标签归传媒娱乐且不含东方股',async({page})=>{
+// ===== 2c. 分组修复：同一标签必须同组（首标签即组键；未命中同义词直接用标签作组名） =====
+test('分组修复：首标签优先——东方同组、2027 羊年（跨年）不被通信/商业航天吸走、IP 归传媒娱乐',async({page})=>{
+  const makeCase=(code:string,name:string,sector:string,theme:string[],concept:string[],netYi:number,reasonText:string)=>makeEntry({
+    code,name,sector,category:'概念',group_name:'',groups:[],
+    added_day:'2026-11-11',added_at:'2026-11-11T10:20:00+08:00',added_price:5.2,quote:quote(5.3,1.1),
+    today_percent:1.1,since_add_percent:1.1,zone:'等待回踩',plan:planDefault(),history:[],windows:null,
+    episodes:{total:1,today:1,first_at:'2026-11-11T10:20:00+08:00',last_at:'2026-11-11T10:20:00+08:00'},
+    quant:{turnover_rate:2.1,volume_ratio:1.1,amplitude:2,float_mcap_yi:30},
+    tags:{concept,theme,event:[],other:[]},reason:reasonText,
+    driver:null,driver_short:null,driver_short_at:null,fund:fund(netYi),
+  });
   const groupFixEntries:Json[]=[
-    makeEntry({code:'sz000801',name:'大东方',sector:'快手概念',category:'名称辈',group_name:'',groups:[],
-      added_day:'2026-11-11',added_at:'2026-11-11T10:20:00+08:00',added_price:5.2,quote:quote(5.3,1.1),
-      today_percent:1.1,since_add_percent:1.1,zone:'等待回踩',plan:planDefault(),history:[],windows:null,
-      episodes:{total:1,today:1,first_at:'2026-11-11T10:20:00+08:00',last_at:'2026-11-11T10:20:00+08:00'},
-      quant:{turnover_rate:2.1,volume_ratio:1.1,amplitude:2,float_mcap_yi:30},
-      tags:{concept:[],theme:['东方'],event:[],other:[]},reason:'东方系名称辈观察',
-      driver:null,driver_short:null,driver_short_at:null,fund:fund(1)}),
-    makeEntry({code:'sz000802',name:'京东方A',sector:'东方',category:'名称辈',group_name:'',groups:[],
-      added_day:'2026-11-11',added_at:'2026-11-11T10:25:00+08:00',added_price:4.1,quote:quote(4.2,0.8),
-      today_percent:0.8,since_add_percent:0.8,zone:'等待回踩',plan:planDefault(),history:[],windows:null,
-      episodes:{total:1,today:1,first_at:'2026-11-11T10:25:00+08:00',last_at:'2026-11-11T10:25:00+08:00'},
-      quant:{turnover_rate:1.8,volume_ratio:1,amplitude:2,float_mcap_yi:20},
-      tags:{concept:[],theme:['东方'],event:[],other:[]},reason:'面板行业需求回升',
-      driver:null,driver_short:null,driver_short_at:null,fund:fund(2)}),
-    makeEntry({code:'sz000803',name:'游戏样本',sector:'游戏Ⅱ',category:'概念',group_name:'',groups:[],
-      added_day:'2026-11-11',added_at:'2026-11-11T10:30:00+08:00',added_price:6.8,quote:quote(7,1.8),
-      today_percent:1.8,since_add_percent:1.8,zone:'等待回踩',plan:planDefault(),history:[],windows:null,
-      episodes:{total:1,today:1,first_at:'2026-11-11T10:30:00+08:00',last_at:'2026-11-11T10:30:00+08:00'},
-      quant:{turnover_rate:3.2,volume_ratio:1.3,amplitude:3,float_mcap_yi:50},
-      tags:{concept:['网络游戏'],theme:['IP'],event:[],other:[]},reason:'游戏版号获批',
-      driver:null,driver_short:null,driver_short_at:null,fund:fund(2.5)}),
+    // A：theme「东方」+ sector「快手概念」→ 组「东方」（不是传媒娱乐）
+    makeCase('sz000801','大东方','快手概念',['东方'],[],1,'东方系名称辈观察'),
+    // B：theme「东方」+ sector「东方」→ 同组「东方」
+    makeCase('sz000802','京东方A','东方',['东方'],[],2,'面板行业需求回升'),
+    // C：theme「IP」→ 命中同义词表 → 传媒娱乐
+    makeCase('sz000803','游戏样本','游戏Ⅱ',['IP'],['网络游戏'],2.5,'游戏版号获批'),
+    // D：theme「2027 羊年（跨年）」+ sector「通信设备」→ 新组「2027 羊年（跨年）」，不得混入通信光通信
+    makeCase('sz000804','盛洋科技','通信设备',['2027 羊年（跨年）'],[],1.5,'跨年题材活跃'),
+    // E：theme「2027 羊年（跨年）」+ concept「商业航天」→ 同组「2027 羊年（跨年）」，不得混入商业航天
+    makeCase('sz000805','阳光照明','商业航天',['2027 羊年（跨年）'],['商业航天'],0.5,'跨年题材活跃'),
   ];
   await boot(page,{entries:groupFixEntries});
-  await waitGroups(page,2);
-  // A/B 虽 sector 分别为 快手概念/东方，但 theme「东方」命中名称辈/生肖 fallback（先于 sector 概念匹配）；
-  // C 的 theme「IP」/concept「网络游戏」命中传媒娱乐。
-  expect((await groupLabels(page)).sort()).toEqual(['分组 名称辈/生肖','分组 传媒娱乐'].sort());
-  expect((await groupTitles(page)).sort()).toEqual(['名称辈/生肖 — 2 只','传媒娱乐 — 1 只'].sort());
-  const nameGroup=groupOf(page,'名称辈/生肖');
+  await waitGroups(page,3);
+  // 组资金：东方 1+2=3.00 > 传媒娱乐 2.50 > 2027 羊年（跨年）1.5+0.5=2.00
+  const labels=await groupLabels(page);
+  expect(labels.sort()).toEqual(['分组 东方','分组 传媒娱乐','分组 2027 羊年（跨年）'].sort());
+  expect((await groupTitles(page)).sort()).toEqual(['东方 — 2 只','传媒娱乐 — 1 只','2027 羊年（跨年） — 2 只'].sort());
+  const eastGroup=groupOf(page,'东方');
   const mediaGroup=groupOf(page,'传媒娱乐');
-  const nameNames=(await nameGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
-  expect(nameNames).toEqual(['京东方A','大东方'].sort());
+  const goatGroup=groupOf(page,'2027 羊年（跨年）');
+  const eastNames=(await eastGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
+  expect(eastNames).toEqual(['京东方A','大东方'].sort());
   await expect(mediaGroup.locator('.pt-name-text')).toHaveText('游戏样本');
-  // 传媒娱乐组不得包含带「东方」标签的 A/B
+  const goatNames=(await goatGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
+  expect(goatNames).toEqual(['盛洋科技','阳光照明'].sort());
+  // 东方/羊年股票不得被 sector 概念吸走：不存在通信光通信、商业航天组
+  expect(labels).not.toContain('分组 通信光通信');
+  expect(labels).not.toContain('分组 商业航天');
+  // 阳光照明的「商业航天」只出现在相关概念·题材列，分组仍为 2027 羊年（跨年）
+  await expect(goatGroup.locator('.pt-row').filter({hasText:'阳光照明'}).locator('.pt-col-tags')).toContainText('商业航天');
+  // 传媒娱乐只含 C，不含带「东方」标签的 A/B
   const mediaNames=(await mediaGroup.locator('.pt-name-text').allInnerTexts()).map(text=>text.trim());
   expect(mediaNames).not.toContain('大东方');
   expect(mediaNames).not.toContain('京东方A');
-  await expect(page.locator('.pt-footer')).toContainText('显示 3 / 共 3 只 · 2 个方向');
+  await expect(page.locator('.pt-footer')).toContainText('显示 5 / 共 5 只 · 3 个方向');
+});
+
+// ===== 2d. 全量分组一致性审计（真实 public/pool-preview.json，173 只） =====
+test('全量分组一致性：真实预览 auditGrouping=[]、相关标签无噪声、首标签映射唯一，次要标签不吸走股票',async()=>{
+  const rootDir=test.info().config.rootDir||process.cwd();
+  const candidates=[
+    resolve(rootDir,'../public/pool-preview.json'),
+    resolve(rootDir,'public/pool-preview.json'),
+    resolve(process.cwd(),'public/pool-preview.json'),
+    resolve(process.cwd(),'Code/stock-monitor/public/pool-preview.json'),
+  ];
+  const previewPath=candidates.find(file=>existsSync(file));
+  expect(previewPath,'public/pool-preview.json 应存在').toBeTruthy();
+  const data=JSON.parse(readFileSync(previewPath as string,'utf8')) as {entries:Entry[]};
+  const entries=data.entries;
+  expect(Array.isArray(entries)).toBe(true);
+  expect(entries.length).toBeGreaterThan(100);
+
+  // 1) 全量审计：每只 groupKey == 其「表格显示的第一个有效标签」的规范映射；同一首个标签不得分到两个组
+  expect(auditGrouping(entries)).toEqual([]);
+
+  // 2) 相关概念·题材不得出现噪声标签（精确匹配）
+  const noisy:string[]=[];
+  for(const entry of entries){
+    for(const tag of relatedTagsOf(entry))if(NOISE_TOKENS.includes(tag))noisy.push(entry.code+'='+tag);
+  }
+  expect(noisy).toEqual([]);
+  // 相关标签为空时 relatedTagsText 回退 sector（非噪声）或 —
+  for(const entry of entries){
+    if(relatedTagsOf(entry).length)continue;
+    const sector=String(entry.sector||'').trim();
+    const expected=sector&&!NOISE_TOKENS.includes(sector)?sector:'—';
+    expect(relatedTagsText(entry)).toBe(expected);
+  }
+  // 同一首个标签 → 唯一组（显式再校验一次，便于定位 same-tag-split）
+  const tagToGroup=new Map<string,string>();
+  for(const entry of entries){
+    const firstTag=relatedTagsOf(entry)[0]||'';
+    if(!firstTag)continue;
+    const group=groupKey(entry);
+    const previous=tagToGroup.get(firstTag);
+    if(previous===undefined)tagToGroup.set(firstTag,group);
+    else expect(group).toBe(previous);
+  }
+  expect(tagToGroup.size).toBeGreaterThan(0);
+
+  // 3) 次要标签不再把股票吸走（直接调用模型，覆盖通用首标签规则）
+  const tagsEntry=(tags:Json,sector:string)=>groupKey({tags,sector} as unknown as Entry);
+  expect(tagsEntry({theme:['2027 羊年（跨年）'],concept:['商业航天'],event:[],other:[]},'商业航天')).toBe('2027 羊年（跨年）');
+  expect(tagsEntry({theme:['2027 羊年（跨年）'],concept:[],event:[],other:[]},'通信设备')).toBe('2027 羊年（跨年）');
+  expect(tagsEntry({theme:['东方'],concept:[],event:[],other:[]},'快手概念')).toBe('东方');
+  expect(tagsEntry({theme:['IP'],concept:['网络游戏'],event:[],other:[]},'游戏Ⅱ')).toBe('传媒娱乐');
 });
 
 // ===== 3. 卡片 10 列：代码 6 位/名称完整/换手无 %/右对齐/不省略/徽标 =====
@@ -708,7 +768,7 @@ test('时间范围：近3日/近5日/今日筛选后重新分组并隐藏空组'
   await expect(page.locator('.pt-footer')).toContainText('显示 7 / 共 11 只 · 4 个方向');
   await period.selectOption('5d');
   await waitGroups(page,5);
-  expect((await groupTitles(page)).sort()).toEqual(['人形机器人 — 3 只','商业航天 — 2 只','通信光通信 — 2 只','半导体电子 — 2 只','名称辈/生肖 — 1 只'].sort());
+  expect((await groupTitles(page)).sort()).toEqual(['人形机器人 — 3 只','商业航天 — 2 只','通信光通信 — 2 只','半导体电子 — 2 只','东方 — 1 只'].sort());
   await expect(page.locator('.pt-footer')).toContainText('显示 10 / 共 11 只 · 5 个方向');
   await period.selectOption('today');
   await waitGroups(page,3);
@@ -1121,7 +1181,7 @@ test('响应式：1440 JS masonry 两列（首行 Top1/Top2、等宽、间距 8p
   // 单列时组顺序 = 全局资金倒序
   const singleColumnLabels=await columnLabels(page);
   expect(singleColumnLabels.length).toBe(1);
-  expect(singleColumnLabels[0]).toEqual(['分组 人形机器人','分组 商业航天','分组 通信光通信','分组 其他','分组 半导体电子','分组 名称辈/生肖']);
+  expect(singleColumnLabels[0]).toEqual(['分组 人形机器人','分组 商业航天','分组 通信光通信','分组 其他','分组 半导体电子','分组 东方']);
   await expect(human.locator('.pt-row').first().locator('.pt-count-badge')).toBeVisible();
   await page.locator('.pool-terminal').screenshot({path:SHOTS+'/02-masonry-1000.png'});
 

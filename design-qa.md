@@ -435,17 +435,57 @@ final result: passed
   - 回测：**173 行**；T+1 有值 75 / 未到期 **98** / 缺数据 0；74.7%/+2.24%/+2.10%；按入选天数分桶（条数/样本）：1 天 121/42（73.8%/+2.02%/+1.86%）、2 天 39/20（75.0%/+1.02%/+0.94%）、3 天及以上 13/13（76.9%/+4.80%/+4.67%）；按入选涨幅 0–3% 64/27、3–7% 49/16、7%+ 60/32；按入选时间 11-11 38/0、11-10 60/0、11-09 58/58、11-06 17/17；明细表头含「入选天数」、筛选「入选天数」；覆盖 173/75/136 只、80 期。
   - 构建：tsc 通过；vite build 通过（669 modules，`index-yJfosRaq.js` 1,804.18 kB / gzip 569.33 kB、`index-CsI_7jNk.css` 120.19 kB）；后端 `.venv/bin/python -m unittest tests.test_pool_table` → **Ran 39 tests, OK**（含入选天数/旧行兼容用例）。
   - **Playwright 正式用例**：`tests/ui/focus-pool.spec.ts` 已更新为 **25 项**（JS masonry/同标签归并/入选天数/徽标 title/回测文案等），本地复跑 **25/25 通过**（13.6s，2026-11-11 14:44）。
-- **截图清单**（`docs/pool-table/screenshots/`，均为 2026-11-11 14:43 第五轮口径 + 173 只真实预览重截；上一轮 group4-* 已删除）：
-  - [group5-1440.png](docs/pool-table/screenshots/group5-1440.png) 1440 JS masonry 两列首屏（标签优先归并/×N=天数/组头单行/10 列）
-  - [group5-detail-1440.png](docs/pool-table/screenshots/group5-detail-1440.png) 卡片内行详情（累计 N 天 · 今日已入选/未入选）
-  - [group5-filter-1440.png](docs/pool-table/screenshots/group5-filter-1440.png) 筛选=多次入选（入选天数≥2，52 只）+排序=入选后涨幅 ↓
-  - [group5-backtest-1440.png](docs/pool-table/screenshots/group5-backtest-1440.png) 回测面板（173 样本 / T+1 75 / 已出75·未到期98·缺数据0；入选天数）
-  - [group5-backtest-tables-1440.png](docs/pool-table/screenshots/group5-backtest-tables-1440.png) 回测分桶与明细特写（按入选天数/条数/样本）
-  - [group5-1000.png](docs/pool-table/screenshots/group5-1000.png) 1000 单列：10 列全显、页面无整页横滚
-  - [group5-detail-1000.png](docs/pool-table/screenshots/group5-detail-1000.png) 1000 宽详情单列
-  - [group5-backtest-1000.png](docs/pool-table/screenshots/group5-backtest-1000.png) 1000 宽回测
-  - [group5-empty-1440.png](docs/pool-table/screenshots/group5-empty-1440.png) 空态（注入空数据）
+- **截图清单（已被第六轮替换）**：第五轮 group5-*.png 已删除，第六轮截图见下一节（group6-*.png）；本轮结论（同标签归并 + 入选天数）保留文字记录。
 - **已知**：入选天数按自然日去重（同一天多期只 1 天），不是期数；东方系全部归入名称辈/生肖后传媒娱乐组规模下降（属修复结果）；同义词表仍为包含匹配启发式；fund 外部接口失败/停牌仍 —；driver_short 来自本机研判存档；事件标签覆盖约 7%；Playwright 用例已随第五轮更新并 25/25 通过。
 - **P0/P1/P2**：无未解决 P0/P1；同义词表可持续补充（P2）。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第六轮：首标签归并（东方 / 2027 羊年（跨年））（2026-11-11）
+
+> 用户反馈：同一标签应同组；「2027 羊年（跨年）」的 盛洋科技/阳光照明 不能再被通信/商业航天吸走。
+> 新规则：`groupKey` **严格取表格「相关概念·题材」的第一个有效标签**（theme → concept → event → other，跳过噪声 token）；命中同义词表 → 规范组名（机器人→人形机器人、通信设备→通信光通信、IP→传媒娱乐 等）；**未命中 → 直接用标签本身作组名**（东方 / 2027 羊年（跨年） / 传感器 / 可控核聚变 …）；**不再有「名称辈/生肖」兜底组**；无标签时才回退 sector（同义词映射，未命中用 sector 本身）；全部噪声/空 → 「其他」。
+
+- **效果（同标签必定同组）**：**东方 — 13 只**（含 日出东方/大东方/京东方Ａ，不再被 sector=快手概念 拆到传媒娱乐）；**2027 羊年（跨年） — 7 只**（含 盛洋科技/阳光照明，不再被通信设备/商业航天吸走）；**通信光通信 — 22 只不再含羊年股**；商业航天 — 3 只；半导体电子 — 12；人形机器人 — 16；AI算力 — 19；传媒娱乐 — 23；其他 — 5；共 **25 组**、173 只、无「其他方向」、单只组保留。
+- **验证（2026-11-11 14:53，独立 Playwright 脚本 + 真实 1420 预览，console 无报错）**：
+  - 标题条“股票池 - 173 / 行情 14:40:24 · 实时 / 上涨 120 / 下跌 51”；chips 173/78/52；footer “25 个方向”。
+  - 25 组：通信光通信 22、商业航天 3、消费零售 4、化工材料 13、其他 5、传感器 1、低空经济 4、基建 1、固态电池 2、消费电子 1、光伏新能源 3、农业 4、**东方 13**、半导体电子 12、人形机器人 16、AI算力 19、汽车产业链 3、印刷包装 2、可控核聚变 1、核污防治 1、家电电机 4、能源电力 7、冰雪经济 2、**2027 羊年（跨年） 7**、传媒娱乐 23。
+  - 组头示例：通信光通信 — 22 只｜上涨 19/下跌 3 · 当前符合 2 · +118.38亿 · 驱动「港股午评：恒指跌0.83%科指」；半导体电子 — 12｜+61.16亿；人形机器人 — 16｜+20.45亿；商业航天 — 3｜+8.44亿；AI算力 — 19｜+6.62亿；东方 — 13｜-6.23亿；2027 羊年（跨年） — 7｜-3.90亿；传媒娱乐 — 23｜-13.97亿；能源电力 — 7｜-0.89亿。
+  - 归属抽查：日出东方/大东方/京东方Ａ 均在「东方」组；盛洋科技/阳光照明 均在「2027 羊年（跨年）」组；页面**不存在「名称辈/生肖」组**。
+  - 徽标/详情/回测口径不变：×1 121 / ×2 39 / ×3 13；回测 173 行、T+1 75/未到期 98/缺数据 0、按入选天数分桶 121/42、39/20、13/13；明细表头「入选天数」。
+  - 1000×980：单列 25 组、10 列全显、页面无整页横滚。
+  - 构建：tsc 通过；vite build 通过（669 modules，`index-BKNpCSeM.js` 1,804.02 kB / gzip 569.24 kB、`index-CsI_7jNk.css` 120.19 kB）；后端 `.venv/bin/python -m unittest tests.test_pool_table` → **Ran 39 tests, OK**。
+  - **Playwright**：`tests/ui/focus-pool.spec.ts` 已更新为 **25 项**（含第六轮首标签归并用例：东方同组、2027 羊年（跨年）不被通信/商业航天吸走、IP→传媒娱乐），本地复跑 **25/25 通过**（13.8s，2026-11-11 14:54）。
+- **截图清单**（`docs/pool-table/screenshots/`，均为 2026-11-11 14:53 第六轮口径 + 173 只真实预览重截；上一轮 group5-* 已删除）：
+  - [group6-1440.png](docs/pool-table/screenshots/group6-1440.png) 1440 JS masonry 两列首屏（首标签归并：东方/2027 羊年（跨年）/通信光通信；×N 天数；组头单行）
+  - [group6-detail-1440.png](docs/pool-table/screenshots/group6-detail-1440.png) 卡片内行详情（累计 N 天）
+  - [group6-filter-1440.png](docs/pool-table/screenshots/group6-filter-1440.png) 筛选=多次入选（52 只）+排序=入选后涨幅 ↓
+  - [group6-backtest-1440.png](docs/pool-table/screenshots/group6-backtest-1440.png) 回测面板（173 样本 / T+1 75 / 未到期 98；入选天数）
+  - [group6-backtest-tables-1440.png](docs/pool-table/screenshots/group6-backtest-tables-1440.png) 回测分桶与明细特写
+  - [group6-1000.png](docs/pool-table/screenshots/group6-1000.png) 1000 单列：10 列全显、页面无整页横滚
+  - [group6-detail-1000.png](docs/pool-table/screenshots/group6-detail-1000.png) 1000 宽详情单列
+  - [group6-backtest-1000.png](docs/pool-table/screenshots/group6-backtest-1000.png) 1000 宽回测
+  - [group6-empty-1440.png](docs/pool-table/screenshots/group6-empty-1440.png) 空态（注入空数据）
+- **已知**：首标签规则可能新增“单标签组”（如 东方 / 2027 羊年（跨年） / 传感器），这是同标签同组的直接结果；同义词表只规范已知组名，其余标签原样成组；无标签才回退 sector；fund 外部接口失败/停牌 —；driver_short 来自本机研判；事件标签覆盖约 7%；Playwright 用例已随第六轮更新并 25/25 通过。
+- **P0/P1/P2**：无未解决 P0/P1；同义词表可持续补充（P2）。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第六轮补充：通用首标签 + 噪声精确过滤 + 全量审计（2026-11-11）
+
+> 用户要求：类似分组问题要一起解决，不只是东方/羊年例子；实现已升级并做全量审计。
+> 通用规则（已实现）：groupKey 严格取表格「相关概念·题材」的第一个有效标签（theme → concept → event → other）；噪声标签改为精确匹配过滤（仅完整等于 昨日首板/题材股/东方财富热股/热门/名称/生肖/概念 的 token 被跳过），真实的 XX概念 标签（游戏概念/CPO概念/英伟达概念/F5G概念/影视概念等）保留并展示；命中同义词表 → 规范组名，否则用标签本身；无标签才回退 sector；全部噪声/空 → 「其他」。
+> 全量审计：新增 auditGrouping()，对真实预览 173 只逐只校验「组 = 首标签规范映射、同首标签同组」，当前 0 条不一致（173/173 通过）；已加 Playwright 回归（直接读取真实 public/pool-preview.json 的审计用例）。
+
+- 已覆盖的同类修复：①「东方」组（日出东方/大东方/京东方Ａ 同组，不再因 sector=快手概念 进传媒娱乐）；②「2027 羊年（跨年）」组（盛洋科技/阳光照明 同组，不再被通信设备/商业航天吸走）；③ 次要标签不再吸走股票（首标签决定组，后续标签只展示）；④ 真实 XX概念 标签不被误过滤——42 行相关概念·题材含「概念」字样，示例 F5G概念 / CPO概念 / 英伟达概念 / 6G概念 / 影视概念 / 快手概念 / 半导体概念，且对应股票仍在正确规范组（如 仕佳光子 F5G概念 → 通信光通信、工业富联 CPO概念 → 通信光通信、新媒股份 快手概念 → 传媒娱乐）。
+- 数据变化（2026-11-11 14:57 DOM，以当前真实预览为准）：仍 173 只/25 组；通信光通信 22→21 只（+118.38→+119.67亿）、AI算力 19→20 只（+6.62→+5.33亿），其余组只数/资金不变（半导体电子 12/+61.16亿、人形机器人 16/+20.45亿、商业航天 3/+8.44亿、东方 13/-6.23亿、2027 羊年（跨年）7/-3.90亿、传媒娱乐 23/-13.97亿、其他 5/+1.93亿等）；chips 173/78/52；回测仍 173/75/98/0、80 期、按入选天数分桶 121/42、39/20、13/13。
+- 验证：独立 Playwright 脚本核对 25 组/首标签归属/东方与羊年同组/XX概念标签展示/1000 单列；console 无报错。构建：tsc 通过；vite build 通过（669 modules，index-CzNEHvHH.js 1,803.99 kB / gzip 569.27 kB、index-CsI_7jNk.css 120.19 kB）；Python .venv/bin/python -m unittest tests.test_pool_table → Ran 39 tests, OK；Playwright tests/ui/focus-pool.spec.ts 更新为 26 项（含全量审计用例），复跑 26/26 通过（13.5s，2026-11-11 14:58）。
+- 截图：沿用 group6-* 文件名，已于 2026-11-11 14:57 用当前 1420 + 173 只真实预览重截覆盖（group6-1440/1000/detail/filter/backtest 等 9 张），相关概念列不再错误隐藏 XX概念；旧 group5-* 已删除。
+- 已知：噪声过滤只精确匹配完整噪声 token（如「概念」被过滤、但「CPO概念」保留）；未命中同义词的标签原样成组；无标签才回退 sector；fund 外部接口失败/停牌 —；driver_short 来自本机研判；事件标签覆盖约 7%；全量审计覆盖分组一致性（不覆盖资金/行情外部数据）。
+- P0/P1/P2：无未解决 P0/P1；同义词表可持续补充（P2）。
 
 final result: passed
