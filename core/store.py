@@ -24,8 +24,15 @@ class Store:
           category TEXT,group_name TEXT,entry_tag TEXT,added_at TEXT,groups_json TEXT,archived INTEGER DEFAULT 0);
         CREATE TABLE IF NOT EXISTS pool_day(code TEXT,day TEXT,price REAL,percent REAL,high REAL,low REAL,state TEXT,
           hit_buy INTEGER DEFAULT 0,hit_stop INTEGER DEFAULT 0,hit_target INTEGER DEFAULT 0,collected_at TEXT,
+          turnover_rate REAL,volume_ratio REAL,
           PRIMARY KEY(code,day));
         CREATE INDEX IF NOT EXISTS pool_day_day ON pool_day(day);
+        CREATE TABLE IF NOT EXISTS pool_episode(
+          code TEXT NOT NULL,issue_id TEXT NOT NULL,published_at TEXT NOT NULL,quote_date TEXT,
+          source TEXT,entry_tag TEXT,price REAL,percent REAL,
+          category TEXT,group_name TEXT,groups_json TEXT,sector TEXT,sector_kind TEXT,
+          reason TEXT,plan TEXT,created_at TEXT,PRIMARY KEY(code,issue_id));
+        CREATE INDEX IF NOT EXISTS pool_episode_code ON pool_episode(code);
         CREATE TABLE IF NOT EXISTS pool_alerts(code TEXT,day TEXT,kind TEXT,created_at TEXT,PRIMARY KEY(code,day,kind));
         CREATE TABLE IF NOT EXISTS broker_accounts(id TEXT PRIMARY KEY,broker TEXT NOT NULL,account TEXT NOT NULL,label TEXT,enabled INTEGER DEFAULT 1,is_default INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(broker,account));
         CREATE TABLE IF NOT EXISTS broker_requests(request_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL,result TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
@@ -40,6 +47,16 @@ class Store:
             self.db.execute('ALTER TABLE pool ADD COLUMN archived INTEGER DEFAULT 0')
         except sqlite3.OperationalError:
             pass
+        # Legacy databases: pool_day gained quant columns; an earlier timed-pool build used a
+        # narrower pool_episode schema that must not make the terminal table unusable.
+        for table, columns in (('pool_day', (('turnover_rate', 'REAL'), ('volume_ratio', 'REAL'))),
+                               ('pool_episode', (('percent', 'REAL'), ('category', 'TEXT'),
+                                                 ('group_name', 'TEXT'), ('groups_json', 'TEXT')))):
+            for column, kind in columns:
+                try:
+                    self.db.execute(f'ALTER TABLE {table} ADD COLUMN {column} {kind}')
+                except sqlite3.OperationalError:
+                    pass
         self.db.execute('INSERT OR IGNORE INTO instruments SELECT code,name FROM watch')
         # An interrupted OS submission has an unknown outcome: never automatically duplicate it.
         self.db.execute("UPDATE local_delivery SET status='unknown',detail='上次发送时进程中断，请检查通知中心' WHERE status='sending'")

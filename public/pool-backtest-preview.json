@@ -1,0 +1,7879 @@
+{
+ "updated_at": "2026-11-11T11:55:05.494524+08:00",
+ "bench": "上证指数",
+ "rows": [
+  {
+   "code": "sh600207",
+   "name": "安彩高科",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 4.9,
+   "first_percent": 0.41,
+   "episodes": 4,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-09T12:30:53.664042+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.03,
+   "latest_percent": -0.7889546351084853,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.03,
+    "percent": -0.7889546351084853
+   },
+   "since_percent": 2.6530612244897833,
+   "since": 2.6530612244897833,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 5.07,
+     "ret_percent": 3.47,
+     "return_percent": 3.47,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 3.39
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "昨日首板"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002712",
+   "name": "思美传媒",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 6.56,
+   "first_percent": 10.07,
+   "episodes": 6,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.03,
+   "latest_percent": -2.898550724637672,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.03,
+    "percent": -2.898550724637672
+   },
+   "since_percent": -8.079268292682917,
+   "since": -8.079268292682917,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 6.21,
+     "ret_percent": -5.34,
+     "return_percent": -5.34,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -5.42
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "昨日首板"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz000678",
+   "name": "襄阳轴承",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 17.93,
+   "first_percent": 3.6,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 21.19,
+   "latest_percent": 10.020768431983385,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 21.19,
+    "percent": 10.020768431983385
+   },
+   "since_percent": 18.181818181818187,
+   "since": 18.181818181818187,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 19.26,
+     "ret_percent": 7.42,
+     "return_percent": 7.42,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 7.34
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "减速器",
+     "题材股"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002578",
+   "name": "闽发铝业",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 5.51,
+   "first_percent": 10.11,
+   "episodes": 19,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T22:30:17.929318+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.09,
+   "latest_percent": 0.4950495049504955,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.09,
+    "percent": 0.4950495049504955
+   },
+   "since_percent": 10.526315789473696,
+   "since": 10.526315789473696,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 6.06,
+     "ret_percent": 9.98,
+     "return_percent": 9.98,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.9
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "题材股"
+    ],
+    "theme": [],
+    "event": [
+     "AI硬件/算力"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603083",
+   "name": "剑桥科技",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 105.13,
+   "first_percent": 0.31,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-09T12:30:53.664042+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 116.95,
+   "latest_percent": 9.998118886380759,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 116.95,
+    "percent": 9.998118886380759
+   },
+   "since_percent": 11.243222676686004,
+   "since": 11.243222676686004,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 106.32,
+     "ret_percent": 1.13,
+     "return_percent": 1.13,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.05
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "贸易"
+    ],
+    "event": [],
+    "other": [
+     "通信设备"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300620",
+   "name": "光库科技",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 175.02,
+   "first_percent": 0.37,
+   "episodes": 4,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 196.1,
+   "latest_percent": 5.14745308310991,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 196.1,
+    "percent": 5.14745308310991
+   },
+   "since_percent": 12.044337789966853,
+   "since": 12.044337789966853,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 186.5,
+     "ret_percent": 6.56,
+     "return_percent": 6.56,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 6.48
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "卫星互联网"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002865",
+   "name": "钧达股份",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 49.05,
+   "first_percent": 10.0,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 47.99,
+   "latest_percent": -1.8609406952965202,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 47.99,
+    "percent": -1.8609406952965202
+   },
+   "since_percent": -2.161060142711513,
+   "since": -2.161060142711513,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 48.9,
+     "ret_percent": -0.31,
+     "return_percent": -0.31,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -0.39
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [
+     "固态电池"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603660",
+   "name": "苏州科达",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 9.26,
+   "first_percent": 9.98,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T14:00:59.153904+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 10.11,
+   "latest_percent": 4.226804123711347,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 10.11,
+    "percent": 4.226804123711347
+   },
+   "since_percent": 9.179265658747294,
+   "since": 9.179265658747294,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 9.7,
+     "ret_percent": 4.75,
+     "return_percent": 4.75,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 4.67
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "低空经济"
+    ],
+    "event": [
+     "低空经济"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz003004",
+   "name": "声迅股份",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 50.89,
+   "first_percent": 10.01,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T14:00:59.153904+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 49.76,
+   "latest_percent": 2.64026402640265,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 49.76,
+    "percent": 2.64026402640265
+   },
+   "since_percent": -2.220475535468658,
+   "since": -2.220475535468658,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 48.48,
+     "ret_percent": -4.74,
+     "return_percent": -4.74,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -4.82
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "低空经济"
+    ],
+    "event": [
+     "低空经济"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600156",
+   "name": "华升股份",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 7.78,
+   "first_percent": 10.04,
+   "episodes": 18,
+   "first_episode_at": "2026-11-09T11:31:13.575753+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.88,
+   "latest_percent": -2.6874115983026914,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.88,
+    "percent": -2.6874115983026914
+   },
+   "since_percent": -11.568123393316199,
+   "since": -11.568123393316199,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 7.07,
+     "ret_percent": -9.13,
+     "return_percent": -9.13,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -9.21
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "昨日首板"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sh600206",
+   "name": "有研新材",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 38.54,
+   "first_percent": 0.34,
+   "episodes": 36,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 38.6,
+   "latest_percent": -0.46415678184631437,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 38.6,
+    "percent": -0.46415678184631437
+   },
+   "since_percent": 0.15568240788792487,
+   "since": 0.15568240788792487,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 38.78,
+     "ret_percent": 0.62,
+     "return_percent": 0.62,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.54
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "题材股",
+     "传感器"
+    ],
+    "theme": [
+     "新材"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz002384",
+   "name": "东山精密",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 82.8,
+   "first_percent": 2.86,
+   "episodes": 22,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 89.7,
+   "latest_percent": 7.18126418926992,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 89.7,
+    "percent": 7.18126418926992
+   },
+   "since_percent": 8.333333333333348,
+   "since": 8.333333333333348,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 83.69,
+     "ret_percent": 1.07,
+     "return_percent": 1.07,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.99
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "元件",
+     "印制电路板"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002916",
+   "name": "深南电路",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 208.59,
+   "first_percent": 3.43,
+   "episodes": 5,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 217.54,
+   "latest_percent": 4.486071085494725,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 217.54,
+    "percent": 4.486071085494725
+   },
+   "since_percent": 4.2907138405484435,
+   "since": 4.2907138405484435,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 208.2,
+     "ret_percent": -0.19,
+     "return_percent": -0.19,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -0.27
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "AI服务器"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300308",
+   "name": "中际旭创",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 460.33,
+   "first_percent": 3.83,
+   "episodes": 5,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T14:31:44.612416+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 509.89,
+   "latest_percent": 8.256900212314221,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 509.89,
+    "percent": 8.256900212314221
+   },
+   "since_percent": 10.766189472769527,
+   "since": 10.766189472769527,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 471.0,
+     "ret_percent": 2.32,
+     "return_percent": 2.32,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 2.24
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "东方财富热股"
+    ],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信设备"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh601088",
+   "name": "中国神华",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 49.95,
+   "first_percent": 1.13,
+   "episodes": 24,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 49.09,
+   "latest_percent": 0.5942622950819709,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 49.09,
+    "percent": 0.5942622950819709
+   },
+   "since_percent": -1.721721721721725,
+   "since": -1.721721721721725,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 48.8,
+     "ret_percent": -2.3,
+     "return_percent": -2.3,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -2.38
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "煤炭"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603366",
+   "name": "日出东方",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 9.89,
+   "first_percent": 10.04,
+   "episodes": 60,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.97,
+   "latest_percent": 10.018382352941169,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.97,
+    "percent": 10.018382352941169
+   },
+   "since_percent": 21.031344792719906,
+   "since": 21.031344792719906,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 10.88,
+     "ret_percent": 10.01,
+     "return_percent": 10.01,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.93
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002913",
+   "name": "奥士康",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 58.42,
+   "first_percent": 10.0,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 61.74,
+   "latest_percent": 4.062025956514415,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 61.74,
+    "percent": 4.062025956514415
+   },
+   "since_percent": 5.68298527901403,
+   "since": 5.68298527901403,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 59.33,
+     "ret_percent": 1.56,
+     "return_percent": 1.56,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.48
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "元件"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600803",
+   "name": "新奥股份",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 21.79,
+   "first_percent": 2.25,
+   "episodes": 17,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 20.9,
+   "latest_percent": 0.5291005291005346,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 20.9,
+    "percent": 0.5291005291005346
+   },
+   "since_percent": -4.084442404772837,
+   "since": -4.084442404772837,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 20.79,
+     "ret_percent": -4.59,
+     "return_percent": -4.59,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -4.67
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sh601328",
+   "name": "交通银行",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 8.41,
+   "first_percent": 1.33,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 8.47,
+   "latest_percent": 0.7134363852556502,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 8.47,
+    "percent": 0.7134363852556502
+   },
+   "since_percent": 0.7134363852556502,
+   "since": 0.7134363852556502,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 8.41,
+     "ret_percent": 0.0,
+     "return_percent": 0.0,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -0.08
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "贸易"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300502",
+   "name": "新易盛",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 177.88,
+   "first_percent": 4.88,
+   "episodes": 6,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 200.51,
+   "latest_percent": 9.091403699673538,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 200.51,
+    "percent": 9.091403699673538
+   },
+   "since_percent": 12.722059815606034,
+   "since": 12.722059815606034,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 183.8,
+     "ret_percent": 3.33,
+     "return_percent": 3.33,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 3.25
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "东方财富热股",
+     "光通信模块"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002652",
+   "name": "扬子新材",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 4.32,
+   "first_percent": 1.17,
+   "episodes": 16,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.31,
+   "latest_percent": -1.5981735159817378,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.31,
+    "percent": -1.5981735159817378
+   },
+   "since_percent": -0.23148148148149916,
+   "since": -0.23148148148149916,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 4.38,
+     "ret_percent": 1.39,
+     "return_percent": 1.39,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.31
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "纳米银"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002149",
+   "name": "西部材料",
+   "source": "炒作雷达",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 41.51,
+   "first_percent": 9.99,
+   "episodes": 17,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 41.28,
+   "latest_percent": -3.9999999999999925,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 41.28,
+    "percent": -3.9999999999999925
+   },
+   "since_percent": -0.5540833534088074,
+   "since": -0.5540833534088074,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 43.0,
+     "ret_percent": 3.59,
+     "return_percent": 3.59,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 3.51
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "可控核聚变"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600327",
+   "name": "大东方",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 5.4,
+   "first_percent": 10.09,
+   "episodes": 60,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.53,
+   "latest_percent": 9.932659932659927,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.53,
+    "percent": 9.932659932659927
+   },
+   "since_percent": 20.925925925925924,
+   "since": 20.925925925925924,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 5.94,
+     "ret_percent": 10.0,
+     "return_percent": 10.0,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.92
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300118",
+   "name": "东方日升",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 10.74,
+   "first_percent": 4.58,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 10.78,
+   "latest_percent": -6.988783433994827,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 10.78,
+    "percent": -6.988783433994827
+   },
+   "since_percent": 0.3724394785847185,
+   "since": 0.3724394785847185,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 11.59,
+     "ret_percent": 7.91,
+     "return_percent": 7.91,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 7.83
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603703",
+   "name": "盛洋科技",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-09",
+   "first_price": 11.1,
+   "first_percent": 10.01,
+   "episodes": 53,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.91,
+   "latest_percent": -2.4570024570024662,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.91,
+    "percent": -2.4570024570024662
+   },
+   "since_percent": 7.297297297297312,
+   "since": 7.297297297297312,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 12.21,
+     "ret_percent": 10.0,
+     "return_percent": 10.0,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.92
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "2027 羊年（跨年）",
+     "通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002172",
+   "name": "澳洋健康",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-09",
+   "first_price": 6.18,
+   "first_percent": 9.96,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.08,
+   "latest_percent": -3.949447077409163,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.08,
+    "percent": -3.949447077409163
+   },
+   "since_percent": -1.6181229773462702,
+   "since": -1.6181229773462702,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 6.33,
+     "ret_percent": 2.43,
+     "return_percent": 2.43,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 2.35
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603993",
+   "name": "洛阳钼业",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-09",
+   "first_price": 13.56,
+   "first_percent": 2.26,
+   "episodes": 22,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 13.52,
+   "latest_percent": -1.3858497447118978,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 13.52,
+    "percent": -1.3858497447118978
+   },
+   "since_percent": -0.2949852507374673,
+   "since": -0.2949852507374673,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 13.71,
+     "ret_percent": 1.11,
+     "return_percent": 1.11,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.03
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz002543",
+   "name": "万和电气",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 7.18,
+   "first_percent": 4.82,
+   "episodes": 16,
+   "first_episode_at": "2026-11-09T14:00:59.153904+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 7.19,
+   "latest_percent": -0.1388888888888884,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 7.19,
+    "percent": -0.1388888888888884
+   },
+   "since_percent": 0.1392757660167332,
+   "since": 0.1392757660167332,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 7.2,
+     "ret_percent": 0.28,
+     "return_percent": 0.28,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.2
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "卫浴电器"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002086",
+   "name": "东方海洋",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 4.37,
+   "first_percent": 9.97,
+   "episodes": 4,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.67,
+   "latest_percent": 1.0822510822510845,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.67,
+    "percent": 1.0822510822510845
+   },
+   "since_percent": 6.864988558352403,
+   "since": 6.864988558352403,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 4.62,
+     "ret_percent": 5.72,
+     "return_percent": 5.72,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 5.64
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "东方财富热股"
+    ],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz000725",
+   "name": "京东方Ａ",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 4.48,
+   "first_percent": 1.79,
+   "episodes": 45,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.45,
+   "latest_percent": -1.1111111111111072,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.45,
+    "percent": -1.1111111111111072
+   },
+   "since_percent": -0.6696428571428603,
+   "since": -0.6696428571428603,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 4.5,
+     "ret_percent": 0.45,
+     "return_percent": 0.45,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.37
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz000525",
+   "name": "红太阳",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-09",
+   "first_price": 5.52,
+   "first_percent": 9.96,
+   "episodes": 15,
+   "first_episode_at": "2026-11-09T14:31:44.612416+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.26,
+   "latest_percent": -3.663003663003661,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.26,
+    "percent": -3.663003663003661
+   },
+   "since_percent": -4.710144927536231,
+   "since": -4.710144927536231,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 5.46,
+     "ret_percent": -1.09,
+     "return_percent": -1.09,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -1.17
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "东方财富热股"
+    ],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz300413",
+   "name": "芒果超媒",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 34.91,
+   "first_percent": 0.23,
+   "episodes": 9,
+   "first_episode_at": "2026-11-09T14:31:44.612416+08:00",
+   "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 36.95,
+   "latest_percent": 3.9381153305204197,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 36.95,
+    "percent": 3.9381153305204197
+   },
+   "since_percent": 5.843597822973368,
+   "since": 5.843597822973368,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 35.55,
+     "ret_percent": 1.83,
+     "return_percent": 1.83,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.75
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "题材股",
+     "网络游戏"
+    ],
+    "theme": [
+     "大模型"
+    ],
+    "event": [],
+    "other": [
+     "传媒"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz000530",
+   "name": "冰山冷热",
+   "source": "炒作雷达",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 9.57,
+   "first_percent": 10.0,
+   "episodes": 27,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.04,
+   "latest_percent": 4.843304843304841,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.04,
+    "percent": 4.843304843304841
+   },
+   "since_percent": 15.3605015673981,
+   "since": 15.3605015673981,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 10.53,
+     "ret_percent": 10.03,
+     "return_percent": 10.03,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.95
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "冰雪经济"
+    ],
+    "event": [
+     "AI硬件/算力"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300189",
+   "name": "神农种业",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 5.43,
+   "first_percent": 4.83,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.31,
+   "latest_percent": -2.029520295202958,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.31,
+    "percent": -2.029520295202958
+   },
+   "since_percent": -2.209944751381221,
+   "since": -2.209944751381221,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 5.51,
+     "ret_percent": 1.47,
+     "return_percent": 1.47,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 1.16
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "生物育种"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh600371",
+   "name": "万向德农",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 12.39,
+   "first_percent": 10.04,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 12.82,
+   "latest_percent": -2.9523088569265776,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 12.82,
+    "percent": -2.9523088569265776
+   },
+   "since_percent": 3.4705407586763437,
+   "since": 3.4705407586763437,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 13.51,
+     "ret_percent": 9.04,
+     "return_percent": 9.04,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 8.72
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "生物育种"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600377",
+   "name": "宁沪高速",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-06",
+   "first_price": 13.88,
+   "first_percent": 2.59,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 13.92,
+   "latest_percent": -0.1434720229555153,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 13.92,
+    "percent": -0.1434720229555153
+   },
+   "since_percent": 0.28818443804032867,
+   "since": 0.28818443804032867,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 13.96,
+     "ret_percent": 0.58,
+     "return_percent": 0.58,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 0.26
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "公路桥梁"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh601188",
+   "name": "龙江交通",
+   "source": "炒作雷达",
+   "category": "题材",
+   "first_day": "2026-11-06",
+   "first_price": 3.81,
+   "first_percent": 10.12,
+   "episodes": 15,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.46,
+   "latest_percent": -3.2537960954446943,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.46,
+    "percent": -3.2537960954446943
+   },
+   "since_percent": 17.06036745406825,
+   "since": 17.06036745406825,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 4.19,
+     "ret_percent": 9.97,
+     "return_percent": 9.97,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 9.66
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "冰雪经济"
+    ],
+    "event": [],
+    "other": [
+     "公路桥梁"
+    ]
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002696",
+   "name": "百洋股份",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 11.06,
+   "first_percent": 1.19,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.07,
+   "latest_percent": -5.141388174807194,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.07,
+    "percent": -5.141388174807194
+   },
+   "since_percent": 0.09041591320071429,
+   "since": 0.09041591320071429,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 11.3,
+     "ret_percent": 2.17,
+     "return_percent": 2.17,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 1.85
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "水产品"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz000333",
+   "name": "美的集团",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-06",
+   "first_price": 89.6,
+   "first_percent": 1.68,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 88.26,
+   "latest_percent": -0.30498136225007855,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 88.26,
+    "percent": -0.30498136225007855
+   },
+   "since_percent": -1.4955357142857006,
+   "since": -1.4955357142857006,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 89.79,
+     "ret_percent": 0.21,
+     "return_percent": 0.21,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -0.11
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "家电行业"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sh600598",
+   "name": "北大荒",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 13.73,
+   "first_percent": 0.96,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 13.34,
+   "latest_percent": -0.521998508575694,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 13.34,
+    "percent": -0.521998508575694
+   },
+   "since_percent": -2.8404952658412252,
+   "since": -2.8404952658412252,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 13.5,
+     "ret_percent": -1.68,
+     "return_percent": -1.68,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -1.99
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "生物燃料"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002714",
+   "name": "牧原股份",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 44.4,
+   "first_percent": 1.49,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 44.6,
+   "latest_percent": 0.06730984967466824,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 44.6,
+    "percent": 0.06730984967466824
+   },
+   "since_percent": 0.45045045045044585,
+   "since": 0.45045045045044585,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 44.55,
+     "ret_percent": 0.34,
+     "return_percent": 0.34,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 0.02
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "猪肉"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz003816",
+   "name": "中国广核",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 4.75,
+   "first_percent": 1.93,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.65,
+   "latest_percent": -0.6410256410256276,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.65,
+    "percent": -0.6410256410256276
+   },
+   "since_percent": -2.1052631578947323,
+   "since": -2.1052631578947323,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 4.77,
+     "ret_percent": 0.42,
+     "return_percent": 0.42,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 0.1
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "核污防治"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002310",
+   "name": "东方新能",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-06",
+   "first_price": 2.32,
+   "first_percent": 9.95,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 2.92,
+   "latest_percent": 3.9145907473309594,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 2.92,
+    "percent": 3.9145907473309594
+   },
+   "since_percent": 25.86206896551724,
+   "since": 25.86206896551724,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 2.55,
+     "ret_percent": 9.91,
+     "return_percent": 9.91,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 9.6
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600690",
+   "name": "海尔智家",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-06",
+   "first_price": 21.62,
+   "first_percent": 0.93,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 21.08,
+   "latest_percent": -1.8164881229622787,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 21.08,
+    "percent": -1.8164881229622787
+   },
+   "since_percent": -2.4976873265495025,
+   "since": -2.4976873265495025,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 21.62,
+     "ret_percent": 0.0,
+     "return_percent": 0.0,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -0.32
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "日韩贸易"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002545",
+   "name": "东方铁塔",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-06",
+   "first_price": 12.06,
+   "first_percent": 0.17,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.62,
+   "latest_percent": -0.8532423208191253,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.62,
+    "percent": -0.8532423208191253
+   },
+   "since_percent": -3.6484245439469376,
+   "since": -3.6484245439469376,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 11.84,
+     "ret_percent": -1.82,
+     "return_percent": -1.82,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -2.14
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002388",
+   "name": "新亚制程",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-06",
+   "first_price": 6.67,
+   "first_percent": 10.07,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 7.08,
+   "latest_percent": 2.3121387283236983,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 7.08,
+    "percent": 2.3121387283236983
+   },
+   "since_percent": 6.146926536731634,
+   "since": 6.146926536731634,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 6.82,
+     "ret_percent": 2.25,
+     "return_percent": 2.25,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 1.93
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [
+     "AI硬件/算力"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600637",
+   "name": "东方明珠",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-06",
+   "first_price": 8.08,
+   "first_percent": 4.8,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 8.18,
+   "latest_percent": -2.270011947431294,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 8.18,
+    "percent": -2.270011947431294
+   },
+   "since_percent": 1.2376237623762387,
+   "since": 1.2376237623762387,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 8.64,
+     "ret_percent": 6.93,
+     "return_percent": 6.93,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 6.61
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600261",
+   "name": "阳光照明",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-06",
+   "first_price": 5.4,
+   "first_percent": 9.98,
+   "episodes": 36,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.09,
+   "latest_percent": 4.10256410256411,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.09,
+    "percent": 4.10256410256411
+   },
+   "since_percent": 12.777777777777777,
+   "since": 12.777777777777777,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 5.32,
+     "ret_percent": -1.48,
+     "return_percent": -1.48,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -1.8
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "商业航天"
+    ],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002242",
+   "name": "九阳股份",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-06",
+   "first_price": 25.1,
+   "first_percent": 3.0,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 26.46,
+   "latest_percent": 0.4174573055028441,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 26.46,
+    "percent": 0.4174573055028441
+   },
+   "since_percent": 5.418326693227082,
+   "since": 5.418326693227082,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 26.1,
+     "ret_percent": 3.98,
+     "return_percent": 3.98,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": 3.67
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603381",
+   "name": "永臻股份",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-06",
+   "first_price": 20.74,
+   "first_percent": 10.03,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T08:11:30.858738+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 22.66,
+   "latest_percent": 3.5175879396984966,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 22.66,
+    "percent": 3.5175879396984966
+   },
+   "since_percent": 9.257473481195767,
+   "since": 9.257473481195767,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-09",
+     "close": 19.9,
+     "ret_percent": -4.05,
+     "return_percent": -4.05,
+     "bench_percent": 0.32,
+     "benchmark_return": 0.32,
+     "excess_percent": -4.37
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光伏/新能源"
+    ],
+    "event": [
+     "固态电池"
+    ],
+    "other": [
+     "光伏辅材"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002436",
+   "name": "兴森科技",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 26.58,
+   "first_percent": 3.63,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 28.3,
+   "latest_percent": 2.573396158028274,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 28.3,
+    "percent": 2.573396158028274
+   },
+   "since_percent": 6.471030850263371,
+   "since": 6.471030850263371,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 27.59,
+     "ret_percent": 3.8,
+     "return_percent": 3.8,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 3.72
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "卫星互联网"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300136",
+   "name": "信维通信",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 50.76,
+   "first_percent": 20.0,
+   "episodes": 9,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 50.15,
+   "latest_percent": -1.3377926421404673,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 50.15,
+    "percent": -1.3377926421404673
+   },
+   "since_percent": -1.2017336485421581,
+   "since": -1.2017336485421581,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 50.83,
+     "ret_percent": 0.14,
+     "return_percent": 0.14,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.06
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "通信"
+    ],
+    "event": [
+     "人形机器人"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300684",
+   "name": "中石科技",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 66.17,
+   "first_percent": 1.77,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 70.0,
+   "latest_percent": 4.446433900328262,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 70.0,
+    "percent": 4.446433900328262
+   },
+   "since_percent": 5.788121505213839,
+   "since": 5.788121505213839,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 67.02,
+     "ret_percent": 1.28,
+     "return_percent": 1.28,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.2
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "汽车热管理"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603986",
+   "name": "兆易创新",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 241.6,
+   "first_percent": 0.88,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 247.48,
+   "latest_percent": 1.1898433986179846,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 247.48,
+    "percent": 1.1898433986179846
+   },
+   "since_percent": 2.4337748344370747,
+   "since": 2.4337748344370747,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 244.57,
+     "ret_percent": 1.23,
+     "return_percent": 1.23,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.15
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "人形机器人"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002281",
+   "name": "光迅科技",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 94.35,
+   "first_percent": 3.34,
+   "episodes": 6,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 98.78,
+   "latest_percent": 4.551227773073663,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 98.78,
+    "percent": 4.551227773073663
+   },
+   "since_percent": 4.695283518812943,
+   "since": 4.695283518812943,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 94.48,
+     "ret_percent": 0.14,
+     "return_percent": 0.14,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.06
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "6G概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信网络设备及器件"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688585",
+   "name": "上纬新材",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 216.02,
+   "first_percent": 20.0,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 229.98,
+   "latest_percent": 5.080873617837867,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 229.98,
+    "percent": 5.080873617837867
+   },
+   "since_percent": 6.462364595870751,
+   "since": 6.462364595870751,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 218.86,
+     "ret_percent": 1.31,
+     "return_percent": 1.31,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.23
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "人形机器人"
+    ],
+    "theme": [
+     "新材",
+     "机器人"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh605488",
+   "name": "福莱新材",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-09",
+   "first_price": 53.8,
+   "first_percent": 10.0,
+   "episodes": 4,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 61.58,
+   "latest_percent": 7.469458987783595,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 61.58,
+    "percent": 7.469458987783595
+   },
+   "since_percent": 14.460966542750931,
+   "since": 14.460966542750931,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 57.3,
+     "ret_percent": 6.51,
+     "return_percent": 6.51,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 6.43
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "新材"
+    ],
+    "event": [
+     "人形机器人"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300223",
+   "name": "君正股份",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 106.6,
+   "first_percent": 1.33,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 109.3,
+   "latest_percent": 1.9589552238805874,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 109.3,
+    "percent": 1.9589552238805874
+   },
+   "since_percent": 2.5328330206378924,
+   "since": 2.5328330206378924,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 107.2,
+     "ret_percent": 0.56,
+     "return_percent": 0.56,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.48
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "机器视觉"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603186",
+   "name": "华正新材",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 146.0,
+   "first_percent": 3.11,
+   "episodes": 16,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 151.88,
+   "latest_percent": 3.8850889192886484,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 151.88,
+    "percent": 3.8850889192886484
+   },
+   "since_percent": 4.027397260273968,
+   "since": 4.027397260273968,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 146.2,
+     "ret_percent": 0.14,
+     "return_percent": 0.14,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.06
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "新材",
+     "AI服务器"
+    ],
+    "event": [],
+    "other": [
+     "元件"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600498",
+   "name": "烽火通信",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 29.7,
+   "first_percent": 10.0,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 29.49,
+   "latest_percent": 0.61412487205732,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 29.49,
+    "percent": 0.61412487205732
+   },
+   "since_percent": -0.7070707070707116,
+   "since": -0.7070707070707116,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 29.31,
+     "ret_percent": -1.31,
+     "return_percent": -1.31,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -1.39
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300394",
+   "name": "天孚通信",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 124.68,
+   "first_percent": 2.2,
+   "episodes": 8,
+   "first_episode_at": "2026-11-09T09:57:50.401305+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 133.86,
+   "latest_percent": 5.893521082192876,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 133.86,
+    "percent": 5.893521082192876
+   },
+   "since_percent": 7.362848893166518,
+   "since": 7.362848893166518,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 126.41,
+     "ret_percent": 1.39,
+     "return_percent": 1.39,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.31
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300757",
+   "name": "罗博特科",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 288.92,
+   "first_percent": 2.82,
+   "episodes": 2,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 302.64,
+   "latest_percent": 3.093064450197569,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 302.64,
+    "percent": 3.093064450197569
+   },
+   "since_percent": 4.748719368683352,
+   "since": 4.748719368683352,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 293.56,
+     "ret_percent": 1.61,
+     "return_percent": 1.61,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.53
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "商业航天"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh601139",
+   "name": "深圳燃气",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 6.52,
+   "first_percent": 0.93,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.42,
+   "latest_percent": 0.46948356807512415,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.42,
+    "percent": 0.46948356807512415
+   },
+   "since_percent": -1.5337423312883347,
+   "since": -1.5337423312883347,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 6.39,
+     "ret_percent": -1.99,
+     "return_percent": -1.99,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -2.07
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603706",
+   "name": "东方环宇",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 20.19,
+   "first_percent": 10.03,
+   "episodes": 19,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 24.43,
+   "latest_percent": 9.995497523637997,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 24.43,
+    "percent": 9.995497523637997
+   },
+   "since_percent": 21.00049529470034,
+   "since": 21.00049529470034,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 22.21,
+     "ret_percent": 10.0,
+     "return_percent": 10.0,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.92
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300182",
+   "name": "捷成股份",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-09",
+   "first_price": 6.22,
+   "first_percent": 4.89,
+   "episodes": 41,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.22,
+   "latest_percent": 0.9740259740259605,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.22,
+    "percent": 0.9740259740259605
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 6.16,
+     "ret_percent": -0.96,
+     "return_percent": -0.96,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -1.04
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "影视概念",
+     "在线教育"
+    ],
+    "theme": [
+     "AI漫剧",
+     "IP"
+    ],
+    "event": [],
+    "other": [
+     "影视院线",
+     "影视动漫制作"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002708",
+   "name": "光洋股份",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-09",
+   "first_price": 21.97,
+   "first_percent": 10.02,
+   "episodes": 9,
+   "first_episode_at": "2026-11-09T10:02:10.435342+08:00",
+   "last_episode_at": "2026-11-10T15:01:00.711191+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 26.59,
+   "latest_percent": 10.012412081092247,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 26.59,
+    "percent": 10.012412081092247
+   },
+   "since_percent": 21.028675466545298,
+   "since": 21.028675466545298,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 24.17,
+     "ret_percent": 10.01,
+     "return_percent": 10.01,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 9.93
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600540",
+   "name": "新赛股份",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 4.77,
+   "first_percent": 4.15,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.71,
+   "latest_percent": -2.079002079002068,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.71,
+    "percent": -2.079002079002068
+   },
+   "since_percent": -1.2578616352201144,
+   "since": -1.2578616352201144,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 4.81,
+     "ret_percent": 0.84,
+     "return_percent": 0.84,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 0.76
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "昨日首板"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh600641",
+   "name": "先导基电",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 32.5,
+   "first_percent": 3.5,
+   "episodes": 15,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 34.08,
+   "latest_percent": 1.8225276366895748,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 34.08,
+    "percent": 1.8225276366895748
+   },
+   "since_percent": 4.8615384615384505,
+   "since": 4.8615384615384505,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 33.47,
+     "ret_percent": 2.98,
+     "return_percent": 2.98,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 2.9
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "题材股"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600345",
+   "name": "长江通信",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 41.06,
+   "first_percent": 9.99,
+   "episodes": 4,
+   "first_episode_at": "2026-11-09T10:31:13.704625+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 40.96,
+   "latest_percent": 0.9115545700911554,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 40.96,
+    "percent": 0.9115545700911554
+   },
+   "since_percent": -0.243546030199715,
+   "since": -0.243546030199715,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 40.59,
+     "ret_percent": -1.14,
+     "return_percent": -1.14,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -1.22
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600278",
+   "name": "东方创业",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 7.83,
+   "first_percent": 9.97,
+   "episodes": 2,
+   "first_episode_at": "2026-11-09T11:02:28.611720+08:00",
+   "last_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 7.72,
+   "latest_percent": -5.7387057387057405,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 7.72,
+    "percent": -5.7387057387057405
+   },
+   "since_percent": -1.4048531289910682,
+   "since": -1.4048531289910682,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 8.19,
+     "ret_percent": 4.6,
+     "return_percent": 4.6,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 4.52
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688808",
+   "name": "联讯仪器",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-09",
+   "first_price": 774.02,
+   "first_percent": 3.48,
+   "episodes": 1,
+   "first_episode_at": "2026-11-09T11:31:13.575753+08:00",
+   "last_episode_at": "2026-11-09T11:31:13.575753+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 798.12,
+   "latest_percent": 6.312522478121285,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 798.12,
+    "percent": 6.312522478121285
+   },
+   "since_percent": 3.113614635280748,
+   "since": 3.113614635280748,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 750.73,
+     "ret_percent": -3.01,
+     "return_percent": -3.01,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": -3.09
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "光通信模块"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600776",
+   "name": "东方通信",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 12.22,
+   "first_percent": 9.99,
+   "episodes": 3,
+   "first_episode_at": "2026-11-09T12:02:16.011381+08:00",
+   "last_episode_at": "2026-11-09T13:01:53.453028+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 12.11,
+   "latest_percent": -2.41740531829171,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 12.11,
+    "percent": -2.41740531829171
+   },
+   "since_percent": -0.9001636661211232,
+   "since": -0.9001636661211232,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 12.41,
+     "ret_percent": 1.55,
+     "return_percent": 1.55,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 1.47
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002889",
+   "name": "东方嘉盛",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 16.4,
+   "first_percent": 9.99,
+   "episodes": 17,
+   "first_episode_at": "2026-11-09T13:31:37.480844+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 16.1,
+   "latest_percent": -4.507710557532607,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 16.1,
+    "percent": -4.507710557532607
+   },
+   "since_percent": -1.8292682926829062,
+   "since": -1.8292682926829062,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 16.86,
+     "ret_percent": 2.8,
+     "return_percent": 2.8,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 2.72
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600121",
+   "name": "郑州煤电",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-09",
+   "first_price": 4.73,
+   "first_percent": 10.0,
+   "episodes": 14,
+   "first_episode_at": "2026-11-09T15:01:29.808325+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.78,
+   "latest_percent": -4.016064257028118,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.78,
+    "percent": -4.016064257028118
+   },
+   "since_percent": 1.0570824524312794,
+   "since": 1.0570824524312794,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 4.98,
+     "ret_percent": 5.29,
+     "return_percent": 5.29,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 5.21
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "煤炭"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300166",
+   "name": "东方国信",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-09",
+   "first_price": 11.3,
+   "first_percent": 0.09,
+   "episodes": 13,
+   "first_episode_at": "2026-11-09T15:30:36.326366+08:00",
+   "last_episode_at": "2026-11-10T08:10:43.875813+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.39,
+   "latest_percent": -1.5557476231633505,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.39,
+    "percent": -1.5557476231633505
+   },
+   "since_percent": 0.7964601769911539,
+   "since": 0.7964601769911539,
+   "returns": {
+    "T+1": {
+     "n": 1,
+     "date": "2026-11-10",
+     "close": 11.57,
+     "ret_percent": 2.39,
+     "return_percent": 2.39,
+     "bench_percent": 0.08,
+     "benchmark_return": 0.08,
+     "excess_percent": 2.31
+    },
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "东方"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh688017",
+   "name": "绿的谐波",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 306.23,
+   "first_percent": 3.39,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 305.65,
+   "latest_percent": 0.9545514599022198,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 305.65,
+    "percent": 0.9545514599022198
+   },
+   "since_percent": -0.18940012408974471,
+   "since": -0.18940012408974471,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "工业机器人"
+    ],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603666",
+   "name": "亿嘉和",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 28.51,
+   "first_percent": 9.99,
+   "episodes": 5,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 30.78,
+   "latest_percent": 7.962118554893016,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 30.78,
+    "percent": 7.962118554893016
+   },
+   "since_percent": 7.962118554893016,
+   "since": 7.962118554893016,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300274",
+   "name": "阳光电源",
+   "source": "炒作雷达",
+   "category": "生肖玄学",
+   "first_day": "2026-11-10",
+   "first_price": 78.76,
+   "first_percent": 1.17,
+   "episodes": 37,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 78.9,
+   "latest_percent": -0.8793969849246075,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 78.9,
+    "percent": -0.8793969849246075
+   },
+   "since_percent": 0.17775520568816816,
+   "since": 0.17775520568816816,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "存储",
+     "2027 羊年（跨年）"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz300053",
+   "name": "航宇微",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 12.06,
+   "first_percent": 8.75,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.79,
+   "latest_percent": -0.16934801016089684,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.79,
+    "percent": -0.16934801016089684
+   },
+   "since_percent": -2.23880597014926,
+   "since": -2.23880597014926,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "存储"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300364",
+   "name": "中文在线",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 27.42,
+   "first_percent": 2.01,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 28.71,
+   "latest_percent": -1.1703958691910543,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 28.71,
+    "percent": -1.1703958691910543
+   },
+   "since_percent": 4.704595185995619,
+   "since": 4.704595185995619,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "IP"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688516",
+   "name": "奥特维",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 46.14,
+   "first_percent": 0.3,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 43.36,
+   "latest_percent": -4.640422256432808,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 43.36,
+    "percent": -4.640422256432808
+   },
+   "since_percent": -6.025140875596014,
+   "since": -6.025140875596014,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002050",
+   "name": "三花智控",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 35.43,
+   "first_percent": 3.48,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "last_episode_at": "2026-11-10T09:35:04.983971+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 36.33,
+   "latest_percent": 2.7722772277227525,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 36.33,
+    "percent": 2.7722772277227525
+   },
+   "since_percent": 2.5402201524131973,
+   "since": 2.5402201524131973,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "机器人执行器"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688165",
+   "name": "埃夫特-U",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 16.05,
+   "first_percent": 3.62,
+   "episodes": 9,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-11T07:06:01.027759+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 16.52,
+   "latest_percent": 4.82233502538072,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 16.52,
+    "percent": 4.82233502538072
+   },
+   "since_percent": 2.928348909657319,
+   "since": 2.928348909657319,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "机器视觉"
+    ],
+    "theme": [],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688836",
+   "name": "宇树科技-W",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 793.99,
+   "first_percent": 10.89,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 757.6,
+   "latest_percent": -0.4480887241954723,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 757.6,
+    "percent": -0.4480887241954723
+   },
+   "since_percent": -4.5831811483771805,
+   "since": -4.5831811483771805,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300433",
+   "name": "蓝思科技",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 28.99,
+   "first_percent": 0.62,
+   "episodes": 10,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T23:07:43.781274+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 28.63,
+   "latest_percent": -1.8512170037710107,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 28.63,
+    "percent": -1.8512170037710107
+   },
+   "since_percent": -1.2418075198344258,
+   "since": -1.2418075198344258,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "3D玻璃",
+     "英伟达概念",
+     "苹果概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz300508",
+   "name": "维宏股份",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 50.82,
+   "first_percent": 15.0,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 51.47,
+   "latest_percent": 3.498894027749855,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 51.47,
+    "percent": 3.498894027749855
+   },
+   "since_percent": 1.2790240062967362,
+   "since": 1.2790240062967362,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "3D玻璃"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz301226",
+   "name": "祥明智能",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 34.47,
+   "first_percent": 4.26,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 32.2,
+   "latest_percent": -6.0128429655574855,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 32.2,
+    "percent": -6.0128429655574855
+   },
+   "since_percent": -6.585436611546259,
+   "since": -6.585436611546259,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "电机Ⅱ"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002472",
+   "name": "双环传动",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 44.82,
+   "first_percent": 1.4,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 44.35,
+   "latest_percent": 3.2596041909196627,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 44.35,
+    "percent": 3.2596041909196627
+   },
+   "since_percent": -1.0486390004462276,
+   "since": -1.0486390004462276,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "减速器"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh600580",
+   "name": "卧龙电驱",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 24.73,
+   "first_percent": 4.74,
+   "episodes": 4,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 24.63,
+   "latest_percent": 1.3997529847673995,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 24.63,
+    "percent": 1.3997529847673995
+   },
+   "since_percent": -0.4043671653861769,
+   "since": -0.4043671653861769,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "同步磁阻电机"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh605189",
+   "name": "富春染织",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 15.21,
+   "first_percent": 1.13,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 15.34,
+   "latest_percent": -0.19518542615484247,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 15.34,
+    "percent": -0.19518542615484247
+   },
+   "since_percent": 0.8547008547008517,
+   "since": 0.8547008547008517,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "机器人执行器"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh603893",
+   "name": "瑞芯微",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 214.0,
+   "first_percent": 0.94,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T10:01:00.580930+08:00",
+   "last_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 231.1,
+   "latest_percent": -0.900514579759859,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 231.1,
+    "percent": -0.900514579759859
+   },
+   "since_percent": 7.9906542056074725,
+   "since": 7.9906542056074725,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "人形机器人"
+    ],
+    "theme": [
+     "IP"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688256",
+   "name": "寒武纪",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 856.52,
+   "first_percent": 0.62,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 850.0,
+   "latest_percent": 1.4319809069212486,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 850.0,
+    "percent": 1.4319809069212486
+   },
+   "since_percent": -0.7612198197356701,
+   "since": -0.7612198197356701,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "半导体概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": [
+     "半导体"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh688279",
+   "name": "峰岹科技",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 232.27,
+   "first_percent": 12.83,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 215.55,
+   "latest_percent": -0.4387990762124705,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 215.55,
+    "percent": -0.4387990762124705
+   },
+   "since_percent": -7.1985189649976355,
+   "since": -7.1985189649976355,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "半导体"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603920",
+   "name": "世运电路",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 36.94,
+   "first_percent": 10.01,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 38.26,
+   "latest_percent": 5.196590596645589,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 38.26,
+    "percent": 5.196590596645589
+   },
+   "since_percent": 3.5733622089875405,
+   "since": 3.5733622089875405,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "英伟达概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz000700",
+   "name": "模塑科技",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 16.21,
+   "first_percent": 4.72,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 17.09,
+   "latest_percent": 5.493827160493825,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 17.09,
+    "percent": 5.493827160493825
+   },
+   "since_percent": 5.428747686613189,
+   "since": 5.428747686613189,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "人形机器人"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600487",
+   "name": "亨通光电",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 43.21,
+   "first_percent": 2.37,
+   "episodes": 7,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 43.76,
+   "latest_percent": 2.4584406462186736,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 43.76,
+    "percent": 2.4584406462186736
+   },
+   "since_percent": 1.2728535061328428,
+   "since": 1.2728535061328428,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": [
+     "通信线缆及配套"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002292",
+   "name": "奥飞娱乐",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 9.73,
+   "first_percent": 4.96,
+   "episodes": 31,
+   "first_episode_at": "2026-11-10T10:37:33.983497+08:00",
+   "last_episode_at": "2026-11-11T07:06:01.027759+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 9.97,
+   "latest_percent": 3.4232365145228316,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 9.97,
+    "percent": 3.4232365145228316
+   },
+   "since_percent": 2.466598150051391,
+   "since": 2.466598150051391,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "网络游戏"
+    ],
+    "theme": [
+     "IP"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002048",
+   "name": "宁波华翔",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 20.86,
+   "first_percent": 10.02,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T11:01:05.078375+08:00",
+   "last_episode_at": "2026-11-10T11:01:05.078375+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 21.81,
+   "latest_percent": 4.554170661553214,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 21.81,
+    "percent": 4.554170661553214
+   },
+   "since_percent": 4.554170661553214,
+   "since": 4.554170661553214,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "人形机器人"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300426",
+   "name": "华智数媒",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 10.73,
+   "first_percent": 12.24,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "last_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.42,
+   "latest_percent": -0.43591979075850995,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.42,
+    "percent": -0.43591979075850995
+   },
+   "since_percent": 6.430568499534006,
+   "since": 6.430568499534006,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "大模型"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300418",
+   "name": "昆仑万维",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 41.79,
+   "first_percent": 4.14,
+   "episodes": 36,
+   "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 41.79,
+   "latest_percent": -0.28632784538296097,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 41.79,
+    "percent": -0.28632784538296097
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "短剧互动游戏",
+     "网络游戏"
+    ],
+    "theme": [
+     "短剧"
+    ],
+    "event": [],
+    "other": [
+     "传媒"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600373",
+   "name": "中文传媒",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 7.88,
+   "first_percent": 1.81,
+   "episodes": 4,
+   "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 7.91,
+   "latest_percent": 0.12658227848101333,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 7.91,
+    "percent": 0.12658227848101333
+   },
+   "since_percent": 0.3807106598984866,
+   "since": 0.3807106598984866,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "数字阅读"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh600986",
+   "name": "浙文互联",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 7.66,
+   "first_percent": 1.86,
+   "episodes": 4,
+   "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 7.73,
+   "latest_percent": -0.5148005148005064,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 7.73,
+    "percent": -0.5148005148005064
+   },
+   "since_percent": 0.9138381201044377,
+   "since": 0.9138381201044377,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "快手概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300790",
+   "name": "宇瞳光学",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 16.72,
+   "first_percent": 4.04,
+   "episodes": 4,
+   "first_episode_at": "2026-11-10T11:31:13.812574+08:00",
+   "last_episode_at": "2026-11-10T13:01:07.546668+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 16.87,
+   "latest_percent": -1.5752625437572942,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 16.87,
+    "percent": -1.5752625437572942
+   },
+   "since_percent": 0.8971291866028741,
+   "since": 0.8971291866028741,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "电子后视镜"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300133",
+   "name": "华策影视",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 11.13,
+   "first_percent": 14.74,
+   "episodes": 4,
+   "first_episode_at": "2026-11-10T12:00:59.996592+08:00",
+   "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.81,
+   "latest_percent": 4.605845881310899,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.81,
+    "percent": 4.605845881310899
+   },
+   "since_percent": 6.109613656783464,
+   "since": 6.109613656783464,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "短剧"
+    ],
+    "event": [],
+    "other": [
+     "传媒"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603533",
+   "name": "掌阅科技",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 32.8,
+   "first_percent": 9.99,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 31.73,
+   "latest_percent": -3.2621951219512058,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 31.73,
+    "percent": -3.2621951219512058
+   },
+   "since_percent": -3.2621951219512058,
+   "since": -3.2621951219512058,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "AI漫剧"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002371",
+   "name": "北方华创",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 548.65,
+   "first_percent": 0.7,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "last_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 534.27,
+   "latest_percent": -0.8186678547560611,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 534.27,
+    "percent": -0.8186678547560611
+   },
+   "since_percent": -2.620978766062154,
+   "since": -2.620978766062154,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "电子"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002565",
+   "name": "顺灏股份",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 10.95,
+   "first_percent": 3.89,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 10.66,
+   "latest_percent": -5.580159433126653,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 10.66,
+    "percent": -5.580159433126653
+   },
+   "since_percent": -2.648401826484015,
+   "since": -2.648401826484015,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "AI"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603501",
+   "name": "豪威集团",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 88.23,
+   "first_percent": 2.46,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T13:31:22.773939+08:00",
+   "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 87.1,
+   "latest_percent": -0.887573964497046,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 87.1,
+    "percent": -0.887573964497046
+   },
+   "since_percent": -1.280743511277349,
+   "since": -1.280743511277349,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "虚拟现实"
+    ],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh605398",
+   "name": "新炬网络",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 25.75,
+   "first_percent": 10.0,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 27.63,
+   "latest_percent": 7.300970873786405,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 27.63,
+    "percent": 7.300970873786405
+   },
+   "since_percent": 7.300970873786405,
+   "since": 7.300970873786405,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "短剧"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600715",
+   "name": "文投控股",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 2.85,
+   "first_percent": 10.04,
+   "episodes": 34,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 3.14,
+   "latest_percent": 10.175438596491237,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 3.14,
+    "percent": 10.175438596491237
+   },
+   "since_percent": 10.175438596491237,
+   "since": 10.175438596491237,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "网络游戏"
+    ],
+    "theme": [
+     "IP"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002475",
+   "name": "立讯精密",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 51.85,
+   "first_percent": 2.11,
+   "episodes": 5,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 51.4,
+   "latest_percent": -0.5417956656346812,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 51.4,
+    "percent": -0.5417956656346812
+   },
+   "since_percent": -0.8678881388621051,
+   "since": -0.8678881388621051,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "智能穿戴"
+    ],
+    "theme": [
+     "汽车零部件"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz300624",
+   "name": "万兴科技",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 53.62,
+   "first_percent": 4.3,
+   "episodes": 32,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 53.0,
+   "latest_percent": -0.07541478129713397,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 53.0,
+    "percent": -0.07541478129713397
+   },
+   "since_percent": -1.1562849682954068,
+   "since": -1.1562849682954068,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "虚拟现实",
+     "在线教育"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300751",
+   "name": "迈为股份",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 163.96,
+   "first_percent": 0.84,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 145.49,
+   "latest_percent": -12.239112076245618,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 145.49,
+    "percent": -12.239112076245618
+   },
+   "since_percent": -11.264942668943645,
+   "since": -11.264942668943645,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "OLED"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz002415",
+   "name": "海康威视",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 34.87,
+   "first_percent": 0.58,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 34.59,
+   "latest_percent": -0.6890611541774172,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 34.59,
+    "percent": -0.6890611541774172
+   },
+   "since_percent": -0.8029825064525209,
+   "since": -0.8029825064525209,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "超清视频"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603019",
+   "name": "中科曙光",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 78.91,
+   "first_percent": 0.2,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 78.33,
+   "latest_percent": -0.34351145038167274,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 78.33,
+    "percent": -0.34351145038167274
+   },
+   "since_percent": -0.7350145735648184,
+   "since": -0.7350145735648184,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "抖音概念(字节概念)"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sh605598",
+   "name": "上海港湾",
+   "source": "炒作雷达",
+   "category": "事件",
+   "first_day": "2026-11-10",
+   "first_price": 28.15,
+   "first_percent": 10.0,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 29.15,
+   "latest_percent": 3.5523978685612745,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 29.15,
+    "percent": 3.5523978685612745
+   },
+   "since_percent": 3.5523978685612745,
+   "since": 3.5523978685612745,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [
+     "固态电池"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600281",
+   "name": "华阳新材",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-10",
+   "first_price": 5.54,
+   "first_percent": 9.92,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "last_episode_at": "2026-11-10T14:02:24.446279+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.68,
+   "latest_percent": 2.5270758122743597,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.68,
+    "percent": 2.5270758122743597
+   },
+   "since_percent": 2.5270758122743597,
+   "since": 2.5270758122743597,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "新材"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600977",
+   "name": "中国电影",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 16.12,
+   "first_percent": 4.95,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 15.96,
+   "latest_percent": -1.053936763794161,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 15.96,
+    "percent": -1.053936763794161
+   },
+   "since_percent": -0.992555831265507,
+   "since": -0.992555831265507,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "影视概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh605577",
+   "name": "龙版传媒",
+   "source": "方向候选",
+   "category": "名称辈",
+   "first_day": "2026-11-10",
+   "first_price": 17.28,
+   "first_percent": 9.99,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "last_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 17.52,
+   "latest_percent": 1.388888888888884,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 17.52,
+    "percent": 1.388888888888884
+   },
+   "since_percent": 1.388888888888884,
+   "since": 1.388888888888884,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "传媒"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603598",
+   "name": "引力传媒",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-10",
+   "first_price": 23.69,
+   "first_percent": 9.98,
+   "episodes": 33,
+   "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 22.63,
+   "latest_percent": -4.474461798227114,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 22.63,
+    "percent": -4.474461798227114
+   },
+   "since_percent": -4.474461798227114,
+   "since": -4.474461798227114,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "传媒"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002343",
+   "name": "慈文传媒",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-10",
+   "first_price": 9.33,
+   "first_percent": 10.02,
+   "episodes": 33,
+   "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 9.59,
+   "latest_percent": 2.7867095391211016,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 9.59,
+    "percent": 2.7867095391211016
+   },
+   "since_percent": 2.7867095391211016,
+   "since": 2.7867095391211016,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "传媒"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002027",
+   "name": "分众传媒",
+   "source": "炒作雷达",
+   "category": "名称辈",
+   "first_day": "2026-11-10",
+   "first_price": 5.66,
+   "first_percent": 1.98,
+   "episodes": 33,
+   "first_episode_at": "2026-11-10T14:42:34.061541+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.52,
+   "latest_percent": -2.127659574468088,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.52,
+    "percent": -2.127659574468088
+   },
+   "since_percent": -2.473498233215554,
+   "since": -2.473498233215554,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "传媒"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh601599",
+   "name": "浙文影业",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 5.64,
+   "first_percent": 4.83,
+   "episodes": 31,
+   "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.37,
+   "latest_percent": -4.107142857142854,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.37,
+    "percent": -4.107142857142854
+   },
+   "since_percent": -4.7872340425531785,
+   "since": -4.7872340425531785,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "影视概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603602",
+   "name": "纵横通信",
+   "source": "炒作雷达",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 12.41,
+   "first_percent": 10.02,
+   "episodes": 24,
+   "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
+   "last_episode_at": "2026-11-11T07:30:47.746955+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 12.37,
+   "latest_percent": -0.3223207091055724,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 12.37,
+    "percent": -0.3223207091055724
+   },
+   "since_percent": -0.3223207091055724,
+   "since": -0.3223207091055724,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "低空经济"
+    ],
+    "event": [
+     "低空经济"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002664",
+   "name": "信质集团",
+   "source": "炒作雷达",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 15.2,
+   "first_percent": 9.99,
+   "episodes": 24,
+   "first_episode_at": "2026-11-10T15:01:00.711191+08:00",
+   "last_episode_at": "2026-11-11T07:30:47.746955+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 15.1,
+   "latest_percent": -0.6578947368421018,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 15.1,
+    "percent": -0.6578947368421018
+   },
+   "since_percent": -0.6578947368421018,
+   "since": -0.6578947368421018,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "低空经济"
+    ],
+    "event": [
+     "低空经济"
+    ],
+    "other": []
+   },
+   "entry_tag": "题材观察",
+   "state": "题材观察",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300770",
+   "name": "新媒股份",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 41.63,
+   "first_percent": 3.25,
+   "episodes": 7,
+   "first_episode_at": "2026-11-10T17:00:28.106013+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 41.14,
+   "latest_percent": -1.1770357914965168,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 41.14,
+    "percent": -1.1770357914965168
+   },
+   "since_percent": -1.1770357914965168,
+   "since": -1.1770357914965168,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "快手概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002241",
+   "name": "歌尔股份",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 25.69,
+   "first_percent": 3.84,
+   "episodes": 22,
+   "first_episode_at": "2026-11-10T17:00:28.106013+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 25.28,
+   "latest_percent": -1.595951732191514,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 25.28,
+    "percent": -1.595951732191514
+   },
+   "since_percent": -1.595951732191514,
+   "since": -1.595951732191514,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "智能穿戴"
+    ],
+    "theme": [
+     "游戏"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh688213",
+   "name": "思特威-W",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 108.67,
+   "first_percent": 3.2,
+   "episodes": 1,
+   "first_episode_at": "2026-11-10T21:00:20.752711+08:00",
+   "last_episode_at": "2026-11-10T21:00:20.752711+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 108.79,
+   "latest_percent": 0.11042606055029491,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 108.79,
+    "percent": 0.11042606055029491
+   },
+   "since_percent": 0.11042606055029491,
+   "since": 0.11042606055029491,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "传感器"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz301171",
+   "name": "易点天下",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 34.63,
+   "first_percent": 4.12,
+   "episodes": 2,
+   "first_episode_at": "2026-11-10T23:07:43.781274+08:00",
+   "last_episode_at": "2026-11-10T23:31:18.465900+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 34.58,
+   "latest_percent": -0.14438348252960864,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 34.58,
+    "percent": -0.14438348252960864
+   },
+   "since_percent": -0.14438348252960864,
+   "since": -0.14438348252960864,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "传媒"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002931",
+   "name": "锋龙股份",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 48.25,
+   "first_percent": 10.01,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 53.08,
+   "latest_percent": 10.010362694300511,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 53.08,
+    "percent": 10.010362694300511
+   },
+   "since_percent": 10.010362694300511,
+   "since": 10.010362694300511,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "汽车零部件"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz301550",
+   "name": "斯菱智驱",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 124.92,
+   "first_percent": 1.09,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 122.08,
+   "latest_percent": -2.2734550112071705,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 122.08,
+    "percent": -2.2734550112071705
+   },
+   "since_percent": -2.2734550112071705,
+   "since": -2.2734550112071705,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "机器人零部件"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz300209",
+   "name": "行云科技",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 24.14,
+   "first_percent": 0.58,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 24.13,
+   "latest_percent": -0.041425020712515526,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 24.13,
+    "percent": -0.041425020712515526
+   },
+   "since_percent": -0.041425020712515526,
+   "since": -0.041425020712515526,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "汽车电子"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz002181",
+   "name": "粤 传 媒",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-10",
+   "first_price": 12.0,
+   "first_percent": 4.08,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 11.78,
+   "latest_percent": -1.8333333333333424,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 11.78,
+    "percent": -1.8333333333333424
+   },
+   "since_percent": -1.8333333333333424,
+   "since": -1.8333333333333424,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "传媒娱乐"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300750",
+   "name": "宁德时代",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-10",
+   "first_price": 249.95,
+   "first_percent": 0.53,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "last_episode_at": "2026-11-11T00:32:42.263104+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 248.07,
+   "latest_percent": -0.7521504300860182,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 248.07,
+    "percent": -0.7521504300860182
+   },
+   "since_percent": -0.7521504300860182,
+   "since": -0.7521504300860182,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "数据中心"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz300857",
+   "name": "协创数据",
+   "source": "建仓清单",
+   "category": "概念",
+   "first_day": "2026-11-10",
+   "first_price": 150.16,
+   "first_percent": 0.64,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T07:30:47.746955+08:00",
+   "last_episode_at": "2026-11-11T08:01:05.745764+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 155.51,
+   "latest_percent": 3.5628662759722873,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 155.51,
+    "percent": 3.5628662759722873
+   },
+   "since_percent": 3.5628662759722873,
+   "since": 3.5628662759722873,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "网络游戏"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "条件未达",
+   "state": "条件未达",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz300724",
+   "name": "捷佳伟创",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 60.32,
+   "first_percent": 1.63,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 57.82,
+   "latest_percent": -2.57792754844145,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 57.82,
+    "percent": -2.57792754844145
+   },
+   "since_percent": -4.144562334217506,
+   "since": -4.144562334217506,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "光伏加工设备"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sh688726",
+   "name": "拉普拉斯",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 39.99,
+   "first_percent": 1.6,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 37.61,
+   "latest_percent": -4.446138211382111,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 37.61,
+    "percent": -4.446138211382111
+   },
+   "since_percent": -5.951487871967998,
+   "since": -5.951487871967998,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "光伏加工设备"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "低于买区"
+  },
+  {
+   "code": "sz300548",
+   "name": "长芯博创",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 120.97,
+   "first_percent": 2.37,
+   "episodes": 5,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 120.92,
+   "latest_percent": 2.3271557925023334,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 120.92,
+    "percent": 2.3271557925023334
+   },
+   "since_percent": -0.04133256179217337,
+   "since": -0.04133256179217337,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信网络设备及器件"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz300570",
+   "name": "太辰光",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 115.92,
+   "first_percent": 8.55,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 119.8,
+   "latest_percent": 12.182788650622701,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 119.8,
+    "percent": 12.182788650622701
+   },
+   "since_percent": 3.347135955831604,
+   "since": 3.347135955831604,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信网络设备及器件"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600293",
+   "name": "三峡新材",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 3.97,
+   "first_percent": 1.28,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.31,
+   "latest_percent": 9.948979591836737,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.31,
+    "percent": 9.948979591836737
+   },
+   "since_percent": 8.564231738035243,
+   "since": 8.564231738035243,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "玻璃制造"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh600096",
+   "name": "云天化",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 27.31,
+   "first_percent": 3.92,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 26.9,
+   "latest_percent": 2.3592085235920823,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 26.9,
+    "percent": 2.3592085235920823
+   },
+   "since_percent": -1.5012815818381542,
+   "since": -1.5012815818381542,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "磷肥及磷化工"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh688313",
+   "name": "仕佳光子",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 94.46,
+   "first_percent": 4.64,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 96.45,
+   "latest_percent": 6.846128281821207,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 96.45,
+    "percent": 6.846128281821207
+   },
+   "since_percent": 2.106711835697661,
+   "since": 2.106711835697661,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "F5G概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh601138",
+   "name": "工业富联",
+   "source": "方向候选",
+   "category": "概念",
+   "first_day": "2026-11-11",
+   "first_price": 43.36,
+   "first_percent": 0.42,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T09:40:38.550005+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 43.94,
+   "latest_percent": 1.7600741083835025,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 43.94,
+    "percent": 1.7600741083835025
+   },
+   "since_percent": 1.3376383763837651,
+   "since": 1.3376383763837651,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [
+     "CPO概念"
+    ],
+    "theme": [],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh603421",
+   "name": "鼎信通讯",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 6.04,
+   "first_percent": 10.02,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 5.82,
+   "latest_percent": 6.0109289617486406,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 5.82,
+    "percent": 6.0109289617486406
+   },
+   "since_percent": -3.6423841059602613,
+   "since": -3.6423841059602613,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信网络设备及器件"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz301313",
+   "name": "凡拓数创",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 78.26,
+   "first_percent": 2.31,
+   "episodes": 3,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 78.14,
+   "latest_percent": 2.1571447248006415,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 78.14,
+    "percent": 2.1571447248006415
+   },
+   "since_percent": -0.1533350370559683,
+   "since": -0.1533350370559683,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "物理AI"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz301488",
+   "name": "豪恩汽电",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 100.53,
+   "first_percent": 4.74,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 100.1,
+   "latest_percent": 4.292560950197943,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 100.1,
+    "percent": 4.292560950197943
+   },
+   "since_percent": -0.42773301502040395,
+   "since": -0.42773301502040395,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "物理AI"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh601869",
+   "name": "长飞光纤",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 257.66,
+   "first_percent": 2.11,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 261.52,
+   "latest_percent": 3.6420560377283584,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 261.52,
+    "percent": 3.6420560377283584
+   },
+   "since_percent": 1.4980982690367073,
+   "since": 1.4980982690367073,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信线缆及配套"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603332",
+   "name": "苏州龙杰",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 12.69,
+   "first_percent": 3.68,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 12.88,
+   "latest_percent": 5.228758169934644,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 12.88,
+    "percent": 5.228758169934644
+   },
+   "since_percent": 1.497241922773851,
+   "since": 1.497241922773851,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "涤纶"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002599",
+   "name": "盛通股份",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 6.04,
+   "first_percent": 3.6,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.04,
+   "latest_percent": 3.6020583190394584,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.04,
+    "percent": 3.6020583190394584
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "印刷"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002251",
+   "name": "步步高",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 3.43,
+   "first_percent": 0.59,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "last_episode_at": "2026-11-11T10:13:42.354698+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 3.4,
+   "latest_percent": -0.2932551319648202,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 3.4,
+    "percent": -0.2932551319648202
+   },
+   "since_percent": -0.8746355685131268,
+   "since": -0.8746355685131268,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "超市"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sh600903",
+   "name": "贵州燃气",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 6.27,
+   "first_percent": 3.29,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 6.17,
+   "latest_percent": 1.6474464579901094,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 6.17,
+    "percent": 1.6474464579901094
+   },
+   "since_percent": -1.5948963317384268,
+   "since": -1.5948963317384268,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz000407",
+   "name": "胜利股份",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 4.35,
+   "first_percent": 10.13,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 4.29,
+   "latest_percent": 8.607594936708862,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 4.29,
+    "percent": 8.607594936708862
+   },
+   "since_percent": -1.3793103448275779,
+   "since": -1.3793103448275779,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "涨停待回踩",
+   "state": "涨停待回踩",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002747",
+   "name": "埃斯顿",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 30.99,
+   "first_percent": 1.41,
+   "episodes": 3,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 31.12,
+   "latest_percent": 1.832460732984309,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 31.12,
+    "percent": 1.832460732984309
+   },
+   "since_percent": 0.4194901581155319,
+   "since": 0.4194901581155319,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh600522",
+   "name": "中天科技",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 23.74,
+   "first_percent": 0.17,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 23.93,
+   "latest_percent": 0.9704641350211096,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 23.93,
+    "percent": 0.9704641350211096
+   },
+   "since_percent": 0.8003369839932661,
+   "since": 0.8003369839932661,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sz002611",
+   "name": "东方精工",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 15.23,
+   "first_percent": 2.63,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 15.19,
+   "latest_percent": 2.358490566037741,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 15.19,
+    "percent": 2.358490566037741
+   },
+   "since_percent": -0.26263952724885353,
+   "since": -0.26263952724885353,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "印刷包装机械"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "等待回踩"
+  },
+  {
+   "code": "sh603236",
+   "name": "移远通信",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 86.03,
+   "first_percent": 4.79,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "last_episode_at": "2026-11-11T10:30:53.961903+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 85.99,
+   "latest_percent": 4.7381242387332545,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 85.99,
+    "percent": 4.7381242387332545
+   },
+   "since_percent": -0.046495408578406394,
+   "since": -0.046495408578406394,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "通信设备"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688218",
+   "name": "江苏北人",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 38.63,
+   "first_percent": 11.81,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 38.54,
+   "latest_percent": 11.548480463096977,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 38.54,
+    "percent": 11.548480463096977
+   },
+   "since_percent": -0.23297954957287592,
+   "since": -0.23297954957287592,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "机器人"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh688507",
+   "name": "索辰科技",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 204.98,
+   "first_percent": 5.87,
+   "episodes": 2,
+   "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 203.46,
+   "latest_percent": 5.082119615742187,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 203.46,
+    "percent": 5.082119615742187
+   },
+   "since_percent": -0.741535759586287,
+   "since": -0.741535759586287,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "物理AI"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sh603318",
+   "name": "水发燃气",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 8.58,
+   "first_percent": 4.76,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 8.46,
+   "latest_percent": 3.296703296703307,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 8.46,
+    "percent": 3.296703296703307
+   },
+   "since_percent": -1.3986013986013845,
+   "since": -1.3986013986013845,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "燃气Ⅱ"
+    ]
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002145",
+   "name": "钛能化学",
+   "source": "方向候选",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 3.86,
+   "first_percent": 0.52,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "last_episode_at": "2026-11-11T11:01:51.953695+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 3.86,
+   "latest_percent": 0.5208333333333259,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 3.86,
+    "percent": 0.5208333333333259
+   },
+   "since_percent": 0.0,
+   "since": 0.0,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "钛白粉"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz301486",
+   "name": "致尚科技",
+   "source": "建仓清单",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 155.72,
+   "first_percent": 16.37,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 154.49,
+   "latest_percent": 15.454749271354906,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 154.49,
+    "percent": 15.454749271354906
+   },
+   "since_percent": -0.7898792704854829,
+   "since": -0.7898792704854829,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "光通信"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  },
+  {
+   "code": "sz002558",
+   "name": "巨人网络",
+   "source": "建仓清单",
+   "category": "行业",
+   "first_day": "2026-11-11",
+   "first_price": 21.43,
+   "first_percent": 0.52,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 21.42,
+   "latest_percent": 0.46904315196998336,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 21.42,
+    "percent": 0.46904315196998336
+   },
+   "since_percent": -0.046663555762938014,
+   "since": -0.046663555762938014,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [],
+    "event": [],
+    "other": [
+     "游戏Ⅱ"
+    ]
+   },
+   "entry_tag": "可建仓",
+   "state": "可建仓",
+   "zone": "已进入买区"
+  },
+  {
+   "code": "sz002896",
+   "name": "中大力德",
+   "source": "方向候选",
+   "category": "题材",
+   "first_day": "2026-11-11",
+   "first_price": 62.72,
+   "first_percent": 3.34,
+   "episodes": 1,
+   "first_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "last_episode_at": "2026-11-11T11:32:12.451071+08:00",
+   "latest_day": "2026-11-11",
+   "latest_price": 62.75,
+   "latest_percent": 3.394298896029002,
+   "latest": {
+    "day": "2026-11-11",
+    "price": 62.75,
+    "percent": 3.394298896029002
+   },
+   "since_percent": 0.04783163265307255,
+   "since": 0.04783163265307255,
+   "returns": {
+    "T+1": null,
+    "T+3": null,
+    "T+5": null
+   },
+   "pending": [
+    "T+1",
+    "T+3",
+    "T+5"
+   ],
+   "missing": [],
+   "tags": {
+    "concept": [],
+    "theme": [
+     "精密减速器"
+    ],
+    "event": [],
+    "other": []
+   },
+   "entry_tag": "高于追高上限",
+   "state": "高于追高上限",
+   "zone": "高于追高上限"
+  }
+ ],
+ "coverage": {
+  "rows": 163,
+  "with_returns": 75,
+  "bench": "上证指数",
+  "daily_codes": 135,
+  "episode_issues": 74,
+  "episode_range": "2026-11-09~2026-11-11",
+  "note": "T+N=首次入选日后第 N 个交易日收盘/入选价格−1，基准上证；未到期/缺数据不按 0 计；历史样本仅供研究，不构成投资建议。"
+ }
+}

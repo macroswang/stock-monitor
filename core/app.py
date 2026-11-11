@@ -534,6 +534,7 @@ class App:
         if method=='pool_remove':return self.pool.remove(args['code'])
         if method=='pool_mark':return self.pool.mark(args['code'],args['state'])
         if method=='pool_sync':return self.start_job(lambda:(self.pool.bootstrap(),self.pool.view())[1])
+        if method=='pool_backtest':return self.pool.pool_backtest()
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')

@@ -256,6 +256,15 @@ def universe():
     return {r['symbol']: r for r in rows if is_a_share(r['symbol'])}
 
 
+def _quote_optional(f, index):
+    """Optional quant field for the stock-pool terminal table; missing/invalid -> None."""
+    try:
+        value = number(f[index])
+    except (ValueError, InvalidOperation, IndexError):
+        return None
+    return float(value)
+
+
 def parse_quotes(text, requested):
     result = {}
     for code, body in re.findall(r'v_(\w+)="([^"]*)"', text):
@@ -282,7 +291,11 @@ def parse_quotes(text, requested):
             result[code] = dict(code=code, price=str(price), previous_close=str(previous),
                                 volume=int(shares), amount_yuan=str(amount), timestamp=stamp.isoformat(), raw_volume=f[6],
                                 raw_volume_unit='shares' if code.startswith(('sh688','sh689')) else 'hands',
-                                raw_turnover_wan=f[37], day_low=f[34], day_high=f[33])
+                                raw_turnover_wan=f[37], day_low=f[34], day_high=f[33],
+                                turnover_rate=_quote_optional(f, 38),
+                                amplitude=_quote_optional(f, 43),
+                                float_mcap_yi=_quote_optional(f, 44),
+                                volume_ratio=_quote_optional(f, 49))
         except (ValueError, InvalidOperation, IndexError):
             continue
     return result

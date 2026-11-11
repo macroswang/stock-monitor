@@ -17,6 +17,7 @@ from datetime import date, datetime, timedelta
 
 from .provider import CN, get, now_cn, symbol
 from .breadth import parse_quotes
+from .paper_session import calendar
 
 QUOTE_URL = 'https://qt.gtimg.cn/q='
 POLL_SECONDS = 8
@@ -25,6 +26,11 @@ WINDOWS = (1, 3, 5)
 HOLDING_BUCKETS = (('0', '今日'), ('1', '1日'), ('2', '2日'), ('3-5', '3–5日'), ('6-10', '6–10日'), ('10+', '10日以上'))
 BENCHMARK_CODE = 'sh000001'
 BENCHMARK_NAME = '上证指数'
+EPISODE_LIMIT = 100
+BACKTEST_LIMIT = 200
+TAG_LIMIT = 4
+THEME_CATEGORIES = ('题材', '名称辈', '生肖玄学')
+TAG_BUCKETS = ('concept', 'theme', 'event', 'other')
 
 ALERT_KINDS = {'已进入买区': ('buy_zone', '进入买区'), '已跌破防守位': ('stop_break', '跌破防守位')}
 
@@ -92,6 +98,29 @@ def _float(value):
 
 def _now():
     return now_cn().isoformat()
+
+
+def _trading_day(now):
+    """Most recent exchange session at/before now; holiday/weekend aware when a calendar exists."""
+    day = now.date()
+    for _ in range(15):
+        if day.weekday() < 5:
+            closed = calendar(day.year)
+            if closed is None or not any(first <= day.isoformat() <= last for first, last in closed):
+                return day.isoformat()
+        day -= timedelta(days=1)
+    return day.isoformat()
+
+
+def _tag_bucket(category):
+    """Map a pool category to the terminal-table tag column it should surface in."""
+    if category == '概念':
+        return 'concept'
+    if category in THEME_CATEGORIES:
+        return 'theme'
+    if category == '事件':
+        return 'event'
+    return 'other'
 
 
 def _category(kind):
@@ -252,14 +281,19 @@ class Pool:
         hit_buy = bool(plan and plan.get('buy_low') is not None and low <= plan['buy_low'] <= high)
         hit_stop = bool(plan and plan.get('stop') is not None and low <= plan['stop'])
         hit_target = bool(plan and plan.get('target1') is not None and high >= plan['target1'])
+        turnover_rate = _float(quote.get('turnover_rate'))
+        volume_ratio = _float(quote.get('volume_ratio'))
         with self.store.lock:
             self.store.db.execute(
-                'INSERT INTO pool_day(code,day,price,percent,high,low,state,hit_buy,hit_stop,hit_target,collected_at) '
-                'VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(code,day) DO UPDATE SET '
+                'INSERT INTO pool_day(code,day,price,percent,high,low,state,hit_buy,hit_stop,hit_target,collected_at,'
+                'turnover_rate,volume_ratio) '
+                'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(code,day) DO UPDATE SET '
                 'price=excluded.price,percent=excluded.percent,high=excluded.high,low=excluded.low,'
                 'hit_buy=excluded.hit_buy,hit_stop=excluded.hit_stop,hit_target=excluded.hit_target,'
-                'collected_at=excluded.collected_at',
-                (code, day, price, percent, high, low, None, int(hit_buy), int(hit_stop), int(hit_target), now.isoformat()))
+                'collected_at=excluded.collected_at,turnover_rate=excluded.turnover_rate,'
+                'volume_ratio=excluded.volume_ratio',
+                (code, day, price, percent, high, low, None, int(hit_buy), int(hit_stop), int(hit_target),
+                 now.isoformat(), turnover_rate, volume_ratio))
             self.store.db.commit()
 
     def _plan(self, code):
@@ -376,7 +410,7 @@ class Pool:
         priority = {'建仓清单': 0, '方向候选': 1, '炒作雷达': 2}
 
         def consider(code, name, source, category, group_name, role, sector, reason, plan,
-                     price, percent, chase, tag):
+                     price, percent, chase, tag, sector_kind=None):
             if not code:
                 return
             membership = (category, group_name)
@@ -384,14 +418,15 @@ class Pool:
             if current is None:
                 candidates[code] = dict(code=code, name=name or code, source=source, category=category,
                                         group_name=group_name, role=role, sector=sector, reason=reason,
-                                        plan=plan or {}, price=price, tag=tag, memberships=[membership])
+                                        plan=plan or {}, price=price, percent=percent, tag=tag,
+                                        sector_kind=sector_kind, memberships=[membership])
                 return
             if membership not in current['memberships']:
                 current['memberships'].append(membership)
             if priority.get(current['source'], 9) <= priority.get(source, 9):
                 return
             current.update(name=name or code, source=source, role=role, sector=sector, reason=reason,
-                           plan=plan or {}, price=price, tag=tag)
+                           plan=plan or {}, price=price, percent=percent, tag=tag, sector_kind=sector_kind)
 
         for pick in issue.get('top_picks') or []:
             code = pick.get('code')
@@ -407,7 +442,8 @@ class Pool:
             plan = {key: pick.get(key) for key in ('buy_low', 'buy_high', 'chase', 'stop', 'target1',
                                                    'target2', 'trail', 'note', 'sell_note')}
             consider(code, pick.get('name'), '建仓清单', _category(pick.get('sector_kind')), pick.get('sector'),
-                     pick.get('role'), pick.get('sector'), reason, plan, price, percent, chase, tag)
+                     pick.get('role'), pick.get('sector'), reason, plan, price, percent, chase, tag,
+                     pick.get('sector_kind'))
 
         tokens = _name_tokens(issue)
         for direction in issue.get('directions') or []:
@@ -435,7 +471,7 @@ class Pool:
                 reason = f"方向：{direction.get('sector')}（{direction.get('state')}）；{(direction.get('why') or '')[:60]}"
                 consider(code, stock.get('name'), '方向候选', _category(direction.get('sector_kind')),
                          direction.get('sector'), stock.get('role'), direction.get('sector'), reason, entry,
-                         price, percent, chase, tag)
+                         price, percent, chase, tag, direction.get('sector_kind'))
 
         for item in issue.get('radar') or []:
             category = _radar_category(item)
@@ -448,7 +484,7 @@ class Pool:
                 reason = f"{item.get('theme')}·{item.get('stage')}·{item.get('verdict')}"
                 consider(code, stock.get('name'), '炒作雷达', category, item.get('theme'), stock.get('role'),
                          item.get('theme'), reason, entry, price, _float(stock.get('percent')),
-                         _float(entry.get('chase')), '题材观察')
+                         _float(entry.get('chase')), '题材观察', item.get('kind'))
 
         for item in candidates.values():
             memberships = item.pop('memberships')
@@ -464,6 +500,69 @@ class Pool:
                     groups.append(category)
             item['groups'] = groups
         return candidates
+
+    def record_episodes(self, issue, candidates=None):
+        """Persist one episode row per research candidate for the issue (idempotent by code+issue).
+
+        Repeated syncs keep the first record; missing metadata on legacy rows is filled in place so
+        tags/percent work for databases written by earlier builds without duplicating counts.
+        """
+        if not isinstance(issue, dict):
+            return dict(recorded=0, issue_id=None)
+        issue_id = issue.get('published_at')
+        if not issue_id:
+            return dict(recorded=0, issue_id=None)
+        candidates = candidates if candidates is not None else self._collect(issue)
+        quote_date = issue.get('quote_date')
+        created = _now()
+        rows = []
+        for item in candidates.values():
+            groups = item.get('groups') or [item.get('category')]
+            rows.append((item['code'], issue_id, issue_id, quote_date, item.get('source'), item.get('tag'),
+                         item.get('price'), item.get('percent'), item.get('category'), item.get('group_name'),
+                         json.dumps(groups, ensure_ascii=False), item.get('sector'), item.get('sector_kind'),
+                         item.get('reason'), json.dumps(item.get('plan') or {}, ensure_ascii=False), created))
+        if not rows:
+            return dict(recorded=0, issue_id=issue_id)
+        with self.store.lock:
+            self.store.db.executemany(
+                'INSERT INTO pool_episode(code,issue_id,published_at,quote_date,source,entry_tag,price,percent,'
+                'category,group_name,groups_json,sector,sector_kind,reason,plan,created_at) '
+                'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '
+                'ON CONFLICT(code,issue_id) DO UPDATE SET '
+                'percent=COALESCE(pool_episode.percent,excluded.percent),'
+                'category=COALESCE(pool_episode.category,excluded.category),'
+                'group_name=COALESCE(pool_episode.group_name,excluded.group_name),'
+                'groups_json=COALESCE(pool_episode.groups_json,excluded.groups_json),'
+                'sector_kind=COALESCE(pool_episode.sector_kind,excluded.sector_kind)',
+                rows)
+            self.store.db.commit()
+        return dict(recorded=len(rows), issue_id=issue_id)
+
+    def _backfill_episodes(self, limit=EPISODE_LIMIT):
+        """Record every archived issue as episodes (recent <=limit files, oldest first)."""
+        folder = self.app.dir / 'daily-outlook'
+        if not folder.exists():
+            return dict(issues=0, recorded=0)
+        try:
+            paths = sorted(folder.glob('*_*.json'))
+        except OSError:
+            return dict(issues=0, recorded=0)
+        if limit:
+            paths = paths[-int(limit):]
+        parsed = []
+        for path in paths:
+            try:
+                issue = json.loads(path.read_text(encoding='utf-8'))
+            except (OSError, ValueError, TypeError):
+                continue
+            if isinstance(issue, dict) and issue.get('published_at'):
+                parsed.append(issue)
+        parsed.sort(key=lambda issue: issue.get('published_at') or '')
+        recorded = 0
+        for issue in parsed:
+            recorded += self.record_episodes(issue)['recorded']
+        return dict(issues=len(parsed), recorded=recorded)
 
     def sync_issue(self, issue, fetch=True):
         """Add every research candidate with entry timestamp and multi-label grouping.
@@ -489,6 +588,7 @@ class Pool:
                 updated += 1
             else:
                 added += 1
+        self.record_episodes(issue, candidates)
         self._backfill_metadata()
         self.archive_old()
         self._remember_all()
@@ -526,6 +626,7 @@ class Pool:
                 self.sync_issue(issue, fetch=False)
             except (OSError, ValueError, TypeError):
                 continue
+        self._backfill_episodes()
         self._backfill_metadata()
         self._backfill_added_at()
         self.archive_old()
@@ -631,7 +732,9 @@ class Pool:
             if latest:
                 stored = latest[0]
                 price = _float(stored['price'])
-                quote = dict(timestamp=stored['collected_at'], day_low=stored['low'], day_high=stored['high'])
+                quote = dict(timestamp=stored['collected_at'], day_low=stored['low'], day_high=stored['high'],
+                             turnover_rate=_float(stored.get('turnover_rate')),
+                             volume_ratio=_float(stored.get('volume_ratio')))
                 basis = 'last'
         if price is None and row['added_price']:
             price = _float(row['added_price'])
@@ -663,7 +766,9 @@ class Pool:
             ordered = list(day_rows)[-30:]
         history = [dict(day=item['day'], price=item['price'], percent=item['percent'], high=item['high'],
                         low=item['low'], hit_buy=bool(item['hit_buy']), hit_stop=bool(item['hit_stop']),
-                        hit_target=bool(item['hit_target'])) for item in ordered]
+                        hit_target=bool(item['hit_target']),
+                        turnover_rate=_float(item.get('turnover_rate')),
+                        volume_ratio=_float(item.get('volume_ratio'))) for item in ordered]
         highs = [h['high'] for h in history if h['high'] is not None]
         lows = [h['low'] for h in history if h['low'] is not None]
         if sample_ready and price is not None:
@@ -692,6 +797,10 @@ class Pool:
                     groups=groups, group_name=row['group_name'] or row['sector'] or '其他', updated_at=row['updated_at'],
                     quote=dict(price=price, percent=percent, time=quote.get('timestamp'),
                                low=_float(quote.get('day_low')), high=_float(quote.get('day_high')),
+                               turnover_rate=_float(quote.get('turnover_rate')),
+                               volume_ratio=_float(quote.get('volume_ratio')),
+                               amplitude=_float(quote.get('amplitude')),
+                               float_mcap_yi=_float(quote.get('float_mcap_yi')),
                                basis=basis, fresh=fresh) if price is not None else None,
                     plan=plan, since_add_percent=since, today_percent=percent,
                     distance_to_buy_percent=distance, zone=zone, hint=hint, history=history,
@@ -738,6 +847,18 @@ class Pool:
                 data[key] = close
         return data
 
+    def _entry_calendar_days(self, entry, benchmark_calendar, today=None):
+        """Trading sessions after the entry day, used for T+N windows and pending/missing split."""
+        try:
+            start = date.fromisoformat(entry['added_day'])
+        except (TypeError, ValueError):
+            return []
+        today = today or now_cn().date()
+        calendar = [day for day in benchmark_calendar if start.isoformat() < day <= today.isoformat()]
+        if not calendar or (today.weekday() < 5 and calendar and calendar[-1] != today.isoformat()):
+            calendar = _weekday_dates(start, today)
+        return calendar
+
     def _attach_performance(self, entry, daily, bench, benchmark_calendar):
         try:
             start = date.fromisoformat(entry['added_day'])
@@ -747,9 +868,7 @@ class Pool:
             entry['windows'] = {}
             return
         today = now_cn().date()
-        calendar = [day for day in benchmark_calendar if start.isoformat() < day <= today.isoformat()]
-        if not calendar or (today.weekday() < 5 and calendar and calendar[-1] != today.isoformat()):
-            calendar = _weekday_dates(start, today)
+        calendar = self._entry_calendar_days(entry, benchmark_calendar, today)
         entry['holding_days'] = len(calendar)
         entry['holding_bucket'] = _bucket(len(calendar))
         base = entry['added_price']
@@ -797,6 +916,204 @@ class Pool:
                               win_rate=round(100 * sum(1 for value in values if value > 0) / len(values), 1) if values else None,
                               avg_since_percent=round(sum(values) / len(values), 2) if values else None))
         return stats
+
+    # ---------- 入选事件 / 标签 / 回测 ----------
+    def _episode_counts(self, codes, trading_today):
+        """One GROUP BY for episode counts (never one query per entry)."""
+        unique = [code for code in dict.fromkeys(codes) if code]
+        if not unique:
+            return {}
+        marks = ','.join('?' * len(unique))
+        rows = self.store.query(
+            'SELECT code,COUNT(*) AS total,'
+            'SUM(CASE WHEN substr(published_at,1,10)=? THEN 1 ELSE 0 END) AS today,'
+            'MIN(published_at) AS first_at,MAX(published_at) AS last_at '
+            f'FROM pool_episode WHERE code IN ({marks}) GROUP BY code',
+            (trading_today,) + tuple(unique))
+        counts = {}
+        for row in rows:
+            counts[row['code']] = dict(total=int(row['total'] or 0), today=int(row['today'] or 0),
+                                       first_at=row['first_at'], last_at=row['last_at'])
+        return counts
+
+    def _episode_meta(self, codes):
+        unique = [code for code in dict.fromkeys(codes) if code]
+        if not unique:
+            return {}
+        marks = ','.join('?' * len(unique))
+        rows = self.store.query(
+            f'SELECT code,category,group_name,groups_json,sector,sector_kind FROM pool_episode '
+            f'WHERE code IN ({marks}) ORDER BY code,published_at', tuple(unique))
+        meta = {}
+        for row in rows:
+            meta.setdefault(row['code'], []).append(row)
+        return meta
+
+    def _episode_first_percent(self, codes):
+        unique = [code for code in dict.fromkeys(codes) if code]
+        if not unique:
+            return {}
+        marks = ','.join('?' * len(unique))
+        rows = self.store.query(
+            f'SELECT code,percent FROM pool_episode WHERE code IN ({marks}) ORDER BY code,published_at',
+            tuple(unique))
+        first = {}
+        for row in rows:
+            first.setdefault(row['code'], row['percent'])
+        return first
+
+    def _episode_coverage(self):
+        rows = self.store.query(
+            'SELECT COUNT(DISTINCT issue_id) AS issues,MIN(published_at) AS first_at,'
+            'MAX(published_at) AS last_at FROM pool_episode')
+        item = rows[0] if rows else {}
+        first, last = item.get('first_at'), item.get('last_at')
+        if not first or not last:
+            return 0, None
+        return int(item.get('issues') or 0), f"{str(first)[:10]}~{str(last)[:10]}"
+
+    @staticmethod
+    def _tag_labels(category, group_name, groups_json, sector):
+        labels = []
+        primary = group_name or sector
+        if primary:
+            labels.append(str(primary))
+        try:
+            groups = json.loads(groups_json or '[]')
+        except (TypeError, ValueError):
+            groups = []
+        if isinstance(groups, list):
+            for group in groups:
+                if isinstance(group, str):
+                    # groups_json keeps category memberships (概念/题材/…), not label text.
+                    if group and group not in CATEGORY_ORDER:
+                        labels.append(group)
+                elif isinstance(group, (list, tuple)) and len(group) >= 2 and group[1]:
+                    labels.append(str(group[1]))
+        return labels
+
+    def _entry_tags(self, entry, episode_rows=None):
+        """Derive concept/theme/event/other labels from episode metadata, falling back to the pool row."""
+        tags = {bucket: [] for bucket in TAG_BUCKETS}
+
+        def add(bucket, label):
+            label = str(label or '').strip()
+            if label and label not in tags[bucket] and len(tags[bucket]) < TAG_LIMIT:
+                tags[bucket].append(label)
+
+        for row in episode_rows or []:
+            category = row.get('category') or _category(row.get('sector_kind') or '')
+            bucket = _tag_bucket(category)
+            for label in self._tag_labels(category, row.get('group_name'), row.get('groups_json'),
+                                          row.get('sector')):
+                add(bucket, label)
+        if not any(tags.values()):
+            category = entry.get('category') or ''
+            bucket = _tag_bucket(category)
+            for label in self._tag_labels(category, entry.get('group_name'), None, entry.get('sector')):
+                add(bucket, label)
+        return tags
+
+    def _attach_episode_view(self, entries, trading_today):
+        """Attach episodes/quant/tags to view entries with a single episode aggregation query."""
+        codes = [entry['code'] for entry in entries]
+        counts = self._episode_counts(codes, trading_today)
+        meta = self._episode_meta(codes)
+        for entry in entries:
+            entry['episodes'] = counts.get(entry['code'], dict(total=0, today=0, first_at=None, last_at=None))
+            quote = entry.get('quote') or {}
+            entry['quant'] = dict(turnover_rate=quote.get('turnover_rate'),
+                                  volume_ratio=quote.get('volume_ratio'),
+                                  amplitude=quote.get('amplitude'),
+                                  float_mcap_yi=quote.get('float_mcap_yi'))
+            entry['tags'] = self._entry_tags(entry, meta.get(entry['code']))
+
+    def pool_backtest(self):
+        """Read-only backtest of every non-archived pool row using the existing T+1/3/5 windows."""
+        now = now_cn()
+        bench, benchmark_calendar = self._benchmark()
+        rows = [row for row in self.store.query('SELECT * FROM pool')
+                if not _is_archived(row.get('archived'))][:BACKTEST_LIMIT]
+        day_rows = {}
+        for item in self.store.query('SELECT * FROM pool_day ORDER BY code,day'):
+            day_rows.setdefault(item['code'], []).append(item)
+        entries = [self._entry(row, now, day_rows.get(row['code'], [])) for row in rows]
+        earliest = min((entry['added_day'] for entry in entries if entry.get('added_day')), default=None)
+        daily = self._daily_map([entry['code'] for entry in entries], earliest)
+        for entry in entries:
+            self._attach_performance(entry, daily, bench, benchmark_calendar)
+        codes = [entry['code'] for entry in entries]
+        counts = self._episode_counts(codes, _trading_day(now))
+        meta = self._episode_meta(codes)
+        first_percent = self._episode_first_percent(codes)
+        results = []
+        with_returns = 0
+        for entry in entries:
+            windows = entry.get('windows') or {}
+            episode = counts.get(entry['code'], dict(total=0, today=0, first_at=None, last_at=None))
+            calendar = self._entry_calendar_days(entry, benchmark_calendar, now.date())
+            returns = {}
+            pending, missing = [], []
+            today = now.date()
+            market_closed = now.hour * 60 + now.minute >= 15 * 60
+            for n in WINDOWS:
+                key = f'T+{n}'
+                window = windows.get(key)
+                if window and str(window.get('date') or '') == today.isoformat() and not market_closed:
+                    # 目标日就是今天且尚未收盘：行情是盘中暂态，不能当 T+N 收益。
+                    returns[key] = None
+                    pending.append(key)
+                    continue
+                if window:
+                    # Alias ret/bench keys for the earlier timed-pool contract shape.
+                    returns[key] = dict(n=n, date=window.get('date'), close=window.get('close'),
+                                        ret_percent=window.get('return_percent'),
+                                        return_percent=window.get('return_percent'),
+                                        bench_percent=window.get('benchmark_return'),
+                                        benchmark_return=window.get('benchmark_return'),
+                                        excess_percent=window.get('excess_percent'))
+                    continue
+                returns[key] = None
+                if len(calendar) < n:
+                    # 目标交易日还没到（含今天但未收盘）：未到期，不是缺数据。
+                    pending.append(key)
+                    continue
+                target = str(calendar[n - 1])
+                target_day = date.fromisoformat(target) if target else None
+                if target_day is not None and target_day == today and not market_closed:
+                    pending.append(key)
+                else:
+                    missing.append(key)
+            if any(value is not None for value in returns.values()):
+                with_returns += 1
+            quote = entry.get('quote') or {}
+            history = entry.get('history') or []
+            latest_day = (str(quote.get('time'))[:10] if quote.get('time') else None) or (
+                history[-1]['day'] if history else entry['added_day'])
+            latest_price = quote.get('price') if quote.get('price') is not None else (
+                history[-1]['price'] if history else entry['added_price'])
+            latest_percent = entry.get('today_percent')
+            if latest_percent is None and history:
+                latest_percent = history[-1]['percent']
+            results.append(dict(
+                code=entry['code'], name=entry['name'], source=entry['source'], category=entry['category'],
+                first_day=entry['added_day'], first_price=entry['added_price'],
+                first_percent=first_percent.get(entry['code']),
+                episodes=episode['total'], first_episode_at=episode['first_at'], last_episode_at=episode['last_at'],
+                latest_day=latest_day, latest_price=latest_price, latest_percent=latest_percent,
+                latest=dict(day=latest_day, price=latest_price, percent=latest_percent),
+                since_percent=entry['since_add_percent'], since=entry['since_add_percent'],
+                returns=returns, pending=pending, missing=missing,
+                tags=self._entry_tags(entry, meta.get(entry['code'])),
+                entry_tag=entry.get('entry_tag'), state=entry.get('state'), zone=entry.get('zone'),
+            ))
+        episode_issues, episode_range = self._episode_coverage()
+        return dict(updated_at=_now(), bench=BENCHMARK_NAME, rows=results,
+                    coverage=dict(rows=len(results), with_returns=with_returns, bench=BENCHMARK_NAME,
+                                  daily_codes=len({code for code, _ in daily}),
+                                  episode_issues=episode_issues, episode_range=episode_range,
+                                  note='T+N=首次入选日后第 N 个交易日收盘/入选价格−1，基准上证；'
+                                       '未到期/缺数据不按 0 计；历史样本仅供研究，不构成投资建议。'))
 
     def _check_alerts(self, quotes, now):
         """Once-per-day local/phone alert when a pool stock enters its buy zone or breaks the stop."""
@@ -986,6 +1303,7 @@ class Pool:
         daily = self._daily_map([entry['code'] for entry in entries], earliest)
         for entry in entries:
             self._attach_performance(entry, daily, bench, benchmark_calendar)
+        self._attach_episode_view(entries, _trading_day(now))
         # Primary-group ranking for “组内 #n/m”.
         rank_groups = {}
         for entry in entries:
