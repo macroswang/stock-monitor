@@ -61,8 +61,15 @@ def parse_daily(payload, start, end):
 
 
 def fetch_daily(start, end):
-    url = URL+'?'+urlencode({'param':f'{CODE},day,{start},{end},2000,'})
-    return parse_daily(json.loads(get(url)), start, end)
+    # fqkline/get 已被来源 WAF 拒绝（2026-11-12 起 HTTP 501）；kline/kline 响应结构相同，优先使用并保留回退。
+    errors=[]
+    for path in ('kline/kline','fqkline/get'):
+        url='https://web.ifzq.gtimg.cn/appstock/app/'+path+'?'+urlencode({'param':f'{CODE},day,{start},{end},2000,'})
+        try:
+            return parse_daily(json.loads(get(url)), start, end)
+        except Exception as exc:
+            errors.append(type(exc).__name__)
+    raise ValueError('指数日线来源不可用（'+'/'.join(errors)+'）')
 
 
 def weekly(rows, last_day):

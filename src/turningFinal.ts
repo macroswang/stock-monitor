@@ -92,6 +92,9 @@ export type TurningFinalFallbackRule = {
   dedupeMinutes: number;
   // Minimum minutes between same-kind accepted signals (main included); 0 disables.
   minSameGap: number;
+  // shape-v3 flag (v3 module only; the v2 engine ignores it): false = fallback emits
+  // tops only, true/absent = the full v2.4 fallback (tops and bottoms).
+  fallbackBottomEnabled?: boolean;
   // Candidate arming deviation floor (v2.4: 0.7% instead of the R1 1.0%).
   minimumDeviationPct: number;
   // Absolute reversal floor in percent of the candidate price (v2.4: 0.15%).
@@ -390,6 +393,31 @@ export function turningFinal(bars: Bar[], rule: Readonly<TurningFinalRule> = TUR
     emitted[event.kind] += 1;
     return {...event, capIndex: emitted[event.kind]};
   });
+}
+
+// Shared raw streams for the shape-v3 module (additive; the v2 entry points above are
+// unchanged and the v2 golden still locks their behaviour). main is already Q-gated and
+// cap-selected among itself; fallback is the raw causal fallback stream (quality attached)
+// so a caller can apply extra filters before its own C1 merge.
+export type TurningFinalStreams = {main: TurningFinalObservation[]; fallback: TurningFinalObservation[]};
+
+export function turningFinalStreams(bars: Bar[], rule: Readonly<TurningFinalRule> = TURNING_FINAL_RULE): TurningFinalStreams {
+  const parsed = parseInput(bars, rule);
+  if (!parsed) return {main: [], fallback: []};
+  const main = select(kernel(parsed, rule, {armRsi: () => true, rsiConfirm: true, quality: rule.quality}),
+    rule.qualityTauEmit, rule.dailyCapPerKind);
+  const fallback = rule.fallback;
+  if (!fallback || !fallback.enabled) return {main, fallback: []};
+  return {
+    main,
+    fallback: kernel(parsed, rule, {
+      armRsi: index => fallback.rsiArm || index >= fallback.earlyLimit,
+      rsiConfirm: fallback.rsiConfirm,
+      quality: fallback.quality,
+      minimumDeviationPct: fallback.minimumDeviationPct,
+      reversalMinPct: fallback.reversalMinPct,
+    }),
+  };
 }
 
 // Diagnostic only: the kernel stream BEFORE the quality gate and cap, with quality

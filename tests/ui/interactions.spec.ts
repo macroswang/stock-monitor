@@ -298,11 +298,13 @@ test('actual missing-side caches show candidate bottom and top with concise inde
   await rpc('__audit_cache',{code:'sh603002',day:'2026-10-19',data:{date:'2026-10-19',source:'shape-ui-test-only',bars:c.bars}});
   await page.reload();await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-19');
   const chart=page.getByLabel('分时价格及分钟成交量');
-  const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey||m.qualityKey).map((m:any)=>({coord:m.coord,shape:m.observationKey||null,q1:m.qualityKey||null,label:m.label.show,symbol:m.symbol}));});
+  const marks=()=>chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.observationKey||m.qualityKey).map((m:any)=>({coord:m.coord,shape:m.observationKey||null,q1:m.qualityKey||null,label:m.label.show,symbol:m.symbol,kind:m.turningKind,value:m.value,promoted:!!m.promotedBottom||!!m.promotedTop}));});
   await expect.poll(async()=>{const all=await marks();return all.filter((m:any)=>m.shape).map((m:any)=>m.coord);}).toEqual(turningShapes(c.bars).map(m=>[m.time,m.price]));
   const all=await marks();expect(all.filter((m:any)=>m.q1).map((m:any)=>m.coord)).toEqual(c.expectedQ1.map((m:any)=>[m.time,m.price]));
-  expect(all.filter((m:any)=>m.label).length).toBe(turningShapes(c.bars).length);
-  for(const m of all.filter((m:any)=>m.q1&&!m.shape)){expect(m.symbol).toBe('circle');expect(m.label).toBe(false);}
+  // 用户规则：Q1 顶/底都按对应信号显示（徽标可见、文案=顶/底信号）。
+  const q1Only=all.filter((m:any)=>m.q1&&!m.shape);
+  expect(all.filter((m:any)=>m.label).length).toBe(all.length);
+  for(const m of q1Only){expect(m.symbol).toBe('circle');expect(m.label).toBe(true);expect(m.value).toBe(m.kind==='底'?'底信号':'顶信号');expect(m.promoted).toBe(true);}
   expect(new Set(all.map((m:any)=>m.coord[0])).size).toBe(all.length);
   await expect(page.getByRole('checkbox',{name:'显示Q1质量',exact:true})).toHaveCount(0);
  }
@@ -487,8 +489,11 @@ test('daily and weekly tooltips stay inside the chart and switch away from the i
   await hover(.35);const first=(await tooltip.locator('..').boundingBox())!;
   expect(first.y).toBeGreaterThanOrEqual(box.y+7);expect(first.y+first.height).toBeLessThanOrEqual(box.y+box.height);
   expect(Math.abs(first.x+first.width-(card.x+card.width-13))).toBeLessThan(3);
-  expect(first.width).toBeLessThanOrEqual(325);expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(10);
+  // 用户 2026-11-12 反馈：日K/周K 浮窗偏大，要求紧凑；收紧尺寸上限防止回退。
+  expect(first.width).toBeLessThanOrEqual(260);expect(first.height).toBeLessThanOrEqual(150);
+  expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(9.5);
   await expect(tooltip).toContainText('开盘：');await expect(tooltip).toContainText('成交量：');
+  await tooltip.locator('..').screenshot({path:'../../outputs/compact-tooltip-20261113/'+(view==='周K'?'weekly':'daily')+'-tooltip-compact.png'});
   expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
   await hover(.75);const second=(await tooltip.locator('..').boundingBox())!;

@@ -381,13 +381,15 @@ def _parse_index_rows(payload, code):
 
 
 def _tencent_daily(code, count, parser):
+    # fqkline/get 已被来源 WAF 拒绝（2026-11-12 起 HTTP 501）；同一响应的 kline/kline 优先，旧路径保留回退。
     errors = []
     for host in KLINE_HOSTS:
-        url = f'https://{host}/appstock/app/fqkline/get?' + urlencode({'param': f'{code},day,,,{count},'})
-        try:
-            return parser(json.loads(get(url)), code)
-        except Exception as exc:
-            errors.append(type(exc).__name__)
+        for path in ('kline/kline', 'fqkline/get'):
+            url = f'https://{host}/appstock/app/{path}?' + urlencode({'param': f'{code},day,,,{count},'})
+            try:
+                return parser(json.loads(get(url)), code)
+            except Exception as exc:
+                errors.append(type(exc).__name__)
     raise ValueError('腾讯日线未取得（' + '/'.join(errors) + '）')
 
 

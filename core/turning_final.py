@@ -294,6 +294,28 @@ def signals(bars, rule=None):
     return capped
 
 
+def turning_final_streams(bars, rule=None):
+    """Shared raw streams for the shape-v3 module (additive; the v2 entry points above
+    are unchanged and the v2 golden still locks their behaviour). main is already Q-gated
+    and cap-selected among itself; fallback is the raw causal fallback stream (quality
+    attached) so a caller can apply extra filters before its own C1 merge."""
+    rule = rule or DEFAULT_RULE
+    parsed = _parse(bars, rule)
+    if not parsed:
+        return dict(main=[], fallback=[])
+    main = _select(_kernel(parsed, rule, quality=rule['quality']),
+                   rule['quality_tau_emit'], rule['daily_cap_per_kind'])
+    fallback = rule.get('fallback')
+    if not fallback or not fallback.get('enabled'):
+        return dict(main=main, fallback=[])
+    raw = _kernel(parsed, rule, quality=fallback['quality'],
+                  rsi_arm=lambda index: fallback['rsi_arm'] or index >= fallback['early_limit'],
+                  rsi_confirm=fallback['rsi_confirm'],
+                  minimum_deviation_pct=fallback['minimum_deviation_pct'],
+                  reversal_min_pct=fallback['reversal_min_pct'])
+    return dict(main=main, fallback=raw)
+
+
 def candidates(bars, rule=None):
     """Diagnostic only: the kernel stream BEFORE the quality gate and cap."""
     rule = rule or DEFAULT_RULE

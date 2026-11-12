@@ -14,8 +14,18 @@ class MinuteCache:
    if refresh:
     now=now_cn();closed=calendar(now.year);clock=now.strftime('%H:%M:%S')
     if day!=now.date().isoformat():raise ValueError('实时分时只能刷新今天')
-    if now.weekday()>=5 or closed is None or any(first<=day<=last for first,last in closed) or not ('09:20:00'<=clock<'11:30:00' or '13:00:00'<=clock<'15:00:00'):
+    if now.weekday()>=5 or closed is None or any(first<=day<=last for first,last in closed):
      return dict(status='paused')
+    session='09:20:00'<=clock<'11:30:00' or '13:00:00'<=clock<'15:00:00'
+    if not session:
+     # 收盘后一次性补全：只放行“当天已有部分分钟”的残缺缓存（如股票池盘中入池时的半日快照）。
+     # 完整缓存直接返回、无缓存/午休/盘前仍暂停，避免额外网络请求。
+     if clock<'15:00:00':return dict(status='paused')
+     cached=self.app.store.getcache(code,'minute',day)
+     if not cached:return dict(status='paused')
+     bars=(cached[0].get('data') or {}).get('bars') or []
+     last=str((bars[-1] if bars else {}).get('time') or '')
+     if last>='15:00':return dict(status='cached')
    if not refresh and self.app.store.getcache(code,'minute',day):return dict(status='cached')
    old=self.app.store.query('SELECT * FROM minute_requests WHERE code=?',(code,))
    rows=self.app.store.getcache(code,'minute')

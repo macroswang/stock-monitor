@@ -1985,3 +1985,38 @@ test('console：瀑布流浏览/排序/筛选/详情/回测无 console error 与
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
 });
+
+test('股票池展开当天缓存只有上午数据时，收盘后自动补全到 15:00',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-12T16:15:00+08:00')});
+  await boot(page,{today:'2026-11-12'});
+  await page.evaluate(()=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;
+    w.poolStaleEnsures=0;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      if(command==='rpc'&&params.method==='minute_ensure'&&params.args?.refresh===true)w.poolStaleEnsures++;
+      const result=await original(command,params);
+      if(command==='rpc'&&params.method==='chart'&&params.args?.code==='sz000101'&&params.args.kind==='minute'){
+        const morning=[
+          {time:'09:30',close:'10.00',volume:100,complete:true,average:'10.00'},
+          {time:'10:00',close:'10.02',volume:120,complete:true,average:'10.01'},
+          {time:'11:30',close:'10.05',volume:90,complete:true,average:'10.02'},
+        ];
+        const bars=w.poolStaleEnsures?[...morning,{time:'15:00',close:'10.20',volume:300,complete:true,average:'10.10'}]:morning;
+        return [{day:'2026-11-12',data:{bars,previous_close:'10'}}];
+      }
+      return result;
+    };
+  });
+  const row=page.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')});
+  await row.click();
+  const detail=page.getByRole('region',{name:'详情 甲机器人'});
+  // 收盘后缓存残缺：StockChartPanel 自动补取一次当天分时（无此修复时状态会停在“至 11:30”）。
+  await expect.poll(()=>page.evaluate(()=>(window as any).poolStaleEnsures)).toBeGreaterThan(0);
+  await expect(detail.locator('.scp-state')).toContainText('分时 2026-11-12 · 至 15:00');
+  const value=await detail.locator('.chart').evaluate(async el=>{
+    const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);
+    const option=e.getInstanceByDom(el).getOption();return option.series.find((s:any)=>s.name==='价格').data[option.xAxis[0].data.indexOf('15:00')];
+  });
+  expect(value).toBe(10.2);
+  await page.screenshot({path:'../../outputs/stock-pool-stale-fix-20261113/screenshots/pool-after-close-full-day.png'});
+});

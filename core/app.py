@@ -488,7 +488,7 @@ class App:
             quote_url='https://qt.gtimg.cn/q='+code,
             minute_url='https://web.ifzq.gtimg.cn/appstock/app/day/query?code='+code,
             history_minute_url='https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketDataService.getKLineData?symbol='+code+'&scale=1&ma=no&datalen=1970',
-            daily_url='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param='+code+',day,开始日期,结束日期,2000,')
+            daily_url='https://web.ifzq.gtimg.cn/appstock/app/kline/kline?param='+code+',day,开始日期,结束日期,2000,')
 
     def call(self,method,args):
         if method.startswith("paper_"):

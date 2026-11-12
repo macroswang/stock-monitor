@@ -1,5 +1,9 @@
 import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
 import {autoTradeMarks,autoTradeRecords,autoTradeDetails,type AutoTradePoint,type AutoTradeChart} from '../../src/autoTradeMarks';
+import {turningFinal,TURNING_FINAL_MODES} from '../../src/turningFinal';
+import {turningFinalV3} from '../../src/turningFinalV3';
+import type {Bar} from '../../src/models';
 const day='2026-11-03';
 const point:AutoTradePoint={id:'one',account_id:'a',broker_name:'银河',account_masked:'400***162',code:'sh603938',day,side:'buy',status:'accepted',mode:'live',signal_key:'signal',signal_time:'14:03',reference_price:27.89,created_at:day+'T14:03:05+08:00',ordered_at:day+'T14:04:01+08:00',order_price:'27.90',quantity:200,message:'',attempted:true};
 const view=(points:AutoTradePoint[]):AutoTradeChart=>({code:point.code,day,accounts:[],points});
@@ -43,4 +47,24 @@ test('auction and afternoon-open orders anchor to visible chart minutes without 
   const cached={...point,source:'broker_cache' as const,mode:'broker',status:'filled',ordered_at:day+'T'+clock+'+08:00',fill_price:'27.88',filled:200};
   expect(autoTradeMarks(view([cached]),[],day)[0].time).toBe(anchor);expect(autoTradeDetails(cached).join(' ')).toContain('成交时间：'+clock);
  }
+});
+test('auto-trade missing-record detection stays on the v2.4 signal list even when the chart has a v3 mode',()=>{
+ const cases=JSON.parse(readFileSync('tests/ui/fixtures/turning-final-chart-cases.json','utf8'));
+ const c=cases.find((x:any)=>x.code==='sz000981'&&x.source==='tencent');
+ const seed:Bar={time:'09:30',close:String(c.opening_price),average:String(c.opening_price),volume:0,complete:true};
+ const bars:Bar[]=[seed,...c.bars.map((b:any)=>({time:b.time,close:String(b.close),average:String(b.average),volume:b.volume,complete:b.complete}))];
+ const v24=turningFinal(bars,TURNING_FINAL_MODES.zhangle),v3=turningFinalV3(bars);
+ const fallbackBottom=v24.find((e:any)=>e.kind==='bottom');
+ expect(fallbackBottom).toBeTruthy();
+ // v3 (experimental chart mode) intentionally drops fallback bottoms ...
+ expect(v3.some((e:any)=>e.kind===fallbackBottom!.kind&&e.time===fallbackBottom!.time)).toBe(false);
+ const data:AutoTradeChart={code:c.code,day:c.day,accounts:[{id:'a',broker_name:'银河',account_masked:'400***162',buy_enabled:true,sell_enabled:true}],points:[]};
+ // ... so autoTradeMarks must keep receiving the v2.4 list: only then is the missing
+ // execution record for the v2.4-only fallback-bottom signal detected.
+ const withV24=autoTradeRecords(data,[fallbackBottom!],c.day);
+ const withV3=autoTradeRecords(data,v3,c.day);
+ const expectedId='missing|a|'+fallbackBottom!.key;
+ expect(withV24.some(r=>r.point.id===expectedId)).toBe(true);
+ expect(withV3.some(r=>r.point.id===expectedId)).toBe(false);
+ expect(autoTradeMarks(data,[fallbackBottom!],c.day)).toEqual([]); // gaps never render as B/S
 });

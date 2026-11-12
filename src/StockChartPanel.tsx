@@ -28,6 +28,25 @@ type MinuteBundle={bars:Bar[];shapeOpening:Bar[];day:string;previousClose:number
 
 const dateText=(value:Date)=>value.toLocaleDateString('sv-SE');
 const todayText=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
+// 股票池行详情的工作日缓存可能是在盘中（如 11:43 入池）抓取的半天快照；收盘后展开时
+// 必须主动补全当天剩余分钟，否则图表会停在“至 11:30”且右侧空白（用户 2026-11-12 反馈）。
+const beijingClock=(now:Date)=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(now);const pick=(type:string)=>parts.find(part=>part.type===type)?.value||'00';return pick('hour')+':'+pick('minute');};
+const expectedLastMinute=(now:Date):string|null=>{
+ if(exchangeCalendar.tradingDay(todayText())!==true)return null;
+ const clock=beijingClock(now);
+ if(clock<'09:31')return null;
+ if(clock<='11:30')return clock;
+ if(clock<'13:01')return '11:30';
+ if(clock<='15:00')return clock;
+ return '15:00';
+};
+/** 收盘后判断当天缓存是否残缺（只处理“当天已有部分分钟”的快照，历史日保持原样）。 */
+const staleAfterClose=(bundle:MinuteBundle,now:Date):boolean=>{
+ if(bundle.day!==todayText()||!bundle.bars.length)return false;
+ const clock=beijingClock(now),expected=expectedLastMinute(now);
+ if(!expected||clock<'15:01')return false;
+ return (bundle.bars.at(-1)?.time||'')<expected;
+};
 const yearsAgoText=(years:number)=>{const value=new Date();value.setFullYear(value.getFullYear()-years);return dateText(value);};
 const readError=(cause:unknown)=>cause instanceof Error?cause.message:'图表加载失败';
 
@@ -59,6 +78,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
   const token=useRef(0);
   const minuteLoaded=useRef(false);
   const dailyLoaded=useRef(false);
+  const staleRefreshed=useRef(false);
   const loadingRef=useRef({minute:false,daily:false});
   const onErrorRef=useRef(onError);onErrorRef.current=onError;
 
@@ -142,6 +162,14 @@ export default function StockChartPanel({request,code,name,initialView='minute',
   useEffect(()=>{
     if(view==='minute')void ensureMinute();else void ensureDaily();
   },[view,ensureMinute,ensureDaily]);
+
+  // 收盘后补全当天残缺缓存：仅一次；盘中由 live 轮询负责刷新，预览/历史日不触发。
+  useEffect(()=>{
+    if(!live||view!=='minute'||!minute||staleRefreshed.current)return;
+    if(!staleAfterClose(minute,new Date()))return;
+    staleRefreshed.current=true;
+    void ensureMinute(true);
+  },[live,view,minute,ensureMinute]);
 
   useEffect(()=>{
     if(!live||view!=='minute')return;

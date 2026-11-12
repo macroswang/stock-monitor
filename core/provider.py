@@ -76,10 +76,18 @@ class Tencent:
         return result
 
     def daily(self,code,start,end):
-        raw=json.loads(get('https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?'+urlencode(
-            {'param':f'{symbol(code)},day,{start},{end},2000,'})))
-        data=raw['data'][code]
-        rows=data.get('day',[])
-        if 'day' not in data: raise ValueError('日线来源没有返回未复权数据字段')
-        return [dict(date=r[0],open=r[1],close=r[2],high=r[3],low=r[4],volume=str(Decimal(r[5])*(1 if code.startswith('sh688') else 100)),raw_volume=r[5],raw_volume_unit='shares' if code.startswith('sh688') else 'hands',volume_unit='shares',
-                     source='tencent',adjustment='none') for r in rows if start<=r[0]<=end]
+        # 2026-11-12：原 fqkline/get 路径被来源 WAF 拒绝（HTTP 501），改用同一响应的
+        # kline/kline，并保留旧路径作回退；两者 param 与 day 数组格式一致。
+        errors=[];ident=symbol(code)
+        for path in ('kline/kline','fqkline/get'):
+            try:
+                raw=json.loads(get('https://web.ifzq.gtimg.cn/appstock/app/'+path+'?'+urlencode(
+                    {'param':f'{ident},day,{start},{end},2000,'})))
+                data=raw['data'][ident]
+                rows=data.get('day',[])
+                if 'day' not in data: raise ValueError('日线来源没有返回未复权数据字段')
+                return [dict(date=r[0],open=r[1],close=r[2],high=r[3],low=r[4],volume=str(Decimal(r[5])*(1 if ident.startswith('sh688') else 100)),raw_volume=r[5],raw_volume_unit='shares' if ident.startswith('sh688') else 'hands',volume_unit='shares',
+                             source='tencent',adjustment='none') for r in rows if start<=r[0]<=end]
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+        raise ValueError('日线来源不可用（'+'/'.join(errors)+'）')

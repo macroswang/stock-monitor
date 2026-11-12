@@ -1,7 +1,7 @@
 """Provider metadata and factory; credentials never belong in display metadata."""
 from decimal import Decimal
 SOURCES=[dict(id='tencent',name='腾讯行情',available=True,website='https://gu.qq.com/',
-    endpoints=dict(quote='https://qt.gtimg.cn/q=',minute='https://web.ifzq.gtimg.cn/appstock/app/day/query',daily='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get'),
+    endpoints=dict(quote='https://qt.gtimg.cn/q=',minute='https://web.ifzq.gtimg.cn/appstock/app/day/query',daily='https://web.ifzq.gtimg.cn/appstock/app/kline/kline'),
     description='公开行情接口；分钟通常覆盖最近数日。日线未复权；客户端统一成交量为股。'),
     dict(id='sina',name='新浪行情',available=False,website='https://finance.sina.com.cn/',endpoints=dict(minute='https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketDataService.getKLineData'),
     description='已接入历史补充，按整日缓存；开盘量及分钟边界不同，规则回放未认证。实时主来源仍为腾讯。')]

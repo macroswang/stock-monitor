@@ -235,3 +235,10 @@
 .turning-mode-select select{font-size:11px;padding:3px 6px;background:#1d2a3f;color:#d5e0f1;border:1px solid #34465e;border-radius:4px}
 .minute-detail .chart-display-options .turning-mode-select{font-size:10px;min-height:20px}
 .stock-chart-panel .turning-mode-select{display:none}
+
+/* 日K/周K 浮窗：紧凑版（用户 2026-11-12 反馈：浮窗偏大，需紧凑） */
+.daily-tooltip.docked-tooltip{width:max-content;max-width:min(300px,calc(100vw - 40px));min-width:0;grid-template-columns:repeat(2,max-content);gap:0 9px;font-size:9px;line-height:1.25}
+.daily-tooltip.docked-tooltip>div:first-child{font-size:10px;line-height:1.25;margin:0 0 2px}
+.daily-tooltip.docked-tooltip .quote-detail{gap:4px;padding:0}
+.daily-tooltip.docked-tooltip .quote-wide{grid-column:1/-1}
+.daily-tooltip.docked-tooltip .tooltip-comparison{gap:2px 10px;margin-top:3px;padding-top:3px}

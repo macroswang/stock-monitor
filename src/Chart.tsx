@@ -8,12 +8,18 @@ import {topVolumeMarks} from './volumeMarks';
 import {turningQualityQ1} from './turningQualityQ1';
 
 import {turningDisplayPoints} from './turningDisplay';
-import {turningFinal,TURNING_FINAL_MODES,type TurningFinalMode} from './turningFinal';
+import {turningFinal,TURNING_FINAL_MODES} from './turningFinal';
+import {turningFinalV3} from './turningFinalV3';
 
-// Chart top/bottom mode. Default = high-coverage zhangle (v2.4), stable (v2.0) is opt-in.
-// Persisted across the page chart and the linked K-line minute chart via the same key.
+// Chart top/bottom mode. Default = zhangle (shape-v2.4, the auto-trading signal);
+// shape-v3 is an experimental feature flag (default off) selectable for comparison, and
+// stable v2.0 stays available. Persisted across the page chart and the linked K-line
+// minute chart via the same key. Auto-trading and autoTradeMarks always use v2.4.
+type TurningChartMode='v3'|'zhangle'|'stable';
 const TURNING_MODE_KEY='stock-monitor-turning-mode-v1';
-const readTurningMode=():TurningFinalMode=>{try{return localStorage.getItem(TURNING_MODE_KEY)==='stable'?'stable':'zhangle';}catch{return 'zhangle';}};
+const TURNING_MODE_LABELS:Record<TurningChartMode,string>={v3:'贴近涨乐通 v3（实验）',zhangle:'贴近涨乐通 v2.4（默认）',stable:'稳健 v2.0'};
+const chartTurningEvents=(bars:Bar[],mode:TurningChartMode)=>mode==='v3'?turningFinalV3(bars):turningFinal(bars,TURNING_FINAL_MODES[mode]);
+const readTurningMode=():TurningChartMode=>{try{const stored=localStorage.getItem(TURNING_MODE_KEY);return stored==='v3'||stored==='stable'?stored:'zhangle';}catch{return 'zhangle';}};
 import {paperChartMarks,paperTradeColors} from './paperMarks';
 import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
 import {splitMinuteVolume} from './volumeFlow';
@@ -97,9 +103,10 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [showOpening,setShowOpening]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-opening')!=='false';}catch{return true;}});
  const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
  const showQuality=true;
- // zhangle = high-coverage v2.4 (default); stable = v2.0. Both hard-capped at 3/kind/day.
- const [turningMode,setTurningMode]=useState<TurningFinalMode>(readTurningMode);
- const updateTurningMode=(mode:TurningFinalMode)=>{setTurningMode(mode);try{localStorage.setItem(TURNING_MODE_KEY,mode);window.dispatchEvent(new window.Event('turning-display-change'));}catch{}};
+ // v3 = experimental (feature flag, default off); zhangle = v2.4 (default/trading); stable = v2.0.
+ // All three are hard-capped at 3/kind/day.
+ const [turningMode,setTurningMode]=useState<TurningChartMode>(readTurningMode);
+ const updateTurningMode=(mode:TurningChartMode)=>{setTurningMode(mode);try{localStorage.setItem(TURNING_MODE_KEY,mode);window.dispatchEvent(new window.Event('turning-display-change'));}catch{}};
  const [plotHeight,setPlotHeight]=useState(0);
  const minutePanels=minutePanelLayout(plotHeight||350,compact?0:30);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
@@ -115,9 +122,15 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const visibleMarks=isCandleView(view)?[]:topVolumeMarks(minute,events,showOpening,showTriggered);
  const latestEvent=events.filter(e=>visibleMarks.some(m=>m.coord[0]===e.candidate_time)).sort((a,b)=>a.event_label.localeCompare(b.event_label)||a.candidate_time.localeCompare(b.candidate_time)).at(-1);
  const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
- const finalTurns=isCandleView(view)?[]:turningFinal(shapeBars,TURNING_FINAL_MODES[turningMode]);
- const turnCounts={bottom:finalTurns.filter(m=>m.kind==='bottom').length,top:finalTurns.filter(m=>m.kind==='top').length};
- const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?finalTurns:[],showQuality?turningQualityQ1(minute):[],showShapes,showQuality);
+ const finalTurns=isCandleView(view)?[]:chartTurningEvents(shapeBars,turningMode);
+ const q1Turns=isCandleView(view)?[]:turningQualityQ1(minute);
+ // 用户规则（2026-11-12）：Q1 顶/底成立时也分别标记为“顶/底”信号；与同 kind 的 v2 信号同分钟出现时
+ // 按既有显示规则合并（shape 优先、Q1 只在剩余槽位补位、每日每类≤3），且同一股价不重复出现。
+ // “底/顶”计数器都统计实际显示的同类信号（v2 + 补位 Q1）。
+ const capPoints=turningDisplayPoints(finalTurns,q1Turns,true,true);
+ // 用户规则：Q1 顶/底都升级为对应信号；“底/顶”计数器统计实际显示的同类信号数（v2 + 补位 Q1，均≤3）。
+ const turnCounts={bottom:capPoints.filter(m=>m.kind==='bottom').length,top:capPoints.filter(m=>m.kind==='top').length};
+ const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?finalTurns:[],showQuality?q1Turns:[],showShapes,showQuality);
  const chosen=choice?.scope===scope&&(choice.kind==='位置'?minute.some(b=>b.time===choice.time&&b.complete):choice.kind?selectableTurns.some(m=>m.time===choice.time&&(m.kind==='bottom'?'底':'顶')===choice.kind):visibleMarks.some(m=>m.coord[0]===choice.time))?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const quotePrices=[...minute.map(b=>+b.close),...(currentPrice?[currentPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
@@ -208,7 +221,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   // display mode may switch to stable, but order matching must follow the trading rule.
   const autoTradeShapes=isDay?[]:turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),shapes=isDay||!showShapes?[]:finalTurns;
   const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time));
-  const quality=isDay||!showQuality?[]:turningQualityQ1(minute);
+  const quality=isDay||!showQuality?[]:q1Turns;
   const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
   const volume=isDay?daily.map(b=>+b.volume/10000):aligned.map(b=>b?b.volume/100:null);
   const splits=aligned.map(b=>b?splitMinuteVolume(b,volumeFlow?.day===selectedDay?volumeFlow:undefined):null);
@@ -267,10 +280,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   };
   const observationMarks=observations.map(m=>{
    const color=m.kind==='bottom'?'#ff5b78':'#00bf83',layout=signalLayout(m.price,m.kind==='bottom'?1:-1);
-   return {coord:[m.time,m.price],turningKind:m.kind==='bottom'?'底':'顶',value:m.shape?(m.kind==='bottom'?'底信号':'顶信号'):(m.kind==='bottom'?'Q1底信号':'Q1顶信号'),
-    observationKey:m.shape?.key,qualityKey:m.q1?.key,connectorDirection:layout.direction,connectorDistance:layout.distance,symbol:'circle',symbolSize:chosen?.kind===(m.kind==='bottom'?'底':'顶')&&chosen.time===m.time?6:3,
+   // 用户规则：Q1 顶/底在图表上都按对应“顶/底信号”显示（与 v2 信号相同的徽标/文案）。
+   return {coord:[m.time,m.price],turningKind:m.kind==='bottom'?'底':'顶',value:m.kind==='bottom'?'底信号':'顶信号',
+    observationKey:m.shape?.key,qualityKey:m.q1?.key,promotedBottom:!!m.promotedBottom,promotedTop:!!m.promotedTop,connectorDirection:layout.direction,connectorDistance:layout.distance,symbol:'circle',symbolSize:chosen?.kind===(m.kind==='bottom'?'底':'顶')&&chosen.time===m.time?6:3,
     itemStyle:{color,borderColor:'#fff',borderWidth:chosen?.kind===(m.kind==='bottom'?'底':'顶')&&chosen.time===m.time?2:m.q1?1:0},
-    label:{show:!!m.shape||!showShapes,position:layout.position,distance:layout.distance,formatter:m.kind==='bottom'?'底':'顶',
+    label:{show:true,position:layout.position,distance:layout.distance,formatter:m.kind==='bottom'?'底':'顶',
      color:'#fff',backgroundColor:m.kind==='bottom'?'#c92f53':'#008660',borderColor:color,borderWidth:.6,borderRadius:3,width:14,height:14,padding:0,align:'center',
      fontFamily:'"PingFang SC","Microsoft YaHei",sans-serif',fontSize:9,fontWeight:600,lineHeight:14}};
   });
@@ -283,7 +297,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
    legend:{show:!isDay,data:['价格','均价',...(canOverlay?['上证走势']:[])],top:0,textStyle:{color:'#9dacc5',...(hasMacd?{fontSize:10}: {})},...(hasMacd?{itemWidth:16,itemHeight:8,itemGap:14}: {})},
    tooltip:{trigger:'axis',confine:false,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
-    extraCssText:'padding:7px 9px;pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
+    extraCssText:(isDay?'padding:4px 7px;':'padding:7px 9px;')+'pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
      const canvas=chart.getDom(),bounds=canvas.getBoundingClientRect(),host=canvas.closest('.detail');
      const top=Math.max(8,(isDay?bounds.top:host?.getBoundingClientRect().top??bounds.top)+8);
      const [width,height]=size.contentSize,gap=16,left=8,right=Math.max(left,size.viewSize[0]-width-12);
@@ -312,11 +326,14 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
      }
      for(const point of observations.filter(m=>m.time===aligned[idx]?.time)){
       const observation=(point.shape||point.q1)!;
-      rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'信号':''}：${price(point.price)} 元`,
+      // Q1 顶/底均按对应“顶/底信号”呈现；仅在来源不同时补一行“来源：Q1 质量点”。
+      const label=point.kind==='bottom'?'底信号':'顶信号';
+      rows.push(`${label}：${price(point.price)} 元`,
        `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
        `${point.shape?'发出时间':'确认时间'}：${point.time} · ${price(point.price)} 元`);
+      if(!point.shape)rows.push('来源：Q1 质量点');
       if(point.shape&&Number.isFinite(point.shape.quality)){
-       rows.push(`模式：${turningMode==='zhangle'?'贴近涨乐通（实验）':'稳健（少而准）'}`,
+       rows.push(`模式：${TURNING_MODE_LABELS[turningMode]}`,
         `质量分：${point.shape.quality!.toFixed(2)}`,
         `当日上限：底 ${turnCounts.bottom}/3 · 顶 ${turnCounts.top}/3`);
       }
@@ -330,7 +347,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       const row=document.createElement('div');
       const split=text.indexOf('：');
       if(split>=0){const label=document.createElement('span');label.textContent=text.slice(0,split+1);const value=document.createElement('span');value.textContent=text.slice(split+1).trim();row.append(label,value);row.className='quote-detail';if(text.startsWith('涨停：'))value.style.color='#ed7d81';if(text.startsWith('跌停：'))value.style.color='#51c7aa';if(text.startsWith('涨跌幅：'))value.style.color=text.includes('：-')?'#51c7aa':text.includes('：+')?'#ed7d81':'#e7edf7';}else row.textContent=text;
-      if(split<0||/^(基准|候选|确认|发出|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发)：/.test(text)))row.classList.add('quote-wide');
+      if(split<0||/^(基准|候选|确认|发出|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发|MA\d+)：/.test(text)))row.classList.add('quote-wide');
       if(/^相对(触发|底|顶|位置)涨跌幅/.test(text)){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
      }
      if(comparison.childElementCount)root.append(comparison);
@@ -390,7 +407,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   <label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>开盘量</label>
   <label className="opening-volume-toggle"><input aria-label="高量" type="checkbox" checked={showTriggered} onChange={e=>{setShowTriggered(e.target.checked);try{localStorage.setItem('stock-monitor-show-trigger-volume',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>高量</label>
   <label className="opening-volume-toggle"><input aria-label="底/顶" type="checkbox" checked={showShapes} onChange={e=>{setShowShapes(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-shapes-v1',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>底/顶 <span className="turning-cap-count" data-testid="turning-cap-count">底 {turnCounts.bottom}/3 · 顶 {turnCounts.top}/3</span></label>
-  <label className="turning-mode-select" title="自动下单固定使用贴近涨乐通信号">顶底模式<select aria-label="顶底模式" value={turningMode} onChange={e=>updateTurningMode(e.target.value==='stable'?'stable':'zhangle')}><option value="zhangle">贴近涨乐通（实验）</option><option value="stable">稳健（少而准）</option></select></label>
+  <label className="turning-mode-select" title="自动下单与自动标注仍使用 v2.4 信号；v3 实验：顶多底少，相似度F0.5略升但底部覆盖/质量下降">顶底模式<select aria-label="顶底模式" value={turningMode} onChange={e=>updateTurningMode((['v3','stable','zhangle'].includes(e.target.value)?e.target.value:'zhangle') as TurningChartMode)}><option value="zhangle">贴近涨乐通 v2.4（默认）</option><option value="v3">贴近涨乐通 v3（实验：顶多底少）</option><option value="stable">稳健 v2.0</option></select></label>
 
  </div>}/>}{tradeHint?.scope===scope&&<div className="chart-trade-hint" role="status">{tradeHint.text}</div>}<div className="chart-shell"><div className={'chart'+(compact?' compact-chart':'')+(hasMacd?' macd-chart':'')} ref={ref} onContextMenu={contextTrade} tabIndex={isCandleView(view)?0:undefined} onClick={()=>{if(isCandleView(view))ref.current?.focus();}} onKeyDown={e=>{if(isCandleView(view)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(isCandleView(view)&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();zoomCandles(e.key==='ArrowUp'?-1:1);}else if(isCandleView(view)&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedCandle||selectedDay);}} aria-label={view==='weekly'?'周K线及成交量':view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>
  <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?minutePanels.headers[0]:'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>

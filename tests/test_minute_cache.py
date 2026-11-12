@@ -64,3 +64,20 @@ class MinuteCacheTest(unittest.TestCase):
   with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,9,20,tzinfo=CN)):
    self.assertEqual(self.a.minute_cache.ensure('sz300058','2026-11-12',refresh=True)['status'],'downloaded')
   self.a.provider.minutes.assert_called_once_with('sz300058')
+
+ def test_after_close_refresh_completes_partial_same_day_cache(self):
+  code='sh600103';day='2026-11-12'
+  self.a.store.cache(code,'minute',day,dict(date=day,bars=[dict(time='11:30',close='3.61',volume=100,complete=True)]))
+  self.a.provider.minutes.return_value=[dict(date=day,bars=[dict(time='11:30',close='3.61',volume=100,complete=True),dict(time='15:00',close='3.60',volume=200,complete=True)])]
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,16,15,tzinfo=CN)),patch('core.minute_cache.time.time',return_value=2000):
+   result=self.a.minute_cache.ensure(code,day,refresh=True)
+  self.assertEqual(result['status'],'downloaded')
+  self.assertEqual(self.a.store.getcache(code,'minute',day)[0]['data']['bars'][-1]['time'],'15:00')
+  self.a.provider.minutes.assert_called_once_with(code)
+ def test_after_close_complete_cache_returns_without_network(self):
+  code='sh600103';day='2026-11-12'
+  self.a.store.cache(code,'minute',day,dict(date=day,bars=[dict(time='09:31',close='3.6',volume=1,complete=True),dict(time='15:00',close='3.6',volume=1,complete=True)]))
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,16,15,tzinfo=CN)),patch('core.minute_cache.time.time',return_value=2000):
+   result=self.a.minute_cache.ensure(code,day,refresh=True)
+  self.assertEqual(result['status'],'cached')
+  self.a.provider.minutes.assert_not_called()
