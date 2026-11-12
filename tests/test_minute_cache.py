@@ -1,5 +1,7 @@
 import tempfile,unittest
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
+from datetime import datetime
+from core.provider import CN
 from core.app import App
 
 class MinuteCacheTest(unittest.TestCase):
@@ -26,3 +28,39 @@ class MinuteCacheTest(unittest.TestCase):
  def test_cooldown_survives_restart(self):
   self.a.provider.minutes.return_value=[];self.a.minute_cache.ensure('sh603002','2026-10-15');self.a.store.db.close()
   self.a=App(self.tmp.name,False);self.a.provider=Mock();self.a.minute_cache.ensure('sh603002','2026-10-15');self.a.provider.minutes.assert_not_called()
+ def test_live_refresh_updates_cached_non_watch_stock_and_throttles_without_trading(self):
+  code='sz300058';day='2026-11-12'
+  self.a.store.cache(code,'minute',day,dict(date=day,bars=[dict(time='11:30',close='15.20',volume=100,complete=True)]))
+  self.a.provider.minutes.return_value=[dict(date='2026-11-11',bars=[dict(time='15:00',close='13.00',volume=100,complete=True)]),dict(date=day,bars=[dict(time='13:01',close='14.56',volume=200,complete=True)])]
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,14,0,tzinfo=CN)),patch('core.minute_cache.time.time',return_value=1000):
+   self.a.minute_cache.ensure(code,day,refresh=True);self.a.minute_cache.ensure(code,day,refresh=True)
+  self.a.provider.minutes.assert_called_once_with(code)
+  self.assertEqual(self.a.store.getcache(code,'minute',day)[0]['data']['bars'][-1]['time'],'13:01')
+  self.assertFalse(self.a.store.getcache(code,'minute','2026-11-11'))
+  self.assertFalse(self.a.store.query('SELECT 1 FROM watch WHERE code=?',(code,)))
+  self.assertFalse(self.a.store.query('SELECT 1 FROM events'))
+  self.assertFalse(self.a.store.query('SELECT 1 FROM broker_requests'))
+ def test_live_refresh_failure_preserves_cache_and_retries_after_cooldown(self):
+  code='sz300058';day='2026-11-12';original=dict(date=day,bars=[dict(time='11:30',close='15.20',volume=100,complete=True)])
+  self.a.store.cache(code,'minute',day,original)
+  self.a.provider.minutes.side_effect=ValueError('offline')
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,14,0,tzinfo=CN)),patch('core.minute_cache.time.time',return_value=1000):
+   for _ in range(2):
+    with self.assertRaises(ValueError):self.a.minute_cache.ensure(code,day,refresh=True)
+  self.a.provider.minutes.assert_called_once()
+  self.assertEqual(self.a.store.getcache(code,'minute',day)[0]['data']['bars'],original['bars'])
+  self.a.provider.minutes.side_effect=None;self.a.provider.minutes.return_value=[dict(date=day,bars=[dict(time='13:02',close='14.56',volume=200,complete=True)])]
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,14,0,tzinfo=CN)),patch('core.minute_cache.time.time',return_value=1031):
+   self.a.minute_cache.ensure(code,day,refresh=True)
+  self.assertEqual(self.a.store.getcache(code,'minute',day)[0]['data']['bars'][-1]['time'],'13:02')
+ def test_live_refresh_pauses_outside_verified_sessions(self):
+  for stamp in ('2026-11-12T09:19:59','2026-11-12T11:30:00','2026-11-12T12:59:59','2026-11-12T15:00:00','2026-11-14T10:00:00','2026-10-01T10:00:00'):
+   now=datetime.fromisoformat(stamp).replace(tzinfo=CN)
+   with self.subTest(stamp=stamp),patch('core.minute_cache.now_cn',return_value=now):
+    self.assertEqual(self.a.minute_cache.ensure('sz300058',now.date().isoformat(),refresh=True)['status'],'paused')
+  self.a.provider.minutes.assert_not_called()
+  self.assertFalse(self.a.store.query("SELECT 1 FROM minute_requests WHERE code='sz300058'"))
+  self.a.provider.minutes.return_value=[dict(date='2026-11-12',bars=[dict(time='09:20',close='14',volume=100,complete=True)])]
+  with patch('core.minute_cache.now_cn',return_value=datetime(2026,11,12,9,20,tzinfo=CN)):
+   self.assertEqual(self.a.minute_cache.ensure('sz300058','2026-11-12',refresh=True)['status'],'downloaded')
+  self.a.provider.minutes.assert_called_once_with('sz300058')

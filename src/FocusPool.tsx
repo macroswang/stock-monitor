@@ -244,7 +244,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     {groups.length>0&&<div className="pt-groups">
       {groupColumns.map((column,index)=><div className="pt-group-col" key={'col-'+(index+1)}>
         {column.map(group=><GroupSection key={group.key} group={group} sort={sort} onSort={onSort} openCode={openCode} onToggle={toggleRow}
-          readOnly={readOnly} busy={busy} request={request} isWatched={isWatched}
+          readOnly={readOnly} busy={busy} request={request} live={active&&!preview} isWatched={isWatched}
           pinned={pinnedSet.has(group.label)} onTogglePin={togglePin} showAddedTime={filter.chip==='alert'}
           onPick={pick} onWatch={addWatch} onDelete={remove}/>)}
       </div>)}
@@ -256,9 +256,9 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   </section>;
 }
 
-function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,isWatched,pinned,onTogglePin,showAddedTime,onPick,onWatch,onDelete}:{
+function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,live,isWatched,pinned,onTogglePin,showAddedTime,onPick,onWatch,onDelete}:{
   group:EntryGroup;sort:SortState;onSort:(key:SortKey)=>void;openCode:string;onToggle:(code:string)=>void;
-  readOnly:boolean;busy:boolean;request:Request;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;showAddedTime:boolean;
+  readOnly:boolean;busy:boolean;request:Request;live:boolean;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;showAddedTime:boolean;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
@@ -317,7 +317,7 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
               <span className="pt-cell pt-num pt-yellow pt-col-turnover" role="cell" title="换手率(%)">{isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2):'—'}</span>
               <span className={'pt-cell pt-tag pt-col-tags'+(related==='—'?' is-empty':'')} role="cell" title={relatedTagsTitle(entry)}>{related}</span>
             </div>
-            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} watched={isWatched(entry.code)} request={request}
+            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} watched={isWatched(entry.code)} request={request} live={live}
               onPick={onPick} onWatch={onWatch} onDelete={onDelete}/>}
           </Fragment>;
         })}
@@ -326,8 +326,8 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
   </section>;
 }
 
-function DetailRow({id,entry,readOnly,busy,watched,request,onPick,onWatch,onDelete}:{
-  id:string;entry:Entry;readOnly:boolean;busy:boolean;watched:boolean;request:Request;
+function DetailRow({id,entry,readOnly,busy,watched,request,live,onPick,onWatch,onDelete}:{
+  id:string;entry:Entry;readOnly:boolean;busy:boolean;watched:boolean;request:Request;live:boolean;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
@@ -338,7 +338,7 @@ function DetailRow({id,entry,readOnly,busy,watched,request,onPick,onWatch,onDele
   const current=currentMatchOf(entry);
   return <section className="pt-detail" id={id} role="region" aria-label={'详情 '+entry.name}>
     <div className="pt-detail-chart">
-      <StockChartPanel request={request} code={entry.code} name={entry.name}/>
+      <StockChartPanel request={request} code={entry.code} name={entry.name} live={live}/>
     </div>
     <div className="pt-detail-grid">
       <div className="pt-detail-col">

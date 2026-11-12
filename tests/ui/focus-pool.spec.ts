@@ -1312,7 +1312,83 @@ test('搜索：标签命中的股票重新分组（单只组保留），空结�
 });
 
 // ===== 8. 行详情内嵌图表：tabs/默认分时/日K/周K/放大缩小/请求不重复 =====
-test('详情图表：内嵌 stock-chart-panel、分时/日K/周K tabs、默认分时、切换 aria-label、放大缩小、切换不重复请求',async({page})=>{
+test('股票池展开分时持续取新数据，切走和收起后停止刷新',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-12T14:00:00+08:00')});
+  await boot(page,{today:'2026-11-12'});
+  await page.evaluate(()=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;
+    w.poolMinuteRefreshes=0;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      if(command==='rpc'&&params.method==='minute_ensure'&&params.args.code==='sz000101'&&params.args.refresh===true)w.poolMinuteRefreshes++;
+      const result=await original(command,params);
+      if(command==='rpc'&&params.method==='chart'&&params.args.code==='sz000101'&&params.args.kind==='minute'&&w.poolMinuteRefreshes){
+        const bars=[...result[0].data.bars,{time:'13:01',close:'14.56',volume:100,complete:true}];
+        if(w.poolMinuteRefreshes>=2)bars.push({time:'13:02',close:'14.58',volume:200,complete:true});
+        if(w.poolMinuteComplete)bars.push({time:'15:00',close:'14.60',volume:300,complete:true});
+        return [{day:'2026-11-12',data:{...result[0].data,bars}}];
+      }
+      return result;
+    };
+  });
+  const row=page.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')});
+  await row.click();
+  const detail=page.getByRole('region',{name:'详情 甲机器人'});
+  await expect(detail.locator('.scp-state')).toContainText('至 13:01');
+  await page.clock.runFor(6500);
+  await expect(detail.locator('.scp-state')).toContainText('至 13:02');
+  const value=await detail.locator('.chart').evaluate(async el=>{
+    const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);
+    const option=e.getInstanceByDom(el).getOption();return option.series.find((s:any)=>s.name==='价格').data[option.xAxis[0].data.indexOf('13:02')];
+  });
+  expect(value).toBe(14.58);
+  await page.getByRole('button',{name:'自选监控',exact:true}).click();
+  const before=await page.evaluate(()=>(window as any).poolMinuteRefreshes);
+  await page.clock.runFor(13000);
+  expect(await page.evaluate(()=>(window as any).poolMinuteRefreshes)).toBe(before);
+  await page.getByRole('button',{name:'股票池',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>(window as any).poolMinuteRefreshes)).toBeGreaterThan(before);
+  await page.evaluate(()=>{(window as any).poolMinuteComplete=true;});
+  await page.clock.runFor(6500);
+  await expect(detail.locator('.scp-state')).toContainText('至 15:00');
+  const complete=await page.evaluate(()=>(window as any).poolMinuteRefreshes);
+  await page.clock.runFor(13000);
+  expect(await page.evaluate(()=>(window as any).poolMinuteRefreshes)).toBe(complete);
+  await row.click();
+  const closed=await page.evaluate(()=>(window as any).poolMinuteRefreshes);
+  await page.clock.runFor(13000);
+  expect(await page.evaluate(()=>(window as any).poolMinuteRefreshes)).toBe(closed);
+});
+
+test('股票池分时午休、收盘及节假日周末暂停，到交易时间自动恢复',async({page})=>{
+  await page.clock.install({time:new Date('2026-09-30T11:29:50+08:00')});
+  await boot(page,{});
+  await page.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')}).click();
+  const count=async()=>(await rpcCalls(page)).filter(call=>call.method==='minute_ensure'&&call.args.code==='sz000101'&&call.args.refresh===true).length;
+  const at=async(stamp:string)=>page.clock.fastForward(await page.evaluate(value=>Date.parse(value)-Date.now(),stamp));
+  await expect.poll(count).toBeGreaterThan(0);
+  await at('2026-09-30T11:30:00+08:00');
+  const lunch=await count();
+  await at('2026-09-30T12:59:59+08:00');
+  expect(await count()).toBe(lunch);
+  await at('2026-09-30T13:00:00+08:00');
+  await expect.poll(count).toBeGreaterThan(lunch);
+  await at('2026-09-30T15:00:00+08:00');
+  const close=await count();
+  await at('2026-10-07T14:00:00+08:00');
+  expect(await count()).toBe(close);
+  await at('2026-10-08T09:19:59+08:00');
+  expect(await count()).toBe(close);
+  await at('2026-10-08T09:20:00+08:00');
+  await expect.poll(count).toBeGreaterThan(close);
+  await at('2026-10-09T15:00:00+08:00');
+  const weekend=await count();
+  await at('2026-10-11T14:00:00+08:00');
+  expect(await count()).toBe(weekend);
+  await at('2026-10-12T09:20:00+08:00');
+  await expect.poll(count).toBeGreaterThan(weekend);
+});
+
+test('详情图表：分时实时刷新、日K与周K复用缓存、切换与放大正常',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
   const human=groupOf(page,'人形机器人');
@@ -1359,16 +1435,16 @@ test('详情图表：内嵌 stock-chart-panel、分时/日K/周K tabs、默认�
   await expect(panel).not.toHaveClass(/is-expanded/);
   await expect(panel.getByRole('button',{name:'放大图表'})).toHaveAttribute('aria-pressed','false');
 
-  // 反复切换 tab 不重复请求：分时 chart / 日K history 各只请求一次（同一 code）
+  // 日K/周K复用一次 history；分时在实时模式下允许刷新。
   await tablist.getByRole('tab',{name:'分时'}).click();
   await tablist.getByRole('tab',{name:'日K'}).click();
   await tablist.getByRole('tab',{name:'分时'}).click();
   const calls=await rpcCalls(page);
   const minuteCalls=calls.filter(call=>call.method==='chart'&&call.args.code==='sz000101'&&call.args.kind==='minute');
   const historyCalls=calls.filter(call=>call.method==='history'&&call.args.code==='sz000101');
-  expect(minuteCalls.length).toBe(1);
+  expect(minuteCalls.length).toBeGreaterThanOrEqual(1);
   expect(historyCalls.length).toBe(1);
-  expect(calls.some(call=>call.method==='minute_ensure'&&call.args.code==='sz000101')).toBe(false);
+  expect(calls.filter(call=>call.method==='minute_ensure'&&call.args.code==='sz000101').every(call=>call.args.refresh===true)).toBe(true);
   await page.locator('.pool-terminal').screenshot({path:SHOTS+'/03-detail-1440.png'});
 });
 

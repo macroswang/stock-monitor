@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import './stockChartPanel.css';
 import Chart from './Chart';
 import {weeklyBars} from './candleData';
+import {exchangeCalendar} from './exchangeCalendar';
 import type {Bar,Daily,HistoryView} from './models';
 import type {Request} from './poolTableModel';
 
@@ -26,7 +27,7 @@ type CachedMinute={day:string;data?:{bars?:Bar[];previous_close?:string|number}}
 type MinuteBundle={bars:Bar[];shapeOpening:Bar[];day:string;previousClose:number|undefined};
 
 const dateText=(value:Date)=>value.toLocaleDateString('sv-SE');
-const todayText=()=>dateText(new Date());
+const todayText=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
 const yearsAgoText=(years:number)=>{const value=new Date();value.setFullYear(value.getFullYear()-years);return dateText(value);};
 const readError=(cause:unknown)=>cause instanceof Error?cause.message:'图表加载失败';
 
@@ -42,11 +43,12 @@ function pickMinute(list:CachedMinute[]|null|undefined):MinuteBundle{
   return {bars,shapeOpening,day:latest.day,previousClose:Number.isFinite(previous)&&previous>0?previous:undefined};
 }
 
-export default function StockChartPanel({request,code,name,initialView='minute',onError}:{
-  request:Request;code:string;name:string;initialView?:ChartView;onError?:(error:unknown)=>void;
+export default function StockChartPanel({request,code,name,initialView='minute',live=false,onError}:{
+  request:Request;code:string;name:string;initialView?:ChartView;live?:boolean;onError?:(error:unknown)=>void;
 }){
   const [view,setView]=useState<ChartView>(initialView);
   const [minute,setMinute]=useState<MinuteBundle|null>(null);
+  const minuteRef=useRef(minute);minuteRef.current=minute;
   const [daily,setDaily]=useState<Daily[]|null>(null);
   const [minuteLoading,setMinuteLoading]=useState(false);
   const [dailyLoading,setDailyLoading]=useState(false);
@@ -66,6 +68,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     loadingRef.current={minute:false,daily:false};
     setMinute(null);setDaily(null);setMinuteError('');setDailyError('');setSelectedDay('');
     setView(initialView);
+    return ()=>{token.current+=1;};
   },[code,initialView]);
 
   const alive=(seq:number)=>seq===token.current;
@@ -80,17 +83,20 @@ export default function StockChartPanel({request,code,name,initialView='minute',
       if(state?.status==='done')return;
       await new Promise(resolve=>setTimeout(resolve,350));
     }
+    throw new Error('图表更新尚未完成，请稍后重试');
   },[request]);
 
-  const ensureMinute=useCallback(async()=>{
-    if(minuteLoaded.current||loadingRef.current.minute)return;
+  const ensureMinute=useCallback(async(refresh=false)=>{
+    if((minuteLoaded.current&&!refresh)||loadingRef.current.minute)return;
     const seq=token.current;
-    loadingRef.current.minute=true;setMinuteLoading(true);setMinuteError('');
+    loadingRef.current.minute=true;setMinuteLoading(!minuteLoaded.current);setMinuteError('');
     try{
+      if(refresh)await waitJob('minute_ensure',{code,day:todayText(),refresh:true},seq);
+      if(!alive(seq))return;
       let list=await request<CachedMinute[]>('chart',{code,kind:'minute'});
       if(!alive(seq))return;
       let bundle=pickMinute(list);
-      if(!bundle.bars.length){
+      if(!bundle.bars.length&&!refresh){
         try{await waitJob('minute_ensure',{code,day:todayText()},seq);}catch{/* 静默：分时补取失败按空态处理 */}
         if(!alive(seq))return;
         list=await request<CachedMinute[]>('chart',{code,kind:'minute'});
@@ -102,8 +108,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     }catch(cause){
       if(alive(seq)){setMinuteError(readError(cause));onErrorRef.current?.(cause);}
     }finally{
-      if(alive(seq)){setMinuteLoading(false);minuteLoaded.current=true;}
-      loadingRef.current.minute=false;
+      if(alive(seq)){setMinuteLoading(false);minuteLoaded.current=true;loadingRef.current.minute=false;}
     }
   },[code,request,waitJob,selectedDay]);
 
@@ -138,6 +143,35 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     if(view==='minute')void ensureMinute();else void ensureDaily();
   },[view,ensureMinute,ensureDaily]);
 
+  useEffect(()=>{
+    if(!live||view!=='minute')return;
+    let timer:ReturnType<typeof setTimeout>;
+    const refresh=()=>{
+      clearTimeout(timer);
+      if(document.visibilityState==='hidden')return;
+      const now=Date.now(),dayMs=86400000;
+      let next=now+dayMs;
+      // 北京时间；休市直接等到下次开盘，不用六秒轮询检查时钟。
+      sessions:for(let offset=0;offset<16;offset+=1){
+        const day=new Date(now+8*3600000+offset*dayMs).toISOString().slice(0,10);
+        if(exchangeCalendar.tradingDay(day)!==true)continue;
+        for(const [start,end] of [['09:20','11:30'],['13:00','15:00']]){
+          const open=Date.parse(day+'T'+start+':00+08:00'),close=Date.parse(day+'T'+end+':00+08:00');
+          if(now<open){next=open;break sessions;}
+          if(now<close){
+            const current=minuteRef.current;
+            if(current?.day!==day||current.bars.at(-1)?.time!=='15:00')void ensureMinute(true);
+            next=Math.min(now+6000,close);break sessions;
+          }
+        }
+      }
+      timer=setTimeout(refresh,Math.max(1,next-now));
+    };
+    refresh();
+    document.addEventListener('visibilitychange',refresh);
+    return ()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',refresh);};
+  },[live,view,ensureMinute]);
+
   const changeView=(next:ChartView)=>setView(next);
   const loading=view==='minute'?minuteLoading:dailyLoading;
   const error=view==='minute'?minuteError:dailyError;
@@ -146,7 +180,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
   const activeDay=view==='minute'?(minute?.day||''):candleDay;
   const weeklyCount=daily&&daily.length?weeklyBars(daily).length:0;
   const statusText=ready
-    ?(view==='minute'?'分时 '+(minute?.day||'—')
+    ?(view==='minute'?'分时 '+(minute?.day||'—')+' · 至 '+(minute?.bars.at(-1)?.time||'—')
       :view==='daily'?'日K '+(daily?.length||0)+'根 · '+(candleDay||'—')
       :'周K '+weeklyCount+'根 · '+(candleDay||'—'))
     :(loading?'加载中…':'—');

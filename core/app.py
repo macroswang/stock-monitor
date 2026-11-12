@@ -109,6 +109,9 @@ class App:
         self.outlook_scheduler=OutlookScheduler(self)
         from .pool import Pool
         self.pool=Pool(self)
+        # Display-only fallback: cached prices never enter live strategy input.
+        self.cached_quotes={r['code']:q for r in self.store.query('SELECT code FROM watch')
+                            if (q:=self.cached_watch_quote(r['code']))}
         if start_worker:
             threading.Thread(target=self.pool.bootstrap,daemon=True).start()
             threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
@@ -153,6 +156,28 @@ class App:
                 # A session boundary or invalid cache must not terminate market monitoring.
                 print('paper sync: '+str(e),file=sys.stderr,flush=True)
             self.stop.wait(3)
+
+    def cached_watch_quote(self,code):
+        saved=self.store.getcache(code,'watch_quote')
+        if saved:return dict(saved[-1]['data'],cached=True)
+        # Older clients kept candle/range metadata but not the full quote.
+        live=self.store.getcache(code,'daily_live')
+        if not live:return None
+        day=live[-1]['day'];candle=live[-1]['data'];stamp=candle.get('quote_time','')
+        if not stamp.startswith(day+'T') or not candle.get('close'):return None
+        minute=self.store.getcache(code,'minute',day)
+        meta=minute[-1]['data'] if minute else {}
+        quote=dict(code=code,date=day,timestamp=stamp,price=candle['close'],
+                   open=candle.get('open'),high=candle.get('high'),low=candle.get('low'),
+                   volume=candle.get('volume'),previous_close=meta.get('previous_close'),
+                   source=candle.get('source','tencent'),cached=True)
+        quote={key:value for key,value in quote.items() if value is not None}
+        from decimal import Decimal,InvalidOperation
+        try:
+            previous=Decimal(str(quote.get('previous_close')))
+            if previous>0:quote['change']=str((Decimal(quote['price'])/previous-1)*100)
+        except (InvalidOperation,ValueError,TypeError):pass
+        return quote
 
     def cache_minutes(self,code,group):
         old=self.store.getcache(code,'minute',group['date'])
@@ -236,16 +261,23 @@ class App:
     def poll_one(self,code):
         if self.stop.is_set(): return
         epoch=self.epochs.get(code,0)
+        stage='报价'
         try:
-            quote=self.provider.quote(code); groups=self.provider.minutes(code)
-            self.minute_cache.note(code)
-            now=now_cn()
+            quote=self.provider.quote(code)
             with self.lock:
                 rows=self.store.query('SELECT enabled FROM watch WHERE code=?',(code,))
                 if self.stop.is_set() or not rows or self.epochs.get(code,0)!=epoch: return
                 self.quotes[code]=quote
+                self.store.cache(code,'watch_quote',quote['date'],quote)
                 self.daily_cache.observe(code,quote)
                 if quote.get('name'):self.store.remember(code,quote['name'])
+            stage='分时'
+            groups=self.provider.minutes(code)
+            self.minute_cache.note(code)
+            now=now_cn()
+            with self.lock:
+                rows=self.store.query('SELECT enabled FROM watch WHERE code=?',(code,))
+                if self.stop.is_set() or not rows or self.epochs.get(code,0)!=epoch:return
                 if rows[0]['enabled'] and self.store.config().get('monitor') and trading(now):
                     self.ingest(code,quote,groups,now)
                 else:
@@ -255,7 +287,7 @@ class App:
         except Exception as e:
             with self.lock:
                 if self.epochs.get(code,0)==epoch:
-                    self.health[code]='获取失败：'+type(e).__name__; self.sessions.pop(code,None)
+                    self.health[code]=stage+'获取失败：'+type(e).__name__+'；保留上次有效报价'; self.sessions.pop(code,None)
 
     def loop(self):
         import time
@@ -540,7 +572,7 @@ class App:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
                 broker_sources=self.live_trading.sources()
                 for w in watch:
-                    w.update(quote=self.quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not self.store.config().get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
+                    w.update(quote=self.quotes.get(w['code']) or self.cached_quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not self.store.config().get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
                         candidates=self.sessions.get(w['code'],{}).get('candidates',[]))
                     w['broker_sources']=broker_sources.get(w['code'],[])
                 events=self.event_rows()
@@ -561,6 +593,7 @@ class App:
             with self.lock:
                 added=self.store.execute('INSERT OR IGNORE INTO watch(code,name) VALUES(?,?)',(code,quote['name']))
                 self.quotes[code]=quote
+                self.store.cache(code,'watch_quote',quote['date'],quote)
                 self.daily_cache.observe(code,quote)
                 self.store.remember(code,quote['name'])
                 if added: self.epochs[code]=self.epochs.get(code,0)+1
@@ -696,7 +729,7 @@ class App:
         if method=='archive_fill':return self.start_job(lambda:self.archive.update(symbol(args['code'])))
         if method=='minute_ensure':
             code=symbol(args['code']);day=date.fromisoformat(args['day']).isoformat()
-            return self.start_job(lambda:self.minute_cache.ensure(code,day))
+            return self.start_job(lambda:self.minute_cache.ensure(code,day,refresh=True) if args.get('refresh') is True else self.minute_cache.ensure(code,day))
         if method=='daily_load':
             code=symbol(args['code']);start,end=bounds(args)
             return self.start_job(lambda:self.daily_cache.fetch(code,date.fromisoformat(start),date.fromisoformat(end)))

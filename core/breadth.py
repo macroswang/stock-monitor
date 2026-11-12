@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 from .provider import CN, get, now_cn
 from .paper_session import calendar
@@ -22,6 +22,15 @@ HISTORY = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent))
 MA_SEED = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent)) / 'fixtures/ma-close-seed-v1.json.gz'
 MA_CLOSE_REFERENCE = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent)) / 'fixtures/ma-reference-2026-10-29.json.gz'
 MA_CLOSE_REFERENCE_1030 = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent.parent)) / 'fixtures/ma-reference-2026-10-30.json.gz'
+
+
+def source_get(url, encoding='utf-8'):
+    try:
+        return get(url) if encoding == 'utf-8' else get(url, encoding)
+    except OSError as exc:
+        host = urlsplit(url).hostname
+        exc.breadth_source = ('新浪股票代码表' if host == 'vip.stock.finance.sina.com.cn' else '腾讯行情') + f'（{host}）'
+        raise
 
 
 @lru_cache(maxsize=512)
@@ -209,7 +218,7 @@ def universe():
     def fetch_json(url):
         for attempt in range(2):
             try:
-                return json.loads(get(url))
+                return json.loads(source_get(url))
             except (OSError, TimeoutError, json.JSONDecodeError):
                 if attempt:
                     raise
@@ -391,7 +400,7 @@ def summarize(rows, expected, day, observed_at, suspended=()):
 
 def collect():
     started = now_cn()
-    anchor_raw = get('https://qt.gtimg.cn/q=sh000001', 'gb18030')
+    anchor_raw = source_get('https://qt.gtimg.cn/q=sh000001', 'gb18030')
     m = re.search(r'v_sh000001="([^"]+)"', anchor_raw)
     if not m:
         raise ValueError('缺少有日期的市场报价，无法锚定交易日')
@@ -406,7 +415,7 @@ def collect():
         time.sleep(.1)
         for attempt in range(2):
             try:
-                return parse_quotes(get('https://qt.gtimg.cn/q=' + ','.join(part), 'gb18030'), set(part))
+                return parse_quotes(source_get('https://qt.gtimg.cn/q=' + ','.join(part), 'gb18030'), set(part))
             except Exception:
                 if attempt:
                     raise
@@ -519,6 +528,10 @@ class Breadth:
             self.error = ''
         except Exception as exc:
             self.error = str(exc) if isinstance(exc, ValueError) else '全市场数据获取失败：' + type(exc).__name__
+            if isinstance(exc, OSError):
+                reason = str(getattr(exc, 'reason', exc)).strip() or type(exc).__name__
+                self.error = '全市场数据获取失败：' + getattr(exc, 'breadth_source', '') + '；' + reason[:180]
+                print(now_cn().isoformat() + ' ' + self.error, file=sys.stderr, flush=True)
         finally:
             with self.lock:
                 self.running = False

@@ -150,9 +150,15 @@ class BreadthTests(unittest.TestCase):
             before=store.query('SELECT * FROM watch');config=store.config()
             with patch('core.breadth.collect',return_value=(result,{'public':'raw'})):service.refresh(force=True)
             self.assertEqual(service.view()['days'][0]['trin'],.5)
-            with patch('core.breadth.collect',side_effect=OSError()):service.refresh(force=True)
+            from urllib.error import URLError
+            from core.breadth import source_get
+            def unavailable():
+                return source_get('https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=sh_a')
+            with patch('core.breadth.collect',side_effect=unavailable),patch('core.breadth.get',side_effect=URLError(TimeoutError('connection timed out'))):service.refresh(force=True)
             self.assertEqual(service.view()['days'][0]['trin'],.5)
             self.assertTrue(service.error)
+            self.assertIn('新浪股票代码表',service.error)
+            self.assertIn('connection timed out',service.error)
             self.assertEqual(store.query('SELECT * FROM watch'),before)
             self.assertEqual(store.config(),config)
             self.assertEqual(store.query('SELECT * FROM events'),[])
