@@ -510,6 +510,8 @@ class Pool:
         self.error = ''
         self.running = False
         self.prefetch_started = False
+        from .pool_signals import PoolSignals
+        self.signals = PoolSignals(app)
         self.fund_flows = None
         self.fund_at = 0.0
 

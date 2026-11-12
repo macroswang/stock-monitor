@@ -43,7 +43,9 @@ class Tencent:
         result=[]
         for day in data['data']:
             ds=day['date']; date=f'{ds[:4]}-{ds[4:6]}-{ds[6:]}'
-            rows=[line.split() for line in day['data']]
+            # Source snapshots after 15:00 may revise cumulative totals. They
+            # are outside the chart session and must not invalidate valid days.
+            rows=[row for line in day['data'] if (row:=line.split()) and row[0]<='1500']
             if not rows: continue
             labels=[r[0] for r in rows]
             if any(len(r)<4 for r in rows) or labels!=sorted(set(labels)):

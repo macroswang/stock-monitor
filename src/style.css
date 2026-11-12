@@ -104,7 +104,7 @@
 .docked-tooltip .quote-detail{gap:4px;padding:0;min-width:0}
 .docked-tooltip .quote-detail>span:last-child{text-align:right;overflow-wrap:anywhere}
 .minute-tooltip.docked-tooltip{width:max-content;max-width:calc(100vw - 56px);grid-template-columns:repeat(2,max-content);gap:2px 12px;white-space:nowrap}
-.minute-tooltip.docked-tooltip .quote-detail{justify-content:flex-start;gap:4px;white-space:nowrap}
+.minute-tooltip.docked-tooltip .quote-detail{justify-content:flex-start;gap:4px;white-space:nowrap;padding:0}
 .minute-tooltip.docked-tooltip .quote-detail>span:first-child{flex:0 0 auto;white-space:nowrap}
 .minute-tooltip.docked-tooltip .quote-detail>span:last-child{min-width:0;overflow-wrap:normal;white-space:nowrap}
 .docked-tooltip>.quote-wide,.docked-tooltip>.tooltip-comparison,.docked-tooltip>.quote-trade-context{grid-column:1/-1}

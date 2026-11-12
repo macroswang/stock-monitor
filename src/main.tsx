@@ -41,6 +41,7 @@ const beijingMinute=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai
 const csiSample=preview&&new URLSearchParams(window.location.search).get('sample')==='csi300';
 async function api<T>(method:string,args:Record<string,unknown>={}):Promise<T>{
  if(preview){
+  if(method==='pool_signals')return null as T;
   if(method==='breadth'){const r=await fetch(csiSample?'/breadth-csi300-preview.json':'/breadth-preview.json');if(!r.ok)return {days:[],running:false,error:'',history_note:'尚未取得完整市场历史，显示已核验日期。'} as T;return r.json();}
   if(method==='csi300'){const r=await fetch('/csi300-preview.json');if(!r.ok)return null as T;const data=await r.json();return (data.date===args.day?data:null) as T;}
   if(method==='sector_flow'){const r=await fetch(args.kind==='concept'?'/sector-concept-preview.json':'/sector-flow-preview.json');if(!r.ok)return {snapshot:null,running:false,error:'板块资金暂无预览数据',source_url:'https://data.eastmoney.com/bkzj/hy.html'} as T;const data=await r.json();const stamp=Date.parse(data.snapshot?.collected_at||'');return (data.snapshot&&(!Number.isFinite(stamp)||stamp>Date.now()+5000)?{...data,snapshot:null,error:'采集时间尚未到达'}:data) as T;}

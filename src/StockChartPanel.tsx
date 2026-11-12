@@ -2,7 +2,7 @@
 // 股票池行详情内嵌使用；同时导出共享的 ChartViewTabs（自选监控 chart-toolbar 复用）。
 import {useCallback,useEffect,useRef,useState} from 'react';
 import './stockChartPanel.css';
-import Chart from './Chart';
+import Chart,{type BottomSignal} from './Chart';
 import {weeklyBars} from './candleData';
 import {exchangeCalendar} from './exchangeCalendar';
 import type {Bar,Daily,HistoryView} from './models';
@@ -28,6 +28,11 @@ type MinuteBundle={bars:Bar[];shapeOpening:Bar[];day:string;previousClose:number
 
 const dateText=(value:Date)=>value.toLocaleDateString('sv-SE');
 const todayText=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
+const minuteDay=()=>{
+ const today=todayText(),date=new Date(today+'T00:00:00Z');
+ for(let i=0;i<16;i+=1){const day=date.toISOString().slice(0,10);if(exchangeCalendar.tradingDay(day)===true)return day;date.setUTCDate(date.getUTCDate()-1);}
+ return today;
+};
 // 股票池行详情的工作日缓存可能是在盘中（如 11:43 入池）抓取的半天快照；收盘后展开时
 // 必须主动补全当天剩余分钟，否则图表会停在“至 11:30”且右侧空白（用户 2026-11-12 反馈）。
 const beijingClock=(now:Date)=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(now);const pick=(type:string)=>parts.find(part=>part.type===type)?.value||'00';return pick('hour')+':'+pick('minute');};
@@ -62,8 +67,8 @@ function pickMinute(list:CachedMinute[]|null|undefined):MinuteBundle{
   return {bars,shapeOpening,day:latest.day,previousClose:Number.isFinite(previous)&&previous>0?previous:undefined};
 }
 
-export default function StockChartPanel({request,code,name,initialView='minute',live=false,onError}:{
-  request:Request;code:string;name:string;initialView?:ChartView;live?:boolean;onError?:(error:unknown)=>void;
+export default function StockChartPanel({request,code,name,initialView='minute',live=false,onError,onBottomSignal}:{
+  request:Request;code:string;name:string;initialView?:ChartView;live?:boolean;onError?:(error:unknown)=>void;onBottomSignal?:(signal:BottomSignal|null)=>void;
 }){
   const [view,setView]=useState<ChartView>(initialView);
   const [minute,setMinute]=useState<MinuteBundle|null>(null);
@@ -106,18 +111,18 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     throw new Error('图表更新尚未完成，请稍后重试');
   },[request]);
 
-  const ensureMinute=useCallback(async(refresh=false)=>{
+  const ensureMinute=useCallback(async(refresh=false,fill=false)=>{
     if((minuteLoaded.current&&!refresh)||loadingRef.current.minute)return;
     const seq=token.current;
     loadingRef.current.minute=true;setMinuteLoading(!minuteLoaded.current);setMinuteError('');
     try{
-      if(refresh)await waitJob('minute_ensure',{code,day:todayText(),refresh:true},seq);
+      if(refresh)await waitJob('minute_ensure',{code,day:fill?minuteDay():todayText(),...(fill?{fill:true}:{refresh:true})},seq);
       if(!alive(seq))return;
       let list=await request<CachedMinute[]>('chart',{code,kind:'minute'});
       if(!alive(seq))return;
       let bundle=pickMinute(list);
       if(!bundle.bars.length&&!refresh){
-        try{await waitJob('minute_ensure',{code,day:todayText()},seq);}catch{/* 静默：分时补取失败按空态处理 */}
+        await waitJob('minute_ensure',{code,day:minuteDay(),fill:true},seq);
         if(!alive(seq))return;
         list=await request<CachedMinute[]>('chart',{code,kind:'minute'});
         bundle=pickMinute(list);
@@ -225,11 +230,12 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     {!loading&&!error&&!ready&&<p className="scp-message" role="status">
       {view==='minute'?'该股暂无可用的分时数据（可稍后重试或查看日K）。':'该股暂无可用的日K数据。'}
     </p>}
+    {view==='minute'&&!loading&&(error||!ready)&&<button type="button" onClick={()=>void ensureMinute(true,true)}>重试分时</button>}
     {ready&&<div className="scp-chart">
       {/* stockCode 传 MACD 中性前缀：内嵌面板不请求/展示指数 MACD（契约要求不传高级数据），名称仍用真实 name */}
       <Chart stockCode={'pool-'+code} stockName={name} minute={minute?.bars||[]} shapeOpening={minute?.shapeOpening||[]}
         daily={daily||[]} view={chartView} selectedDay={activeDay} onSelectDay={day=>setSelectedDay(day)}
-        compact previousClose={minute?.previousClose} benchmark={null}/>
+        compact onBottomSignal={onBottomSignal} previousClose={minute?.previousClose} benchmark={null}/>
     </div>}
   </section>;
 }

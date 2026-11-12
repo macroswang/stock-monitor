@@ -273,7 +273,7 @@ class TradingTests(unittest.TestCase):
     def test_default_paused_no_signal_or_broker_dispatch(self):
         self.seed();self.observe();self.drain()
         self.assertEqual(self.runs(),[]);self.submit.assert_not_called()
-        with patch('core.turning_final.signals') as engine:
+        with patch('core.turning_combined.signals') as engine:
             self.service.ingest('sz000981',[],self.quote,self.now,True)
             engine.assert_not_called()
 
@@ -290,10 +290,10 @@ class TradingTests(unittest.TestCase):
     def test_revised_vwap_cannot_become_a_new_signal_one_poll_later(self):
         self.arm()
         bars=[dict(time='10:00',close='2.13',volume=100000,average='2.15',complete=True)]
-        with patch('core.turning_final.signals',return_value=[]):
+        with patch('core.turning_combined.signals',return_value=[]):
             self.service.ingest('sz000981',bars,self.quote,self.now,False)
         revised=[dict(bars[0],average='2.30')]
-        with patch('core.turning_final.signals',return_value=[self.event()]):
+        with patch('core.turning_combined.signals',return_value=[self.event()]):
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
             self.service.ingest('sz000981',revised,self.quote,self.now,True)
         self.assertEqual([r['status'] for r in self.runs()],['skipped'])
@@ -303,9 +303,9 @@ class TradingTests(unittest.TestCase):
     def test_live_ingestion_only_dispatches_new_confirmations_after_baseline(self):
         self.arm()
         bars=[dict(time='10:00',close='2.13',volume=100000,average='2.15',complete=True)]
-        with patch('core.turning_final.signals',return_value=[]):
+        with patch('core.turning_combined.signals',return_value=[]):
             self.service.ingest('sz000981',bars,self.quote,self.now,False)
-        with patch('core.turning_final.signals',return_value=[self.event()]):
+        with patch('core.turning_combined.signals',return_value=[self.event()]):
             self.service.ingest('sz000981',bars+[dict(bars[0],time='10:01')],self.quote,self.now,True)
             self.service.ingest('sz000981',bars+[dict(bars[0],time='10:01')],self.quote,self.now,True)
         self.assertEqual(len(self.runs()),1)

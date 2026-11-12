@@ -14,7 +14,7 @@ from decimal import Decimal, ROUND_DOWN
 
 from . import brokers
 from .provider import now_cn, symbol
-from .turning_final import SIGNAL, LABEL
+from .turning_combined import SIGNAL, LABEL
 from .trading_quantity import order_quantity,quantity as sized_quantity,migrate_rule
 from .trading_price import PRICE_POLICY, price_guard, rejection_message
 from .trading_quantity import BUY_CASH_RESERVE_RATE, BUY_CASH_RESERVE_FIXED, buy_cash_required
@@ -117,7 +117,7 @@ class LiveTrading:
                 changed=True
             if changed:
                 self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_paused','true')")
-                self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('底/顶信号已升级为观量 v2（每日顶/底各≤3）；买卖开关已保留，自动执行已暂停，请确认规则后重新启用。'),))
+                self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('底/顶信号已升级为观量 v2+Q1（Q1补位，每日顶/底各≤3）；买卖开关已保留，自动执行已暂停，请确认规则后重新启用。'),))
             self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_price_policy',?)",(json.dumps(PRICE_POLICY),))
             self.store.db.commit()
 
@@ -607,7 +607,8 @@ class LiveTrading:
         if self.settings()['paused'] or not self.store.query("SELECT 1 FROM trading_rules WHERE code=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1 OR json_extract(payload,'$.paired_enabled')=1) LIMIT 1",(code,)):
             self.frames.pop(code,None)
             return
-        from .turning_final import signals,liquidity
+        from .turning_combined import signals
+        from .turning_final import liquidity
         observations=[dict(m,liquidity=liquidity(bars,m['time'])) for m in signals(bars)]
         signature=[tuple(b.get(k) for k in ('time','close','volume','average','complete')) for b in bars]
         day=now.date().isoformat()
@@ -654,6 +655,16 @@ class LiveTrading:
                     if m.get('candidateTime') and self.store.query("SELECT 1 FROM trading_runs WHERE account_id=? AND code=? AND side=? AND day=? AND json_extract(payload,'$.signal.candidateTime')=? AND json_extract(payload,'$.mode')=? AND status NOT IN ('skipped','failed','not_sent') LIMIT 1",
                             (row['account_id'],code,side,now.date().isoformat(),m['candidateTime'],self.settings()['mode'])):
                         continue
+                    # Order-level daily safety net (independent mode only): the merged
+                    # v2+Q1 list can change as later v2 events arrive, so cap actual orders
+                    # per account+code+side+day at 3. The 4th signal is recorded as skipped.
+                    daily_orders = self.store.query(
+                        "SELECT COUNT(*) AS n FROM trading_runs WHERE account_id=? AND code=? AND side=? AND day=? "
+                        "AND status NOT IN ('skipped','failed','not_sent') "
+                        "AND COALESCE(json_extract(payload,'$.admission.allowed'),1)!=0",
+                        (row['account_id'], code, side, now.date().isoformat()))[0]['n']
+                    if not reason and daily_orders >= 3:
+                        reason = '当日该方向已达3个信号上限（含Q1补位），本条不再下单'
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
                     payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])

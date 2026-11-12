@@ -73,14 +73,18 @@ test('default zhangle mode renders high-coverage marks: <=3/kind and Sanzi 09:37
  const expected=display(c,'zhangle');
  await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(expected));
  await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(expected));
- // Popover: mode + quality + daily cap rows on a v2 point.
+ // Signal details keep quality and pair candidate/emission fields compactly.
  await showTip(chart,'09:37');
  const tooltip=chart.locator('.quote-tooltip');
- await expect(tooltip).toContainText('模式：');
- await expect(tooltip).toContainText('贴近涨乐通');
+ await expect(tooltip).not.toContainText('模式：');
  await expect(tooltip).toContainText('质量分：');
- await expect(tooltip).toContainText('当日上限：底 ');
- await chart.screenshot({path:test.info().outputPath('zhangle-sanzi-000981.png')});
+ await expect(tooltip).not.toContainText('当日上限：');
+ const candidate=tooltip.locator('.quote-detail').filter({hasText:'候选点：'});
+ const emitted=tooltip.locator('.quote-detail').filter({hasText:'发出时间：'});
+ expect(Math.abs((await candidate.boundingBox())!.y-(await emitted.boundingBox())!.y)).toBeLessThan(2);
+ expect(await candidate.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+ expect(await emitted.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+ await page.screenshot({path:test.info().outputPath('zhangle-sanzi-000981.png')});
 });
 
 test('stable mode is opt-in, persisted, and matches the v2.0 events in the real chart',async({page})=>{

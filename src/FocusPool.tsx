@@ -2,6 +2,7 @@ import {Fragment,useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import './focusPool.css';
 import StockSearch from './StockSearch';
 import StockChartPanel from './StockChartPanel';
+import type {BottomSignal} from './Chart';
 import {
   BACKTEST_EPISODE_OPTIONS,BACKTEST_PERCENT_OPTIONS,backtestAnchor,backtestCoverageText,backtestSources,backtestSummary,
   bucketByEpisodes,bucketByFirstDay,bucketByPercent,clockText,currentMatchOf,dayShort,entryTime,episodesOf,episodesTitle,filterBacktestRows,
@@ -20,7 +21,7 @@ const DETAIL_ID=(code:string)=>'pt-detail-'+code;
 
 // 契约 §12.2：卡片内 10 列（名称完整显示 + ×N 徽标；代码去前缀；数值列右对齐，文本列左对齐）
 const COLUMNS:{key?:SortKey;label:string;cls?:string;num?:boolean}[]=[
-  {label:'代码',num:true},{label:'名称'},{label:'现价',num:true,cls:'pt-col-price'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格',num:true},
+  {label:'代码',cls:'pt-head-text'},{label:'名称',cls:'pt-head-text'},{label:'现价',num:true,cls:'pt-col-price'},{key:'added',label:'入选时间'},{key:'entry',label:'入选价格',num:true},
   {key:'since',label:'入选后涨幅',num:true},{key:'today',label:'今日涨幅',num:true},
   {key:'ratio',label:'量比',num:true},{key:'turnover',label:'换手(%)',num:true},{label:'相关概念·题材',cls:'pt-col-tags'},
 ];
@@ -53,12 +54,29 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   const [message,setMessage]=useState('');
   const [busy,setBusy]=useState(false);
   const [openCode,setOpenCode]=useState('');
+  const [bottomSignals,setBottomSignals]=useState<Record<string,BottomSignal>>({});
+  const recordBottom=useCallback((code:string,signal:BottomSignal|null)=>{
+    setBottomSignals(current=>{
+      const old=current[code];
+      if(old?.day===signal?.day&&old?.time===signal?.time&&old?.price===signal?.price)return current;
+      const next={...current};if(signal)next[code]=signal;else delete next[code];return next;
+    });
+  },[]);
   const [backtestOpen,setBacktestOpen]=useState(false);
   const [addOpen,setAddOpen]=useState(false);
   const [input,setInput]=useState('');
   const sequence=useRef(0);
   const refreshedAt=useRef(0);
   const tradingRef=useRef(false);
+  const signalsRunning=useRef(false);
+  const readSignals=useCallback(async()=>{
+    const mode=localStorage.getItem('stock-monitor-turning-mode-v1')||'zhangle';
+    const result=await request<{signals?:Record<string,BottomSignal>;running?:boolean}>('pool_signals',{mode});
+    if(result?.signals){
+      signalsRunning.current=Boolean(result.running);
+      setBottomSignals(current=>JSON.stringify(current)===JSON.stringify(result.signals)?current:result.signals!);
+    }
+  },[request]);
   const dataRef=useRef<PoolData|null>(null);
   dataRef.current=data;
   const fetchPool=useCallback(async()=>{
@@ -77,7 +95,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     if(mode==='refresh'){
       if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
       // 休市降频：行情不变时 30 秒刷新一次，减少重复请求。
-      if(!tradingRef.current&&Date.now()-refreshedAt.current<POLL_IDLE)return;
+      if(!tradingRef.current&&Date.now()-refreshedAt.current<POLL_IDLE){if(signalsRunning.current)await readSignals();return;}
     }
     const seq=++sequence.current;
     if(mode==='reset')setLoading(true);
@@ -87,18 +105,20 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
       refreshedAt.current=Date.now();
       tradingRef.current=Boolean(next.trading);
       setData(next);setError(next.error||'');
+      await readSignals();
     }catch(cause){
       if(seq===sequence.current)setError(readError(cause));
     }finally{
       if(seq===sequence.current)setLoading(false);
     }
-  },[fetchPool]);
+  },[fetchPool,readSignals]);
 
   useEffect(()=>{
     if(!active)return;
     void read('reset');
     const timer=preview?undefined:setInterval(()=>void read('refresh'),POLL_LIVE);
-    return ()=>{if(timer!==undefined)clearInterval(timer);};
+    const sync=()=>{void read('reset');};window.addEventListener('turning-display-change',sync);
+    return ()=>{if(timer!==undefined)clearInterval(timer);window.removeEventListener('turning-display-change',sync);};
   },[active,preview,read]);
 
   const entries=useMemo<Entry[]>(()=>data?.entries??[],[data]);
@@ -163,7 +183,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     if(isWatched(entry.code)){setMessage(entry.name+' 已在自选监控中。');return;}
     if(!requireDesktop())return;
     setBusy(true);setError('');
-    try{await request('add_job',{code:entry.code});setMessage('已请求加入自选：'+entry.name+'。');}
+    try{await request('add_job',{code:entry.code});}
     catch(cause){setError(cause instanceof Error?cause.message:'加入自选失败');}
     finally{setBusy(false);}
   };
@@ -173,7 +193,6 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     setBusy(true);setError('');
     try{
       await request('pool_remove',{code:entry.code});
-      setMessage('已从股票池删除 '+entry.name);
       if(openCode===entry.code)setOpenCode('');
       await refetch();
     }catch(cause){setError(cause instanceof Error?cause.message:'删除失败');}
@@ -184,7 +203,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     if(!code)return;
     if(!requireDesktop())return;
     setBusy(true);setError('');
-    try{await request('pool_add',{code});setInput('');setMessage('已添加 '+code+' 到股票池');await refetch();}
+    try{await request('pool_add',{code});setInput('');await refetch();}
     catch(cause){setError(cause instanceof Error?cause.message:'添加失败');}
     finally{setBusy(false);}
   };
@@ -245,6 +264,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
       {groupColumns.map((column,index)=><div className="pt-group-col" key={'col-'+(index+1)}>
         {column.map(group=><GroupSection key={group.key} group={group} sort={sort} onSort={onSort} openCode={openCode} onToggle={toggleRow}
           readOnly={readOnly} busy={busy} request={request} live={active&&!preview} isWatched={isWatched}
+          bottomSignals={bottomSignals} signalDay={anchor} onBottomSignal={recordBottom}
           pinned={pinnedSet.has(group.label)} onTogglePin={togglePin} showAddedTime={filter.chip==='alert'}
           onPick={pick} onWatch={addWatch} onDelete={remove}/>)}
       </div>)}
@@ -256,9 +276,10 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   </section>;
 }
 
-function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,live,isWatched,pinned,onTogglePin,showAddedTime,onPick,onWatch,onDelete}:{
+function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,live,isWatched,pinned,onTogglePin,showAddedTime,onPick,onWatch,onDelete,bottomSignals,signalDay,onBottomSignal}:{
   group:EntryGroup;sort:SortState;onSort:(key:SortKey)=>void;openCode:string;onToggle:(code:string)=>void;
   readOnly:boolean;busy:boolean;request:Request;live:boolean;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;showAddedTime:boolean;
+  bottomSignals:Record<string,BottomSignal>;signalDay:string;onBottomSignal:(code:string,signal:BottomSignal|null)=>void;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
@@ -307,6 +328,8 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
               <span className="pt-cell pt-name" role="cell" title={entry.name} aria-label={entry.name}>
                 <span className="pt-name-text">{displayName(entry.name)}</span>
                 <span className="pt-count-badge" title={episodesTitle(entry)} aria-label={'入选 '+episodes.total+' 天'}>×{episodes.total}</span>
+                {bottomSignals[entry.code]?.day===signalDay&&<span className="pt-bottom-badge" aria-label="分时底信号"
+                  title={'底信号 '+bottomSignals[entry.code].day+' '+bottomSignals[entry.code].time+' · '+num2(bottomSignals[entry.code].price)+' 元'}>底</span>}
               </span>
               <span className="pt-cell pt-num pt-col-price" role="cell" title={entry.quote?'行情 '+clockText(entry.quote.time):'行情待取得'}>{entry.quote?num2(entry.quote.price):'—'}</span>
               <span className="pt-cell pt-time" role="cell" title={(showAddedTime?'入池 ':'入选 ')+fullStamp(stamp)} aria-label={timeLabel+' '+fullStamp(stamp)}>{showAddedTime?(stamp&&stamp.length===10?stamp.slice(5):shortStamp(stamp)):entryTime(entry)}</span>
@@ -317,7 +340,7 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
               <span className="pt-cell pt-num pt-yellow pt-col-turnover" role="cell" title="换手率(%)">{isNum(quant.turnover_rate)?quant.turnover_rate.toFixed(2):'—'}</span>
               <span className={'pt-cell pt-tag pt-col-tags'+(related==='—'?' is-empty':'')} role="cell" title={relatedTagsTitle(entry)}>{related}</span>
             </div>
-            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} watched={isWatched(entry.code)} request={request} live={live}
+            {expanded&&<DetailRow id={DETAIL_ID(entry.code)} entry={entry} readOnly={readOnly} busy={busy} watched={isWatched(entry.code)} request={request} live={live} onBottomSignal={onBottomSignal}
               onPick={onPick} onWatch={onWatch} onDelete={onDelete}/>}
           </Fragment>;
         })}
@@ -326,8 +349,9 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
   </section>;
 }
 
-function DetailRow({id,entry,readOnly,busy,watched,request,live,onPick,onWatch,onDelete}:{
+function DetailRow({id,entry,readOnly,busy,watched,request,live,onPick,onWatch,onDelete,onBottomSignal}:{
   id:string;entry:Entry;readOnly:boolean;busy:boolean;watched:boolean;request:Request;live:boolean;
+  onBottomSignal:(code:string,signal:BottomSignal|null)=>void;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
@@ -338,7 +362,7 @@ function DetailRow({id,entry,readOnly,busy,watched,request,live,onPick,onWatch,o
   const current=currentMatchOf(entry);
   return <section className="pt-detail" id={id} role="region" aria-label={'详情 '+entry.name}>
     <div className="pt-detail-chart">
-      <StockChartPanel request={request} code={entry.code} name={entry.name} live={live}/>
+      <StockChartPanel request={request} code={entry.code} name={entry.name} live={live} onBottomSignal={signal=>onBottomSignal(entry.code,signal)}/>
     </div>
     <div className="pt-detail-grid">
       <div className="pt-detail-col">

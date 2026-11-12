@@ -55,7 +55,7 @@
 /* 表格：卡片内紧凑固定列（10 列），未命中数值列不省略；极窄窗兜底 */
 .pt-scroll{min-width:0;max-width:100%;overflow-x:auto;background:transparent}
 .pt-table{display:flex;flex-direction:column;min-width:0}
-.pt-head,.pt-row{display:grid;grid-template-columns:46px 72px 46px 72px 46px 61px 52px 38px 48px minmax(0,1fr);
+.pt-head,.pt-row{display:grid;grid-template-columns:46px 88px 46px 72px 46px 61px 52px 38px 48px minmax(0,1fr);
   align-items:stretch;padding:0 6px;min-width:0;column-gap:0}
 /* 契约 §12.2：行 11px / 表头 10.5px；数值列与表头右对齐，文本列左对齐 */
 .pt-group .pt-head,.pt-group .pt-row{font-size:11px}
@@ -64,6 +64,7 @@
 .pt-group .pt-row>span{padding-right:3px}
 .pt-group .pt-head>span{padding-right:2px}
 .pt-head-num{justify-content:flex-end;text-align:right}
+.pt-head-text{justify-content:flex-start;text-align:left}
 /* 用户第八轮：现价与入选时间之间留 4–6px 呼吸位（在列内 padding，不改变总宽） */
 .pt-head>span.pt-col-price{padding-right:7px}
 .pt-row>span.pt-cell.pt-col-price{padding-right:7px}
@@ -118,8 +119,10 @@
 .pt-code{color:#c7d6e8;font-size:11px}
 .pt-row>span.pt-name{display:flex;align-items:center;gap:3px;color:#e9f1fb;font-weight:600}
 .pt-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
-.pt-count-badge{flex:0 0 auto;font-size:9px;line-height:13px;padding:0 2px;border-radius:6px;font-weight:400;
+.pt-count-badge{flex:0 0 auto;font-size:8px;line-height:13px;padding:0 2px;border-radius:6px;font-weight:400;
   color:#8fa6c4;background:#1b2940;border:1px solid #2f4462}
+.pt-bottom-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px;width:14px;height:14px;
+  border-radius:50%;font-size:8px;line-height:1;font-weight:600;color:#ffb3c1;background:#61263b;border:1px solid #b94968}
 .pt-time{color:#f3ce88}
 .pt-num{text-align:right}
 .pt-tag{color:#9fb6d4;font-size:11px}

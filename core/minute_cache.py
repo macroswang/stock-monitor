@@ -5,13 +5,14 @@ from .paper_session import calendar
 
 class MinuteCache:
  def __init__(self,app):
-  self.app=app;self.lock=threading.RLock()
+  self.app=app;self.lock=threading.RLock();self.code_locks={}
   app.store.execute('CREATE TABLE IF NOT EXISTS minute_requests(code TEXT PRIMARY KEY,attempt REAL,error TEXT)')
  def note(self,code,error=''):
   self.app.store.execute('INSERT OR REPLACE INTO minute_requests VALUES(?,?,?)',(code,time.time(),error))
- def ensure(self,code,day,refresh=False):
-  with self.lock:
-   if refresh:
+ def ensure(self,code,day,refresh=False,on_demand=False):
+  with self.lock:code_lock=self.code_locks.setdefault(code,threading.RLock())
+  with code_lock:
+   if refresh and not on_demand:
     now=now_cn();closed=calendar(now.year);clock=now.strftime('%H:%M:%S')
     if day!=now.date().isoformat():raise ValueError('实时分时只能刷新今天')
     if now.weekday()>=5 or closed is None or any(first<=day<=last for first,last in closed):
@@ -43,7 +44,8 @@ class MinuteCache:
     if refresh and not any(group.get('date')==day and group.get('bars') for group in groups):
      raise ValueError('来源未返回今天的分时')
     self.note(code)
-   except Exception:
+   except Exception as exc:
     self.note(code,'网络或来源暂时异常')
-    raise ValueError('分时更新失败，已保留缓存，稍后自动重试' if refresh else '分时获取失败，已保留本地缓存；30分钟内不会重复请求')
+    detail=str(getattr(exc,'reason',exc)).strip() or type(exc).__name__
+    raise ValueError(('分时获取失败：'+detail[:160]+'；已保留缓存，可稍后重试') if on_demand else '分时更新失败，已保留缓存，稍后自动重试' if refresh else '分时获取失败，已保留本地缓存；30分钟内不会重复请求')
    return dict(status='downloaded' if self.app.store.getcache(code,'minute',day) else 'unavailable',message='仅缓存来源实际返回的日期，未返回不代表无成交或无触发')

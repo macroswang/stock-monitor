@@ -1,6 +1,6 @@
 {
   "name": "stock-monitor",
-  "version": "0.6.85",
+  "version": "0.6.89",
   "private": true,
   "type": "module",
   "scripts": {

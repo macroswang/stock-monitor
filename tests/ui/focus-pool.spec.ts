@@ -288,6 +288,7 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
               entries:clone(config.entries.slice(offset,offset+limit)),filtered_total:config.entries.length,has_more:offset+limit<config.entries.length,offset,limit,
               benchmark:'上证指数',archived_count:0};
           }
+          case 'pool_signals':return null;
           case 'pool_backtest':{
             if(backtestFailures>0){backtestFailures-=1;throw Error('回测服务不可用');}
             return clone(config.backtest);
@@ -889,11 +890,11 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   await expect(heads).toHaveCount(10);
   const labels=(await human.locator('.pt-head [role="columnheader"]').allInnerTexts()).map(text=>text.replace(/[▾▴]/g,'').trim());
   expect(labels).toEqual(['代码','名称','现价','入选时间','入选价格','入选后涨幅','今日涨幅','量比','换手(%)','相关概念·题材']);
-  // 名称列宽 72px；入选后涨幅列宽 61px；现价列表头/单元格 padding-right≈7px
+  // 名称列宽 88px（为“底”圆标留位）；入选后涨幅列宽 61px；现价列表头/单元格 padding-right≈7px
   const columnTracks=await human.locator('.pt-head').evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean));
-  expect(columnTracks[1]).toBe('72px');
+  expect(columnTracks[1]).toBe('88px');
   const nameWidth=await human.locator('.pt-row').first().locator('.pt-name').evaluate(element=>element.getBoundingClientRect().width);
-  expect(Math.abs(nameWidth-72)).toBeLessThanOrEqual(2);
+  expect(Math.abs(nameWidth-88)).toBeLessThanOrEqual(2);
   expect(await human.locator('.pt-head > span').nth(2).evaluate(element=>getComputedStyle(element).paddingRight)).toBe('7px');
   expect(await human.locator('.pt-row').first().locator('.pt-cell.pt-col-price').evaluate(element=>getComputedStyle(element).paddingRight)).toBe('7px');
   await expect(human.getByRole('table',{name:'人形机器人 标的'})).toBeVisible();
@@ -940,12 +941,17 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   // 对齐：数值列表头/单元格右对齐，文本列左对齐
   const headClasses=await heads.evaluateAll(elements=>elements.map(element=>element.className));
   const headJustify=await heads.evaluateAll(elements=>elements.map(element=>getComputedStyle(element).justifyContent));
-  const numIndexes=[0,2,4,5,6,7,8];
+  // 第二批改动：代码/名称表头改为文本列左对齐（pt-head-text），其余数值列仍右对齐。
+  const numIndexes=[2,4,5,6,7,8];
   for(const index of numIndexes){
     expect(headClasses[index]).toContain('pt-head-num');
     expect(headJustify[index]).toBe('flex-end');
   }
-  for(const index of [1,3,9]){
+  for(const index of [0,1]){
+    expect(headClasses[index]).toContain('pt-head-text');
+    expect(headJustify[index]).toBe('flex-start');
+  }
+  for(const index of [3,9]){
     expect(headClasses[index]).not.toContain('pt-head-num');
     expect(headJustify[index]).toBe('normal');
   }
@@ -958,8 +964,8 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
   expect(await inlineOverflowProblems(page)).toEqual([]);
 });
 
-// ===== 3b. 名称展示：去尾部字母，title/aria 保留原名，名称列 72px 不省略 =====
-test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保留完整原名，名称列 72px 且不省略',async({page})=>{
+// ===== 3b. 名称展示：去尾部字母，title/aria 保留原名，名称列 88px 不省略 =====
+test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保留完整原名，名称列 88px 且不省略',async({page})=>{
   const cases:[string,string,string][]=[
     ['sz000a01','奥比中光-W','奥比中光'],
     ['sz000a02','宇树科技-W','宇树科技'],
@@ -990,7 +996,7 @@ test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保�
   const overflow=await page.locator('.pt-name-text').evaluateAll(elements=>elements.filter(element=>element.scrollWidth>element.clientWidth+1).map(element=>element.textContent));
   expect(overflow).toEqual([]);
   const tracks=await groupOf(page,'名称测试0').locator('.pt-head').evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean));
-  expect(tracks[1]).toBe('72px');
+  expect(tracks[1]).toBe('88px');
 });
 
 // ===== 4. 组内排序（组间顺序固定按资金） =====
@@ -1312,6 +1318,84 @@ test('搜索：标签命中的股票重新分组（单只组保留），空结�
 });
 
 // ===== 8. 行详情内嵌图表：tabs/默认分时/日K/周K/放大缩小/请求不重复 =====
+test('股票池未展开股票也直接显示后台底信号摘要，不逐行请求分时',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-11T14:00:00+08:00')});
+  await boot(page,{});
+  await page.evaluate(()=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      const result=await original(command,params);
+      if(command==='rpc'&&params.method==='pool_signals')return {signals:{sz000101:{day:'2026-11-11',time:'13:45',price:12.34}},running:false};
+      return result;
+    };
+  });
+  await page.clock.runFor(6500);
+  const row=page.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')});
+  await expect(row.getByLabel('分时底信号')).toBeVisible();
+  await expect(row).toHaveAttribute('aria-expanded','false');
+  const calls=await rpcCalls(page);
+  expect(calls.filter(call=>call.args.code==='sz000101'&&['chart','minute_ensure'].includes(call.method))).toHaveLength(0);
+});
+
+test('股票池缺分时在收盘后按需补取，失败显示原因并可重试恢复',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-11T23:00:00+08:00')});
+  await boot(page,{emptyChart:true});
+  await page.evaluate(()=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;w.poolFillAttempts=0;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      const result=await original(command,params);
+      if(command==='rpc'&&params.method==='minute_ensure'&&params.args.code==='sz000101'&&params.args.fill){w.poolFillAttempts++;return {job:'pool-fill'};}
+      if(command==='rpc'&&params.method==='job'&&params.args.job==='pool-fill')return w.poolFillAttempts===1?{status:'failed',error:'分时获取失败：连接超时'}:{status:'done'};
+      if(command==='rpc'&&params.method==='chart'&&params.args.code==='sz000101'&&params.args.kind==='minute'&&w.poolFillAttempts>=2)return [{day:'2026-11-11',data:{previous_close:'10',bars:[{time:'09:30',close:'10',volume:100,complete:true},{time:'15:00',close:'10.5',volume:100,complete:true}]}}];
+      return result;
+    };
+  });
+  await page.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')}).click();
+  const detail=page.getByRole('region',{name:'详情 甲机器人'});
+  await expect(detail).toContainText('分时获取失败：连接超时');
+  await detail.getByRole('button',{name:'重试分时'}).click();
+  await expect(detail.locator('.scp-state')).toContainText('至 15:00');
+  await expect(detail.locator('.scp-chart')).toBeVisible();
+  await page.clock.runFor(180000);
+  expect(await page.evaluate(()=>(window as any).poolFillAttempts)).toBe(2);
+});
+
+test('股票池表头左对齐，图上出现底信号后行内显示圆标并在收起后保留',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-11T14:00:00+08:00')});
+  await boot(page,{});
+  const fixture=JSON.parse(readFileSync('tests/ui/fixtures/turning-final-chart-cases.json','utf8')).find((c:any)=>c.code==='sz000981');
+  await page.evaluate(c=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;w.poolShowBottom=false;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      if(command==='rpc'&&params.method==='chart'&&params.args.code==='sz000101'&&params.args.kind==='minute'){
+        const opening={time:'09:30',close:String(c.opening_price),average:String(c.opening_price),volume:0,complete:true};
+        const bars=w.poolShowBottom?[opening,...c.bars]:[opening,...c.bars.slice(0,20).map((b:any)=>({...b,close:String(c.opening_price),average:String(c.opening_price)}))];
+        return [{day:'2026-11-11',data:{bars,previous_close:String(c.previous_close)}}];
+      }
+      return original(command,params);
+    };
+  },fixture);
+  const group=groupOf(page,'人形机器人');
+  for(const label of ['代码','名称'])expect(await group.getByRole('columnheader',{name:label,exact:true}).evaluate(el=>getComputedStyle(el).justifyContent)).toBe('flex-start');
+  const row=group.locator('.pt-row').filter({has:page.locator('.pt-name[title="甲机器人"]')});
+  await row.click();
+  await expect(page.getByRole('region',{name:'详情 甲机器人'}).locator('.scp-chart')).toBeVisible();
+  await expect(row.getByLabel('分时底信号')).toHaveCount(0);
+  await page.evaluate(()=>{(window as any).poolShowBottom=true;});
+  await page.clock.runFor(6500);
+  const badge=row.getByLabel('分时底信号');await expect(badge).toHaveText('底');
+  const lastBottom=await page.getByRole('region',{name:'详情 甲机器人'}).locator('.chart').evaluate(async el=>{
+    const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);
+    return e.getInstanceByDom(el).getOption().series[0].markPoint.data.filter((m:any)=>m.turningKind==='底').at(-1).coord;
+  });
+  await expect(badge).toHaveAttribute('title',new RegExp(lastBottom[0]));
+  expect(await badge.evaluate(el=>el.previousElementSibling?.classList.contains('pt-count-badge'))).toBe(true);
+  expect(await badge.evaluate(el=>el.getBoundingClientRect().right<=el.parentElement!.getBoundingClientRect().right)).toBe(true);
+  await row.click();await expect(badge).toBeVisible();
+  await expect(group.locator('.pt-row').filter({hasText:'乙减速器'}).getByLabel('分时底信号')).toHaveCount(0);
+  await group.screenshot({path:test.info().outputPath('pool-bottom-badge.png')});
+});
+
 test('股票池展开分时持续取新数据，切走和收起后停止刷新',async({page})=>{
   await page.clock.install({time:new Date('2026-11-12T14:00:00+08:00')});
   await boot(page,{today:'2026-11-12'});
@@ -1601,7 +1685,6 @@ test('详情操作：买入跳模拟交易、加自选调用 add_job（K线按�
   await expect(detail).toBeVisible();
   await detail.getByRole('button',{name:'加自选',exact:true}).click();
   await waitRpc(page,call=>call.method==='add_job'&&call.args.code==='sz000101');
-  await expect(page.locator('.pt-notice')).toHaveText('已请求加入自选：甲机器人。');
 });
 
 // ===== 11. 删除二次确认 =====
@@ -1623,7 +1706,8 @@ test('详情删除：window.confirm 取消不调用，确认后调用 pool_remov
   expect((await rpcCalls(page)).some(call=>call.method==='pool_remove')).toBe(false);
   await detail.getByRole('button',{name:'删除',exact:true}).click();
   await waitRpc(page,call=>call.method==='pool_remove'&&call.args.code==='sz000101');
-  await expect(page.locator('.pt-notice')).toHaveText('已从股票池删除 甲机器人');
+  // 第二批改动：删除成功后不再弹成功提示（减少噪音）；确认行/详情消失即可。
+  await expect(page.locator('.pt-notice')).toHaveCount(0);
   await expect(page.getByRole('region',{name:'详情 甲机器人'})).toHaveCount(0);
 });
 

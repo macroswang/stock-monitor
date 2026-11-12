@@ -4,7 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock,patch
 from core.turning_shapes import signals
-from core.turning_final import SIGNAL, signals as final_signals
+from core.turning_final import signals as final_signals
+from core.turning_combined import SIGNAL
 from core.turning_q1 import signals as q1_signals
 from core.live_trading import LiveTrading,DEFAULT_RULE
 from core.store import Store
@@ -51,7 +52,7 @@ class SignalMigrationTests(unittest.TestCase):
   self.assertNotIn('max_order_value',rule);self.assertNotIn('daily_buy_value',rule)
   self.assertEqual(rule['revision'],8);self.assertEqual(rule['armed_at'],upgraded.started_at)
   self.assertTrue(upgraded.settings()['paused']);self.assertEqual(upgraded.settings()['mode'],'live')
-  self.assertIn('底/顶信号已升级为观量 v2',upgraded.settings()['signal_notice'])
+  self.assertIn('观量 v2+Q1',upgraded.settings()['signal_notice'])
  def test_migration_does_not_repeat_or_rewrite_an_already_correct_rule(self):
   upgraded=LiveTrading(self.app);before=upgraded.rule('a','sz000981')
   self.store.setconfig('trading_paused',False)

@@ -31,14 +31,21 @@ class RequiredChecksTests(TestCase):
         self.assertEqual(self.run_row()['status'],'accepted');submit.assert_called_once()
         self.assertEqual(self.service.view()['cash_reserve'],dict(rate=0,fixed=0))
 
-    def test_each_distinct_signal_can_submit_past_old_daily_quota(self):
+    def test_third_same_direction_signal_is_the_daily_order_limit(self):
+        # task-21 safety net: independent mode now caps actual orders per
+        # account+code+side+day at 3 (the merged v2+Q1 list can change retroactively).
         self.live()
         with patch('core.live_trading.brokers.holdings',side_effect=lambda *_a,**_k:self.snapshot_now()),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
-            for n,status in enumerate(['unknown','rejected','cancelled','filled','accepted','accepted']):
+            for n in range(3):
                 self.observe(str(n));self.service.drain(reports=False)
                 self.assertEqual(self.run_row()['status'],'accepted')
-                self.store.execute('UPDATE trading_runs SET status=? WHERE id=?',(status,self.run_row()['id']))
-            self.assertEqual(submit.call_count,6)
+                self.store.execute('UPDATE trading_runs SET status=? WHERE id=?',('accepted',self.run_row()['id']))
+            for n in (3,4):
+                self.observe(str(n));self.service.drain(reports=False)
+                row=self.run_row()
+                self.assertEqual(row['status'],'skipped')
+                self.assertIn('当日该方向已达3个信号上限（含Q1补位）',json.loads(row['payload'])['message'])
+            self.assertEqual(submit.call_count,3)
 
     def test_stale_quote_waits_without_device_io_then_uses_fresh_data(self):
         self.live();self.observe('waiting');self.now+=timedelta(seconds=100)
@@ -104,20 +111,20 @@ class RequiredChecksTests(TestCase):
 
     def test_revision_or_sampling_gap_does_not_veto_new_current_minute_signal(self):
         self.arm();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
         self.now+=timedelta(seconds=50);self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='shape|09:59|10:01',price=30)
-        with patch('core.turning_final.signals',return_value=[event]):
+        with patch('core.turning_combined.signals',return_value=[event]):
             self.service.ingest('sh603938',[dict(bar,average='30.6'),dict(bar,time='10:01')],self.app.quotes['sh603938'],self.now,False,'分钟数据修订')
         self.assertEqual(self.run_row()['status'],'pending')
         self.assertTrue(json.loads(self.run_row()['payload'])['admission']['allowed'])
 
     def test_recovered_historical_signal_is_not_admitted_on_new_tail(self):
         self.arm();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
         self.now+=timedelta(minutes=2)
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='old-shape',price=30)
-        with patch('core.turning_final.signals',return_value=[event]):
+        with patch('core.turning_combined.signals',return_value=[event]):
             self.service.ingest('sh603938',[bar,dict(bar,time='10:03')],self.app.quotes['sh603938'],self.now,False)
         self.assertEqual(self.run_row()['status'],'skipped')
 
@@ -128,10 +135,10 @@ class RequiredChecksTests(TestCase):
 
     def test_delayed_minute_data_is_not_mistaken_for_a_current_signal(self):
         self.arm();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
         self.now+=timedelta(minutes=2);self.app.quotes['sh603938']['timestamp']=self.now.isoformat()
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='delayed-shape',price=30)
-        with patch('core.turning_final.signals',return_value=[event]):
+        with patch('core.turning_combined.signals',return_value=[event]):
             self.service.ingest('sh603938',[bar,dict(bar,time='10:01')],self.app.quotes['sh603938'],self.now,False)
         self.assertEqual(self.run_row()['status'],'skipped')
 
@@ -171,13 +178,13 @@ class RequiredChecksTests(TestCase):
         self.live();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='shape|09:59|10:01',price=30)
         bars=[bar,dict(bar,time='10:01')]
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
-        with patch('core.turning_final.signals',return_value=[event]):self.service.ingest('sh603938',bars,self.app.quotes['sh603938'],self.now,True)
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[event]):self.service.ingest('sh603938',bars,self.app.quotes['sh603938'],self.now,True)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
         with patch('core.live_trading.brokers.holdings',return_value=self.snapshot_now()) as holdings,patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
             self.service.drain(reports=False)
             self.assertEqual(self.run_row()['status'],'pending');holdings.assert_not_called();submit.assert_not_called()
-            with patch('core.turning_final.signals',return_value=[event]):self.service.ingest('sh603938',bars,self.app.quotes['sh603938'],self.now,True)
+            with patch('core.turning_combined.signals',return_value=[event]):self.service.ingest('sh603938',bars,self.app.quotes['sh603938'],self.now,True)
             self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0)")
             self.service.drain(reports=False)
             self.assertEqual(self.run_row()['status'],'accepted');submit.assert_called_once()
@@ -187,10 +194,10 @@ class RequiredChecksTests(TestCase):
         self.store.execute('UPDATE trading_rules SET armed_at=?',(self.now.isoformat(),))
         bar=dict(time='10:01',close='30',volume=10000,average='30.5',complete=True)
         self.now+=timedelta(seconds=5)
-        with patch('core.turning_final.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
+        with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
         self.now+=timedelta(seconds=5)
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='new-after-activation',price=30)
-        with patch('core.turning_final.signals',return_value=[event]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,True)
+        with patch('core.turning_combined.signals',return_value=[event]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,True)
         self.assertEqual(self.run_row()['status'],'pending')
         self.assertGreater(json.loads(self.run_row()['payload'])['admission']['baseline_at'],self.service.started_at)
 
@@ -198,7 +205,7 @@ class RequiredChecksTests(TestCase):
         self.arm();self.service.started_at=self.now.isoformat()
         bar=dict(time='10:01',close='30',volume=10000,average='30.5',complete=True)
         event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='already-present',price=30)
-        with patch('core.turning_final.signals',return_value=[event]):
+        with patch('core.turning_combined.signals',return_value=[event]):
             self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)
             self.now+=timedelta(seconds=5)
             self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,True)

@@ -10,6 +10,7 @@ import {turningQualityQ1} from './turningQualityQ1';
 import {turningDisplayPoints} from './turningDisplay';
 import {turningFinal,TURNING_FINAL_MODES} from './turningFinal';
 import {turningFinalV3} from './turningFinalV3';
+import {turningCombinedSignals} from './turningCombined';
 
 // Chart top/bottom mode. Default = zhangle (shape-v2.4, the auto-trading signal);
 // shape-v3 is an experimental feature flag (default off) selectable for comparison, and
@@ -78,7 +79,9 @@ const renderPaperConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
   {type:'circle',shape:{cx:x,cy:y,r:1.5},style:{fill:color}}
  ]};
 };
-export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,benchmark,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice}:{stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string};volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean}){
+export type BottomSignal={day:string;time:string;price:number};
+
+export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,benchmark,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,onBottomSignal}:{onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string};volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean}){
  // Opening quotes seed R1 only; plotted prices, volumes, MACD and Q1 keep their original input.
  const shapeBars=shapeOpening?[...shapeOpening,...minute]:minute;
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
@@ -131,6 +134,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  // 用户规则：Q1 顶/底都升级为对应信号；“底/顶”计数器统计实际显示的同类信号数（v2 + 补位 Q1，均≤3）。
  const turnCounts={bottom:capPoints.filter(m=>m.kind==='bottom').length,top:capPoints.filter(m=>m.kind==='top').length};
  const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?finalTurns:[],showQuality?q1Turns:[],showShapes,showQuality);
+ const latestBottom=selectableTurns.filter(point=>point.kind==='bottom').at(-1);
+ const bottomCallback=useRef(onBottomSignal);bottomCallback.current=onBottomSignal;
+ useEffect(()=>{
+  if(!isCandleView(view)&&selectedDay)bottomCallback.current?.(latestBottom?{day:selectedDay,time:latestBottom.time,price:latestBottom.price}:null);
+ },[stockCode,view,selectedDay,latestBottom?.time,latestBottom?.price]);
  const chosen=choice?.scope===scope&&(choice.kind==='位置'?minute.some(b=>b.time===choice.time&&b.complete):choice.kind?selectableTurns.some(m=>m.time===choice.time&&(m.kind==='bottom'?'底':'顶')===choice.kind):visibleMarks.some(m=>m.coord[0]===choice.time))?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const quotePrices=[...minute.map(b=>+b.close),...(currentPrice?[currentPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
@@ -219,7 +227,8 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
 
   // Automatic-trade annotations read the fixed high-coverage shape-v2.4 stream: the
   // display mode may switch to stable, but order matching must follow the trading rule.
-  const autoTradeShapes=isDay?[]:turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),shapes=isDay||!showShapes?[]:finalTurns;
+ // Auto-trade annotations follow the backend trading stream: v2.4 + Q1 fill (shape-v2-q1).
+ const autoTradeShapes=isDay?[]:turningCombinedSignals(turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),q1Turns),shapes=isDay||!showShapes?[]:finalTurns;
   const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time));
   const quality=isDay||!showQuality?[]:q1Turns;
   const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
@@ -328,15 +337,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       const observation=(point.shape||point.q1)!;
       // Q1 顶/底均按对应“顶/底信号”呈现；仅在来源不同时补一行“来源：Q1 质量点”。
       const label=point.kind==='bottom'?'底信号':'顶信号';
-      rows.push(`${label}：${price(point.price)} 元`,
-       `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
+      rows.push(`${label}：${price(point.price)} 元`);
+      if(point.shape&&Number.isFinite(point.shape.quality))rows.push(`质量分：${point.shape.quality!.toFixed(2)}`);
+      rows.push(`候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
        `${point.shape?'发出时间':'确认时间'}：${point.time} · ${price(point.price)} 元`);
       if(!point.shape)rows.push('来源：Q1 质量点');
-      if(point.shape&&Number.isFinite(point.shape.quality)){
-       rows.push(`模式：${TURNING_MODE_LABELS[turningMode]}`,
-        `质量分：${point.shape.quality!.toFixed(2)}`,
-        `当日上限：底 ${turnCounts.bottom}/3 · 顶 ${turnCounts.top}/3`);
-      }
      }
      for(const t of tradesByTime.get(labels[idx])||[])rows.push(`模拟成交 ${t.value}：${t.buyShares?`买入${t.buyShares}股 · 均价${price(t.buyAmount/t.buyShares/100)}元`:''}${t.buyShares&&t.sellShares?'；':''}${t.sellShares?`卖出${t.sellShares}股 · 均价${price(t.sellAmount/t.sellShares/100)}元`:''}${t.value==='T'?'（当日有买有卖）':''}`);
      if(!isDay)for(const t of tradePoints.filter(t=>t.time===labels[idx]&&t.orderCount&&(t.fills>t.orderCount||t.orderCount>1))){
@@ -347,7 +352,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       const row=document.createElement('div');
       const split=text.indexOf('：');
       if(split>=0){const label=document.createElement('span');label.textContent=text.slice(0,split+1);const value=document.createElement('span');value.textContent=text.slice(split+1).trim();row.append(label,value);row.className='quote-detail';if(text.startsWith('涨停：'))value.style.color='#ed7d81';if(text.startsWith('跌停：'))value.style.color='#51c7aa';if(text.startsWith('涨跌幅：'))value.style.color=text.includes('：-')?'#51c7aa':text.includes('：+')?'#ed7d81':'#e7edf7';}else row.textContent=text;
-      if(split<0||/^(基准|候选|确认|发出|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发|MA\d+)：/.test(text)))row.classList.add('quote-wide');
+      if(split<0||/^(基准|模拟成交|委托累计|买卖量为约值|个股量柱|指数量柱)/.test(text)||(isDay&&!/^(开盘|收盘|最高|最低|成交量|触发|MA\d+)：/.test(text)))row.classList.add('quote-wide');
       if(/^相对(触发|底|顶|位置)涨跌幅/.test(text)){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
      }
      if(comparison.childElementCount)root.append(comparison);

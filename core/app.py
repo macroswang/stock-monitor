@@ -555,6 +555,7 @@ class App:
             service=self.option_pcr if product=='510050' else self.option_pcr_300
             if method=='option_pcr':return service.view()
             return self.start_job(lambda:(service.refresh(),service.view())[1])
+        if method=='pool_signals':return self.pool.signals.view(args.get('mode','zhangle'))
         if method in ('pool','pool_view'):
             return self.pool.view(args.get('days'),args.get('start'),args.get('end'),args.get('group'),
                                   args.get('status'),args.get('limit'),args.get('offset'),
@@ -729,6 +730,7 @@ class App:
         if method=='archive_fill':return self.start_job(lambda:self.archive.update(symbol(args['code'])))
         if method=='minute_ensure':
             code=symbol(args['code']);day=date.fromisoformat(args['day']).isoformat()
+            if args.get('fill') is True:return self.start_job(lambda:self.minute_cache.ensure(code,day,refresh=True,on_demand=True))
             return self.start_job(lambda:self.minute_cache.ensure(code,day,refresh=True) if args.get('refresh') is True else self.minute_cache.ensure(code,day))
         if method=='daily_load':
             code=symbol(args['code']);start,end=bounds(args)

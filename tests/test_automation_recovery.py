@@ -81,17 +81,23 @@ class AutomationRecoveryTests(unittest.TestCase):
   a=json.loads(self.store.query("SELECT payload FROM trading_positions WHERE account_id='a'")[0]['payload'])
   b=json.loads(self.store.query("SELECT payload FROM trading_positions WHERE account_id='b'")[0]['payload'])
   self.assertEqual(a['quantity'],200);self.assertEqual(b['quantity'],300)
- def test_existing_outcomes_never_block_an_independent_signal_and_sync_is_fresh(self):
+ def test_existing_outcomes_never_block_an_independent_signal_until_daily_order_cap(self):
+  # task-21: independent-mode actual orders are capped at 3 per account+code+side+day,
+  # so the first two independent signals still submit past the original outcome while
+  # the third one is recorded as skipped by the new safety net.
   self.service.configure(dict(mode='live',confirm_live=True));self.arm()
   with patch('core.live_trading.brokers.holdings',return_value=self.snapshot) as holdings,patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
    self.observe('one');self.service.drain(reports=False)
    original=self.store.query('SELECT * FROM trading_runs')[0]
-   for status in ['accepted','unknown','partial']:
+   for index,status in enumerate(['accepted','unknown','partial']):
     self.store.execute('UPDATE trading_runs SET status=? WHERE id=?',(status,original['id']))
     self.observe('independent-'+status);self.service.drain(reports=False)
-    self.assertEqual(self.store.query('SELECT status FROM trading_runs ORDER BY rowid DESC LIMIT 1')[0]['status'],'accepted')
+    latest=self.store.query('SELECT status FROM trading_runs ORDER BY rowid DESC LIMIT 1')[0]['status']
+    self.assertEqual(latest,'accepted' if index<2 else 'skipped')
+   skipped=json.loads(self.store.query('SELECT payload FROM trading_runs ORDER BY rowid DESC LIMIT 1')[0]['payload'])
+   self.assertIn('当日该方向已达3个信号上限（含Q1补位）',skipped['message'])
    self.observe('independent-unknown');self.service.drain(reports=False)
-   self.assertEqual(submit.call_count,4);self.assertEqual(holdings.call_count,4)
+   self.assertEqual(submit.call_count,3);self.assertEqual(holdings.call_count,3)
    self.assertTrue(all(call.args[1]=='a' for call in submit.call_args_list))
  def test_fresh_quote_after_long_native_preparation_is_allowed_within_original_deadline(self):
   self.arm();self.observe('one');self.now+=timedelta(seconds=50)

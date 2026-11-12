@@ -8,10 +8,11 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from core.turning_q1 import TIMES, signals as q1_signals
-from core.turning_final import (SIGNAL, LABEL, VERSION, STABLE, ZHANGLE, RULE,
+from core.turning_final import (SIGNAL as V2_SIGNAL, LABEL, VERSION, STABLE, ZHANGLE, RULE,
                                 signals, candidates, liquidity,
                                 quality_v2, quality_proximity)
 from core.live_trading import LiveTrading, DEFAULT_RULE
+from core.turning_combined import SIGNAL
 from core.provider import now_cn
 from core.store import Store
 
@@ -32,10 +33,11 @@ def case_bars(case):
 
 class GoldenParityTests(unittest.TestCase):
     def test_metadata_matches_frozen_contract(self):
-        self.assertEqual(SIGNAL, 'shape-v2')
+        self.assertEqual(V2_SIGNAL, 'shape-v2')
+        self.assertEqual(SIGNAL, 'shape-v2-q1')
         self.assertEqual(LABEL, '观量底／顶信号')
         self.assertEqual(VERSION, 'shape-v2.4')
-        self.assertEqual(GOLDEN['meta']['signal'], SIGNAL)
+        self.assertEqual(GOLDEN['meta']['signal'], V2_SIGNAL)
         self.assertEqual(GOLDEN['meta']['version'], VERSION)
         self.assertIs(RULE, ZHANGLE)
         self.assertFalse(ZHANGLE['same_session_only'])
@@ -287,7 +289,7 @@ class LiveTradingMigrationTests(unittest.TestCase):
         self.assertEqual(settings['mode'], 'live')
         self.assertEqual(settings['signal'], SIGNAL)
         self.assertEqual(settings['signal_label'], LABEL)
-        self.assertIn('底/顶信号已升级为观量 v2', settings['signal_notice'])
+        self.assertIn('观量 v2+Q1', settings['signal_notice'])
         self.assertIn('自动执行已暂停', settings['signal_notice'])
         # A second restart must not migrate (or pause) again.
         self.store.setconfig('trading_paused', False)
