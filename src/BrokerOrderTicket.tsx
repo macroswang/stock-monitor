@@ -6,7 +6,7 @@ import {defaultTCosts} from './tCosts';
 
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 type Account={id:string;broker_name:string;account_masked:string;enabled:boolean;supports_order:boolean};
-type Result={status:string;submitted:boolean;request_id:string;message?:string;order_id?:string;result?:{message?:string;order_id?:string}};
+type Result={status:string;submitted:boolean;request_id:string;receipt_pending?:boolean;message?:string;order_id?:string;result?:{message?:string;order_id?:string}};
 type CapacityView={accounts:{id:string;sync_status:string;funds:Record<string,string>;funds_observed_at?:string}[];positions:{account_id:string;code:string;position_verified:boolean;sellable:number;updated_at?:string;rule:{commission_wan:number;minimum_commission:number}}[]};
 
 /** A manual intent sent through the existing durable broker gateway. */
@@ -62,8 +62,8 @@ export default function BrokerOrderTicket({request,point,initialPrice,visible=tr
      let outcome=state.result;if(!outcome)throw Error('未收到委托结果');
      if(outcome.status==='accepted'&&outcome.submitted!==true)outcome={...outcome,status:'unknown'};
      setResult(outcome);
-     if(outcome.status==='accepted'&&outcome.submitted===true){
-      onAccepted(`真实委托：${selected!.broker_name} ${selected!.account_masked} · ${side==='buy'?'买入':'卖出'} ${point.name} ${n} 股，限价 ${(cents/100).toFixed(2)} 元 · 券商已受理，成交待回报`);
+     if(outcome.submitted===true&&(outcome.status==='accepted'||outcome.receipt_pending===true)){
+      onAccepted(`真实委托：${selected!.broker_name} ${selected!.account_masked} · ${side==='buy'?'买入':'卖出'} ${point.name} ${n} 股，限价 ${(cents/100).toFixed(2)} 元 · 委托已发送，待手动同步成交`);
      }else if(['failed','rejected'].includes(outcome.status)){
       intent.current=null;
      }

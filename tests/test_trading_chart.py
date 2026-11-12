@@ -32,6 +32,26 @@ class TradingChartTests(unittest.TestCase):
   self.seed();p=chart(self.store,'sz000981','2026-11-03')['points'][0]
   self.assertEqual(p['order_price'],'2.16');self.assertEqual(p['reference_price'],2.17)
   self.assertIsNone(p['fill_price']);self.assertIsNone(p['filled']);self.assertEqual(p['order_id'],'contract-one')
+ def test_manual_submission_is_visible_then_replaced_only_by_a_new_verified_fill_sync(self):
+  day='2026-11-03';stamp=day+'T10:00:01+08:00'
+  request=dict(account_id='a',code='000981',side='buy',price='2.20',quantity=100,dry_run=False)
+  result=dict(status='unknown',submitted=True,receipt_pending=True,submitted_at=stamp)
+  self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('manual-buy-123456','a',json.dumps(request),'unknown',json.dumps(result),stamp,stamp))
+  initial=chart(self.store,'sz000981',day)['points']
+  self.assertEqual(len(initial),1);self.assertEqual(initial[0]['source'],'manual');self.assertEqual(initial[0]['ordered_at'],stamp)
+  self.assertEqual(initial[0]['order_price'],'2.20');self.assertNotIn('fill_price',initial[0])
+  cache=dict(account_id='a',account_verified=True,complete=True,day=day,observed_at=day+'T09:59:00+08:00',rows=[])
+  self.store.cache('broker-account:a',CACHE_KIND,day,cache)
+  self.assertEqual(chart(self.store,'sz000981',day)['points'][0]['source'],'manual')
+  cache.update(observed_at=day+'T10:05:00+08:00',rows=[dict(code='000981',side='buy',date=day,time='10:03:02',order_id='actual123',filled=100,average='2.18')])
+  self.store.cache('broker-account:a',CACHE_KIND,day,dict(cache,account_verified=False))
+  self.assertEqual(chart(self.store,'sz000981',day)['points'][0]['source'],'manual')
+  self.store.cache('broker-account:a',CACHE_KIND,day,cache)
+  actual=chart(self.store,'sz000981',day)['points']
+  self.assertEqual(len(actual),1);self.assertEqual(actual[0]['source'],'broker_cache');self.assertEqual(actual[0]['fill_price'],2.18)
+  self.assertEqual(actual[0]['ordered_at'],day+'T10:03:02+08:00')
+  self.store.cache('broker-account:a',CACHE_KIND,day,dict(cache,rows=[]))
+  self.assertEqual(chart(self.store,'sz000981',day)['points'],[])
  def test_verified_average_is_separate_from_limit_and_manual_notes_cannot_supply_it(self):
   self.seed(verification=dict(origin='broker_auto',status='filled',filled=2300,average='2.15'),status='filled')
   self.seed('two','b',verification=dict(origin='manual',status='filled',filled=2300,average='2.14'),status='filled')

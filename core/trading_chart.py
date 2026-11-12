@@ -11,6 +11,42 @@ from executor.trade import parse_result_message
 CACHE_KIND='broker_filled_orders_v1'
 
 
+def _fill_cache(store, account_id, day):
+    cached=store.getcache('broker-account:'+account_id,CACHE_KIND,day)
+    payload=cached[0]['data'] if cached else {}
+    if (payload.get('account_id')==account_id and payload.get('account_verified') is True and
+        payload.get('complete') is True and payload.get('day')==day and
+        isinstance(payload.get('observed_at'),str) and payload['observed_at'].startswith(day+'T') and
+        isinstance(payload.get('rows'),list)):
+        return payload
+    return None
+
+
+def _manual_submissions(store, code, day):
+    points=[]
+    rows=store.query("SELECT b.*,a.broker,a.account FROM broker_requests b JOIN broker_accounts a ON a.id=b.account_id "
+                     "WHERE b.request_id NOT LIKE 'auto_%' AND substr(b.created_at,1,10)=? AND a.enabled=1",(day,))
+    for row in rows:
+        try:
+            plan,request_day=request_plan(row)
+            result=json.loads(row['result'] or '{}')
+            if request_day!=day or plan['code']!=code[2:] or result.get('submitted') is not True:
+                continue
+            submitted=result.get('submitted_at') or row['created_at']
+            cached=_fill_cache(store,row['account_id'],day)
+            # 用户完整同步后，以券商实际成交点替换待同步的手动委托点。
+            if cached and cached['observed_at']>=submitted:
+                continue
+            points.append(dict(id='manual-'+row['request_id'],source='manual',account_id=row['account_id'],
+                broker_name=brokers._spec(row['broker']).name,account_masked=brokers.mask_account(row['account']),
+                code=code,day=day,side=plan['side'],status=row['status'],mode='live',created_at=row['created_at'],
+                ordered_at=submitted,order_price=plan['price'],quantity=plan['quantity'],order_id=known_id(result),
+                attempted=True,message='手动委托已发送，待手动同步成交'))
+        except (ValueError,TypeError,KeyError):
+            continue
+    return points
+
+
 def sync_filled_orders(store,day):
     """Read complete broker-side fills and replace only verified account caches."""
     date.fromisoformat(day)
@@ -53,13 +89,8 @@ def _cached_fills(store,code,day,automatic,native_keys):
     points=[]
     accounts=store.query('SELECT * FROM broker_accounts WHERE enabled=1 ORDER BY created_at,id')
     for account in accounts:
-        cached=store.getcache('broker-account:'+account['id'],CACHE_KIND,day)
-        if not cached:continue
-        payload=cached[0]['data']
-        if (payload.get('account_id')!=account['id'] or payload.get('account_verified') is not True or
-            payload.get('complete') is not True or payload.get('day')!=day or
-            not isinstance(payload.get('observed_at'),str) or not payload['observed_at'].startswith(day+'T') or
-            not isinstance(payload.get('rows'),list)):continue
+        payload=_fill_cache(store,account['id'],day)
+        if not payload:continue
         occurrences={}
         for row in payload['rows']:
             if not isinstance(row,dict):continue
@@ -190,5 +221,6 @@ def chart(store,code,day):
             created_at=r['created_at'],ordered_at=sent,order_price=plan.get('price'),quantity=plan.get('quantity'),order_id=order_id or receipt_id,
             filled=v.get('filled'),fill_price=fill_price,message=p.get('message',''),reconciliation=p.get('reconciliation'),
             attempted=r['request_status'] in ('sending','accepted','unknown','partial','filled','cancelled','rejected'),receipt_accepted=bool(receipt_id),receipt_message=receipt.get('message',''),admission=p.get('admission'),source='automatic'))
+    points.extend(_manual_submissions(store,code,day))
     points.extend(_cached_fills(store,code,day,points,native_keys))
     return dict(code=code,day=day,accounts=accounts,points=points)

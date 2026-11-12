@@ -129,6 +129,11 @@ class Adapter(BrokerAdapter):
         if self.owner.broker=='ths' and filled:
             report.update(kind='contract_fills',source='ths_native_contract_group')
         return report
+    def filled_orders(self,day):
+        rows=[dict(code=o['code'],side=o['side'],date=day,time=o.get('fill_time',o['time']),
+                   order_id=o['order_id'],quantity=o['quantity'],price=o['price'],filled=o['filled'],average=o.get('fill_price',o['price']))
+              for o in self.owner.orders if o['filled']]
+        return dict(day=day,complete=True,rows=rows)
     def discover_order_report(self,day,expected,submitted_at):
         from executor.ths_report import discover
         records=[dict(order_id=o['order_id'],code=o['code'],side=o['side'],name='山子高科',date=o['date'],time=o['time'],
@@ -145,7 +150,7 @@ class Harness:
         from core import brokers
         self.tmp=tempfile.TemporaryDirectory(prefix='guanliang-order-e2e-');os.environ['STOCK_MONITOR_DATA']=self.tmp.name
         self.clock=[datetime(2026,11,4,9,55,0,tzinfo=CN)];self.patches=[]
-        for name in ('core.app','core.live_trading','core.brokers','core.broker_reconciliation','core.store'):
+        for name in ('core.app','core.live_trading','core.brokers','core.broker_reconciliation','core.store','core.trading_chart'):
             self.patches.append(patch(name+'.now_cn',side_effect=lambda:self.clock[0]))
         self.patches += [patch('executor.adb.Adb.run',side_effect=forbidden),patch('core.brokers.device_operation',side_effect=lambda *_a,**_k:nullcontext()),
             patch('executor.trade.wait_until',side_effect=poll),patch('executor.ths_order.wait_until',side_effect=poll)]
@@ -208,6 +213,11 @@ class Harness:
             for owner in self.owners.values():owner.gate.set()
             return True
         if method=='e2e_reconcile':return self.reconcile(args['fraction'])
+        if method=='e2e_manual_fill':
+            self.clock[0]+=timedelta(minutes=1)
+            order=self.owners[args['broker']].orders[-1]
+            order.update(filled=order['quantity'],fill_price=args['price'],fill_time=self.clock[0].strftime('%H:%M:%S'))
+            return True
         if method=='e2e_state':return self.state()
         if method=='e2e_fault':
             owner=self.owners[args['broker']];setattr(owner,args['kind'],True);return True

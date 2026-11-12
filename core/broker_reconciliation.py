@@ -284,6 +284,8 @@ class Reconciler:
         now = now_cn()
         rows = self.store.query("SELECT * FROM broker_requests WHERE status IN ('accepted','unknown','partial') ORDER BY updated_at,request_id")
         for row in rows:
+            if not row['request_id'].startswith('auto_'):
+                continue  # 手动委托由用户同步成交，不自动占用设备查询回报。
             result = json.loads(row['result'] or '{}')
             try:
                 _,day=request_plan(row)

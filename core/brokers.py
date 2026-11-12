@@ -425,7 +425,10 @@ def submit_order(
         ready=_verify_account(client, creds, store)
         if ready.get('maintenance') is True and not dry_run:raise BrokerError('券商正在清算维护，数据可能不准确，本次不发送委托')
         result = client.submit_order(side=side, code=code, quantity=quantity, price=price,
-                                     max_value=max_value, dry_run=dry_run, before_confirm=before_confirm)
+                                     max_value=max_value, dry_run=dry_run, before_confirm=before_confirm,
+                                     **({'wait_for_receipt': False} if not request_id.startswith('auto_') else {}))
+        if result.get('receipt_pending') is True and result.get('submitted') is True:
+            result['submitted_at'] = now_cn().isoformat()
         if result.get("status") not in ("accepted", "rejected", "preview", "unknown"):
             result = {"submitted": False, "status": "unknown", "message": "券商返回结果无法确认"}
     except Exception as exc:

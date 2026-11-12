@@ -48,6 +48,10 @@ class ReconciliationTests(unittest.TestCase):
         return r,t
 
     def reconcile(self,**kw):return self.rec.reconcile('a','auto_one',**kw)
+    def test_manual_requests_are_not_automatically_polled(self):
+        self.store.execute("UPDATE broker_requests SET request_id='manual-order-123456'")
+        self.rec.poll()
+        self.reader.assert_not_called()
 
     def test_exact_report_commits_both_records_and_preserves_ack(self):
         result=self.reconcile();self.assertTrue(result['ok'])

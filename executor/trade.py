@@ -502,6 +502,7 @@ class TradePage:
         dry_run: bool = False,
         timeout: float = 20.0,
         before_confirm=None,
+        wait_for_receipt: bool = True,
     ) -> dict:
         """Fill, submit, verify the confirmation dialog and confirm it.
 
@@ -600,6 +601,9 @@ class TradePage:
             raise
         try:
             self.adb.tap_node(ok)
+            if not wait_for_receipt:
+                return {"submitted": True, "status": "unknown", "receipt_pending": True,
+                        "message": "委托确认已发送，待手动同步成交", "confirm": confirm.as_dict()}
             result = self._wait_result(timeout)
         except Exception:
             result = None  # 点击可能已经生效；不能把读回失败当成未提交。

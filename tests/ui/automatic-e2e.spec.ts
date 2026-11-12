@@ -192,9 +192,10 @@ test('manual real buy uses the selected account and existing gateway without a p
  await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('2300');
  await expect(submit).toBeEnabled();await expect(ticket.getByRole('checkbox')).toHaveCount(0);
  await page.screenshot({path:info.outputPath('manual-real-buy.png')});await submit.click();
- await expect(ticket).toHaveCount(0);await expect(page.locator('.toast')).toContainText('券商已受理，成交待回报');
+ await expect(ticket).toHaveCount(0);await expect(page.locator('.toast')).toContainText('待手动同步成交');
  const state=await rpc('e2e_state');expect(state.orders.zhangle).toMatchObject([{side:'buy',code:'000981',quantity:2300,price:'2.24'}]);expect(state.orders.ths).toEqual([]);
- const requests=await rpc('broker_requests',{id:'e2e-a'});expect(requests).toHaveLength(1);expect(requests[0].status).toBe('accepted');expect(requests[0].request_id).not.toMatch(/^auto_/);
+ const requests=await rpc('broker_requests',{id:'e2e-a'});expect(requests).toHaveLength(1);expect(requests[0].status).toBe('unknown');expect(requests[0].request_id).not.toMatch(/^auto_/);
+ const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'B',source:'manual',status:'unknown',order_price:'2.24'}]);
  const after=await rpc('trading_view');expect(after.settings).toEqual(before.settings);expect(after.positions.map((p:any)=>p.rule)).toEqual(before.positions.map((p:any)=>p.rule));expect(after.runs).toEqual(before.runs);
  const paper=await rpc('paper_snapshot');expect(paper.accounts).toHaveLength(0);expect(paper.orders).toEqual([]);
  // A newly opened ticket always defaults to real; simulation remains selectable.
@@ -213,19 +214,24 @@ test('manual real sell freezes its intent while sending and cannot submit twice'
  await rpc('e2e_release_native');await expect(ticket).toHaveCount(0);
  const state=await rpc('e2e_state');expect(state.orders.zhangle).toEqual([]);expect(state.orders.ths).toMatchObject([{side:'sell',quantity:200,price:'2.25'}]);
  expect(await rpc('broker_requests',{id:'e2e-b'})).toHaveLength(1);
+ const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'S',source:'manual',order_price:'2.25'}]);
  // Existing bottom-signal automation remains functional after a manual order.
  const automatic=await rpc('e2e_feed',{kind:'bottom'});expect(automatic.orders.zhangle).toHaveLength(1);expect(automatic.orders.ths).toHaveLength(2);
  expect(automatic.runs.map((r:any)=>r.status)).toEqual(['accepted','accepted']);
 });
 
-test('manual real order with a lost receipt stays unknown and never retries automatically',async({page},info)=>{
- await setup(page);await rpc('e2e_fault',{broker:'zhangle',kind:'lose_receipt'});const ticket=await manualTicket(page);
- await ticket.getByLabel('真实委托券商账户').selectOption('e2e-a');await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('100');
- await ticket.getByRole('button',{name:'确认买入'}).click();
- await expect(ticket.getByRole('status')).toContainText('未收到明确回执');await expect(ticket.getByRole('button',{name:'确认买入'})).toBeDisabled();
- expect((await rpc('e2e_state')).orders.zhangle).toHaveLength(1);expect((await rpc('broker_requests',{id:'e2e-a'}))[0].status).toBe('unknown');
- await page.screenshot({path:info.outputPath('manual-real-unknown.png')});
- await ticket.getByRole('button',{name:'关闭真实委托'}).click();await page.reload();expect((await rpc('e2e_state')).orders.zhangle).toHaveLength(1);
+test('manual order closes and shows B without reading the receipt, then manual sync corrects its position',async({page})=>{
+ await setup(page);await page.getByRole('button',{name:'暂停全部自动交易'}).click();
+ await page.clock.install({time:new Date('2026-11-04T09:55:00+08:00')});
+ await rpc('e2e_fault',{broker:'ths',kind:'lose_receipt'});const ticket=await manualTicket(page);
+ await ticket.getByLabel('真实委托券商账户').selectOption('e2e-b');await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('100');
+ await ticket.getByRole('button',{name:'确认买入'}).click();await expect(ticket).toHaveCount(0);
+ const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'B',source:'manual',status:'unknown',order_price:'2.24'}]);
+ expect((await rpc('e2e_state')).orders.ths).toHaveLength(1);
+ await rpc('e2e_manual_fill',{broker:'ths',price:'2.23'});await rpc('e2e_repeat');
+ await page.getByRole('button',{name:'同步券商成交',exact:true}).click();
+ await expect.poll(plot.read).toMatchObject([{label:'B',source:'broker_cache',fill_price:2.23,ordered_at:'2026-11-04T09:56:00+08:00'}]);
+ expect((await rpc('e2e_state')).orders.ths).toHaveLength(1);
 });
 
 test('manual real order verifies the chosen brokerage account before native submission',async({page})=>{
@@ -246,22 +252,23 @@ test('manual real order with an interrupted IPC response keeps the same intent a
  });
  await ticket.getByRole('button',{name:'确认买入'}).click();
  await expect(ticket.getByRole('alert')).toContainText('结果待核实');await expect(ticket.getByRole('button',{name:'确认买入'})).toBeDisabled();
- await expect.poll(async()=> (await rpc('broker_requests',{id:'e2e-a'}))[0]?.status).toBe('accepted');
+ await expect.poll(async()=> (await rpc('broker_requests',{id:'e2e-a'}))[0]?.status).toBe('unknown');
  expect((await rpc('e2e_state')).orders.zhangle).toHaveLength(1);expect(await rpc('broker_requests',{id:'e2e-a'})).toHaveLength(1);
  await expect(ticket).toBeVisible();
 });
 
 test('mode switching preserves the unknown real intent and cannot unlock another submission',async({page})=>{
- await setup(page);await rpc('e2e_fault',{broker:'zhangle',kind:'lose_receipt'});const ticket=await manualTicket(page);
+ await setup(page);const ticket=await manualTicket(page);
  await ticket.getByLabel('真实委托券商账户').selectOption('e2e-a');await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('100');
+ await page.evaluate(()=>{const w=window as any,original=w.testTradingRpc;let lost=false;w.testTradingRpc=(method:string,args:any)=>method==='job'&&!lost?(lost=true,Promise.reject(Error('IPC 回执中断'))):original(method,args);});
  await ticket.getByRole('button',{name:'确认买入'}).click();
- await expect(ticket.getByRole('status')).toContainText('未收到明确回执');
+ await expect(ticket.getByRole('alert')).toContainText('结果待核实');
  const original=await rpc('broker_requests',{id:'e2e-a'});
  await ticket.getByRole('switch',{name:'真实委托'}).click();
  await expect(ticket.getByRole('button',{name:'买入',exact:true})).toHaveAttribute('aria-pressed','true');
  await ticket.getByRole('button',{name:'卖出',exact:true}).click();
  await ticket.getByRole('switch',{name:'真实委托'}).click();
- await expect(ticket.getByRole('status')).toContainText('未收到明确回执');
+ await expect(ticket.getByRole('alert')).toContainText('结果待核实');
  await expect(ticket.getByLabel('真实委托券商账户')).toHaveValue('e2e-a');
  await expect(ticket.getByRole('button',{name:'确认买入'})).toBeDisabled();
  expect(await rpc('broker_requests',{id:'e2e-a'})).toEqual(original);expect((await rpc('e2e_state')).orders.zhangle).toHaveLength(1);

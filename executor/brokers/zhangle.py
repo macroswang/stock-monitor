@@ -74,6 +74,7 @@ class ZhangleAdapter(BrokerAdapter):
         max_value: float | None = 1000.0,
         dry_run: bool = False,
         before_confirm=None,
+        wait_for_receipt=True,
     ) -> dict:
         page = TradePage(self.adb)
         return page.submit(
@@ -84,6 +85,7 @@ class ZhangleAdapter(BrokerAdapter):
             max_value=max_value,
             dry_run=dry_run,
             before_confirm=before_confirm,
+            wait_for_receipt=wait_for_receipt,
         )
 
     # ----- 查询 ------------------------------------------------------------

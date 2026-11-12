@@ -52,10 +52,10 @@ class ThsAdapter(BrokerAdapter):
         from ..ths_order import ThsOrderPage
         return dict(ThsOrderPage(self.adb,getattr(self,'_verified_account',None)).preview(side,code,quantity,price).as_dict(),submitted=False)
 
-    def submit_order(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None):
+    def submit_order(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True):
         from ..ths_order import ThsOrderPage
         if not getattr(self,'_verified_account',None):raise ValueError('尚未核验同花顺资金账户，禁止委托')
-        return ThsOrderPage(self.adb,self._verified_account).submit(side,code,quantity,price,max_value,dry_run,before_confirm)
+        return ThsOrderPage(self.adb,self._verified_account).submit(side,code,quantity,price,max_value,dry_run,before_confirm,wait_for_receipt)
 
     # ----- 查询 ------------------------------------------------------------
     def orders(self, kind: str = "today") -> dict:

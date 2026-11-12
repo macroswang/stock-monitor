@@ -123,5 +123,6 @@ class BrokerAdapter:
         max_value: float | None = 1000.0,
         dry_run: bool = False,
         before_confirm=None,
+        wait_for_receipt: bool = True,
     ) -> dict:
         raise NotImplementedError("该券商尚未实现下单")

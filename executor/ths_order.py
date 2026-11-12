@@ -219,7 +219,7 @@ class ThsOrderPage:
         self.adb.tap_node(cancel)
         self.wait(lambda ns:find_by_id(ns,'dialog_title') is None and read_form(ns) is not None)
 
-    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None):
+    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True):
         self._pending_plan=None
         self._last_form_nodes=None
         if not dry_run and before_confirm is None:raise ThsError('真实委托必须经过持久化请求入口')
@@ -276,6 +276,9 @@ class ThsOrderPage:
             raise
         try:
             self.adb.tap_node(ok)
+            if not wait_for_receipt:
+                return dict(status='unknown',submitted=True,receipt_pending=True,
+                            message='委托确认已发送，待手动同步成交',confirm=asdict(confirmation))
             nodes=self.wait(lambda ns:parse_result(ns) is not None,timeout=20)
             result=parse_result(nodes)
         except Exception:

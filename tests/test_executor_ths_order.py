@@ -153,6 +153,11 @@ class SubmitBoundaryTests(unittest.TestCase):
         page=self.page();page.wait.side_effect=[confirmation(),TimeoutError()]
         result=page.submit('buy','000981',100,'2.00',before_confirm=Mock())
         self.assertEqual(result['status'],'unknown');self.assertFalse(result['submitted'])
+    def test_manual_submit_returns_after_final_tap_without_reading_receipt(self):
+        page=self.page();page.wait.side_effect=[confirmation(),AssertionError('must not read receipt')]
+        result=page.submit('buy','000981',100,'2.00',before_confirm=Mock(),wait_for_receipt=False)
+        self.assertEqual(result['status'],'unknown');self.assertTrue(result['submitted']);self.assertTrue(result['receipt_pending'])
+        self.assertEqual(page.wait.call_count,1);self.assertEqual(page.adb.tap_node.call_count,2)
 
     def test_network_or_conflicting_messages_are_never_a_rejection_or_success(self):
         for text in ('委托成功，查询失败','网络超时','查询失败','委托成功，但出现错误'):
