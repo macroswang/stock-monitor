@@ -96,6 +96,9 @@ class Store:
                         (code,kind,day) if day else (code,kind))
         return [dict(day=r['day'],data=json.loads(r['payload'])) for r in rows]
     def event(self,event,mode,delay=0):
+        # 股票池只保留观察数据，不再产生提醒事件或进入本机/手机发送队列。
+        if event.get('kind') == 'POOL_ALERT':
+            return False
         with self.lock:
             event=self.enrich_event(event)
             cur=self.db.execute('INSERT OR IGNORE INTO events(key,payload,mode) VALUES(?,?,?)',

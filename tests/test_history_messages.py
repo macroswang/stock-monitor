@@ -65,6 +65,26 @@ class HistoryMessagesTest(unittest.TestCase):
   e=self.event();self.a.store.event(e,'live');self.a.call('local_claim',{'key':e['key']});self.a.call('local_finish',{'key':e['key'],'status':'accepted','detail':'test'})
   row=self.a.call('messages',{})['items'][0];self.assertEqual(row['local_delivery'],'accepted')
   self.a.call('messages',{});self.assertEqual(self.a.store.query('SELECT attempts FROM local_delivery')[0]['attempts'],1)
+ def test_pool_alert_filter_includes_old_messages_and_preserves_read_state(self):
+  self.a.store.event(self.event(),'live')
+  pool={**self.event(),'key':'pool|2026-10-16|sz300274|buy_zone','kind':'POOL_ALERT',
+        'code':'sz300274','symbol':'300274','name':'阳光电源','notification_title':'观量 · 股票池提醒 · 阳光电源'}
+  self.a.store.message('signal',pool['notification_title'],'历史股票池提醒',event_key=pool['key'],payload=pool)
+  self.a.store.message('test','测试','本机测试')
+  result=self.a.call('messages',{'category':'pool_alert','limit':1})
+  self.assertEqual(result['total'],1)
+  row=result['items'][0]
+  self.assertEqual(row['payload']['code'],'sz300274')
+  self.assertEqual(self.a.call('messages',{'category':'signal'})['total'],1)
+  self.assertEqual(self.a.call('messages',{'category':'pool_alert','offset':1})['items'],[])
+  self.a.call('message_read',{'id':row['id']})
+  self.assertEqual(self.a.call('messages',{'category':'pool_alert','unread':True})['total'],0)
+  restarted=App(self.tmp.name,False)
+  self.addCleanup(restarted.store.db.close)
+  restored=restarted.call('messages',{'category':'pool_alert'})['items'][0]
+  self.assertEqual(restored['id'],row['id'])
+  self.assertTrue(restored['read_at'])
+  self.assertEqual(restarted.call('messages',{})['total'],3)
  def test_push_test_failure_is_retained_without_secret(self):
   with patch('core.notify.bark',side_effect=ValueError('no key')):
    with self.assertRaises(ValueError):self.a.call('test_push',{})

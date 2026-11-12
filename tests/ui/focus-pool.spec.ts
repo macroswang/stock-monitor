@@ -1,7 +1,7 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
 import {existsSync,mkdirSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {auditGrouping,groupKey,NOISE_TOKENS,relatedTagsOf,relatedTagsText,type Entry} from '../../src/poolTableModel';
+import {auditGrouping,entryTime,groupKey,NOISE_TOKENS,relatedTagsOf,relatedTagsText,rowCounts,type Entry} from '../../src/poolTableModel';
 
 // 股票池「瀑布流分组卡片 + 同义词归并 + 组头单行 + 回测」验收测试（2026-11-11 第四轮）。
 // 依据 docs/pool-table/contract.md §12-§12.3 与当前 src/FocusPool.tsx / src/poolTableModel.ts。
@@ -43,7 +43,8 @@ const fund=(net_yi:number|null,net:number|null=null):Json=>(
 );
 
 // 默认 = 人形机器人组的「甲机器人」
-const makeEntry=(over:Json):Json=>({
+const makeEntry=(over:Json):Json=>{
+  const entry:Json={
   code:'sz000101',name:'甲机器人',added_day:'2026-11-11',added_at:'2026-11-11T11:02:00+08:00',added_price:12.68,
   source:'建仓清单',sector:'人形机器人',role:'低吸候选',state:'可建仓',entry_tag:'可建仓',category:'概念',
   group_name:'人形机器人',groups:['概念','人形机器人'],
@@ -64,7 +65,25 @@ const makeEntry=(over:Json):Json=>({
   driver_short_at:'2026-11-11T10:00:00+08:00',
   fund:fund(5.6),
   ...over,
-});
+  };
+  // 默认补 selection（契约第九轮）：first_at 取 added_at 以保持既有入选时间列/排序；
+  // 测试可用 over.selection 覆盖（09:25 映射、today/last_day 口径等）。
+  if(over.selection===undefined){
+    const episodes=entry.episodes;
+    const lastAt=episodes&&typeof episodes==='object'&&typeof episodes.last_at==='string'?episodes.last_at:(entry.added_at??null);
+    const total=episodes&&typeof episodes==='object'&&typeof episodes.total==='number'?episodes.total:1;
+    const today=episodes&&typeof episodes==='object'&&typeof episodes.today==='number'?(episodes.today>0?1:0):0;
+    entry.selection={
+      first_at:entry.added_at??null,
+      first_day:entry.added_day,
+      last_at:lastAt,
+      last_day:lastAt&&lastAt.length>=10?lastAt.slice(0,10):entry.added_day,
+      days:total,
+      today,
+    };
+  }
+  return entry;
+};
 
 // 11 只 / 6 组：同义词合并（机器人+人形机器人+工业机器人；光通信+通信设备；商业航天+卫星互联网；半导体+OLED），
 // 首标签（theme→concept→event→other，跳过噪声）即组键：命中同义词→规范组名，未命中→标签本身；无标签才回退 sector，全空进「其他」。每组数量不限。
@@ -200,6 +219,10 @@ type BootOptions={
   failBacktestTimes?:number;
   delayPoolMs?:number;
   emptyChart?:boolean;
+  today?:string;
+  calendarToday?:string;
+  quotesTime?:string;
+  messages?:Json[];
 };
 
 // Tauri rpc mock：pool / pool_backtest 为主，其余为主应用启动所需的最小响应。
@@ -208,16 +231,20 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
     entries:options.entries??ENTRIES,
     backtest:options.backtest??BACKTEST_DATA,
     trading:options.trading!==false,
-    quotesTime:QUOTES_TIME,
+    quotesTime:options.quotesTime??QUOTES_TIME,
     updatedAt:UPDATED_AT,
     failPoolTimes:options.failPoolTimes??0,
     failBacktestTimes:options.failBacktestTimes??0,
     delayPoolMs:options.delayPoolMs??0,
     emptyChart:Boolean(options.emptyChart),
+    today:options.today??'2026-11-11',
+    calendarToday:options.calendarToday??options.today??'2026-11-11',
+    messages:options.messages??[],
   };
   await page.addInitScript((config:Json)=>{
     try{
       localStorage.removeItem('stock-monitor-pool-terminal-v1');
+      localStorage.removeItem('stock-monitor-pool-terminal-v2');
       localStorage.removeItem('stock-monitor-pool-view');
       localStorage.removeItem('stock-monitor-pool-filters-v2');
     }catch{}
@@ -256,8 +283,9 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
           case 'pool':{
             if(poolFailures>0){poolFailures-=1;throw Error('行情服务不可用');}
             if(config.delayPoolMs)await new Promise(resolve=>setTimeout(resolve,config.delayPoolMs));
-            return {updated_at:config.updatedAt,quotes_time:config.quotesTime,trading:config.trading,error:'',
-              entries:clone(config.entries),filtered_total:config.entries.length,has_more:false,offset:0,limit:200,
+            const offset=Number(params.args?.offset||0),limit=Number(params.args?.limit||200);
+            return {updated_at:config.updatedAt,quotes_time:config.quotesTime,today:config.today,calendar_today:config.calendarToday,trading:config.trading,error:'',
+              entries:clone(config.entries.slice(offset,offset+limit)),filtered_total:config.entries.length,has_more:offset+limit<config.entries.length,offset,limit,
               benchmark:'上证指数',archived_count:0};
           }
           case 'pool_backtest':{
@@ -282,7 +310,16 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
           case 'daily_load':return {job:'mock-daily'};
           case 'job':return {status:'done',result:null};
           case 'volume_flow':return {code:params.args?.code,day:'',status:'unavailable',minutes:[],message:''};
-          case 'events':case 'messages':return {items:[],total:0};
+          case 'events':return {items:[],total:0};
+          case 'messages':{
+            const items=config.messages.filter((m:Json)=>(!params.args?.unread||!m.read_at)&&(!params.args?.category||
+              (params.args.category==='pool_alert'?m.payload.kind==='POOL_ALERT':m.category===params.args.category&&m.payload.kind!=='POOL_ALERT')));
+            return {items:clone(items),total:items.length};
+          }
+          case 'message_read':{
+            for(const m of config.messages)if(params.args?.all||params.args?.id===m.id)m.read_at=config.updatedAt;
+            return {ok:true};
+          }
           case 'config':return {};
           case 'sources':return null;
           default:throw Error('测试未提供 '+params.method);
@@ -653,8 +690,26 @@ test('全量分组一致性：真实预览 auditGrouping=[]、相关标签无噪
   ];
   const previewPath=candidates.find(file=>existsSync(file));
   expect(previewPath,'public/pool-preview.json 应存在').toBeTruthy();
-  const data=JSON.parse(readFileSync(previewPath as string,'utf8')) as {entries:Entry[]};
+  const data=JSON.parse(readFileSync(previewPath as string,'utf8')) as {entries:Entry[];today?:string|null};
   const entries=data.entries;
+  // selection/alert 数据完备性（真实 preview）：selection 全量存在、无 00:0x 半截时间、今日提醒存在
+  const withSelection=entries.filter(entry=>entry.selection&&typeof entry.selection==='object');
+  expect(withSelection.length).toBe(entries.length);
+  const badSelectionTime=withSelection.filter(entry=>typeof entry.selection?.first_at==='string'&&entry.selection.first_at.includes('T00:0')).map(entry=>entry.code);
+  expect(badSelectionTime).toEqual([]);
+  const previewToday=typeof data.today==='string'&&data.today?data.today.slice(0,10):'';
+  if(previewToday){
+    const alertsToday=entries.filter(entry=>entry.alert&&entry.alert.day===previewToday);
+    expect(alertsToday.length).toBeGreaterThan(0);
+    expect(String(alertsToday[0].alert?.label||'')).not.toBe('');
+    // 真实 preview 全量计数（本轮验收口径：190 只 / 今日入选 38 / 多次入选 57 / 今日提醒 58）
+    const previewCounts=rowCounts(entries,previewToday);
+    expect(previewCounts.all).toBe(entries.length);
+    expect(previewCounts.all).toBe(190);
+    expect(previewCounts.today).toBe(38);
+    expect(previewCounts.multi).toBe(57);
+    expect(previewCounts.alert).toBe(2);
+  }
   expect(Array.isArray(entries)).toBe(true);
   expect(entries.length).toBeGreaterThan(100);
 
@@ -904,7 +959,7 @@ test('卡片 10 列：代码 6 位、名称不省略、换手无 %、数值右�
 });
 
 // ===== 3b. 名称展示：去尾部字母，title/aria 保留原名，名称列 72px 不省略 =====
-test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保留完整原名，名称列 77px 且不省略',async({page})=>{
+test('名称展示：displayName 去尾部 -W/-U/全角字母，title/aria 保留完整原名，名称列 72px 且不省略',async({page})=>{
   const cases:[string,string,string][]=[
     ['sz000a01','奥比中光-W','奥比中光'],
     ['sz000a02','宇树科技-W','宇树科技'],
@@ -987,39 +1042,25 @@ test('组内排序：默认入选时间降序，6 个表头/下拉升降序只�
 });
 
 // ===== 5. 筛选 chips 重新分组、空组消失 =====
-test('筛选 chips：今日入选/多次入选后重新分组、空组消失、清除筛选恢复',async({page})=>{
+test('今日入选保持原有再次入选口径，多次入选和清除筛选正常',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
   const chips=page.getByRole('group',{name:'入选筛选'});
-  const all=chips.getByRole('button',{name:'全部 11'});
-  const today=chips.getByRole('button',{name:'今日入选 4'});
-  const multi=chips.getByRole('button',{name:'多次入选 5'});
-  await expect(all).toHaveAttribute('aria-pressed','true');
-  await expect(today).toBeVisible();
-  await expect(multi).toBeVisible();
-
-  await today.click();
-  await expect(today).toHaveAttribute('aria-pressed','true');
-  await waitGroups(page,3);
-  expect((await groupLabels(page)).sort()).toEqual(['分组 人形机器人','分组 商业航天','分组 通信光通信'].sort());
-  expect((await groupTitles(page)).sort()).toEqual(['人形机器人 — 2 只','商业航天 — 1 只','通信光通信 — 1 只'].sort());
-  await expect(page.locator('.pt-footer')).toContainText('显示 4 / 共 11 只 · 3 个方向');
-  await expect(page.locator('.pt-row')).toHaveCount(4);
-  await expect(page.getByRole('button',{name:'清除筛选'})).toBeVisible();
+  await expect(chips.locator('button')).toHaveCount(4);
+  await chips.getByRole('button',{name:'今日入选 3'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(3);
+  await expect(chips.getByRole('button',{name:'今日入选 3'})).toHaveAttribute('title',/不要求今天是首次入选/);
+  await page.getByLabel('时间范围').selectOption('today');
+  await expect(page.locator('.pt-row')).toHaveCount(3);
   await page.getByRole('button',{name:'清除筛选'}).click();
   await waitGroups(page);
-  await expect(all).toHaveAttribute('aria-pressed','true');
-
-  await multi.click();
-  await waitGroups(page,3);
-  expect((await groupTitles(page)).sort()).toEqual(['人形机器人 — 2 只','通信光通信 — 1 只','半导体电子 — 2 只'].sort());
-  await expect(page.locator('.pt-footer')).toContainText('显示 5 / 共 11 只 · 3 个方向');
+  await chips.getByRole('button',{name:'多次入选 5'}).click();
   await expect(page.locator('.pt-row')).toHaveCount(5);
   await page.getByRole('button',{name:'清除筛选'}).click();
-  await waitGroups(page);
+  await expect(page.locator('.pt-row')).toHaveCount(11);
 });
 
-// ===== 6. 时间范围筛选重新分组 =====
+
 test('时间范围：近3日/近5日/今日筛选后重新分组并隐藏空组',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
@@ -1042,27 +1083,232 @@ test('时间范围：近3日/近5日/今日筛选后重新分组并隐藏空组'
   await expect(page.locator('.pt-footer')).toContainText('显示 11 / 共 11 只 · 6 个方向');
 });
 
-// ===== 7. 搜索 / 空结果 / 清除 =====
+// ===== 6b. 时间范围「今日」与「今日入选」一致（盘前 anchor 优先 data.today，按最近一次入选日过滤） =====
+test('时间范围今日命中今日入选行：anchor 优先 data.today（盘前 quotes_time 为上一交易日）、近3日/5日按 last_at 过滤',async({page})=>{
+  const baseEntry=(over:Json)=>makeEntry(Object.assign({
+    sector:'测试方向',category:'概念',group_name:'',groups:[],
+    tags:{concept:['测试方向'],theme:[],event:[],other:[]},
+    quote:quote(10,1),today_percent:1,since_add_percent:1,plan:planDefault(),history:[],windows:null,
+    quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+    driver:null,driver_short:null,driver_short_at:null,fund:fund(1),
+  },over));
+  const entries:Json[]=[
+    // 今日再次入选：首次入选日更早(11-11)，最近一次入选日=今日 11-12（盘前 08:05）
+    baseEntry({code:'sz000d01',name:'今日样本',added_day:'2026-11-11',added_at:'2026-11-11T10:00:00+08:00',
+      tags:{concept:['测试方向A'],theme:[],event:[],other:[]},
+      episodes:{total:2,today:1,first_at:'2026-11-09T10:00:00+08:00',last_at:'2026-11-12T08:05:00+08:00'}}),
+    // 最近一次入选日=11-11（若错误地用 quotes_time 11-11 作 anchor，则「今日」会误收该行）
+    baseEntry({code:'sz000d02',name:'前日样本',added_day:'2026-11-09',added_at:'2026-11-09T10:00:00+08:00',
+      tags:{concept:['测试方向B'],theme:[],event:[],other:[]},
+      episodes:{total:1,today:0,first_at:'2026-11-09T10:00:00+08:00',last_at:'2026-11-11T14:00:00+08:00'}}),
+    // 最近一次入选日=10-20，超出近3日/近5日范围（排除样本）
+    baseEntry({code:'sz000d03',name:'远日样本',added_day:'2026-11-03',added_at:'2026-11-03T10:00:00+08:00',
+      tags:{concept:['测试方向C'],theme:[],event:[],other:[]},
+      episodes:{total:1,today:0,first_at:'2026-10-20T10:00:00+08:00',last_at:'2026-10-20T10:00:00+08:00'}}),
+  ];
+  // 盘前场景：quotes_time 仍是上一交易日 11-11，而后端 today=11-12
+  await boot(page,{entries,today:'2026-11-12',quotesTime:'2026-11-11T15:00:00+08:00'});
+  await waitGroups(page,3);
+  const chips=page.getByRole('group',{name:'入选筛选'});
+  await expect(chips.getByRole('button',{name:'今日入选 1'})).toBeVisible();
+  const period=page.getByLabel('时间范围');
+  const rows=()=>page.locator('.pt-row');
+  const names=async()=>(await page.locator('.pt-row .pt-name-text').allInnerTexts()).map(text=>text.trim()).sort();
+
+  // 单独「时间范围=今日」→ 命中今日再次入选行（修复前为 0 行）
+  await period.selectOption('today');
+  await expect(rows()).toHaveCount(1);
+  expect(await names()).toEqual(['今日样本']);
+  await expect(page.locator('.pt-footer')).toContainText('显示 1 / 共 3 只');
+  // 今日入选 chip + 时间范围今日 → 同一行
+  await chips.getByRole('button',{name:'今日入选 1'}).click();
+  await expect(rows()).toHaveCount(1);
+  expect(await names()).toEqual(['今日样本']);
+  await page.getByRole('button',{name:'清除筛选'}).click();
+  await waitGroups(page,3);
+
+  // 近3日：按 last_at 判断 → 今日样本(11-12)、前日样本(11-11)保留；远日样本(10-20)排除
+  await period.selectOption('3d');
+  await expect(rows()).toHaveCount(2);
+  expect(await names()).toEqual(['前日样本','今日样本'].sort());
+  // 近5日：同样按 last_at 排除远日样本
+  await period.selectOption('5d');
+  await expect(rows()).toHaveCount(2);
+  expect(await names()).toEqual(['前日样本','今日样本'].sort());
+  await period.selectOption('all');
+  await waitGroups(page,3);
+});
+
+// ===== 6c. 有效入选时间 selection：09:25 映射、回退、过滤口径与详情 =====
+test('入选时间 selection：09:25 映射不显示 00:05、无 selection 回退、chip/时间范围/详情按 selection 口径',async({page})=>{
+  const mk=(over:Json)=>makeEntry(Object.assign({
+    sector:'选测方向',category:'概念',group_name:'',groups:[],
+    tags:{concept:['选测方向'],theme:[],event:[],other:[]},
+    quote:quote(10,1),today_percent:1,since_add_percent:1,plan:planDefault(),history:[],windows:null,
+    quant:{turnover_rate:2,volume_ratio:1.2,amplitude:2,float_mcap_yi:30},
+    driver:null,driver_short:null,driver_short_at:null,fund:fund(1),
+  },over));
+  const entries:Json[]=[
+    // Z1：added_at=00:05，但有效入选时间 selection.first_at=09:25；episodes.today=0 而 selection.today=1（chip 以 selection 为准）
+    mk({code:'sz000e01',name:'有效样本',added_day:'2026-11-12',added_at:'2026-11-12T00:05:00+08:00',
+      tags:{concept:['选测方向A'],theme:[],event:[],other:[]},
+      selection:{first_at:'2026-11-12T09:25:00+08:00',first_day:'2026-11-12',last_at:'2026-11-12T09:25:00+08:00',last_day:'2026-11-12',days:5,today:1},
+      episodes:{total:3,today:0,first_at:'2026-11-09T14:31:00+08:00',last_at:'2026-11-12T09:25:00+08:00'}}),
+    // Z2：selection.today=0 而 episodes.today=1 → 不计入今日入选
+    mk({code:'sz000e02',name:'口径样本',added_day:'2026-11-11',added_at:'2026-11-11T10:00:00+08:00',
+      tags:{concept:['选测方向B'],theme:[],event:[],other:[]},
+      selection:{first_at:'2026-11-11T10:00:00+08:00',first_day:'2026-11-11',last_at:'2026-11-11T10:00:00+08:00',last_day:'2026-11-11',days:1,today:0},
+      episodes:{total:1,today:1,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'}}),
+    // Z3：selection.last_day=11-09（近3日排除），added_day=11-10 本在范围内 → 证明时间范围按 selection
+    mk({code:'sz000e03',name:'远日样本',added_day:'2026-11-10',added_at:'2026-11-10T10:00:00+08:00',
+      tags:{concept:['选测方向C'],theme:[],event:[],other:[]},
+      selection:{first_at:'2026-11-09T10:00:00+08:00',first_day:'2026-11-09',last_at:'2026-11-09T10:00:00+08:00',last_day:'2026-11-09',days:1,today:0},
+      episodes:{total:1,today:0,first_at:'2026-11-09T10:00:00+08:00',last_at:'2026-11-09T10:00:00+08:00'}}),
+    // Z4：无 selection → first_at 回退 episodes.first_at=11-11 10:00；last_day 回退 episodes.last_at=11-11（今日 anchor=11-12 应排除）
+    mk({code:'sz000e04',name:'回退样本',added_day:'2026-11-12',added_at:'2026-11-12T08:05:00+08:00',
+      tags:{concept:['选测方向D'],theme:[],event:[],other:[]},selection:null,
+      episodes:{total:1,today:0,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'}}),
+  ];
+  // 盘前：quotes_time 仍是上一交易日 11-11，后端 today=11-12
+  await boot(page,{entries,today:'2026-11-12',quotesTime:'2026-11-11T15:00:00+08:00'});
+  await waitGroups(page,4);
+  const z1=page.locator('.pt-row').filter({has:page.locator('.pt-name[title="有效样本"]')});
+  const z4=page.locator('.pt-row').filter({has:page.locator('.pt-name[title="回退样本"]')});
+  const timeCell=z1.locator('.pt-time');
+  await expect(timeCell).toHaveText('11-12 09:25');
+  await expect(timeCell).toHaveAttribute('title','入选 2026-11-12 09:25');
+  await expect(timeCell).toHaveAttribute('aria-label','入选时间 2026-11-12 09:25');
+  await expect(z1).not.toContainText('00:05');
+  await expect(z4.locator('.pt-time')).toHaveText('11-11 10:00');
+  await expect(z4.locator('.pt-time')).toHaveAttribute('title','入选 2026-11-11 10:00');
+  // 连 episodes.first_at 都没有时回退 added_at（模型级）
+  expect(entryTime({added_day:'2026-11-12',added_at:'2026-11-12T08:05:00+08:00'} as unknown as Entry)).toBe('11-12 08:05');
+  // chip 今日入选 = selection.today：Z1 计入、Z2 不计入 → 1
+  const chips=page.getByRole('group',{name:'入选筛选'});
+  await expect(chips.getByRole('button',{name:'今日入选 1'})).toBeVisible();
+  await chips.getByRole('button',{name:'今日入选 1'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await page.getByLabel('时间范围').selectOption('today');
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await expect(page.locator('.pt-row .pt-name-text')).toHaveText('有效样本');
+  await page.getByRole('button',{name:'清除筛选'}).click();
+  await waitGroups(page,4);
+  // 时间范围今日：anchor=data.today=11-12 → 仅 Z1；Z4(last_day 11-11) 不被误收
+  await page.getByLabel('时间范围').selectOption('today');
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await expect(page.locator('.pt-row .pt-name-text')).toHaveText('有效样本');
+  // 近3日按 selection.last_day：Z3(11-09) 排除（若按 added_day=11-10 会保留）
+  await page.getByLabel('时间范围').selectOption('3d');
+  await expect(page.locator('.pt-row')).toHaveCount(3);
+  expect((await page.locator('.pt-row .pt-name-text').allInnerTexts()).map(text=>text.trim()).sort()).toEqual(['回退样本','口径样本','有效样本'].sort());
+  await page.getByLabel('时间范围').selectOption('5d');
+  await expect(page.locator('.pt-row')).toHaveCount(4);
+  // 详情：累计天数=selection.days(5，而非 episodes.total=3)、首次/最近=selection 时间
+  await page.getByLabel('时间范围').selectOption('all');
+  await z1.click();
+  const detail=page.getByRole('region',{name:'详情 有效样本'});
+  await expect(detail.locator('.pt-kv > div').filter({hasText:'累计'})).toContainText('5 天 · 今日已入选');
+  await expect(detail.locator('.pt-kv > div').filter({hasText:'首次'})).toContainText('2026-11-12 09:25');
+  await expect(detail.locator('.pt-kv > div').filter({hasText:'最近'})).toContainText('2026-11-12 09:25');
+  await expect(z1.locator('.pt-count-badge')).toHaveText('×3');
+});
+
+// ===== 6d. 今日提醒 alert：无行内铃铛、行标记/动态计数/筛选说明/详情提醒行 =====
+test('今日提醒严格按当天首次加入筛选，历史重选或历史通知不混入，今日入选逻辑不变',async({page})=>{
+  const mk=(code:string,added:string,over:Json={})=>makeEntry({code,name:code,
+    added_at:added,added_day:added.slice(0,10),
+    episodes:{total:1,today:0,first_at:added,last_at:added},...over});
+  const entries=[
+    mk('sz100001','2026-11-12T00:05:00+08:00',{added_day:'2026-11-11',
+      episodes:{total:1,today:1,first_at:'2026-11-12T00:05:00+08:00',last_at:'2026-11-12T00:05:00+08:00'}}),
+    mk('sz100002','2026-11-11T10:00:00+08:00',{
+      episodes:{total:2,today:1,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-12T10:00:00+08:00'},
+      alert:{day:'2026-11-12',kind:'buy_zone',label:'进入买区',at:'2026-11-12T09:34:00+08:00'}}),
+    mk('sz100003','2026-11-10T10:00:00+08:00',{
+      alert:{day:'2026-11-12',kind:'stop_break',label:'跌破防守位',at:'2026-11-12T09:35:00+08:00'}}),
+    mk('sz100004','2026-11-12',{source:'手动',episodes:null,selection:null}),
+    mk('sz100005','2026-11-13T00:05:00+08:00'),
+    mk('sz100006','2026-11-11T16:10:00Z'),
+    mk('sz100007','2026-11-12T00:10:00+09:00'),
+  ];
+  await boot(page,{entries,today:'2026-11-12',quotesTime:'2026-11-11T15:00:00+08:00'});
+  const chips=page.getByRole('group',{name:'入选筛选'});
+  await expect(chips.getByRole('button',{name:'今日入选 2'})).toBeVisible();
+  await chips.getByRole('button',{name:'今日入选 2'}).click();
+  await expect(page.locator('.pt-code')).toHaveText(['100001','100002']);
+  await page.getByRole('button',{name:'清除筛选'}).click();
+  await page.getByLabel('时间范围').selectOption('3d');
+  await chips.getByRole('button',{name:/^今日提醒 /}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(3);
+  expect((await page.locator('.pt-code').allTextContents()).sort()).toEqual(['100001','100004','100006']);
+  await expect(chips.getByRole('button',{name:'今日提醒 3'})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByLabel('时间范围')).toHaveValue('all');
+  await expect(page.getByLabel('时间范围')).toBeDisabled();
+  await expect(page.locator('.pt-filter-note')).toContainText('仅显示 2026-11-12 首次加入');
+  for(const stamp of await page.locator('.pt-time').allTextContents())expect(stamp).toMatch(/^11-12/);
+  await expect(page.getByRole('button',{name:'按入池时间排序'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'消息中心',exact:true})).toHaveCount(0);
+  await expect(page.locator('.pt-alert-line')).toHaveCount(0);
+  await expect(page.getByText(/已定位通知股票/)).toHaveCount(0);
+  await page.screenshot({path:SHOTS+'/today-added-only.png',fullPage:true});
+});
+
+test('今日提醒按自然日而非上个交易日筛选',async({page})=>{
+  await boot(page,{today:'2026-11-13',calendarToday:'2026-11-15',entries:[
+    makeEntry({code:'sz100011',added_day:'2026-11-13',added_at:'2026-11-13T10:00:00+08:00'}),
+    makeEntry({code:'sz100012',added_day:'2026-11-15',added_at:'2026-11-15T10:00:00+08:00'}),
+  ]});
+  await page.getByRole('button',{name:'今日提醒 1'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await expect(page.locator('.pt-code')).toHaveText('100012');
+});
+
+test('超过200只的股票池继续读取下一页，今日入选和当天首次加入筛选不漏尾页',async({page})=>{
+  const entries=Array.from({length:201},(_,index)=>makeEntry({code:'sz'+String(100000+index),name:'测试'+index,added_at:index===200?'2026-11-11T10:00:00+08:00':'2026-11-10T10:00:00+08:00',
+    episodes:{total:1,today:index===200?1:0,first_at:'2026-11-11T10:00:00+08:00',last_at:'2026-11-11T10:00:00+08:00'},
+    tags:{concept:['分页方向'],theme:[],event:[],other:[]},
+    alert:index===200?{day:'2026-11-11',kind:'buy_zone',label:'进入买区',at:'2026-11-11T09:34:00+08:00'}:null}));
+  await boot(page,{entries});
+  await expect(page.locator('.pt-row')).toHaveCount(201);
+  await page.getByRole('button',{name:'今日入选 1'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await expect(page.locator('.pt-row')).toContainText('测试200');
+  await page.getByRole('button',{name:'今日提醒 1'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(1);
+  await expect(page.locator('.pt-row')).toContainText('测试200');
+  await waitRpc(page,call=>call.method==='pool'&&call.args.offset===200);
+});
+
 test('搜索：标签命中的股票重新分组（单只组保留），空结果提示与清除筛选',async({page})=>{
   await boot(page,{});
   await waitGroups(page);
   const search=page.getByLabel('搜索代码/名称/标签');
+  const chips=page.getByRole('group',{name:'入选筛选'});
   await search.fill('光通信');
   await waitGroups(page,1);
   expect(await groupLabels(page)).toEqual(['分组 通信光通信']);
   expect(await groupTitles(page)).toEqual(['通信光通信 — 1 只']);
   await expect(page.locator('.pt-row .pt-name-text')).toHaveText('丁光通信');
+  // chips 数字跟随搜索动态变化
+  await expect(chips.getByRole('button',{name:'全部 1'})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'今日入选 1'})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'多次入选 0'})).toBeVisible();
   await search.fill('卫星');
   await waitGroups(page,1);
   expect(await groupLabels(page)).toEqual(['分组 商业航天']);
   expect(await page.locator('.pt-row')).toHaveCount(2);
+  await expect(chips.getByRole('button',{name:'全部 2'})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'今日入选 1'})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'多次入选 0'})).toBeVisible();
   await search.fill('不存在的标签');
   await expect(page.locator('.pt-empty')).toHaveText('当前筛选条件下没有标的。点「清除筛选」恢复。');
   await expect(page.locator('.pt-group')).toHaveCount(0);
+  await expect(chips.getByRole('button',{name:'全部 0'})).toBeVisible();
   await page.getByRole('button',{name:'清除筛选'}).click();
   await waitGroups(page);
   await expect(search).toHaveValue('');
   await expect(page.getByRole('button',{name:'清除筛选'})).toHaveCount(0);
+  await expect(chips.getByRole('button',{name:'全部 11'})).toBeVisible();
 });
 
 // ===== 8. 行详情内嵌图表：tabs/默认分时/日K/周K/放大缩小/请求不重复 =====
@@ -1154,7 +1400,7 @@ test('详情精简：保留计划与关键价位/入选理由/完整标签/入�
   await expect(detail.locator('.pt-detail-tags')).toContainText('概念 机器人 · 题材 人形机器人 · 减速器 · 事件 产业订单 · 其他 高端制造');
   // 入选统计：累计天数/今日/首次/最近
   await expect(detail.locator('.pt-kv > div').filter({hasText:'累计'})).toContainText('3 天 · 今日已入选');
-  await expect(detail.locator('.pt-kv > div').filter({hasText:'首次'})).toContainText('2026-11-09 10:02');
+  await expect(detail.locator('.pt-kv > div').filter({hasText:'首次'})).toContainText('2026-11-11 11:02');
   await expect(detail.locator('.pt-kv > div').filter({hasText:'最近'})).toContainText('2026-11-11 11:02');
   const kvJoined=(await detail.locator('.pt-kv').allInnerTexts()).join(' ');
   for(const removed of ['来源','方向','状态','跟进','量比/换手','振幅/流通']){
@@ -1649,7 +1895,7 @@ test('console：瀑布流浏览/排序/筛选/详情/回测无 console error 与
   await boot(page,{});
   await waitGroups(page);
   await groupOf(page,'人形机器人').getByRole('button',{name:'按入选后涨幅排序'}).click();
-  await page.getByRole('group',{name:'入选筛选'}).getByRole('button',{name:'今日入选 4'}).click();
+  await page.getByRole('group',{name:'入选筛选'}).getByRole('button',{name:'今日入选 3'}).click();
   await waitGroups(page,3);
   await page.getByRole('button',{name:'清除筛选'}).click();
   await waitGroups(page);

@@ -50,6 +50,9 @@ class PoolTests(unittest.TestCase):
         self.addCleanup(self.app.store.db.close)
         self.pool = Pool(self.app)
         self.now = datetime(2026, 11, 9, 13, 0, tzinfo=CN)
+        clock = patch('core.pool.now_cn', side_effect=lambda: self.now)
+        clock.start()
+        self.addCleanup(clock.stop)
         (self.app.dir / 'daily-outlook').mkdir(exist_ok=True)
 
     def issue(self):
@@ -288,21 +291,18 @@ class PoolTests(unittest.TestCase):
         self.assertEqual(filtered['windows']['T+1']['sample'], 1)
         self.assertEqual(next(item for item in filtered['holding'] if item['bucket'] == '1')['count'], 1)
 
-    def test_alerts_transition_deduped(self):
+    def test_pool_quote_transitions_do_not_generate_notifications(self):
         self.sync()
-        entry = self.app.store.query('SELECT plan FROM pool WHERE code=?', ('sh600001',))[0]
-        plan = json.loads(entry['plan'])
-        self.assertIsNotNone(plan.get('buy_low'))
-        self.pool.last_zones = {'sh600001': '高于追高上限'}
-        now = datetime(2026, 11, 9, 10, 0, tzinfo=CN)
-        quote_row = quote('sh600001', 10.1, 10.0, high=10.2, low=9.9)
-        with patch('core.pool.trading', return_value=True):
-            self.pool._check_alerts({'sh600001': quote_row}, now)
-            self.pool._check_alerts({'sh600001': quote_row}, now)
-        rows = self.app.store.query("SELECT key FROM events WHERE key LIKE 'pool|%'")
-        self.assertEqual(len(rows), 1)
-        alert = self.app.store.query('SELECT * FROM pool_alerts WHERE code=?', ('sh600001',))
-        self.assertEqual(len(alert), 1)
+        with patch.object(self.pool, '_batch') as batch, patch.object(self.pool, 'refresh_fund_flows'):
+            for price in (11.5, 10.1, 8.0):
+                batch.return_value = {'sh600001': quote('sh600001', price, 10.0)}
+                self.pool.poll(force=True)
+        self.assertFalse(self.pool.error)
+        self.assertFalse(self.app.store.query('SELECT * FROM events'))
+        self.assertFalse(self.app.store.query('SELECT * FROM messages'))
+        self.assertFalse(self.app.store.query('SELECT * FROM local_delivery'))
+        self.assertFalse(self.app.store.query('SELECT * FROM pool_alerts'))
+        self.assertTrue(self.app.store.query('SELECT * FROM pool_day'))
 
     def test_archive_old_entries(self):
         self.sync()

@@ -5,7 +5,7 @@ import StockChartPanel from './StockChartPanel';
 import {
   BACKTEST_EPISODE_OPTIONS,BACKTEST_PERCENT_OPTIONS,backtestAnchor,backtestCoverageText,backtestSources,backtestSummary,
   bucketByEpisodes,bucketByFirstDay,bucketByPercent,clockText,currentMatchOf,dayShort,entryTime,episodesOf,episodesTitle,filterBacktestRows,
-  codeDigits,displayName,filterRows,fullStamp,groupEntries,groupFundText,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,layoutGroups,num2,pinGroups,readPinnedGroups,writePinnedGroups,
+  codeDigits,displayName,filterRows,fullStamp,groupEntries,groupFundText,HORIZONS,horizonCell,horizonTitle,horizonValue,isNum,layoutGroups,num2,pinGroups,poolAddedStamp,readPinnedGroups,selectionOf,writePinnedGroups,
   pctSigned,PERIOD_OPTIONS,planText,quantOf,readStoredTerminal,relatedTagsText,relatedTagsTitle,rowCounts,shortStamp,sortFromOption,
   sortOptionValue,SORT_OPTIONS,tagsOf,tagsTitle,toggleSort,windowExcessText,windowOf,windowReturnText,writeStoredTerminal,
   DEFAULT_BACKTEST_FILTER,DEFAULT_ROW_FILTER,
@@ -61,6 +61,17 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   const tradingRef=useRef(false);
   const dataRef=useRef<PoolData|null>(null);
   dataRef.current=data;
+  const fetchPool=useCallback(async()=>{
+    const first=await request<PoolData>('pool',{limit:LIMIT,offset:0,include_archived:false});
+    const entries=[...first.entries];
+    let page=first;
+    while(page.has_more){
+      page=await request<PoolData>('pool',{limit:LIMIT,offset:entries.length,include_archived:false});
+      if(!page.entries.length)throw Error('股票池分页读取未完成，请重试');
+      entries.push(...page.entries);
+    }
+    return {...first,entries:[...new Map(entries.map(entry=>[entry.code,entry])).values()],has_more:false};
+  },[request]);
 
   const read=useCallback(async(mode:'reset'|'refresh')=>{
     if(mode==='refresh'){
@@ -71,7 +82,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     const seq=++sequence.current;
     if(mode==='reset')setLoading(true);
     try{
-      const next=await request<PoolData>('pool',{limit:LIMIT,offset:0,include_archived:false});
+      const next=await fetchPool();
       if(seq!==sequence.current)return;
       refreshedAt.current=Date.now();
       tradingRef.current=Boolean(next.trading);
@@ -81,7 +92,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     }finally{
       if(seq===sequence.current)setLoading(false);
     }
-  },[request]);
+  },[fetchPool]);
 
   useEffect(()=>{
     if(!active)return;
@@ -92,16 +103,27 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
 
   const entries=useMemo<Entry[]>(()=>data?.entries??[],[data]);
   const anchor=useMemo(()=>{
+    if(data?.today&&data.today.length>=10)return data.today.slice(0,10);
     const raw=data?.quotes_time||data?.updated_at||'';
     if(raw.length>=10)return raw.slice(0,10);
     let latest='';
     for(const entry of entries)if(entry.added_day&&entry.added_day>latest)latest=entry.added_day;
-    return latest||new Date().toISOString().slice(0,10);
+    return latest||new Date().toLocaleDateString('sv-SE');
   },[data,entries]);
-  const counts=useMemo(()=>rowCounts(entries,anchor),[entries,anchor]);
+  const calendarToday=data?.calendar_today||anchor;
+  // 筛选计数跟随时间范围和搜索。
+  const visibleBase=useMemo(()=>filterRows(entries,{...filter,chip:'all'},anchor,calendarToday),[entries,filter.period,filter.search,anchor,calendarToday]);
+  const counts=useMemo(()=>rowCounts(visibleBase,anchor,calendarToday),[visibleBase,anchor,calendarToday]);
   // 契约 §7：先筛选/搜索，再分组（排序作用于组内），空组自然消失。
-  const filteredRows=useMemo(()=>filterRows(entries,filter,anchor),[entries,filter,anchor]);
-  const groups=useMemo(()=>groupEntries(filteredRows,sort),[filteredRows,sort]);
+  const filteredRows=useMemo(()=>filterRows(entries,filter,anchor,calendarToday),[entries,filter,anchor,calendarToday]);
+  const groups=useMemo(()=>{
+    const result=groupEntries(filteredRows,sort);
+    if(filter.chip==='alert'&&sort.key==='added'){
+      const direction=sort.dir==='desc'?-1:1;
+      for(const group of result)group.entries.sort((a,b)=>poolAddedStamp(a).localeCompare(poolAddedStamp(b))*direction);
+    }
+    return result;
+  },[filteredRows,sort,filter.chip]);
   // 用户第七轮：置顶组排最前（保持钉住先后顺序，不随资金排序移动；筛选后不存在的置顶组忽略）
   const [pinned,setPinned]=useState<string[]>(()=>readPinnedGroups());
   useEffect(()=>{writePinnedGroups(pinned);},[pinned]);
@@ -125,7 +147,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
 
   const refetch=async()=>{
     try{
-      const next=await request<PoolData>('pool',{limit:LIMIT,offset:0,include_archived:false});
+      const next=await fetchPool();
       setData(next);setError(next.error||'');
     }catch(cause){setError(readError(cause));}
   };
@@ -182,15 +204,20 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     </div>
     <div className="pt-toolbar" role="toolbar" aria-label="股票池工具栏">
       <div className="pt-chips" role="group" aria-label="入选筛选">
-        <button type="button" aria-pressed={filter.chip==='all'} onClick={()=>setFilter(current=>({...current,chip:'all'}))}>全部 {counts.all}</button>
-        <button type="button" aria-pressed={filter.chip==='today'} onClick={()=>setFilter(current=>({...current,chip:'today'}))}>今日入选 {counts.today}</button>
-        <button type="button" aria-pressed={filter.chip==='multi'} onClick={()=>setFilter(current=>({...current,chip:'multi'}))}>多次入选 {counts.multi}</button>
+        <button type="button" aria-pressed={filter.chip==='all'} title="显示全部股票池标的" onClick={()=>setFilter(current=>({...current,chip:'all'}))}>全部 {counts.all}</button>
+        <button type="button" aria-pressed={filter.chip==='today'} title="今天有新的有效入选事件（同一股票今天被研判选中；不要求今天是首次入选）" onClick={()=>setFilter(current=>({...current,chip:'today'}))}>今日入选 {counts.today}</button>
+        <button type="button" aria-pressed={filter.chip==='multi'} title="历史累计有效入选天数 ≥2 天" onClick={()=>setFilter(current=>({...current,chip:'multi'}))}>多次入选 {counts.multi}</button>
+        <button type="button" className="pt-alert-chip" aria-pressed={filter.chip==='alert'}
+          title="只显示今天首次加入股票池的股票；历史股票今天再次入选不计入，也不依据系统通知"
+          onClick={()=>setFilter(current=>({...current,chip:'alert',period:'all'}))}>今日提醒 {counts.alert}</button>
       </div>
-      <label className="pt-field">时间范围<select aria-label="时间范围" value={filter.period} onChange={event=>setFilter(current=>({...current,period:event.target.value as RowPeriod}))}>
+      <label className="pt-field">时间范围<select aria-label="时间范围" value={filter.period} disabled={filter.chip==='alert'}
+        title={filter.chip==='alert'?'今日提醒仅按今天首次加入股票池的日期筛选，与最近一次入选时间范围无关':'按最近一次有效入选日筛选'}
+        onChange={event=>setFilter(current=>({...current,period:event.target.value as RowPeriod}))}>
         {PERIOD_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
       </select></label>
       <label className="pt-field">排序<select aria-label="排序" value={sortOptionValue(sort)} onChange={event=>setSort(sortFromOption(event.target.value))}>
-        {SORT_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+        {SORT_OPTIONS.map(option=><option key={option.value} value={option.value}>{filter.chip==='alert'?option.label.replace('入选时间','入池时间'):option.label}</option>)}
       </select></label>
       <input className="pt-search" aria-label="搜索代码/名称/标签" placeholder="搜索 代码/名称/标签" value={filter.search}
         onChange={event=>setFilter(current=>({...current,search:event.target.value}))}/>
@@ -218,7 +245,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
       {groupColumns.map((column,index)=><div className="pt-group-col" key={'col-'+(index+1)}>
         {column.map(group=><GroupSection key={group.key} group={group} sort={sort} onSort={onSort} openCode={openCode} onToggle={toggleRow}
           readOnly={readOnly} busy={busy} request={request} isWatched={isWatched}
-          pinned={pinnedSet.has(group.label)} onTogglePin={togglePin}
+          pinned={pinnedSet.has(group.label)} onTogglePin={togglePin} showAddedTime={filter.chip==='alert'}
           onPick={pick} onWatch={addWatch} onDelete={remove}/>)}
       </div>)}
     </div>}
@@ -229,14 +256,15 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   </section>;
 }
 
-function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,isWatched,pinned,onTogglePin,onPick,onWatch,onDelete}:{
+function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request,isWatched,pinned,onTogglePin,showAddedTime,onPick,onWatch,onDelete}:{
   group:EntryGroup;sort:SortState;onSort:(key:SortKey)=>void;openCode:string;onToggle:(code:string)=>void;
-  readOnly:boolean;busy:boolean;request:Request;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;
+  readOnly:boolean;busy:boolean;request:Request;isWatched:(code:string)=>boolean;pinned:boolean;onTogglePin:(label:string)=>void;showAddedTime:boolean;
   onPick:(entry:Entry,side:'buy'|'sell')=>void;
   onWatch:(entry:Entry)=>Promise<void>;
   onDelete:(entry:Entry)=>Promise<void>;
 }){
   const {stats}=group;
+  const columns=showAddedTime?COLUMNS.map(column=>column.key==='added'?{...column,label:'入池时间'}:column):COLUMNS;
   const fundTone=isNum(stats.fundYi)?(stats.fundYi>0?'pt-up':stats.fundYi<0?'pt-down':'pt-flat'):'pt-flat';
   return <section className="pt-group" aria-label={'分组 '+group.label}>
     <div className="pt-group-head">
@@ -256,7 +284,7 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
     <div className="pt-scroll">
       <div className="pt-table" role="table" aria-label={group.label+' 标的'}>
         <div className="pt-head" role="row">
-          {COLUMNS.map(column=>column.key
+          {columns.map(column=>column.key
             ?<span key={column.label} role="columnheader" className={headClass(column)} aria-sort={sort.key===column.key?(sort.dir==='desc'?'descending':'ascending'):'none'}>
               <button type="button" className={'pt-head-btn'+(sort.key===column.key?' is-sorted':'')} onClick={()=>onSort(column.key as SortKey)}
                 aria-label={'按'+column.label+'排序'}>{column.label}{sort.key===column.key?(sort.dir==='desc'?'▾':'▴'):''}</button>
@@ -266,10 +294,13 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
         {group.entries.map(entry=>{
           const expanded=openCode===entry.code;
           const episodes=episodesOf(entry);
+          const selection=selectionOf(entry);
+          const stamp=showAddedTime?poolAddedStamp(entry):selection.first_at||selection.first_day;
+          const timeLabel=showAddedTime?'入池时间':'入选时间';
           const quant=quantOf(entry);
           const related=relatedTagsText(entry);
           return <Fragment key={entry.code}>
-            <div className={'pt-row'+(expanded?' is-open':'')} role="row" tabIndex={0} aria-expanded={expanded} aria-controls={DETAIL_ID(entry.code)}
+            <div data-pool-code={entry.code} className={'pt-row'+(expanded?' is-open':'')} role="row" tabIndex={0} aria-expanded={expanded} aria-controls={DETAIL_ID(entry.code)}
               onClick={()=>onToggle(entry.code)}
               onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onToggle(entry.code);}}}>
               <span className="pt-cell pt-code pt-num" role="cell" title={entry.code}>{codeDigits(entry.code)}</span>
@@ -278,7 +309,7 @@ function GroupSection({group,sort,onSort,openCode,onToggle,readOnly,busy,request
                 <span className="pt-count-badge" title={episodesTitle(entry)} aria-label={'入选 '+episodes.total+' 天'}>×{episodes.total}</span>
               </span>
               <span className="pt-cell pt-num pt-col-price" role="cell" title={entry.quote?'行情 '+clockText(entry.quote.time):'行情待取得'}>{entry.quote?num2(entry.quote.price):'—'}</span>
-              <span className="pt-cell pt-time" role="cell" title={'入选 '+fullStamp(entry.added_at||entry.added_day)}>{entryTime(entry)}</span>
+              <span className="pt-cell pt-time" role="cell" title={(showAddedTime?'入池 ':'入选 ')+fullStamp(stamp)} aria-label={timeLabel+' '+fullStamp(stamp)}>{showAddedTime?(stamp&&stamp.length===10?stamp.slice(5):shortStamp(stamp)):entryTime(entry)}</span>
               <span className="pt-cell pt-num" role="cell">{num2(entry.added_price)}</span>
               <span className={'pt-cell pt-num '+ (isNum(entry.since_add_percent)?(entry.since_add_percent>0?'pt-up':entry.since_add_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="入选后涨幅（自入选价至今）">{pctSigned(entry.since_add_percent)}</span>
               <span className={'pt-cell pt-num '+ (isNum(entry.today_percent)?(entry.today_percent>0?'pt-up':entry.today_percent<0?'pt-down':'pt-flat'):'')} role="cell" title="今日涨幅">{pctSigned(entry.today_percent)}</span>
@@ -302,7 +333,7 @@ function DetailRow({id,entry,readOnly,busy,watched,request,onPick,onWatch,onDele
   onDelete:(entry:Entry)=>Promise<void>;
 }){
   const plan=entry.plan;
-  const episodes=episodesOf(entry);
+  const selection=selectionOf(entry);
   const tags=tagsOf(entry);
   const current=currentMatchOf(entry);
   return <section className="pt-detail" id={id} role="region" aria-label={'详情 '+entry.name}>
@@ -329,9 +360,9 @@ function DetailRow({id,entry,readOnly,busy,watched,request,onPick,onWatch,onDele
         <p className="pt-detail-tags">概念 {tagsTitle(tags.concept)} · 题材 {tagsTitle(tags.theme)} · 事件 {tagsTitle(tags.event)}{tags.other.length?' · 其他 '+tagsTitle(tags.other):''}</p>
         <h4>入选统计</h4>
         <dl className="pt-kv">
-          <div><dt>累计</dt><dd>{episodes.total} 天 · 今日{episodes.today > 0 ? '已入选' : '未入选'}</dd></div>
-          <div><dt>首次</dt><dd>{fullStamp(episodes.first_at)}</dd></div>
-          <div><dt>最近</dt><dd>{fullStamp(episodes.last_at)}</dd></div>
+          <div><dt>累计</dt><dd>{selection.days} 天 · 今日{selection.today > 0 ? '已入选' : '未入选'}</dd></div>
+          <div><dt>首次</dt><dd>{fullStamp(selection.first_at)}</dd></div>
+          <div><dt>最近</dt><dd>{fullStamp(selection.last_at)}</dd></div>
         </dl>
         <h4>当前状态</h4>
         <div className={'pt-current'+(current.ok?' is-match':'')}>

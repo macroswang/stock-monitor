@@ -544,6 +544,90 @@ class PoolTableTests(unittest.TestCase):
         self.assertIsNone(entry['driver_short'])
 
 
+    # ---------- 有效入选时间 selection ----------
+    def test_view_selection_maps_off_hours_to_trading_slots(self):
+        self.sync(self.issue(day='2026-11-11', published='2026-11-11T13:00:00+08:00',
+                             picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        for stamp in ('2026-11-12T00:05:11.950825+08:00', '2026-11-12T04:30:12.163609+08:00',
+                      '2026-11-12T08:11:00+08:00'):
+            self.sync(self.issue(day='2026-11-12', published=stamp,
+                                 picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 12, 10, 0, tzinfo=CN))
+        self.assertEqual(entry['selection'], dict(
+            first_at='2026-11-11T13:00:00+08:00', first_day='2026-11-11',
+            last_at='2026-11-12T09:25:00+08:00', last_day='2026-11-12', days=2, today=1))
+        # 兼容旧字段：episodes 计数改为有效入选日，first/last 仍是 raw 时间。
+        self.assertEqual(entry['episodes'], dict(
+            total=2, today=1, first_at='2026-11-11T13:00:00+08:00',
+            last_at='2026-11-12T08:11:00+08:00'))
+
+    def test_view_selection_weekend_maps_to_next_session(self):
+        self.sync(self.issue(day='2026-11-14', published='2026-11-14T10:00:00+08:00',
+                             picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 16, 10, 0, tzinfo=CN))
+        self.assertEqual(entry['selection'], dict(
+            first_at='2026-11-16T09:25:00+08:00', first_day='2026-11-16',
+            last_at='2026-11-16T09:25:00+08:00', last_day='2026-11-16', days=1, today=1))
+
+    def test_view_selection_none_without_episodes(self):
+        with self.app.store.lock:
+            self.app.store.db.execute(
+                'INSERT INTO pool(code,name,added_day,added_price,source,category,group_name,entry_tag,'
+                'groups_json,sector,state,plan,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                ('sh600001', '甲股份', '2026-11-09', 10.2, '建仓清单', '概念', '智能穿戴', '可建仓',
+                 json.dumps(['概念']), '智能穿戴', '可建仓', '{}', '2026-11-09T08:00:00+08:00'))
+            self.app.store.db.commit()
+        entry, _ = self.view_entry()
+        self.assertEqual(entry['selection'], dict(first_at=None, first_day=None, last_at=None,
+                                                 last_day=None, days=0, today=0))
+
+    # ---------- 股票池提醒 alert ----------
+    def test_view_entry_alert_today_latest(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        with self.app.store.lock:
+            self.app.store.db.execute(
+                'INSERT INTO pool_alerts(code,day,kind,created_at) VALUES(?,?,?,?)',
+                ('sh600001', '2026-11-11', 'buy_zone', '2026-11-11T09:46:53+08:00'))
+            self.app.store.db.execute(
+                'INSERT INTO pool_alerts(code,day,kind,created_at) VALUES(?,?,?,?)',
+                ('sh600001', '2026-11-12', 'buy_zone', '2026-11-12T09:34:13+08:00'))
+            self.app.store.db.commit()
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 12, 10, 0, tzinfo=CN))
+        self.assertEqual(entry['alert'], dict(day='2026-11-12', kind='buy_zone',
+                                              label='进入买区', at='2026-11-12T09:34:13+08:00'))
+        with self.app.store.lock:
+            self.app.store.db.execute(
+                'INSERT INTO pool_alerts(code,day,kind,created_at) VALUES(?,?,?,?)',
+                ('sh600001', '2026-11-12', 'stop_break', '2026-11-12T09:40:00+08:00'))
+            self.app.store.db.commit()
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 12, 10, 0, tzinfo=CN))
+        self.assertEqual(entry['alert']['kind'], 'stop_break')
+        self.assertEqual(entry['alert']['label'], '跌破防守位')
+        self.assertEqual(entry['alert']['at'], '2026-11-12T09:40:00+08:00')
+
+    def test_view_entry_alert_ignores_previous_days(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        with self.app.store.lock:
+            self.app.store.db.execute(
+                'INSERT INTO pool_alerts(code,day,kind,created_at) VALUES(?,?,?,?)',
+                ('sh600001', '2026-11-11', 'buy_zone', '2026-11-11T09:46:53+08:00'))
+            self.app.store.db.commit()
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 12, 10, 0, tzinfo=CN))
+        self.assertIsNone(entry['alert'])
+
+    def test_view_entry_alert_none_without_alerts(self):
+        self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 12, 10, 0, tzinfo=CN))
+        self.assertIsNone(entry['alert'])
+
+    def test_pool_backtest_episodes_use_selection_days(self):
+        for stamp in ('2026-11-12T00:05:11+08:00', '2026-11-12T04:30:12+08:00'):
+            self.sync(self.issue(day='2026-11-12', published=stamp,
+                                 picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        with patch('core.pool.now_cn', return_value=datetime(2026, 11, 12, 10, 0, tzinfo=CN)):
+            result = self.pool.pool_backtest()
+        self.assertEqual([row['episodes'] for row in result['rows']], [1])
+
     def test_refresh_fund_flows_limits_to_pool_codes(self):
         self.sync(self.issue(picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
         fetched = []
@@ -873,6 +957,43 @@ class TradingDayTests(unittest.TestCase):
         self.assertEqual(_trading_day(datetime(2026, 11, 14, 10, 0, tzinfo=CN)), '2026-11-13')
         self.assertEqual(_trading_day(datetime(2026, 11, 15, 10, 0, tzinfo=CN)), '2026-11-13')
         self.assertEqual(_trading_day(datetime(2026, 11, 13, 10, 0, tzinfo=CN)), '2026-11-13')
+
+
+class SelectionStampTests(unittest.TestCase):
+    def test_before_open_maps_to_same_day_0925(self):
+        from core.pool import _selection_stamp
+        for stamp in ('2026-11-12T00:05:11.950825+08:00', '2026-11-12T04:30:12.163609+08:00',
+                      '2026-11-12T08:11:00+08:00', '2026-11-12T09:24:59+08:00'):
+            self.assertEqual(_selection_stamp(stamp), '2026-11-12T09:25:00+08:00')
+
+    def test_trading_hours_keep_original_time(self):
+        from core.pool import _selection_stamp
+        for stamp in ('2026-11-12T09:25:00+08:00', '2026-11-12T11:12:30+08:00',
+                      '2026-11-12T14:59:59+08:00', '2026-11-12T15:00:00+08:00'):
+            self.assertEqual(_selection_stamp(stamp), stamp)
+
+    def test_after_close_maps_to_next_trading_day(self):
+        from core.pool import _selection_stamp
+        self.assertEqual(_selection_stamp('2026-11-12T15:30:00+08:00'), '2026-11-13T09:25:00+08:00')
+        self.assertEqual(_selection_stamp('2026-11-12T19:25:00+08:00'), '2026-11-13T09:25:00+08:00')
+        # 周五收盘后顺延到下周一。
+        self.assertEqual(_selection_stamp('2026-11-13T16:30:00+08:00'), '2026-11-16T09:25:00+08:00')
+
+    def test_weekend_maps_to_next_trading_day(self):
+        from core.pool import _selection_stamp
+        self.assertEqual(_selection_stamp('2026-11-14T10:00:00+08:00'), '2026-11-16T09:25:00+08:00')
+        self.assertEqual(_selection_stamp('2026-11-15T22:00:00+08:00'), '2026-11-16T09:25:00+08:00')
+
+    def test_holiday_maps_to_next_trading_day(self):
+        from core.pool import _selection_stamp
+        self.assertEqual(_selection_stamp('2026-10-01T12:00:00+08:00'), '2026-10-08T09:25:00+08:00')
+        self.assertEqual(_selection_stamp('2026-10-07T21:00:00+08:00'), '2026-10-08T09:25:00+08:00')
+
+    def test_invalid_timestamp_returns_none(self):
+        from core.pool import _selection_stamp
+        self.assertIsNone(_selection_stamp(''))
+        self.assertIsNone(_selection_stamp(None))
+        self.assertIsNone(_selection_stamp('not-a-time'))
 
 
 if __name__ == '__main__':

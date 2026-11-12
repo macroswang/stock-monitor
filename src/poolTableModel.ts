@@ -16,6 +16,9 @@ export type HistoryRow = {
 };
 export type EntryWindow = {n?: number; date?: string | null; close?: number | null; return_percent?: number | null; benchmark_return?: number | null; excess_percent?: number | null};
 export type Episodes = {total: number; today: number; first_at: string | null; last_at: string | null};
+/** 用户第九轮：有效交易时间（后端 selection）与今日提醒（后端 alert）。 */
+export type Selection = {first_at?: string | null; first_day?: string | null; last_at?: string | null; last_day?: string | null; days?: number | null; today?: number | null};
+export type PoolAlert = {day?: string | null; kind?: string | null; label?: string | null; at?: string | null};
 export type Quant = {turnover_rate: number | null; volume_ratio: number | null; amplitude: number | null; float_mcap_yi: number | null};
 export type Tags = {concept: string[]; theme: string[]; event: string[]; other: string[]};
 /** 契约 §8：driver = 该 code 最新一期研判的入选理由（截断）；fund = 东财主力净流入（缺失 None）。 */
@@ -31,9 +34,10 @@ export type Entry = {
   windows?: Record<string, EntryWindow | null> | null; holding_days?: number | null; holding_bucket?: string | null;
   episodes?: Partial<Episodes> | null; quant?: Partial<Quant> | null; tags?: Partial<Record<keyof Tags, unknown>> | null;
   driver?: Partial<Driver> | null; driver_short?: string | null; driver_short_at?: string | null; fund?: Partial<Fund> | null;
+  selection?: Partial<Selection> | null; alert?: Partial<PoolAlert> | null;
 };
 export type PoolData = {
-  updated_at: string | null; quotes_time: string | null; trading?: boolean; error?: string;
+  updated_at: string | null; quotes_time: string | null; today?: string | null; calendar_today?: string; trading?: boolean; error?: string;
   entries: Entry[]; filtered_total?: number; has_more?: boolean; offset?: number; limit?: number;
   benchmark?: string | null; archived_count?: number | null; [key: string]: unknown;
 };
@@ -58,7 +62,7 @@ export const SORT_OPTIONS: {value: string; label: string; key: SortKey; dir: 'as
   {value: 'entry-desc', label: '入选价格 ↓', key: 'entry', dir: 'desc'},
   {value: 'entry-asc', label: '入选价格 ↑', key: 'entry', dir: 'asc'},
 ];
-export type RowChip = 'all' | 'today' | 'multi';
+export type RowChip = 'all' | 'today' | 'multi' | 'alert';
 export type RowPeriod = 'all' | 'today' | '3d' | '5d';
 export type RowFilter = {chip: RowChip; period: RowPeriod; search: string};
 export const DEFAULT_ROW_FILTER: RowFilter = {chip: 'all', period: 'all', search: ''};
@@ -66,13 +70,14 @@ export const PERIOD_OPTIONS: {value: RowPeriod; label: string}[] = [
   {value: 'all', label: '全部时间'}, {value: 'today', label: '今日'}, {value: '3d', label: '近3日'}, {value: '5d', label: '近5日'},
 ];
 
-export const STORAGE_KEY = 'stock-monitor-pool-terminal-v1';
+export const STORAGE_KEY = 'stock-monitor-pool-terminal-v2';
 export function readStoredTerminal(): {filter: RowFilter; sort: SortState} {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {filter: DEFAULT_ROW_FILTER, sort: DEFAULT_SORT};
     const parsed = JSON.parse(raw) as {filter?: Partial<RowFilter>; sort?: Partial<SortState>};
     const filter = {...DEFAULT_ROW_FILTER, ...(parsed.filter || {})};
+    if (!['all', 'today', 'multi', 'alert'].includes(filter.chip)) filter.chip = 'all';
     const sort = parsed.sort && parsed.sort.key && parsed.sort.dir ? {key: parsed.sort.key, dir: parsed.sort.dir} : DEFAULT_SORT;
     return {filter, sort};
   } catch {
@@ -102,10 +107,24 @@ export const clockText = (value: string | null | undefined) => {
 };
 export const TIME_LABEL: Record<string, string> = {'0-3': '0–3%', '3-7': '3–7%', '7+': '7% 以上', lt0: '< 0%', '3+': '3 天及以上'};
 
-/** 行内“时间（入选）”：MM-DD HH:MM，缺时间时退化为 MM-DD。 */
+/** 首次加入时间按中国时区显示；不采用后来再次入选的研判时间。 */
+export function poolAddedStamp(entry: Entry): string {
+  const raw = entry.added_at || entry.added_day || '';
+  if (/T.*(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+    const time = new Date(raw);
+    if (Number.isFinite(time.getTime())) return new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    }).format(time).replace(' ', 'T');
+  }
+  return raw;
+}
+export const poolAddedDay = (entry: Entry) => poolAddedStamp(entry).slice(0, 10);
 export function entryTime(entry: Entry) {
-  if (entry.added_at && entry.added_at.length >= 16) return entry.added_at.slice(5, 10) + ' ' + entry.added_at.slice(11, 16);
-  return entry.added_day ? entry.added_day.slice(5) : '—';
+  const selection = selectionOf(entry);
+  if (selection.first_at && selection.first_at.length >= 16) return selection.first_at.slice(5, 10) + ' ' + selection.first_at.slice(11, 16);
+  if (selection.first_day) return selection.first_day.slice(5);
+  return '—';
 }
 export const fullStamp = (value: string | null | undefined) => {
   if (!value) return '—';
@@ -131,6 +150,19 @@ export function episodesOf(entry: Entry): Episodes {
   }
   // 兜底：episodes 尚未接入时，至少按 pool 行自身算 1 天，避免整列空白。
   return {total: 1, today: 0, first_at: entry.added_at ?? null, last_at: entry.added_at ?? null};
+}
+/** 有效交易时间（selection 优先，缺失回退 episodes/added_at/added_day）。 */
+export type SelectionInfo = {first_at: string | null; first_day: string; last_at: string | null; last_day: string; days: number; today: number};
+export function selectionOf(entry: Entry): SelectionInfo {
+  const raw = entry.selection && typeof entry.selection === 'object' ? entry.selection : {};
+  const episodes = episodesOf(entry);
+  const firstAt = typeof raw.first_at === 'string' ? raw.first_at : (episodes.first_at ?? entry.added_at ?? null);
+  const lastAt = typeof raw.last_at === 'string' ? raw.last_at : (episodes.last_at ?? entry.added_at ?? null);
+  const firstDay = typeof raw.first_day === 'string' && raw.first_day ? raw.first_day : (firstAt ? firstAt.slice(0, 10) : (entry.added_day || ''));
+  const lastDay = typeof raw.last_day === 'string' && raw.last_day ? raw.last_day : (lastAt ? lastAt.slice(0, 10) : (entry.added_day || ''));
+  const days = isNum(raw.days) ? Math.max(0, Math.trunc(raw.days as number)) : episodes.total;
+  const today = isNum(raw.today) ? (Number(raw.today) > 0 ? 1 : 0) : (episodes.today > 0 ? 1 : 0);
+  return {first_at: firstAt, first_day: firstDay, last_at: lastAt, last_day: lastDay, days, today};
 }
 export function episodesTitle(entry: Entry) {
   const episodes = episodesOf(entry);
@@ -591,14 +623,21 @@ export function periodStart(anchor: string, period: RowPeriod) {
   if (period === 'today') return anchor;
   return previousTradingDay(anchor, (period === '3d' ? 3 : 5) - 1);
 }
-export function filterRows(rows: Entry[], filter: RowFilter, anchor: string) {
-  const start = periodStart(anchor, filter.period);
+/** 最近一次有效入选日：selection.last_day（缺失回退 selection.last_at/episodes/added_day）。 */
+export function latestSelectionDay(entry: Entry) {
+  return selectionOf(entry).last_day;
+}
+export function filterRows(rows: Entry[], filter: RowFilter, anchor: string, calendarToday = anchor) {
+  // 「今日提醒」改为当天首次加入的股票，与研判再次入选和历史通知无关。
+  const start = filter.chip === 'alert' ? null : periodStart(anchor, filter.period);
   const search = filter.search.trim().toLowerCase();
   return rows.filter(entry => {
+    const selection = selectionOf(entry);
     const episodes = episodesOf(entry);
-    if (filter.chip === 'today' && !(episodes.today > 0 || entry.added_day === anchor)) return false;
+    if (filter.chip === 'today' && selection.today <= 0) return false;
     if (filter.chip === 'multi' && episodes.total < 2) return false;
-    if (start && entry.added_day < start) return false;
+    if (filter.chip === 'alert' && poolAddedDay(entry) !== calendarToday) return false;
+    if (start && selection.last_day < start) return false;
     if (search) {
       const tags = tagsOf(entry);
       const haystack = [entry.code, entry.name, ...tags.concept, ...tags.theme, ...tags.event, ...tags.other].join(' ').toLowerCase();
@@ -607,25 +646,31 @@ export function filterRows(rows: Entry[], filter: RowFilter, anchor: string) {
     return true;
   });
 }
-export function rowCounts(rows: Entry[], anchor: string) {
+export function rowCounts(rows: Entry[], anchor: string, calendarToday = anchor) {
   let today = 0;
   let multi = 0;
+  let alert = 0;
   let up = 0;
   let down = 0;
   let flat = 0;
   for (const entry of rows) {
+    const selection = selectionOf(entry);
     const episodes = episodesOf(entry);
-    if (episodes.today > 0 || entry.added_day === anchor) today += 1;
+    if (selection.today > 0) today += 1;
     if (episodes.total >= 2) multi += 1;
+    if (poolAddedDay(entry) === calendarToday) alert += 1;
     if (isNum(entry.today_percent) && entry.today_percent > 0) up += 1;
     else if (isNum(entry.today_percent) && entry.today_percent < 0) down += 1;
     else flat += 1;
   }
-  return {all: rows.length, today, multi, up, down, flat};
+  return {all: rows.length, today, multi, alert, up, down, flat};
 }
 const sortValue = (entry: Entry, key: SortKey): number | string | null => {
   switch (key) {
-    case 'added': return entry.added_at || entry.added_day || '';
+    case 'added': {
+      const selection = selectionOf(entry);
+      return selection.first_at || selection.first_day || '';
+    }
     case 'entry': return entry.added_price;
     case 'since': return entry.since_add_percent;
     case 'today': return entry.today_percent;

@@ -38,6 +38,7 @@
 .pt-chips{display:flex;gap:3px}
 .pool-terminal .pt-chips button{padding:0 7px}
 .pool-terminal .pt-chips button[aria-pressed=true]{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
+/* 用户第九轮：今日提醒 chip 与行内提醒标记 */
 .pool-terminal .pt-toggle.is-on{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
 .pt-field{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#8fa6c4;white-space:nowrap}
 .pt-search{width:160px}
@@ -198,3 +199,4 @@
 @media(max-width:600px){
  .pt-table{min-width:520px}
 }
+.pt-filter-note{flex:1 1 100%;font-size:10.5px;line-height:1.5;color:#f3ce88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

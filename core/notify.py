@@ -26,6 +26,9 @@ def drain(store,enabled):
     if not enabled: return
     for row in store.query("SELECT d.*,e.payload FROM delivery d JOIN events e USING(key) WHERE status IN ('pending','retry') AND next_try<=?",(time.time(),)):
         e=json.loads(row['payload'])
+        if e.get('kind')=='POOL_ALERT':
+            store.execute("UPDATE delivery SET status='skipped' WHERE key=?",(row['key'],))
+            continue
         stamp=datetime.fromisoformat(e['trading_date']+'T'+e['event_label']).replace(tzinfo=CN)
         if (now_cn()-stamp).total_seconds()>180:
             store.execute("UPDATE delivery SET status='expired' WHERE key=?",(row['key'],))

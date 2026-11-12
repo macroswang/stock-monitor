@@ -608,8 +608,6 @@ class App:
             return chart(self.store,symbol(args['code']),datetime.fromisoformat(args['day']).date().isoformat())
         if method=='trading_chart_sync':
             from .trading_chart import sync_filled_orders
-            if self.live_trading.settings()['mode']=='live' and not self.live_trading.settings()['paused'] and trading(now_cn()):
-                raise ValueError('交易时段正在自动实盘执行，为避免占用下单设备，请收盘后同步券商成交')
             return self.broker_job(lambda:sync_filled_orders(self.store,datetime.fromisoformat(args['day']).date().isoformat()))
         if method=='trading_view':return self.live_trading.view()
         if method=='trading_config':return self.live_trading.configure(args)
@@ -722,7 +720,14 @@ class App:
         if method=='messages':
             conditions=[];params=[]
             if args.get('unread'):conditions.append('m.read_at IS NULL')
-            if args.get('category'):conditions.append('m.category=?');params.append(args['category'])
+            category=args.get('category')
+            # Keep existing message IDs/read state and classify legacy pool alerts by payload.
+            if category=='pool_alert':
+                conditions.append("m.category='signal' AND json_extract(m.payload,'$.kind')='POOL_ALERT'")
+            elif category=='signal':
+                conditions.append("m.category='signal' AND COALESCE(json_extract(m.payload,'$.kind'),'')!='POOL_ALERT'")
+            elif category:
+                conditions.append('m.category=?');params.append(category)
             where=' WHERE '+' AND '.join(conditions) if conditions else ''
             total=self.store.query('SELECT count(*) AS n FROM messages m'+where,params)[0]['n']
             limit=min(100,max(1,int(args.get('limit',30))));offset=max(0,int(args.get('offset',0)))
@@ -752,6 +757,9 @@ class App:
             pending=[]
             for row in self.store.query("SELECT l.*,e.payload FROM local_delivery l JOIN events e USING(key) WHERE status='pending' AND next_try<=?",(time.time(),)):
                 e=json.loads(row['payload'])
+                if e.get('kind')=='POOL_ALERT':
+                    self.store.execute("UPDATE local_delivery SET status='skipped',detail='股票池提醒功能已移除' WHERE key=? AND status='pending'",(row['key'],))
+                    continue
                 observed=datetime.fromisoformat(e.get('observed_at',e['trading_date']+'T'+e['event_label'])).replace(tzinfo=CN)
                 age=(now_cn()-observed).total_seconds()
                 if not 0<=age<=180:

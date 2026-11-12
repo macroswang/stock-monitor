@@ -16,11 +16,12 @@ import time
 import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time as clock_time, timedelta
 
 from .provider import CN, get, now_cn, symbol
 from .breadth import parse_quotes
 from .paper_session import calendar
+from .index_technical import trading_day as exchange_trading_day
 
 QUOTE_URL = 'https://qt.gtimg.cn/q='
 POLL_SECONDS = 8
@@ -70,7 +71,7 @@ NEWS_THEME_KEYWORDS = (
 )
 NEWS_NOISE_SECTORS = {'昨日首板', '题材股', '东方财富热股', '东方', '名称辈', '生肖玄学', '手动', '其他'}
 
-ALERT_KINDS = {'已进入买区': ('buy_zone', '进入买区'), '已跌破防守位': ('stop_break', '跌破防守位')}
+ALERT_LABELS = {'buy_zone': '进入买区', 'stop_break': '跌破防守位'}  # 仅用于读取历史记录
 
 
 def _is_archived(value):
@@ -148,6 +149,51 @@ def _trading_day(now):
                 return day.isoformat()
         day -= timedelta(days=1)
     return day.isoformat()
+
+
+def _is_exchange_day(day):
+    """Trading-day check with exchange holidays (index_technical.trading_day)."""
+    result = exchange_trading_day(day)
+    if result is None:  # no verified calendar: fall back to weekdays instead of inventing holidays
+        return day.weekday() < 5
+    return bool(result)
+
+
+def _next_exchange_day(day):
+    cursor = day
+    for _ in range(45):
+        cursor += timedelta(days=1)
+        if _is_exchange_day(cursor):
+            return cursor
+    return cursor
+
+
+def _selection_stamp(published_at):
+    """Map an episode publish time to its effective selection slot (trading day 09:25-15:00).
+
+    Trading-day times inside 09:25-15:00 are kept; earlier times map to 09:25 the same day;
+    after-close and non-trading-day times map to 09:25 on the next exchange session.
+    Returns an ISO string with +08:00 (None when the timestamp cannot be parsed).
+    """
+    try:
+        moment = datetime.fromisoformat(str(published_at or '').strip())
+    except (TypeError, ValueError):
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=CN)
+    moment = moment.astimezone(CN)
+    day = moment.date()
+    if not _is_exchange_day(day):
+        target = _next_exchange_day(day)
+        return datetime.combine(target, clock_time(9, 25), tzinfo=CN).isoformat()
+    opened = moment.replace(hour=9, minute=25, second=0, microsecond=0)
+    if moment < opened:
+        return opened.isoformat()
+    closed = moment.replace(hour=15, minute=0, second=0, microsecond=0)
+    if moment <= closed:
+        return moment.isoformat()
+    target = _next_exchange_day(day)
+    return datetime.combine(target, clock_time(9, 25), tzinfo=CN).isoformat()
 
 
 def _tag_bucket(category):
@@ -463,7 +509,6 @@ class Pool:
         self.last_poll = 0.0
         self.error = ''
         self.running = False
-        self.last_zones = {}
         self.prefetch_started = False
         self.fund_flows = None
         self.fund_at = 0.0
@@ -557,7 +602,6 @@ class Pool:
                 self.quotes.update(quotes)
                 self.error = ''
             self._record(quotes, stamp)
-            self._check_alerts(quotes, stamp)
             if time.monotonic() - self.fund_at >= FUND_FLOW_SECONDS:
                 try:
                     self.refresh_fund_flows(codes)
@@ -1259,36 +1303,46 @@ class Pool:
 
     # ---------- 入选事件 / 标签 / 回测 ----------
     def _episode_counts(self, codes, trading_today):
-        """One query for episode-day counts (never one query per entry).
+        """One query for episode counts based on effective selection days (no N+1).
 
-        total counts distinct natural selection days (substr(published_at,1,10)) so several issues
-        of the same code on one day count once; today is 1 when the current session is one of
-        those days, else 0; first_at/last_at stay the min/max published_at.
+        total = distinct effective selection days (several issues on one trading day count once);
+        today = 1 when trading_today is one of those effective days; first_at/last_at stay the raw
+        published_at, while first_selection/last_selection are the mapped selection timestamps.
         """
         unique = [code for code in dict.fromkeys(codes) if code]
         if not unique:
             return {}
         marks = ','.join('?' * len(unique))
         rows = self.store.query(
-            'SELECT code,substr(published_at,1,10) AS day,MIN(published_at) AS first_at,'
-            'MAX(published_at) AS last_at '
-            f'FROM pool_episode WHERE code IN ({marks}) GROUP BY code,day',
-            tuple(unique))
+            f'SELECT code,published_at FROM pool_episode WHERE code IN ({marks})', tuple(unique))
         counts = {}
         for row in rows:
-            code, day = row['code'], row['day']
+            code = row['code']
+            raw = row.get('published_at')
+            stamp = _selection_stamp(raw) or raw
+            day = str(stamp or '')[:10]
             item = counts.get(code)
             if item is None:
                 counts[code] = dict(total=1, today=1 if day == trading_today else 0,
-                                    first_at=row['first_at'], last_at=row['last_at'])
+                                    first_at=raw, last_at=raw,
+                                    first_selection=stamp, last_selection=stamp,
+                                    selection_days={day})
                 continue
-            item['total'] += 1
+            if day not in item['selection_days']:
+                item['selection_days'].add(day)
+                item['total'] += 1
             if day == trading_today:
                 item['today'] = 1
-            if item['first_at'] is None or (row['first_at'] or '') < item['first_at']:
-                item['first_at'] = row['first_at']
-            if item['last_at'] is None or (row['last_at'] or '') > item['last_at']:
-                item['last_at'] = row['last_at']
+            if raw and (item['first_at'] is None or raw < item['first_at']):
+                item['first_at'] = raw
+            if raw and (item['last_at'] is None or raw > item['last_at']):
+                item['last_at'] = raw
+            if stamp and (item['first_selection'] is None or stamp < item['first_selection']):
+                item['first_selection'] = stamp
+            if stamp and (item['last_selection'] is None or stamp > item['last_selection']):
+                item['last_selection'] = stamp
+        for item in counts.values():
+            item.pop('selection_days', None)
         return counts
 
     def _episode_meta(self, codes):
@@ -1401,12 +1455,34 @@ class Pool:
         return latest
 
     def _attach_episode_view(self, entries, trading_today):
-        """Attach episodes/quant/tags/driver/driver_short to view entries with one episode query."""
-        codes = [entry['code'] for entry in entries]
-        counts = self._episode_counts(codes, trading_today)
-        meta = self._episode_meta(codes)
+        """Attach episodes/selection/alert/quant/tags/driver to view entries (batched queries)."""
+        unique = [code for code in dict.fromkeys(entry['code'] for entry in entries) if code]
+        counts = self._episode_counts(unique, trading_today)
+        meta = self._episode_meta(unique)
+        alerts = {}
+        if unique:
+            marks = ','.join('?' * len(unique))
+            rows = self.store.query(
+                f'SELECT code,day,kind,created_at FROM pool_alerts WHERE code IN ({marks}) AND day=? '
+                'ORDER BY created_at', tuple(unique) + (trading_today,))
+            for row in rows:  # ascending: the last row per code is the latest alert today
+                alerts[row['code']] = dict(day=row['day'], kind=row['kind'],
+                                           label=ALERT_LABELS.get(row['kind'], row['kind']),
+                                           at=row['created_at'])
         for entry in entries:
-            entry['episodes'] = counts.get(entry['code'], dict(total=0, today=0, first_at=None, last_at=None))
+            count = counts.get(entry['code'], dict(total=0, today=0, first_at=None, last_at=None,
+                                                   first_selection=None, last_selection=None))
+            entry['episodes'] = dict(total=count['total'], today=count['today'],
+                                     first_at=count['first_at'], last_at=count['last_at'])
+            first_selection = count.get('first_selection')
+            last_selection = count.get('last_selection')
+            entry['selection'] = dict(
+                first_at=first_selection,
+                first_day=str(first_selection)[:10] if first_selection else None,
+                last_at=last_selection,
+                last_day=str(last_selection)[:10] if last_selection else None,
+                days=count['total'], today=count['today'])
+            entry['alert'] = alerts.get(entry['code'])
             quote = entry.get('quote') or {}
             entry['quant'] = dict(turnover_rate=quote.get('turnover_rate'),
                                   volume_ratio=quote.get('volume_ratio'),
@@ -1506,50 +1582,6 @@ class Pool:
                                   episode_issues=episode_issues, episode_range=episode_range,
                                   note='T+N=首次入选日后第 N 个交易日收盘/入选价格−1，基准上证；'
                                        '未到期/缺数据不按 0 计；历史样本仅供研究，不构成投资建议。'))
-
-    def _check_alerts(self, quotes, now):
-        """Once-per-day local/phone alert when a pool stock enters its buy zone or breaks the stop."""
-        if not quotes or now.weekday() > 4 or not trading(now):
-            return
-        day = now.date().isoformat()
-        for row in self.store.query('SELECT * FROM pool WHERE archived=0'):
-            if row['state'] in MARKED:
-                continue
-            code = row['code']
-            plan = self._plan(code)
-            if not plan.get('buy_low') and not plan.get('stop'):
-                continue
-            quote = quotes.get(code)
-            if not quote:
-                continue
-            stamp = _stamp(quote.get('timestamp'))
-            if not stamp or stamp.date().isoformat() != day or (now - stamp).total_seconds() > 180:
-                continue
-            zone, _ = self._zone(dict(plan=plan), quote)
-            previous = self.last_zones.get(code)
-            self.last_zones[code] = zone
-            if previous is None or previous == zone:
-                continue
-            alert = ALERT_KINDS.get(zone)
-            if not alert:
-                continue
-            kind, label = alert
-            inserted = self.store.execute(
-                'INSERT OR IGNORE INTO pool_alerts(code,day,kind,created_at) VALUES(?,?,?,?)',
-                (code, day, kind, now.isoformat()))
-            if not inserted:
-                continue
-            price = _float(quote.get('price'))
-            title = f'观量 · 股票池提醒 · {row["name"]}'
-            body = f'{row["name"]}（{code}）{label}，现价 {price:.2f}；仅提醒，手动交易。'
-            event = dict(key=f'pool|{day}|{code}|{kind}', code=code, symbol=code[2:], trading_date=day,
-                         candidate_time='—', confirmation_label='股票池', event_label=now.strftime('%H:%M:%S'),
-                         volumes=[], kind='POOL_ALERT', observed_at=now.isoformat(), reference_price=price,
-                         manual_sell_only=True, notification_title=title, notification_body=body)
-            try:
-                self.store.event(event, 'live')
-            except Exception:
-                continue
 
     def archive_old(self):
         cutoff = (now_cn().date() - timedelta(days=ARCHIVE_DAYS)).isoformat()
@@ -1800,7 +1832,8 @@ class Pool:
         window_stats = self._window_stats(base_entries)
         windows = {item['window']: item for item in window_stats}
         holding_stats = self._holding_stats(base_entries)
-        return dict(updated_at=_now(), quotes_time=max(stamps) if stamps else None, error=self.error,
+        return dict(updated_at=_now(), today=_trading_day(now), calendar_today=now.date().isoformat(),
+                    quotes_time=max(stamps) if stamps else None, error=self.error,
                     trading=trading(now), summary=summary, counts=counts, tag_stats=tag_stats,
                     groups=group_rows, entries=page, filtered_total=filtered_total,
                     offset=offset, limit=limit, has_more=offset + len(page) < filtered_total,

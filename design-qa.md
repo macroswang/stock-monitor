@@ -560,3 +560,74 @@ final result: passed
 - **P0/P1/P2**：无未解决 P0/P1；Playwright 用例更新为 P2。
 
 final result: passed
+
+---
+
+# Design QA — 股票池时间范围筛选 bug 修复（2026-11-12）
+
+> 用户反馈：系统通知很多股票入选，但股票池选择「今日入选 29 + 时间范围 今日」列表为空。
+> 根因：时间范围此前按「首次入选日 added_day」过滤；今日入选的股票多数首次入选日更早（且盘前 quotes_time 可能还是上一交易日），因此被全部过滤。
+> 修复：后端 pool.view 增加 **today** 字段（当前交易日）；前端 anchor 优先用 today（回退 quotes_time/更新日期/本地日期）；时间范围改为按**最近一次入选日**（episodes.last_at 的日期，回退 added_day）过滤；今日入选判定=episodes.today>0 或 latestDay===anchor 或 added_day===anchor。
+> 验证（真实 1420 预览）：池 190 只/29 组；今日入选 29；「今日入选+时间范围今日」→ **29 行/12 组**（修复前 0），单独时间范围今日也 **29 行/12 组**；首行示例含 11-09/11-11 首次入选但今天仍在入选的股票（×4/×3），证明按最近入选日过滤。
+> 截图：旧 today-filter-1440 已删除，改由第九轮 [selection-today-1440.png](docs/pool-table/screenshots/selection-today-1440.png) 覆盖（今日入选+时间范围今日=38 行/13 组，selection 口径）。
+
+- **实现细节**：pool.view 返回 today=_trading_day(now)（当前交易日）；前端 FocusPool 的 anchor= today ?? quotes_time/updated_at 日期 ?? 本地日期；filterRows/periodStart 用 episodes.last_at（最近一次入选日）而不是 added_day；chip 今日入选与时间范围今日互不依赖（单独时间范围今日同样 29 行）。
+- **数据/回归**：当前预览 190 只/29 组（chips 190/29/71；行情 09:38:13 实时、上涨 93/下跌 96；资金 185/190，盘前新入池 5 只稍后刷新）；回测 190 行、T+1 135/未到期 55/缺数据 0、65.2%/+1.75%/+1.47%、coverage 190/135/190、107 期（2026-11-09~11-12）；名称列当前 72px、入选后涨幅 61px、现价右距 7px。
+- **测试**：tsc 通过；vite build 通过（673 modules，index-Bi0XUP9h.js 1,809.73 kB / gzip 571.92 kB、index-RvAt6JwV.css 123.60 kB）；Python tests.test_pool_table **54 tests OK**；Playwright spec 已更新为 **35 项**（含 today/anchor/时间范围/最近入选日用例），本地复跑 **35/35 通过**（19.8s，2026-11-12 09:41）。
+- **已知**：浏览器只读预览为静态快照；时间范围按最近入选日（不是首次入选日）；盘前 quotes_time 可能是上一交易日，anchor 已优先用后端 today；资金盘前 5 只暂缺（稍后刷新）。
+- **P0/P1/P2**：该 bug 已修复；无遗留 P0/P1。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第九轮：入选时间有效化 + 今日提醒（2026-11-12）
+
+> 用户反馈：① 入选时间出现 00:05 不合理；② 系统通知的股票池提醒无法在股票池查看。
+> 实现文件：core/pool.py（selection 映射、view entry.alert、pool_alerts 读取）、src/FocusPool.tsx（chip/铃铛/详情/筛选）、src/poolTableModel.ts（selectionOf/alertToday/filterRows）、src/focusPool.css（提醒样式）、tests/test_pool_table.py。
+
+- **入选时间有效化（selection）**：后端新增 **selection** 字段（有效交易时段时间）：交易日 **09:25–15:00** 保留原时间；**09:25 前**（00:05/04:30/08:11 等）→当天 **09:25**；**15:00 后或非交易日**→**下一交易日 09:25**（含节假日）。selection 含 first_at/first_day/last_at/last_day/days/today；表格入选时间、详情首次/最近、筛选统一使用 selection（不再显示 00:05）。实测：江丰电子 11-12 00:05 → 表格显示 **11-12 09:25**。
+- **筛选口径同步 selection**：时间范围按最近一次有效入选日（selection.last_day，缺时回退 selection.last_at/episodes/added_day）；今日入选=有效今日 selection（selection.today>0 或 last_day=anchor 或 added_day=anchor）。真实 190 只：今日入选 **38**、多次入选 **57**；「今日入选+时间范围今日」**38 行/13 组**（非空）。
+- **今日提醒（pool_alerts）**：pool_alerts 今日数据挂到 view 的 **entry.alert**（day/kind/label/time）；工具栏新增铃铛 chip「**今日提醒 58**」；行名称旁显示小铃铛（.pt-alert-badge，title/aria 如「09:34 进入买区」/「今日提醒 09:34 进入买区」）；详情显示「今日提醒：进入买区 09:34」；当前 190 只中 **58 只有今日提醒**（DB 今日 pool_alerts 64 条，按股票去重后 58 只；含系统通知里的 扬子新材/红太阳），点「今日提醒」chip 即筛选 **58 行/23 组**，解决“通知里的股票无法在股票池查看”。
+- **验证（2026-11-12 09:57 真实 1420 预览）**：
+  - 标题条 190 / 行情 09:56:52 实时 / 上涨 93 / 下跌 97；chips 全部 190 / 今日入选 38 / 多次入选 57 / 今日提醒 58；29 组、footer 29 个方向。
+  - 江丰电子入选时间 11-12 09:25（原 published 00:05）；铃铛 58 个，title 示例 09:30/09:34/09:38 进入买区；扬子新材 title 09:34 进入买区、红太阳 09:34 进入买区。
+  - 今日入选+时间范围今日 = 38 行/13 组（footer 显示 38 / 共 190 只 · 13 个方向）；今日提醒 chip = 58 行/23 组；详情「今日提醒：进入买区 09:30」；1000 单列 alert 58 行、页面无横滚。
+  - 入选天数（selection.days）分布：×1 133、×2 40、×3 12、×4 5（最大 4 天）；回测 190 行/T+1 135/未到期 55/缺数据 0、65.2%/+1.75%/+1.47%、107 期不变；资金 185/190（盘前 5 只稍后刷新）。
+  - 构建/测试：tsc 通过；vite build 通过（673 modules，`index-Dwuk_smk.js` 1,811.88 kB / gzip 572.51 kB、`index-Cf0kbW9g.css` 124.30 kB）；Python `tests.test_pool_table` **67 tests OK**；Playwright spec 现 35 项（09:39，第九轮 selection/alert 用例待 verifier 更新后复跑，以最终结果为准）。
+- **截图清单**（docs/pool-table/screenshots/，2026-11-12 09:57 真实 1420 重截）：
+  - [selection-today-1440.png](docs/pool-table/screenshots/selection-today-1440.png) 今日入选+时间范围今日=38 行/13 组（入选时间已有效化）
+  - [selection-alert-1440.png](docs/pool-table/screenshots/selection-alert-1440.png) 今日提醒 58 行 + 铃铛 + 行详情「今日提醒：进入买区 09:30」
+  - [selection-alert-1000.png](docs/pool-table/screenshots/selection-alert-1000.png) 1000 单列今日提醒 + 详情
+  - 另保留 group8-1440/1000/pin-1440 与 chart-* 6 张（表格/图表历史截图；今日筛选旧图 today-filter-1440 已删除，改由 selection-today 覆盖）。
+- **已知**：selection 映射需节假日日历（当前按交易日历）+ 15:00 后归下一交易日；alert 仅展示当日（anchor=pool.view.today）；浏览器只读预览为 09:56 静态快照；资金盘前 185/190；Playwright 第九轮用例待 verifier 更新复跑。
+- **P0/P1/P2**：两个用户反馈均已修复；无未解决 P0/P1；Playwright 用例更新为 P2。
+
+final result: passed
+
+---
+
+# Design QA — 股票池第十轮：今日提醒计数/列表一致 + 名称去铃铛 + 筛选规则说明（2026-11-12）
+
+> 用户反馈：① 今日提醒 59 vs 底部 12 不一致；② 名称被铃铛挤省略；③ 筛选规则不清。
+> 根因：59 是「今天触发过股票池提醒（进入买区/跌破防守位）」的股票数（今日 pool_alerts 去重，与入选时间无关）；底部 12 是因为当时时间范围=今日，又叠加「最近入选日=今日」过滤。
+> 修复：① 点今日提醒 chip 自动重置时间范围=全部并禁用时间范围（提示与入选时间无关）；filterRows 对 alert 忽略 period；chip 下方显示说明 note；列表行数=今日提醒计数（当前 58）。② 名称旁小铃铛移除（不再占宽），有提醒的行改行左侧 2px 金色标记（box-shadow inset 2px #f3ce88）；名称 72px 下 190 只全部不省略；详情仍显示今日提醒。③ chips 数字改为跟随时间范围/搜索动态计算（不跟随当前 chip），保证数字与列表一致；chip title 增加解释：今日入选=今天有新的有效入选事件（不要求首次）、今日提醒=今天盘中触发提醒且与入选时间无关、多次入选=累计有效入选天数≥2；今日提醒下方说明 note。
+
+- 验证（2026-11-12 10:1x 真实 1420）：
+  - 默认 chips：全部 190 / 今日入选 38 / 多次入选 57 / 今日提醒 58；title 分别为「显示全部股票池标的」「今天有新的有效入选事件…」「历史累计有效入选天数 ≥2 天」「今天盘中触发过股票池提醒…与入选时间无关」。
+  - 动态计数：时间范围=今日 → 全部 38 / 今日入选 38 / 多次入选 21 / 今日提醒 12；搜索「机器人」→ 全部 17 / 今日入选 5 / 多次入选 9 / 今日提醒 7（数字跟随范围/搜索，与列表一致）。
+  - 点「今日提醒」→ 时间范围自动恢复=全部且 disabled（value=all，title「今日提醒与入选时间范围无关…」）；列表 58 行/23 组，footer「显示 58 / 共 190 只 · 23 个方向」；chip 下方 note「今日提醒：今天盘中触发过股票池提醒（进入买区/跌破防守位）的股票，与入选时间无关，已忽略时间范围。」。
+  - 列表：.pt-row.has-alert 58 行，无 .pt-alert-badge 铃铛；标记为 box-shadow: rgb(243,206,136) 2px 0 0 0 inset（行左 2px 金色，不占名称宽度）；名称无省略（过滤视图 58 只 0 条 truncate）。
+  - 详情：展开仍显示「今日提醒：进入买区 09:30」；1000 单列 58 行/23 组、页面无横滚、note 可见。
+  - 数据：190 只/29 组；今日入选 38/多次 57/今日提醒 58；回测 190/135/55/0、107 期；资金 185/190（盘前 5 只稍后刷新）。
+  - 构建/测试：tsc 通过；vite build 通过（673 modules，index-BHZGCQ7Z.js 1,812.24 kB / gzip 572.79 kB、index-7oi9jaR4.css 124.16 kB）；Python tests.test_pool_table 67 tests OK；Playwright spec 37 项，本地全量 36 passed/1 failed——失败为上一轮「行内 alert 徽标」断言（现改为行左标记），第九/十轮 alert 用例待 verifier 更新后复跑；以 verifier 最终结果为准。
+- 截图清单（真实 1420，2026-11-12 10:1x）：
+  - [selection-alert-1440.png](docs/pool-table/screenshots/selection-alert-1440.png) 今日提醒 58 行/23 组：无铃铛、行左 2px 金色标记、chip 说明 note、详情「今日提醒」
+  - [selection-alert-1000.png](docs/pool-table/screenshots/selection-alert-1000.png) 1000 单列今日提醒 + 详情
+  - [alert-rules-1440.png](docs/pool-table/screenshots/alert-rules-1440.png) 今日提醒规则/计数说明（note + 动态 chips）
+  - [selection-today-1440.png](docs/pool-table/screenshots/selection-today-1440.png) 今日入选+时间范围今日=38 行/13 组
+  - group8-1440/1000/pin-1440 与 chart-* 6 张保留（历史/图表）。
+- 已知：时间范围/搜索变化时 chips 数字动态变化；点今日提醒会清空时间范围并禁用（设计如此）；行左金色标记为 box-shadow；alert 统计与入选时间无关；浏览器预览为 09:56 静态快照；Playwright 待 verifier 更新 alert 断言。
+- P0/P1/P2：三个反馈均已修复；无未解决 P0/P1；Playwright 用例更新为 P2。
+
+final result: passed

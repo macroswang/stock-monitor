@@ -38,6 +38,34 @@ test.beforeEach(async({page})=>{
 });
 test.afterEach(async({page})=>{await page.close();process.stdin.end();await new Promise(resolve=>process.once('exit',resolve));await rm(directory,{recursive:true,force:true});});
 
+test('manual broker-fill sync remains available during live automatic trading',async({page})=>{
+ await page.clock.install({time:new Date('2026-10-16T10:00:00+08:00')});
+ await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ await page.evaluate(()=>{
+  const w=window as any,original=w.__TAURI_INTERNALS__.invoke;
+  w.manualFillSyncCalls=[];
+  w.__TAURI_INTERNALS__.invoke=async(command:string,args:any)=>{
+   if(command==='rpc'&&args.method==='snapshot'){
+    const snapshot=await original(command,args);
+    return {...snapshot,market_open:true,config:{...snapshot.config,trading_mode:'live',trading_paused:false}};
+   }
+   if(command==='rpc'&&args.method==='trading_chart_sync'){
+    w.manualFillSyncCalls.push(args.args);
+    return {job:'manual-fill-test'};
+   }
+   if(command==='rpc'&&args.method==='job'&&args.args.job==='manual-fill-test')return {status:'done',result:{message:'已缓存 0 条券商当日成交委托'}};
+   return original(command,args);
+  };
+ });
+ await expect(page.locator('.rail-bottom')).toContainText('自动实盘执行中');
+ const sync=page.getByRole('button',{name:'同步券商成交',exact:true});
+ await expect(sync).toBeEnabled();
+ await sync.click();
+ await expect.poll(()=>page.evaluate(()=>(window as any).manualFillSyncCalls)).toEqual([{day:'2026-10-16'}]);
+ await expect(sync).toBeEnabled();
+ await expect(page.locator('.toast')).toContainText('已缓存 0 条');
+});
+
 test('market guidance uses isolated real RPC data and pauses after a backend failure',async({page})=>{
  await rpc('__audit_market_decision_reference');
  await page.clock.install({time:new Date('2026-10-30T19:30:00Z')});
@@ -106,6 +134,21 @@ test('index-option PCR reaches the chart through the real isolated backend',asyn
  await expect(panel.locator('.option-readout strong').first()).toHaveText('0.612');
  await expect(panel).toContainText('47,939 / 78,341 张');
  await expect(panel).toContainText('不代表全市场');
+});
+
+test('startup and reload select the first current watch stock instead of the former fixed default',async({page})=>{
+ await rpc('remove',{code:'sh603002'});
+ await page.reload();
+ await expect(page.locator('.stock')).toHaveCount(11);
+ await expect(page.locator('.stock').first()).toHaveClass(/selected/);
+ await expect(page.locator('.detail-identity h2')).toContainText('海优新材');
+ await expect(page.locator('.detail-identity h2')).toContainText('SH688680');
+ await page.locator('.stock').nth(1).click();
+ await expect(page.locator('.detail-identity h2')).toContainText('盛和资源');
+ await expect(page.locator('.stock').nth(1)).toHaveClass(/selected/);
+ await page.reload();
+ await expect(page.locator('.stock').first()).toHaveClass(/selected/);
+ await expect(page.locator('.detail-identity h2')).toContainText('海优新材');
 });
 
 test('same-stock click preserves graph; rapid selection never shows the previous stock cache',async({page})=>{
@@ -206,7 +249,7 @@ test('daily left boundary expands using local cached history and retains selecte
  await page.screenshot({path:'../../outputs/guanliang-q1-freeze-20261025/ui/ui/0.4.0/history.png',fullPage:true});
 });
 
-test('hidden message navigation keeps existing records and read state intact',async({page})=>{
+test('message center stays hidden while existing records and read state remain intact',async({page})=>{
  const e={key:'2026-10-16|603002|09:31',symbol:'603002',trading_date:'2026-10-16',candidate_time:'09:31',confirmation_label:'09:33',event_label:'09:33',volumes:[4384500,1461000,1957000],kind:'TWO_MINUTE_CONFIRMATION',observed_at:'2026-10-16T09:33:05+08:00'};
  await rpc('__audit_event',e);await rpc('__audit_event',e);
  await expect(page.getByRole('button',{name:'消息中心',exact:true})).toHaveCount(0);
