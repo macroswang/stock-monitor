@@ -228,3 +228,10 @@
 .volume-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;line-height:14px;font-size:10px;color:#9dacc5;pointer-events:none;white-space:nowrap}.volume-panel-header time{margin-left:auto;font-variant-numeric:tabular-nums}.volume-panel-header .volume-value{color:#c5d4e9;font-variant-numeric:tabular-nums}
 
 .auto-trade-tooltip{max-width:350px;font-size:11px;line-height:1.7;white-space:normal}.auto-trade-tooltip>div:first-child{font-weight:600;color:#dbe8fb;margin-bottom:4px}.auto-trade-records{display:grid;gap:8px;max-height:240px;overflow:auto}.auto-trade-records>div{padding:5px 0;border-bottom:1px solid #2d3d55}.auto-trade-records strong,.auto-trade-records span{display:block;font-size:11px;line-height:1.7}.auto-trade-records span{color:#9db1cc}
+
+/* shape-v2 display: daily cap indicator + top/bottom mode selector */
+.turning-cap-count{color:#8fa3bf;font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.chart-display-options .turning-mode-select{display:flex;align-items:center;gap:5px;margin:0;min-height:24px;white-space:nowrap;font-size:12px;color:#bac9dd}
+.turning-mode-select select{font-size:11px;padding:3px 6px;background:#1d2a3f;color:#d5e0f1;border:1px solid #34465e;border-radius:4px}
+.minute-detail .chart-display-options .turning-mode-select{font-size:10px;min-height:20px}
+.stock-chart-panel .turning-mode-select{display:none}

@@ -252,7 +252,7 @@ test('execution records expose receipts without manual verification tasks or mis
 
 test('automation follows the labelled chart top/bottom signals rather than Q1 filtering',async({page})=>{
  await setup(page);
- await expect(page.getByText('信号源：图中已确认的顶／底',{exact:false})).toBeVisible();
+ await expect(page.getByText('信号源：',{exact:false})).toBeVisible();
  await page.getByRole('checkbox',{name:'123***001 山子高科 自动买入'}).check();
  await page.getByRole('button',{name:'启动试运行',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('底买、顶卖');

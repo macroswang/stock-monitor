@@ -14,7 +14,7 @@ from decimal import Decimal, ROUND_DOWN
 
 from . import brokers
 from .provider import now_cn, symbol
-from .turning_shapes import SIGNAL, LABEL
+from .turning_final import SIGNAL, LABEL
 from .trading_quantity import order_quantity,quantity as sized_quantity,migrate_rule
 from .trading_price import PRICE_POLICY, price_guard, rejection_message
 from .trading_quantity import BUY_CASH_RESERVE_RATE, BUY_CASH_RESERVE_FIXED, buy_cash_required
@@ -117,7 +117,7 @@ class LiveTrading:
                 changed=True
             if changed:
                 self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_paused','true')")
-                self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('数量规则已简化为固定手数或当前持仓百分比；金额上限已移除，原买卖开关已保留，自动执行已暂停。'),))
+                self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('底/顶信号已升级为观量 v2（每日顶/底各≤3）；买卖开关已保留，自动执行已暂停，请确认规则后重新启用。'),))
             self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_price_policy',?)",(json.dumps(PRICE_POLICY),))
             self.store.db.commit()
 
@@ -607,7 +607,7 @@ class LiveTrading:
         if self.settings()['paused'] or not self.store.query("SELECT 1 FROM trading_rules WHERE code=? AND (json_extract(payload,'$.buy_enabled')=1 OR json_extract(payload,'$.sell_enabled')=1 OR json_extract(payload,'$.paired_enabled')=1) LIMIT 1",(code,)):
             self.frames.pop(code,None)
             return
-        from .turning_shapes import signals,liquidity
+        from .turning_final import signals,liquidity
         observations=[dict(m,liquidity=liquidity(bars,m['time'])) for m in signals(bars)]
         signature=[tuple(b.get(k) for k in ('time','close','volume','average','complete')) for b in bars]
         day=now.date().isoformat()

@@ -3,7 +3,7 @@
     "paused": true,
     "mode": "trial",
     "signal": "shape-v1",
-    "signal_label": "图中已确认的顶／底"
+    "signal_label": "观量底／顶信号"
   },
   "accounts": [
     {

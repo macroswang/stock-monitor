@@ -3,7 +3,8 @@ from datetime import datetime,timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock,patch
-from core.turning_shapes import signals,SIGNAL
+from core.turning_shapes import signals
+from core.turning_final import SIGNAL, signals as final_signals
 from core.turning_q1 import signals as q1_signals
 from core.live_trading import LiveTrading,DEFAULT_RULE
 from core.store import Store
@@ -50,7 +51,7 @@ class SignalMigrationTests(unittest.TestCase):
   self.assertNotIn('max_order_value',rule);self.assertNotIn('daily_buy_value',rule)
   self.assertEqual(rule['revision'],8);self.assertEqual(rule['armed_at'],upgraded.started_at)
   self.assertTrue(upgraded.settings()['paused']);self.assertEqual(upgraded.settings()['mode'],'live')
-  self.assertIn('金额上限已移除',upgraded.settings()['signal_notice'])
+  self.assertIn('底/顶信号已升级为观量 v2',upgraded.settings()['signal_notice'])
  def test_migration_does_not_repeat_or_rewrite_an_already_correct_rule(self):
   upgraded=LiveTrading(self.app);before=upgraded.rule('a','sz000981')
   self.store.setconfig('trading_paused',False)
@@ -59,7 +60,7 @@ class SignalMigrationTests(unittest.TestCase):
 
 class LabelledBottomDispatchTests(unittest.TestCase):
  def test_live_labelled_bottom_omitted_by_q1_generates_one_account_scoped_plan(self):
-  c=next(c for c in R1['cases'] if c['code']=='sh603938' and c['day']=='2026-11-09');c=dict(c,bars=case_bars(c));mark=signals(c['bars'])[0]
+  c=next(c for c in R1['cases'] if c['code']=='sh603938' and c['day']=='2026-11-09');c=dict(c,bars=case_bars(c));mark=final_signals(c['bars'])[0]
   self.assertEqual((mark['kind'],mark['time']),('bottom','09:39'))
   self.assertNotIn(mark['key'],[m['key'] for m in q1_signals(c['bars'])])
   now=datetime.fromisoformat(c['day']+'T09:39:05+08:00')
@@ -93,7 +94,7 @@ class CandidateLiveDispatchTests(unittest.TestCase):
   for kind,side,zero_previous in [('bottom','buy',False),('top','sell',False),('bottom','buy',True),('top','sell',True)]:
    with self.subTest(kind=kind,zero_previous=zero_previous),tempfile.TemporaryDirectory() as directory:
     c=next(c for c in R1['cases'] if c['code']=='sh603938' and c['day']==('2026-11-09' if kind=='bottom' else '2026-11-10'));c=dict(c,bars=case_bars(c))
-    mark=next(m for m in signals(c['bars']) if m['kind']==kind)
+    mark=next(m for m in final_signals(c['bars']) if m['kind']==kind)
     now=datetime.fromisoformat(c['day']+'T'+mark['time']+':05+08:00')
     store=Store(Path(directory)/'test.sqlite3')
     try:

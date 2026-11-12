@@ -6,8 +6,14 @@ import type {Bar,Daily,Event,IndexMinute,VolumeFlow} from './models';
 import {price,wan,wanShares} from './format';
 import {topVolumeMarks} from './volumeMarks';
 import {turningQualityQ1} from './turningQualityQ1';
-import {turningShapes} from './turningShapes';
+
 import {turningDisplayPoints} from './turningDisplay';
+import {turningFinal,TURNING_FINAL_MODES,type TurningFinalMode} from './turningFinal';
+
+// Chart top/bottom mode. Default = high-coverage zhangle (v2.4), stable (v2.0) is opt-in.
+// Persisted across the page chart and the linked K-line minute chart via the same key.
+const TURNING_MODE_KEY='stock-monitor-turning-mode-v1';
+const readTurningMode=():TurningFinalMode=>{try{return localStorage.getItem(TURNING_MODE_KEY)==='stable'?'stable':'zhangle';}catch{return 'zhangle';}};
 import {paperChartMarks,paperTradeColors} from './paperMarks';
 import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
 import {splitMinuteVolume} from './volumeFlow';
@@ -91,12 +97,15 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [showOpening,setShowOpening]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-opening')!=='false';}catch{return true;}});
  const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
  const showQuality=true;
+ // zhangle = high-coverage v2.4 (default); stable = v2.0. Both hard-capped at 3/kind/day.
+ const [turningMode,setTurningMode]=useState<TurningFinalMode>(readTurningMode);
+ const updateTurningMode=(mode:TurningFinalMode)=>{setTurningMode(mode);try{localStorage.setItem(TURNING_MODE_KEY,mode);window.dispatchEvent(new window.Event('turning-display-change'));}catch{}};
  const [plotHeight,setPlotHeight]=useState(0);
  const minutePanels=minutePanelLayout(plotHeight||350,compact?0:30);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
  const [showDailyPatterns,setShowDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
  const dayPatterns=useMemo(()=>view==='daily'?selectDailyPatterns(dailyPatterns(daily)):[],[daily,view]);
- useEffect(()=>{const sync=()=>{try{setShowShapes(localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false');setShowTriggered(localStorage.getItem('stock-monitor-show-trigger-volume')!=='false');}catch{}};window.addEventListener('storage',sync);window.addEventListener('turning-display-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('turning-display-change',sync);};},[]);
+ useEffect(()=>{const sync=()=>{try{setShowShapes(localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false');setShowTriggered(localStorage.getItem('stock-monitor-show-trigger-volume')!=='false');setTurningMode(readTurningMode());}catch{}};window.addEventListener('storage',sync);window.addEventListener('turning-display-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('turning-display-change',sync);};},[]);
  const costsRef=useRef(costs);costsRef.current=costs;
  const refreshTrade=useRef<(()=>void)|null>(null);
  const updateCosts=(next:TCosts)=>{costsRef.current=next;setCosts(next);refreshTrade.current?.();if(tProfit(10,10,next)){try{localStorage.setItem('stock-monitor-t-costs-v4',JSON.stringify(next));}catch{}}};
@@ -106,7 +115,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const visibleMarks=isCandleView(view)?[]:topVolumeMarks(minute,events,showOpening,showTriggered);
  const latestEvent=events.filter(e=>visibleMarks.some(m=>m.coord[0]===e.candidate_time)).sort((a,b)=>a.event_label.localeCompare(b.event_label)||a.candidate_time.localeCompare(b.candidate_time)).at(-1);
  const latestMark=visibleMarks.find(m=>m.coord[0]===latestEvent?.candidate_time);
- const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?turningShapes(shapeBars):[],showQuality?turningQualityQ1(minute):[],showShapes,showQuality);
+ const finalTurns=isCandleView(view)?[]:turningFinal(shapeBars,TURNING_FINAL_MODES[turningMode]);
+ const turnCounts={bottom:finalTurns.filter(m=>m.kind==='bottom').length,top:finalTurns.filter(m=>m.kind==='top').length};
+ const selectableTurns=isCandleView(view)?[]:turningDisplayPoints(showShapes?finalTurns:[],showQuality?turningQualityQ1(minute):[],showShapes,showQuality);
  const chosen=choice?.scope===scope&&(choice.kind==='位置'?minute.some(b=>b.time===choice.time&&b.complete):choice.kind?selectableTurns.some(m=>m.time===choice.time&&(m.kind==='bottom'?'底':'顶')===choice.kind):visibleMarks.some(m=>m.coord[0]===choice.time))?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
  const quotePrices=[...minute.map(b=>+b.close),...(currentPrice?[currentPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
@@ -128,7 +139,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  };
  const scopeRef=useRef(scope);scopeRef.current=scope;
  const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef('');
- const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Fit the comparison stack to the remaining viewport without reacting to scroll.
@@ -193,8 +204,10 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const tradeMarks=tradeAnchors.map(m=>({coord:[m.time,m.anchor],value:m.value,executionPrice:m.price,paperTrade:true,silent:true,symbol:'circle',symbolSize:10,
    symbolOffset:m.value==='B'?[0,18]:[0,-18],itemStyle:{color:paperTradeColors[m.value],borderColor:'#edf4ff',borderWidth:.7},label:{show:true,formatter:m.value,position:'inside',align:'center',verticalAlign:'middle',offset:tradeLabelOffset(m.value),padding:0,lineHeight:10,color:'#fff',fontFamily:'Arial, sans-serif',fontSize:8,fontWeight:'bold'}}));
 
-  const allShapes=isDay?[]:turningShapes(shapeBars),shapes=showShapes?allShapes:[];
-  const automatic=isDay?[]:autoTradeMarks(autoTrading,allShapes,selectedDay||'').filter(m=>labels.includes(m.time));
+  // Automatic-trade annotations read the fixed high-coverage shape-v2.4 stream: the
+  // display mode may switch to stable, but order matching must follow the trading rule.
+  const autoTradeShapes=isDay?[]:turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),shapes=isDay||!showShapes?[]:finalTurns;
+  const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time));
   const quality=isDay||!showQuality?[]:turningQualityQ1(minute);
   const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
   const volume=isDay?daily.map(b=>+b.volume/10000):aligned.map(b=>b?b.volume/100:null);
@@ -302,6 +315,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
       rows.push(`${point.shape?'': 'Q1'}${point.kind==='bottom'?'底':'顶'}${point.shape?'信号':''}：${price(point.price)} 元`,
        `候选点：${observation.candidateTime} · ${price(observation.candidatePrice)} 元`,
        `${point.shape?'发出时间':'确认时间'}：${point.time} · ${price(point.price)} 元`);
+      if(point.shape&&Number.isFinite(point.shape.quality)){
+       rows.push(`模式：${turningMode==='zhangle'?'贴近涨乐通（实验）':'稳健（少而准）'}`,
+        `质量分：${point.shape.quality!.toFixed(2)}`,
+        `当日上限：底 ${turnCounts.bottom}/3 · 顶 ${turnCounts.top}/3`);
+      }
      }
      for(const t of tradesByTime.get(labels[idx])||[])rows.push(`模拟成交 ${t.value}：${t.buyShares?`买入${t.buyShares}股 · 均价${price(t.buyAmount/t.buyShares/100)}元`:''}${t.buyShares&&t.sellShares?'；':''}${t.sellShares?`卖出${t.sellShares}股 · 均价${price(t.sellAmount/t.sellShares/100)}元`:''}${t.value==='T'?'（当日有买有卖）':''}`);
      if(!isDay)for(const t of tradePoints.filter(t=>t.time===labels[idx]&&t.orderCount&&(t.fills>t.orderCount||t.orderCount>1))){
@@ -371,7 +389,8 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  </div>}{!isCandleView(view)&&<TCostSettings value={costs} onChange={updateCosts} displayOptions={<div className="chart-display-options" role="group" aria-label="分时显示选项">
   <label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>开盘量</label>
   <label className="opening-volume-toggle"><input aria-label="高量" type="checkbox" checked={showTriggered} onChange={e=>{setShowTriggered(e.target.checked);try{localStorage.setItem('stock-monitor-show-trigger-volume',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>高量</label>
-  <label className="opening-volume-toggle"><input aria-label="底/顶" type="checkbox" checked={showShapes} onChange={e=>{setShowShapes(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-shapes-v1',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>底/顶</label>
+  <label className="opening-volume-toggle"><input aria-label="底/顶" type="checkbox" checked={showShapes} onChange={e=>{setShowShapes(e.target.checked);try{localStorage.setItem('stock-monitor-show-turning-shapes-v1',String(e.target.checked));window.dispatchEvent(new window.Event('turning-display-change'));}catch{}}}/>底/顶 <span className="turning-cap-count" data-testid="turning-cap-count">底 {turnCounts.bottom}/3 · 顶 {turnCounts.top}/3</span></label>
+  <label className="turning-mode-select" title="自动下单固定使用贴近涨乐通信号">顶底模式<select aria-label="顶底模式" value={turningMode} onChange={e=>updateTurningMode(e.target.value==='stable'?'stable':'zhangle')}><option value="zhangle">贴近涨乐通（实验）</option><option value="stable">稳健（少而准）</option></select></label>
 
  </div>}/>}{tradeHint?.scope===scope&&<div className="chart-trade-hint" role="status">{tradeHint.text}</div>}<div className="chart-shell"><div className={'chart'+(compact?' compact-chart':'')+(hasMacd?' macd-chart':'')} ref={ref} onContextMenu={contextTrade} tabIndex={isCandleView(view)?0:undefined} onClick={()=>{if(isCandleView(view))ref.current?.focus();}} onKeyDown={e=>{if(isCandleView(view)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(isCandleView(view)&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();zoomCandles(e.key==='ArrowUp'?-1:1);}else if(isCandleView(view)&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedCandle||selectedDay);}} aria-label={view==='weekly'?'周K线及成交量':view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>
  <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?minutePanels.headers[0]:'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>
