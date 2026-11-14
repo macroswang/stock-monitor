@@ -217,6 +217,14 @@
 
 /* Shared timeline keeps the price, volume and both MACD panes in one comparison stack. */
 .chart-shell{position:relative;min-width:0}
+.watch-chart-empty{position:relative;min-height:120px}
+.watch-chart-empty>.history-empty{padding-right:42px}
+.watch-stock-switcher{position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:8;display:flex;flex-direction:column;gap:4px}
+.watch-stock-switcher button{display:grid;place-items:center;width:24px;height:24px;padding:0;border-radius:6px;background:#142237;color:#9bbce8;border-color:#344964}
+.watch-stock-switcher button:hover:not(:disabled){background:#243b59;color:#c6ddff;border-color:#6588b6}
+.watch-stock-switcher button:focus-visible{outline:2px solid #76aaff;outline-offset:1px}
+.watch-stock-switcher button:disabled{opacity:.3;cursor:default}
+
 .chart.macd-chart{height:var(--minute-chart-height,max(350px,calc(100dvh - 280px)))}
 .chart.compact-chart.macd-chart{height:420px}
 .macd-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;pointer-events:none;font-size:10px;line-height:14px;color:#aabbd3;white-space:nowrap;font-variant-numeric:tabular-nums}

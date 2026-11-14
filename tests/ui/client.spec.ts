@@ -53,3 +53,31 @@ test('folding the watchlist preserves loaded chart data, candle zoom and the cha
  }
  expect(errors).toEqual([]);
 });
+
+
+test('chart-side navigation updates loaded minute, daily and weekly charts and stays on the right',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/');
+ await expect(page.locator('.detail h2')).toContainText('宏昌电子');
+ await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
+ const nav=page.getByRole('group',{name:'自选股切换',exact:true});
+ for(const [view,label] of [['分时','分时价格及分钟成交量'],['日K','日K线及成交量'],['周K','周K线及成交量']]){
+  await page.getByRole('button',{name:view,exact:true}).click();
+  const chart=page.getByLabel(label);await expect(chart.locator('canvas').first()).toBeVisible();
+  const data=()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);return e.getInstanceByDom(el).getOption().series[0].data;});
+  await expect.poll(async()=>(await data()).length).toBeGreaterThan(0);const before=await data();
+  const plot=(await chart.boundingBox())!,buttons=(await nav.boundingBox())!;
+  expect(buttons.x).toBeGreaterThanOrEqual(plot.x+plot.width-40);expect(buttons.x+buttons.width).toBeLessThanOrEqual(plot.x+plot.width);
+  expect(Math.abs(buttons.y+buttons.height/2-plot.y-plot.height/2)).toBeLessThan(1);
+  await nav.getByRole('button',{name:'下一支自选股'}).click();
+  await expect(page.locator('.detail h2')).toContainText('海优新材');
+  await expect(chart).toBeVisible();await expect.poll(async()=>(await data()).length).toBeGreaterThan(0);await expect.poll(data).not.toEqual(before);
+  await expect(page.getByRole('button',{name:view,exact:true})).toHaveClass(/chosen/);
+  await expect(page.getByRole('button',{name:'展开我的自选',exact:true})).toBeVisible();
+  await nav.getByRole('button',{name:'上一支自选股'}).click();
+  await expect(page.locator('.detail h2')).toContainText('宏昌电子');await expect.poll(data).toEqual(before);
+  if(view==='分时')await page.screenshot({path:'outputs/watch-stock-switcher.png',fullPage:true});
+ }
+ await page.setViewportSize({width:1000,height:980});
+ await expect(nav).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+ expect(errors).toEqual([]);
+});
