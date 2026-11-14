@@ -50,9 +50,11 @@ class Discover(unittest.TestCase):
             (root/'daily-outlook/2026-11-06_1030.json').write_text(json.dumps(issue))
             records=[dict(data=dict(date='2026-11-06',collected_at='batch',quotes=members))]
             flow=Mock();flow.view.return_value={theme['code']:{'net':1}}
-            app=SimpleNamespace(dir=root,store=Mock(),live_theme_flow=flow,sector_flow=Mock())
+            app=SimpleNamespace(dir=root,store=Mock(),live_theme_flow=flow,
+                                sector_flow=Mock(spec=['view']),concept_flow=Mock(spec=['view']))
             app.store.getcache.return_value=records
             app.sector_flow.view.return_value={}
+            app.concept_flow.view.return_value={}
             report=daily_outlook.view(app,'2026-11-06','batch')
             self.assertEqual({q['code'] for q in report['quotes']},set(codes))
             self.assertIn(theme['code'],report['sectors'])

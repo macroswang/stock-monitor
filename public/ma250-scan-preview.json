@@ -1,0 +1,17 @@
+{
+ "generated_at": "2026-10-16T16:05:00+08:00",
+ "universe": "watch_pool",
+ "recent": 5,
+ "trading_days": ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16"],
+ "cutoff": "2026-10-12",
+ "scanned": 2,
+ "codes": 2,
+ "latest_day": "2026-10-16",
+ "market": {"date": "2026-10-16", "close": 3550.2, "ma250": 3601.7, "above": false, "bars": 320, "error": ""},
+ "total": 3,
+ "rows": [
+  {"code": "sh603002", "name": "宏昌电子", "date": "2026-10-14", "kind": "pullback", "strong": true, "quality": true, "strong_reasons": [], "close": 12.34, "ma250": 11.8, "distance_pct": 4.6, "pullback_pct": 12.5, "touch_date": "2026-10-02", "touch_low": 11.65, "atr20_pct": 3.1, "market_above": true},
+  {"code": "sh688680", "name": "海优新材", "date": "2026-10-13", "kind": "pullback", "strong": false, "quality": false, "strong_reasons": ["broke-line"], "close": 45.2, "ma250": 44.0, "distance_pct": 2.7, "pullback_pct": 18.0, "touch_date": "2026-10-04", "touch_low": 42.0, "atr20_pct": 4.5, "market_above": false},
+  {"code": "sh603002", "name": "宏昌电子", "date": "2026-10-12", "kind": "breakout", "strong": false, "quality": true, "strong_reasons": [], "close": 11.2, "ma250": 10.9, "distance_pct": 2.75, "pullback_pct": null, "touch_date": null, "touch_low": null, "atr20_pct": null, "market_above": true, "slope60_pct": 1.4, "volume_ratio": 1.3, "margin_pct": 2.75, "days_below": 18}
+ ]
+}

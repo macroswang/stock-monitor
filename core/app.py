@@ -10,6 +10,10 @@ from . import brokers
 from .validated_engine import evaluate, MINUTES
 from .sources import SOURCES,daily_view,provider_name
 from .history import view as history_view,bounds
+from .ma250_pullback import rule_spec
+from .market_regime import MarketRegime
+from .ma250_sessions import eligible_sessions as annual_sessions
+from .version import VERSION
 from .daily_cache import DailyCache
 from .minute_cache import MinuteCache
 from .archive import Archive
@@ -72,7 +76,7 @@ class App:
         self.health={}; self.sessions={}; self.quotes={}; self.last_poll=None; self.jobs={}
         self.jobs_lock=threading.Lock(); self.job_slots=threading.BoundedSemaphore(8)
         self.job_times={}
-        self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None
+        self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None; self.ma250_checked={}
         if not self.store.config().get('initialized'):
             rows=[]
             for code,name in SEEDS:
@@ -96,6 +100,9 @@ class App:
         self.index_option_pcr=IndexOptionPCR(self.store)
         self.equity_bond=EquityBond(self.store)
         self.index_technical=IndexTechnical(self.store)
+        self.market_regime=MarketRegime(self.store)
+        from .ma250_service import AnnualSignals
+        self.annual_signals=AnnualSignals(self)
         self.sector_flow=SectorFlow(self.store,enabled=start_worker)
         self.concept_flow=SectorFlow(self.store,enabled=start_worker,kind='concept')
         self.external_market=ExternalMarket(self.store,enabled=start_worker)
@@ -109,6 +116,8 @@ class App:
         self.outlook_scheduler=OutlookScheduler(self)
         from .pool import Pool
         self.pool=Pool(self)
+        from .ma250_scan import Ma250Scan
+        self.ma250_scan=Ma250Scan(self)
         # Display-only fallback: cached prices never enter live strategy input.
         self.cached_quotes={r['code']:q for r in self.store.query('SELECT code FROM watch')
                             if (q:=self.cached_watch_quote(r['code']))}
@@ -118,6 +127,7 @@ class App:
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
+            threading.Thread(target=self.archive_loop,daemon=True).start()
             threading.Thread(target=self.market_loop,daemon=True).start()
             threading.Thread(target=self.breadth_loop,daemon=True).start()
             threading.Thread(target=self.csi300_loop,daemon=True).start()
@@ -418,15 +428,79 @@ class App:
     def daily_loop(self):
         # Keep slow historical IO off the live quote/minute polling path.
         while not self.stop.is_set():
-            for row in self.store.query('SELECT code FROM watch'):
+            # One CSI300 snapshot per completed session; the strong annual-line
+            # signal is the only consumer and missing data never counts as above.
+            try:self.market_regime.ensure(now_cn())
+            except Exception:pass
+            watched=self.store.query('SELECT code FROM watch')
+            for row in watched:
                 if self.stop.is_set():return
                 code=row['code']
                 try:
                     self.daily_cache.update(code)
-                    self.archive.update(code)
                     self.cache_health.pop(code,None)
                 except Exception as e:self.cache_health[code]='日线更新失败，已保留缓存并延后重试：'+type(e).__name__
+                # An alert or display defect must never be reported as a cache failure.
+                try:self.check_ma250(code,now_cn())
+                except Exception:pass
+            # Finish ready-stock close checks before slow multi-year warmups
+            # for IPOs/new watches. Newly completed histories get a second check.
+            for row in watched:
+                if self.stop.is_set():return
+                code=row['code']
+                try:self.daily_cache.ensure_history(code)
+                except Exception as e:self.cache_health[code]='日线历史待补，已延后重试：'+type(e).__name__
+                try:self.check_ma250(code,now_cn())
+                except Exception:pass
             self.stop.wait(60)
+
+    def archive_loop(self):
+        # Minute-history downloads must not queue ahead of close confirmations.
+        while not self.stop.is_set():
+            for row in self.store.query('SELECT code FROM watch'):
+                if self.stop.is_set():return
+                try:self.archive.update(row['code'])
+                except Exception:pass
+            self.stop.wait(300)
+
+    def check_ma250(self,code,now):
+        if now.weekday()>4 or now.strftime('%H:%M')<'15:20':return
+        if not self.store.query('SELECT code FROM watch WHERE enabled=1 AND code=?',(code,)):return
+        today=now.date().isoformat()
+        if annual_sessions(now,1)!=[today]:return
+        spec=rule_spec();config=self.store.config()
+        revision=self.annual_signals.revision(code)
+        enabled=config.get('monitor',True) and config.get('ma250_alert',True)
+        stamp=(today,*revision,enabled)
+        if self.ma250_checked.get(code)==stamp:return
+        report=self.annual_signals.report(code)
+        market_above=self.market_regime.above_map().get(today)
+        signal=next((s for s in report['signals'] if s['date']==today),None)
+        current=report['latest'] is not None and report['latest']['date']==today
+        complete=bool(current and report['error'] is None and report['latest'].get('ready') and market_above is not None)
+        payload=dict(date=today,code=code,close=report['latest']['close'] if current else None,
+            ma250=report['latest']['ma250'] if current else None,data_date=report['latest']['date'] if report['latest'] else None,market_above=market_above,signal=signal,
+            observed_at=now.isoformat(),rule=spec,price_basis='tencent-unadjusted',
+            status='complete' if complete else 'awaiting_data',error=report['error'],notification_enabled=enabled)
+        self.store.annual_journal(code,today,spec['rule_id'],'observed',payload)
+        if complete:self.store.annual_journal(code,today,spec['rule_id'],'confirmed',payload)
+        if not complete or not enabled or not signal or not signal['strong']:
+            self.ma250_checked[code]=stamp
+            return
+        found=self.store.query('SELECT name FROM instruments WHERE code=?',(code,))
+        name=found[0]['name'] if found else code
+        title=f'观量 · 年线回踩强信号 · {name}（{code[2:]}）'
+        body=(f"{name}（{code[2:]}）{today} 收盘 {signal['close']:.2f} 元，MA250 {signal['ma250']:.2f} 元；"
+              f"整轮低点 {signal['touch_date']} {signal['touch_low']:.2f} 元，回撤 {signal['pullback_pct']:.0f}%，"
+              f"参考失效价 {signal['stop']:.2f} 元，ATR20 {signal['atr20_pct']:.1f}%。仅提醒，请手动判断。")
+        key=f"ma250|{spec['rule_id']}|{code}|{signal['episode_id']}|strong"
+        self.store.event(dict(key=key,symbol=code[2:],code=code,trading_date=today,
+            candidate_time='年线回踩强信号',confirmation_label='收盘',event_label=now.strftime('%H:%M'),volumes=[],
+            kind='MA250_PULLBACK',observed_at=now.isoformat(),reference_price=f"{signal['close']:.2f}",
+            rule_id=spec['rule_id'],episode_id=signal['episode_id'],
+            notification_title=title,notification_body=body),'live')
+        # A transient event-write failure must be retried by the next loop.
+        self.ma250_checked[code]=stamp
 
     def start_job(self,fn):
         import uuid
@@ -501,6 +575,8 @@ class App:
                 return report
             return self.start_job(research)
         if method=='market':return self.market.view(args.get('day'))
+        if method=='ma250_scan':return self.ma250_scan.view(args)
+        if method=='ma250_scan_start':return self.start_job(lambda:self.ma250_scan.view(args))
         if method=='index_minute':
             return self.market.index_view(args.get('code'),args.get('day'))
         if method=='market_overview':
@@ -571,17 +647,18 @@ class App:
         if method=='snapshot':
             with self.lock:
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
+                config=self.store.config()
                 broker_sources=self.live_trading.sources()
                 for w in watch:
-                    w.update(quote=self.quotes.get(w['code']) or self.cached_quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not self.store.config().get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
+                    w.update(quote=self.quotes.get(w['code']) or self.cached_quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not config.get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
                         candidates=self.sessions.get(w['code'],{}).get('candidates',[]))
                     w['broker_sources']=broker_sources.get(w['code'],[])
                 events=self.event_rows()
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
-                    config=self.store.config(),now=now_cn().isoformat(),market_open=trading(now_cn()),
-                    last_poll=self.last_poll,data_dir=str(self.dir),version='0.6.64',rule='running_max_inclusive_v1',
-                    pool_count=self.pool.count())
+                    config=config,now=now_cn().isoformat(),market_open=trading(now_cn()),
+                    last_poll=self.last_poll,data_dir=str(self.dir),version=VERSION,rule='running_max_inclusive_v1',
+                    pool_count=self.pool.count(),market_regime=self.market_regime.view())
         if method=='stock_search':
             from .stock_search import search
             return search(self.store,args.get('query',''),args.get('limit',20))
@@ -622,7 +699,7 @@ class App:
                 if k=='provider':
                     if v not in [p['id'] for p in SOURCES if p['available']]:raise ValueError('该数据来源尚未接入或验证，不能切换')
                     self.store.setconfig(k,v)
-                if k in ('monitor','phone_enabled','sound') and isinstance(v,bool):
+                if k in ('monitor','phone_enabled','sound','ma250_alert') and isinstance(v,bool):
                     old=self.store.config().get(k)
                     if k=='monitor' and old!=v:
                         with self.lock:

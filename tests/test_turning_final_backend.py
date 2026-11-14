@@ -392,56 +392,86 @@ class LiveDispatchTests(unittest.TestCase):
 
 
 class CapDispatchIntegrationTests(unittest.TestCase):
-    def test_fourth_same_kind_signal_creates_no_fourth_order(self):
-        # Four causal bottom waves exist, but the engine emits only three; streaming the
-        # same minutes through the real trading service must therefore create 3 orders.
-        prices = [98, 98.7, 96, 97.5, 94, 96, 90, 92]
-        start = now_cn()
-        day = start.date().isoformat()
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = Store(Path(self.tmp.name) / 'test.sqlite3')
+        self.addCleanup(self.store.db.close)
+        self.now = datetime.fromisoformat('2026-11-13T09:30:05+08:00')
+        clock = patch('core.live_trading.now_cn', side_effect=lambda: self.now)
+        clock.start()
+        self.addCleanup(clock.stop)
+        self.code = 'sz000981'
+        self.app = SimpleNamespace(store=self.store, quotes={})
+        self.service = LiveTrading(self.app)
+        self.store.execute("INSERT INTO broker_accounts(id,broker,account) VALUES('a','zhangle','123456789')")
+        self.snapshot = dict(account_id='a', account_verified=True, observed_at=self.now.isoformat(),
+                             complete=True, funds=dict(available='100000'),
+                             positions=[dict(code=self.code, name='测试股', quantity=1000,
+                                             sellable=1000, price='98')], quote=dict(price='98'))
+        self.service.apply_snapshot('a', self.snapshot)
+        rule = self.service.rule('a', self.code)
+        self.service.save_rule('a', self.code, dict(buy_enabled=True, buy_lots=1), rule['revision'])
+        self.store.setconfig('trading_mode', 'trial')
+        self.store.setconfig('trading_paused', False)
+        self.store.setconfig('monitor', True)
+        earlier = (self.now - timedelta(minutes=5)).isoformat()
+        self.service.started_at = earlier
+        self.store.execute('UPDATE trading_rules SET armed_at=?', (earlier,))
+        holdings = patch('core.live_trading.brokers.holdings',
+                         side_effect=lambda *args, **kw: dict(self.snapshot, observed_at=self.now.isoformat()))
+        self.holdings = holdings.start()
+        self.addCleanup(holdings.stop)
+        submit = patch('core.live_trading.brokers.submit_order',
+                       side_effect=AssertionError('trial mode must never submit an order'))
+        self.submit = submit.start()
+        self.addCleanup(submit.stop)
+
+    def test_combined_spacing_creates_one_valid_trial_plan(self):
+        from core.turning_combined import signals as combined_signals
         rows = [dict(time='09:30', close='100', average='100', volume=0, complete=True)] + [
             dict(time=TIMES[i], close=str(price), average='100', volume=10000, complete=True)
-            for i, price in enumerate(prices)]
-        self.assertEqual(len(signals(rows)), 3)
-        with tempfile.TemporaryDirectory() as directory:
-            store = Store(Path(directory) / 'test.sqlite3')
-            try:
-                app = SimpleNamespace(store=store, quotes={})
-                service = LiveTrading(app)
-                store.execute("INSERT INTO broker_accounts(id,broker,account) VALUES('a','zhangle','123456789')")
-                now = start
-                snapshot = dict(account_id='a', account_verified=True, observed_at=now.isoformat(),
-                                complete=True, funds=dict(available='100000'),
-                                positions=[dict(code='sz000981', name='测试股', quantity=1000,
-                                                 sellable=1000, price='98')],
-                                quote=dict(price='98'))
-                service.apply_snapshot('a', snapshot)
-                rule = service.rule('a', 'sz000981')
-                service.save_rule('a', 'sz000981', dict(buy_enabled=True, buy_lots=1), rule['revision'])
-                store.setconfig('trading_mode', 'trial')
-                store.setconfig('trading_paused', False)
-                store.setconfig('monitor', True)
-                earlier = (start - timedelta(hours=20)).isoformat()
-                service.started_at = earlier
-                store.execute('UPDATE trading_rules SET armed_at=?', (earlier,))
-                for i in range(1, len(rows)):
-                    stamp = rows[i]['time']
-                    now = datetime.fromisoformat(day + 'T' + stamp + ':05+08:00')
-                    quote = dict(code='sz000981', price=rows[i]['close'], timestamp=now.isoformat())
-                    app.quotes['sz000981'] = quote
-                    prefix = signals(rows[:i + 1])
-                    for kind in ('top', 'bottom'):
-                        self.assertLessEqual(len([e for e in prefix if e['kind'] == kind]), 3)
-                    service.ingest('sz000981', rows[:i + 1], quote, now, True)
-                    service.drain(reports=False)
-                runs = store.query("SELECT * FROM trading_runs WHERE side='buy'")
-                # C1 causal merge makes the streaming union equal the full-day set, so the
-                # cumulative order count is naturally capped at 3 without a trading cap.
-                self.assertEqual(len(runs), 3)
-                self.assertEqual(len({json.loads(r['payload'])['signal']['key'] for r in runs}), 3)
-                keys = json.loads(runs[0]['payload'])['signal']['key']
-                self.assertTrue(keys.startswith('shape-v2|bottom|'))
-            finally:
-                store.db.close()
+            for i, price in enumerate([98, 98.7, 96, 97.5, 94, 96, 90, 92])]
+        self.assertEqual(len(signals(rows)), 3)  # v2 alone; trading uses the combined stream.
+        expected = combined_signals(rows)
+        self.assertEqual([m['time'] for m in expected], ['09:32'])
+        for i in range(1, len(rows)):
+            self.now = datetime.fromisoformat('2026-11-13T' + rows[i]['time'] + ':05+08:00')
+            quote = dict(code=self.code, price=rows[i]['close'], timestamp=self.now.isoformat())
+            self.app.quotes[self.code] = quote
+            self.service.ingest(self.code, rows[:i + 1], quote, self.now, True)
+            self.service.drain(reports=False)
+        runs = self.store.query("SELECT * FROM trading_runs WHERE side='buy'")
+        self.assertEqual(len(runs), 1)
+        self.assertEqual(runs[0]['status'], 'trial')
+        payload = json.loads(runs[0]['payload'])
+        self.assertTrue(payload['admission']['allowed'])
+        self.assertEqual(payload['signal']['key'], expected[0]['key'])
+        self.assertEqual(payload['plan']['quantity'], 100)
+        self.assertEqual(self.holdings.call_count, 1)
+        self.submit.assert_not_called()
+
+    def test_fourth_same_kind_signal_creates_no_fourth_order(self):
+        # Exercise the order-admission cap separately from detector spacing.
+        # Rejected attempts remain audit rows; only allowed trial plans count.
+        for index, stamp in enumerate(('09:32', '09:42', '09:52', '10:02')):
+            self.now = datetime.fromisoformat('2026-11-13T' + stamp + ':05+08:00')
+            quote = dict(code=self.code, price='98', timestamp=self.now.isoformat())
+            self.app.quotes[self.code] = quote
+            mark = dict(key=f'shape-v2|bottom|cap-{index}', kind='bottom',
+                        candidateTime=(self.now - timedelta(minutes=1)).strftime('%H:%M'),
+                        time=stamp, price=98.)
+            self.service.observe(self.code, [mark], quote, self.now, True)
+            self.service.drain(reports=False)
+        runs = self.store.query("SELECT * FROM trading_runs WHERE side='buy' ORDER BY rowid")
+        self.assertEqual([row['status'] for row in runs], ['trial', 'trial', 'trial', 'skipped'])
+        payloads = [json.loads(row['payload']) for row in runs]
+        self.assertEqual([p['admission']['allowed'] for p in payloads], [True, True, True, False])
+        self.assertEqual([p['plan']['quantity'] for p in payloads[:3]], [100, 100, 100])
+        self.assertNotIn('plan', payloads[3])
+        self.assertIn('已达3个信号上限', payloads[3]['admission']['reason'])
+        self.assertEqual(self.holdings.call_count, 3)
+        self.submit.assert_not_called()
 
 
 class QualityIndependenceTests(unittest.TestCase):

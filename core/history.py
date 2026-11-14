@@ -36,7 +36,11 @@ def analyze(code,day,data,daily=None):
 
 def view(app,args):
     code=symbol(args['code']);start,end=bounds(args)
-    daily=[daily_view(code,r['data']) for r in app.daily_cache.rows(code) if start<=r['day']<=end]
+    rows=app.daily_cache.rows(code)
+    daily=[daily_view(code,r['data']) for r in rows if start<=r['day']<=end]
+    # The annual-line marker always uses completed bars; an intraday provisional
+    # candle can neither create nor remove a signal.
+    ma250=app.annual_signals.report(code)
     minute={r['day']:r['data'] for r in app.store.getcache(code,'minute') if start<=r['day']<=end}
     recorded=app.event_rows(code=code,start=start,end=end,limit=None)
     days=sorted(set(r['date'] for r in daily)|set(minute)|{e['trading_date'] for e in recorded})
@@ -55,4 +59,4 @@ def view(app,args):
         r['limit_basis']=minute.get(day,{}).get('limit_basis','验证样本历史参考价' if r['limit_up'] else '')
         analyses.append(r)
     return dict(code=code,start=start,end=end,daily=daily,days=analyses,events=list(events.values()),
-        minute_days=sorted(minute),source=app.source_info(code))
+        minute_days=sorted(minute),ma250=ma250,source=app.source_info(code))

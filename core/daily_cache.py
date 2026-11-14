@@ -1,5 +1,5 @@
 """Persistent daily request coverage, paced requests and failure cooldowns."""
-import threading,time
+import json,threading,time
 from datetime import date,timedelta
 from decimal import Decimal,InvalidOperation
 from .provider import now_cn
@@ -37,7 +37,8 @@ class DailyCache:
         return day
 
     def update(self,code):
-        end=self.completed_day();rows=self.app.store.getcache(code,'daily')
+        end=self.completed_day();saved=self.app.store.query("SELECT day,payload FROM cache WHERE code=? AND kind='daily' ORDER BY day DESC LIMIT 1",(code,))
+        rows=[dict(day=r['day'],data=json.loads(r['payload'])) for r in saved]
         if rows and rows[-1]['day']>end.isoformat():return []
         start=date.fromisoformat(rows[-1]['day'])+timedelta(days=1) if rows else end-timedelta(days=365)
         if rows and rows[-1]['day']==end.isoformat():
@@ -46,6 +47,15 @@ class DailyCache:
             if stamp>=end.isoformat()+'T15:15':return []
             start=end
         return self.fetch(code,start,end)
+
+    def ensure_history(self,code,minimum=310):
+        """Background warmup is independent of whether a chart was ever opened."""
+        count=self.app.store.query("SELECT count(*) AS n FROM cache WHERE code=? AND kind='daily'",(code,))[0]['n']
+        if count>=minimum:return []
+        end=self.completed_day()
+        # A finite request with persisted coverage also bounds retries for IPOs
+        # and suspended stocks that cannot have 310 observations yet.
+        return self.fetch(code,end-timedelta(days=3*365),end)
 
     def fetch(self,code,start,end):
         end=min(end,self.completed_day())

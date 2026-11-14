@@ -101,7 +101,11 @@ class ProviderTest(unittest.TestCase):
    with patch('core.provider.get',return_value=raw): groups=Tencent().minutes(code,datetime(2026,10,18,tzinfo=CN))
    actual=next(g for g in groups if g['date']=='2026-10-16')
    expected=json.loads((ROOT/'fixtures'/f'{code}-2026-10-16-tencent.json').read_text())
-   self.assertEqual([(b['time'],b['volume']) for b in actual['bars']],[(b['time'],b['volume']) for b in expected['bars']])
+   # Keep the saved raw response intact; the adapter excludes post-close
+   # cumulative revisions from its normalized chart-session bars.
+   session=[b for b in expected['bars'] if b['time']<='15:00']
+   self.assertTrue(all(b['time']<='15:00' for b in actual['bars']))
+   self.assertEqual([(b['time'],b['volume']) for b in actual['bars']],[(b['time'],b['volume']) for b in session])
 
 if __name__=='__main__':unittest.main()
 

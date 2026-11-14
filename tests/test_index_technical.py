@@ -9,6 +9,7 @@ from core.index_technical import CODE,KIND,IndexTechnical,indicators,parse_daily
 from core.option_pcr import eligible_sessions
 from core.provider import CN
 from core.store import Store
+from core.breadth import _next_verified_trading_day
 
 
 class IndexTechnicalTests(unittest.TestCase):
@@ -96,6 +97,8 @@ class IndexTechnicalTests(unittest.TestCase):
     def test_refresh_preserves_prior_year_warmup_only_with_known_calendar(self):
         # Synthetic calendars and prices test the year boundary; this is not
         # a claim about 2027 exchange holidays or future market data.
+        _next_verified_trading_day.cache_clear()
+        self.addCleanup(_next_verified_trading_day.cache_clear)
         end = '2027-01-04'
         now = datetime(2027,1,4,17,tzinfo=CN)
         day = datetime(2026,6,1,tzinfo=CN)

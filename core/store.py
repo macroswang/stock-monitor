@@ -38,6 +38,33 @@ class Store:
         CREATE TABLE IF NOT EXISTS broker_requests(request_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL,result TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS broker_requests_account ON broker_requests(account_id,created_at);
         PRAGMA user_version=3;''')
+        # Revision counters invalidate annual-line computations without loading
+        # and hashing every historical JSON row on each UI poll. Raw SQL writes
+        # and deletions are covered as well as Store.cache().
+        had_revisions=self.db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='cache_revision'").fetchone() is not None
+        self.db.executescript('''
+        CREATE TABLE IF NOT EXISTS cache_revision(code TEXT,kind TEXT,revision INTEGER NOT NULL,
+          PRIMARY KEY(code,kind));
+        CREATE INDEX IF NOT EXISTS cache_kind_day ON cache(kind,day DESC);
+        CREATE TRIGGER IF NOT EXISTS annual_cache_insert AFTER INSERT ON cache
+          WHEN NEW.kind IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(NEW.code,NEW.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TRIGGER IF NOT EXISTS annual_cache_update AFTER UPDATE ON cache
+          WHEN NEW.kind IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(NEW.code,NEW.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TRIGGER IF NOT EXISTS annual_cache_delete AFTER DELETE ON cache
+          WHEN OLD.kind IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(OLD.code,OLD.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TABLE IF NOT EXISTS ma250_journal(
+          code TEXT,day TEXT,rule_id TEXT,phase TEXT,payload TEXT NOT NULL,
+          PRIMARY KEY(code,day,rule_id,phase));
+        ''')
+        if not had_revisions:
+            self.db.execute("INSERT OR IGNORE INTO cache_revision SELECT DISTINCT code,kind,0 FROM cache WHERE kind IN ('daily','index_regime_v1')")
+            self.db.commit()
         for column in ('category', 'group_name', 'entry_tag', 'added_at', 'groups_json'):
             try:
                 self.db.execute(f'ALTER TABLE pool ADD COLUMN {column} TEXT')
@@ -95,6 +122,14 @@ class Store:
         rows=self.query('SELECT day,payload FROM cache WHERE code=? AND kind=? '+('AND day=? ' if day else '')+'ORDER BY day',
                         (code,kind,day) if day else (code,kind))
         return [dict(day=r['day'],data=json.loads(r['payload'])) for r in rows]
+    def cache_revision(self,code,kind):
+        rows=self.query('SELECT revision FROM cache_revision WHERE code=? AND kind=?',(code,kind))
+        return rows[0]['revision'] if rows else 0
+    def annual_journal(self,code,day,rule_id,phase,payload):
+        # Append once per observation phase. Replays/restarts/parameter changes
+        # cannot overwrite an already frozen observation.
+        return self.execute('INSERT OR IGNORE INTO ma250_journal VALUES(?,?,?,?,?)',
+            (code,day,rule_id,phase,json.dumps(payload,ensure_ascii=False)))
     def event(self,event,mode,delay=0):
         # 股票池只保留观察数据，不再产生提醒事件或进入本机/手机发送队列。
         if event.get('kind') == 'POOL_ALERT':

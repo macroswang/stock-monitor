@@ -5,7 +5,7 @@ import './stockChartPanel.css';
 import Chart,{type BottomSignal} from './Chart';
 import {weeklyBars} from './candleData';
 import {exchangeCalendar} from './exchangeCalendar';
-import type {Bar,Daily,HistoryView} from './models';
+import type {Bar,Daily,HistoryView,Ma250Pullback} from './models';
 import type {Request} from './poolTableModel';
 
 export type ChartView = 'minute' | 'daily' | 'weekly';
@@ -67,13 +67,14 @@ function pickMinute(list:CachedMinute[]|null|undefined):MinuteBundle{
   return {bars,shapeOpening,day:latest.day,previousClose:Number.isFinite(previous)&&previous>0?previous:undefined};
 }
 
-export default function StockChartPanel({request,code,name,initialView='minute',live=false,onError,onBottomSignal}:{
-  request:Request;code:string;name:string;initialView?:ChartView;live?:boolean;onError?:(error:unknown)=>void;onBottomSignal?:(signal:BottomSignal|null)=>void;
+export default function StockChartPanel({request,code,name,initialView='minute',initialDate,annualLineFocus=false,live=false,onError,onBottomSignal}:{
+  request:Request;code:string;name:string;initialView?:ChartView;initialDate?:string;annualLineFocus?:boolean;live?:boolean;onError?:(error:unknown)=>void;onBottomSignal?:(signal:BottomSignal|null)=>void;
 }){
   const [view,setView]=useState<ChartView>(initialView);
   const [minute,setMinute]=useState<MinuteBundle|null>(null);
   const minuteRef=useRef(minute);minuteRef.current=minute;
   const [daily,setDaily]=useState<Daily[]|null>(null);
+  const [ma250,setMa250]=useState<Ma250Pullback|null>(null);
   const [minuteLoading,setMinuteLoading]=useState(false);
   const [dailyLoading,setDailyLoading]=useState(false);
   const [minuteError,setMinuteError]=useState('');
@@ -91,7 +92,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     token.current+=1;
     minuteLoaded.current=false;dailyLoaded.current=false;
     loadingRef.current={minute:false,daily:false};
-    setMinute(null);setDaily(null);setMinuteError('');setDailyError('');setSelectedDay('');
+    setMinute(null);setDaily(null);setMa250(null);setMinuteError('');setDailyError('');setSelectedDay('');
     setView(initialView);
     return ()=>{token.current+=1;};
   },[code,initialView]);
@@ -146,7 +147,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
       let data=await request<HistoryView>('history',{code,start,end});
       if(!alive(seq))return;
       let rows=Array.isArray(data?.daily)?data.daily:[];
-      if(!rows.length){
+      if(!rows.length||(annualLineFocus&&rows.filter(row=>!row.provisional).length<310)){
         try{await waitJob('daily_load',{code,start,end},seq);}catch{/* 静默：日K补取失败按空态处理 */}
         if(!alive(seq))return;
         data=await request<HistoryView>('history',{code,start,end});
@@ -154,15 +155,15 @@ export default function StockChartPanel({request,code,name,initialView='minute',
       }
       rows=[...rows].sort((left,right)=>String(left.date).localeCompare(String(right.date)));
       if(!alive(seq))return;
-      setDaily(rows);
-      if(rows.length)setSelectedDay(rows[rows.length-1].date);
+      setDaily(rows);setMa250(data?.ma250??null);
+      if(rows.length)setSelectedDay(rows.some(row=>row.date===initialDate)?initialDate!:rows[rows.length-1].date);
     }catch(cause){
       if(alive(seq)){setDailyError(readError(cause));onErrorRef.current?.(cause);}
     }finally{
       if(alive(seq)){setDailyLoading(false);dailyLoaded.current=true;}
       loadingRef.current.daily=false;
     }
-  },[code,request,waitJob]);
+  },[code,request,waitJob,initialDate,annualLineFocus]);
 
   useEffect(()=>{
     if(view==='minute')void ensureMinute();else void ensureDaily();
@@ -221,7 +222,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
   return <section className={'stock-chart-panel'+(expanded?' is-expanded':'')} aria-label={'行情图表 '+name}>
     <div className="scp-toolbar">
       <ChartViewTabs value={view} onChange={changeView} asTabs/>
-      <span className="scp-state" role="status">{statusText}</span>
+      <span className="scp-state" role="status">{statusText}{annualLineFocus&&view==='daily'&&ready?' · MA250'+((daily?.filter(row=>!row.provisional).length||0)<310?' · 信号预热不足310根':''):''}</span>
       <button type="button" className="scp-expand" aria-label={expanded?'缩小图表':'放大图表'} aria-pressed={expanded}
         title={expanded?'恢复默认高度':'放大图表'} onClick={()=>setExpanded(value=>!value)}>{expanded?'缩小':'放大'}</button>
     </div>
@@ -234,7 +235,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     {ready&&<div className="scp-chart">
       {/* stockCode 传 MACD 中性前缀：内嵌面板不请求/展示指数 MACD（契约要求不传高级数据），名称仍用真实 name */}
       <Chart stockCode={'pool-'+code} stockName={name} minute={minute?.bars||[]} shapeOpening={minute?.shapeOpening||[]}
-        daily={daily||[]} view={chartView} selectedDay={activeDay} onSelectDay={day=>setSelectedDay(day)}
+        daily={daily||[]} ma250={ma250} annualLineFocus={annualLineFocus} view={chartView} selectedDay={activeDay} onSelectDay={day=>setSelectedDay(day)}
         compact onBottomSignal={onBottomSignal} previousClose={minute?.previousClose} benchmark={null}/>
     </div>}
   </section>;

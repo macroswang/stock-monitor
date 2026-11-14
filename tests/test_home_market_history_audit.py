@@ -3,10 +3,12 @@ import json
 import tempfile
 import unittest
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from core.app import App
+from core import breadth
 from scripts.audit_home_market_history import CALENDAR, DATA, audit
 
 
@@ -32,15 +34,29 @@ class HomeMarketHistoryAuditTests(unittest.TestCase):
         self.assertIn(rows[-1]['date'], result['invalid_dates'])
 
     def test_preview_matches_fresh_isolated_backend_history(self):
+        # The browser sample freezes a date set and retains two live closes.
+        # Replay those same inputs; a fresh DB otherwise has only historical
+        # closes and the standard archive may have acquired earlier sessions.
+        preview_days = {row['date'] for row in self.rows}
+        history = json.loads(breadth.HISTORY.read_text())
+        frozen_history = [row for row in history if row['date'] in preview_days]
         fields = ('source', 'universe', 'advance', 'decline', 'flat', 'suspended', 'covered',
                   'advance_volume', 'decline_volume', 'advance_amount', 'decline_amount',
                   'trin', 'trin_amount', 'advancing_percent', 'adl', 'adl_gap_before', 'mcl_samples')
         with tempfile.TemporaryDirectory() as root, patch('core.breadth.now_cn', return_value=self.now):
+            frozen = Path(root) / 'frozen-history.json'
+            frozen.write_text(json.dumps(frozen_history))
+            history_patch = patch('core.breadth.HISTORY', frozen)
+            history_patch.start()
+            self.addCleanup(history_patch.stop)
             app = App(root, False)
             try:
+                for row in self.rows:
+                    if not row.get('historical'):
+                        app.store.cache(breadth.CODE, breadth.KIND, row['date'], row)
                 rows = app.call('breadth', {})['days']
                 self.assertEqual([r['date'] for r in rows], [r['date'] for r in self.rows])
-                for actual, preview in zip(rows[-90:], self.rows[-90:]):
+                for actual, preview in zip(rows, self.rows):
                     with self.subTest(day=actual['date']):
                         self.assertEqual({k: actual.get(k) for k in fields}, {k: preview.get(k) for k in fields})
             finally:
