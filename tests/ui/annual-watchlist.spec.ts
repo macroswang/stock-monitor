@@ -10,6 +10,7 @@ const stocks=[
  ['sz300364','中文在线','27.73','27.13','28.11','26.24'],
  ['sh603533','掌阅科技','28.88','29.55','30.50','28.47'],
  ['sz002639','雪人集团','14.42','15.23','15.29','14.38'],
+ ['sh600467','好当家','2.73','2.48','2.74','2.63'],
 ];
 
 async function setup(page:Page,failFirst=false){
@@ -73,7 +74,7 @@ test('annual signals add a stock once, synchronize duplicate rows and appear in 
  await page.screenshot({path:'outputs/annual-watch-added.png',fullPage:true});
  await page.getByRole('button',{name:'自选监控',exact:true}).click();
  await expect(page.locator('.stocks .stock').filter({hasText:'盛和资源'})).toHaveCount(1);
- await expect(page.locator('.watchlist .card-heading')).toContainText('8 只');
+ await expect(page.locator('.watchlist .card-heading')).toContainText('9 只');
  expect(errors).toEqual([]);
 });
 
@@ -92,7 +93,9 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
  const card=page.locator('.watchlist');
  for(const width of [1380,1000]){
   await page.setViewportSize({width,height:980});
-  await expect(card.locator('.stock')).toHaveCount(7);
+  await expect(card.locator('.stock')).toHaveCount(8);
+  expect((await card.boundingBox())!.width).toBe(284);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
   for(const row of await card.locator('.stock').all()){
    const boxes=await row.evaluate(el=>{
     const rect=(selector:string)=>{const node=el.querySelector(selector)!;const r=node.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,font:parseFloat(getComputedStyle(node).fontSize),marginTop:parseFloat(getComputedStyle(node).marginTop),marginBottom:parseFloat(getComputedStyle(node).marginBottom),overflow:node.scrollWidth>node.clientWidth+1};};
@@ -106,17 +109,21 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
    expect(Math.abs((boxes.price.y+boxes.status.bottom)/2-(boxes.row.y+boxes.row.height/2))).toBeLessThan(1);
    expect(boxes.metrics.x).toBeGreaterThan(boxes.code.right);
    expect(boxes.metrics.right).toBeLessThanOrEqual(boxes.right.x+1);
-   expect(boxes.row.height).toBeLessThanOrEqual(36);
+   expect(boxes.row.height).toBe(36);
    expect(boxes.name.font).toBe(11);
-   expect(boxes.code.font).toBe(6);expect(boxes.source.font).toBe(6);
-   expect(boxes.price.font).toBe(9);expect(boxes.status.font).toBe(6);
+   expect(boxes.code.font).toBe(8);expect(boxes.source.font).toBe(8);
+   expect(boxes.price.font).toBe(11);expect(boxes.status.font).toBe(6);
+   expect(boxes.status.overflow).toBe(false);expect(boxes.price.overflow).toBe(false);
+   expect(boxes.values[0].x).toBeGreaterThan(boxes.code.right);
+   expect(boxes.price.x-boxes.values[2].right).toBeGreaterThanOrEqual(10);
    for(let i=0;i<3;i++){
-    expect(boxes.values[i].font).toBe(8);expect(boxes.labels[i].font).toBe(6);
+    expect(boxes.values[i].font).toBe(9);expect(boxes.labels[i].font).toBe(6);
+    expect(boxes.labels[i].overflow).toBe(false);
     expect(boxes.values[i].overflow).toBe(false);
     expect(boxes.values[i].y).toBe(boxes.values[0].y);
     expect(boxes.labels[i].y).toBe(boxes.labels[0].y);
     expect(boxes.labels[i].y).toBeGreaterThanOrEqual(boxes.values[i].bottom);
-    if(i>0)expect(boxes.values[i].x).toBeGreaterThan(boxes.values[i-1].x);
+    if(i>0)expect(boxes.values[i].x-boxes.values[i-1].right,JSON.stringify({stock:await row.locator('.watch-stock-title').innerText(),metrics:boxes.metrics,values:boxes.values})).toBeGreaterThanOrEqual(8);
    }
   }
   await expect(card.getByLabel('涨跌额').first()).toContainText('-1.61');

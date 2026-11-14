@@ -38,8 +38,28 @@ for(const [name,rows,kind] of [['下飘旗',flag,'falling-flag'],['上飘旗',be
   const box=(await chart.boundingBox())!;await page.mouse.move(box.x+drawn.hover[0],box.y+drawn.hover[1]);await expect(chart.locator('.quote-tooltip')).toContainText('收盘：');expect((await inspect()).pointerLines).toBe(0);
   await page.mouse.move(0,0);await page.addStyleTag({content:'.interactive-price-tooltip{visibility:hidden!important}'});
   await chart.screenshot({path:test.info().outputPath(`${kind}.png`)});await controls.screenshot({path:test.info().outputPath('automatic-controls.png')});
-  await page.getByLabel('显示日线形态',{exact:true}).uncheck();expect((await inspect()).segments).toEqual([]);
-  await page.getByLabel('显示日线形态',{exact:true}).check();await expect.poll(async()=>(await inspect()).keys).toEqual(accepted.map(p=>p.key));
+  await expect(page.getByRole('checkbox',{name:'显示日线形态',exact:true})).toHaveCount(0);
+  await expect(page.getByText('显示日线形态',{exact:true})).toHaveCount(0);
+  await expect.poll(async()=>(await inspect()).keys).toEqual(accepted.map(p=>p.key));
   await expect(controls.getByRole('combobox')).toHaveCount(0);expect(errors).toEqual([]);
  });
 }
+
+
+test('hidden daily pattern control preserves a previously disabled preference',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('stock-monitor-show-daily-patterns-v1','false'));
+ await page.goto('/');await page.getByRole('button',{name:'日K',exact:true}).click();
+ const chart=page.getByLabel('日K线及成交量');await expect(chart).toBeVisible();
+ await expect(page.getByRole('checkbox',{name:'显示日线形态',exact:true})).toHaveCount(0);
+ await expect(page.locator('.daily-pattern-mode')).toHaveCount(0);
+ const patternSeries=await chart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);
+  return e.getInstanceByDom(el).getOption().series.filter((s:any)=>s.name==='日线形态识别'||s.name==='日线形态轮廓').length;
+ });
+ expect(patternSeries).toBe(0);
+ expect(await page.evaluate(()=>localStorage.getItem('stock-monitor-show-daily-patterns-v1'))).toBe('false');
+ await page.getByRole('button',{name:'周K',exact:true}).click();
+ await expect(page.getByRole('checkbox',{name:'显示日线形态',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'分时',exact:true}).click();
+ await expect(page.getByRole('checkbox',{name:'高量',exact:true})).toBeVisible();
+});

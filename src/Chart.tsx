@@ -120,7 +120,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const [plotHeight,setPlotHeight]=useState(0);
  const minutePanels=minutePanelLayout(plotHeight||350,compact?0:30);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
- const [showDailyPatterns,setShowDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
+ const [showDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
  const dayPatterns=useMemo(()=>view==='daily'&&!annualLineFocus?selectDailyPatterns(dailyPatterns(daily)):[],[daily,view,annualLineFocus]);
  const ma250Signals=useMemo(()=>{
   if(view!=='daily'||!showMa250||!ma250?.signals?.length)return [];
@@ -447,7 +447,6 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
  },[contentKey]);
  useEffect(()=>{if(isCandleView(view))ref.current?.focus({preventScroll:true});},[view]);
  return <>{isCandleView(view)&&<CandleControls value={ma} onChange={updateMa} onZoom={zoomCandles}/>} {view==='daily'&&<div className="daily-pattern-controls" role="group" aria-label="日线形态显示选项">
-  <label className="opening-volume-toggle"><input type="checkbox" checked={showDailyPatterns} onChange={e=>{setShowDailyPatterns(e.target.checked);try{localStorage.setItem('stock-monitor-show-daily-patterns-v1',String(e.target.checked));}catch{}}}/>显示日线形态</label>
   {showDailyPatterns&&<><span className="daily-pattern-mode">自动识别 · 同一区域择优显示</span><span className="daily-pattern-legend">{([...new Set(dayPatterns.map(p=>p.kind))]).map(kind=><span key={kind}><i style={{backgroundColor:dailyPatternColors[kind]}}/>{dayPatterns.find(p=>p.kind===kind)!.name}</span>)}</span></>}
  </div>}{!isCandleView(view)&&<TCostSettings value={costs} onChange={updateCosts} displayOptions={<div className="chart-display-options" role="group" aria-label="分时显示选项">
   <label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>开盘量</label>

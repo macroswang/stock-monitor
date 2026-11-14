@@ -46,23 +46,23 @@
 /* Share one toolbar row; wrap naturally when the detail column gets narrow. */
 .minute-chart-controls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding:4px 20px 2px}.minute-chart-controls>.t-direction{flex:0 0 auto;margin:0;min-height:26px}.minute-chart-controls>.chart-display-options{flex:1 1 280px;padding:0}.minute-chart-controls>.t-cost-settings{flex:0 0 100%;min-width:0;margin:0 0 2px}.minute-chart-controls>.t-cost-settings summary{padding:4px 0}.minute-chart-controls .t-direction button{padding:4px 10px}.chart-caption{padding-top:10px}
 /* Compact each watch row while keeping all quote fields and the full list. */
-.market-grid{grid-template-columns:260px minmax(0,1fr)}
+.market-grid{grid-template-columns:284px minmax(0,1fr)}
 .watchlist>.card-heading{padding:7px 8px}.watchlist>.card-heading h2{font-size:12px;line-height:16px}.watchlist>.card-heading>span{font-size:9px}
 .watchlist>.add{padding:0 7px 6px;gap:4px}.watchlist>.add input{padding:4px 6px;font-size:10px;line-height:14px}.watchlist>.add button{padding:3px 7px;font-size:11px;line-height:16px}
-.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 98px 38px;align-items:center;padding:2px 7px;gap:5px;min-height:36px}
+.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 116px 38px;align-items:center;padding:2px 7px;gap:8px;min-height:36px}
 .watchlist .stock.selected{padding-left:4px}
 .watchlist .watch-stock-identity{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0}
 .watchlist .watch-stock-title{display:flex;align-items:center;gap:0;min-width:0;max-width:100%;white-space:nowrap}
 .watchlist .watch-stock-title>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:500}
 .watchlist .stock small{margin-top:0;font-size:9px;line-height:12px;letter-spacing:0;white-space:nowrap}
-.watchlist .watch-stock-title>small{flex-shrink:0;margin-left:5px;font-size:6px;line-height:7px}
-.watchlist .stock .trading-source{order:-1;margin:3px 0;padding:0 3px;font-size:6px;line-height:8px;border-radius:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.watchlist .watch-stock-title>small{flex-shrink:0;margin-left:5px;font-size:8px;line-height:10px}
+.watchlist .stock .trading-source{order:-1;margin:3px 0;padding:0 3px;font-size:8px;line-height:10px;border-radius:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .watchlist .stock-right{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;align-self:center;margin:0;min-width:0}
-.watchlist .stock-right>strong{font-size:9px;font-weight:600;line-height:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.watchlist .stock-right>strong{font-size:11px;font-weight:600;line-height:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .watchlist .stock-right>small{margin-top:1px;font-size:6px;line-height:8px}
-.watchlist .watch-quote-details{width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0;padding:0;border:0}
+.watchlist .watch-quote-details{width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;border:0}
 .watchlist .watch-metric{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px}
-.watchlist .stock .watch-metric strong{font-size:8px;line-height:10px;font-weight:500;letter-spacing:-.2px}
+.watchlist .stock .watch-metric strong{font-size:9px;line-height:11px;font-weight:500;letter-spacing:-.4px}
 .watchlist .watch-metric>span{font-size:6px;line-height:8px}
 
 /* Compact market overview: value and change share a row when space permits. */
