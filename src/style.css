@@ -35,7 +35,7 @@
 .opening-volume-toggle{display:flex;align-items:center;gap:7px;margin:0 20px 8px;color:#bac9dd;font-size:12px}.opening-volume-toggle input{width:auto;margin:0;accent-color:#8798b2}.opening-volume-toggle span{color:#7e91ac;font-size:11px}
 
 /* Stretch the card to the detail column, without stretching individual rows. */
-.watchlist{align-self:stretch;display:flex;flex-direction:column;min-height:0}.watchlist>.card-heading,.watchlist>.add{flex-shrink:0}.watchlist>.stocks{height:auto;max-height:none;min-height:0;overflow-y:visible;flex:0 0 auto}.watchlist .stock{flex-shrink:0}
+.watchlist{align-self:stretch;display:flex;flex-direction:column;min-height:0}.watchlist-content>.card-heading,.watchlist-content>.add{flex-shrink:0}.watchlist-content>.stocks{height:auto;max-height:none;min-height:0;overflow-y:visible;flex:0 0 auto}.watchlist .stock{flex-shrink:0}
 
 /* Tighter workspace spacing while preserving card content padding. */
 .workspace{padding-left:16px;padding-right:16px}.summary{margin-bottom:12px}.market-grid{gap:10px}@media(max-width:1150px){.workspace{padding-left:12px;padding-right:12px}.market-grid{gap:8px}}
@@ -46,10 +46,10 @@
 /* Share one toolbar row; wrap naturally when the detail column gets narrow. */
 .minute-chart-controls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding:4px 20px 2px}.minute-chart-controls>.t-direction{flex:0 0 auto;margin:0;min-height:26px}.minute-chart-controls>.chart-display-options{flex:1 1 280px;padding:0}.minute-chart-controls>.t-cost-settings{flex:0 0 100%;min-width:0;margin:0 0 2px}.minute-chart-controls>.t-cost-settings summary{padding:4px 0}.minute-chart-controls .t-direction button{padding:4px 10px}.chart-caption{padding-top:10px}
 /* Compact each watch row while keeping all quote fields and the full list. */
-.market-grid{grid-template-columns:284px minmax(0,1fr)}
-.watchlist>.card-heading{padding:7px 8px}.watchlist>.card-heading h2{font-size:12px;line-height:16px}.watchlist>.card-heading>span{font-size:9px}
-.watchlist>.add{padding:0 7px 6px;gap:4px}.watchlist>.add input{padding:4px 6px;font-size:10px;line-height:14px}.watchlist>.add button{padding:3px 7px;font-size:11px;line-height:16px}
-.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 116px 38px;align-items:center;padding:2px 7px;gap:8px;min-height:36px}
+.market-grid{grid-template-columns:296px minmax(0,1fr)}
+.watchlist-content>.card-heading{padding:7px 36px 7px 8px}.watchlist-content>.card-heading h2{font-size:12px;line-height:16px}.watchlist-content>.card-heading>span{font-size:9px}
+.watchlist-content>.add{padding:0 7px 6px;gap:4px}.watchlist-content>.add input{padding:4px 6px;font-size:10px;line-height:14px}.watchlist-content>.add button{padding:3px 7px;font-size:11px;line-height:16px}
+.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 128px 38px;align-items:center;padding:2px 7px;gap:8px;min-height:36px}
 .watchlist .stock.selected{padding-left:4px}
 .watchlist .watch-stock-identity{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0}
 .watchlist .watch-stock-title{display:flex;align-items:center;gap:0;min-width:0;max-width:100%;white-space:nowrap}
@@ -62,8 +62,18 @@
 .watchlist .stock-right>small{margin-top:1px;font-size:6px;line-height:8px}
 .watchlist .watch-quote-details{width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;border:0}
 .watchlist .watch-metric{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px}
-.watchlist .stock .watch-metric strong{font-size:9px;line-height:11px;font-weight:500;letter-spacing:-.4px}
+.watchlist .stock .watch-metric strong{font-size:10px;line-height:12px;font-weight:500;letter-spacing:-.4px}
 .watchlist .watch-metric>span{font-size:6px;line-height:8px}
+
+/* Local presentation only: keep watch rows mounted while the chart gets the width. */
+.watchlist{position:relative;min-width:0}
+.watchlist-content{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
+.watchlist-content[hidden]{display:none}
+.watchlist .watchlist-toggle{position:absolute;top:5px;right:5px;width:22px;height:22px;display:grid;place-items:center;padding:0;border-radius:5px;background:#152338;color:#93b3dc}
+.watchlist .watchlist-toggle:hover{background:#243753;color:#c3d9f8}
+.watchlist .watchlist-toggle:focus-visible{outline:2px solid #76aaff;outline-offset:1px}
+.market-grid:has(>.watchlist.is-collapsed){grid-template-columns:32px minmax(0,1fr)}
+.watchlist-collapsed-label{align-self:center;writing-mode:vertical-rl;text-orientation:upright;margin-top:36px;font-size:10px;line-height:18px;letter-spacing:3px;color:#8fa9c9;user-select:none}
 
 /* Compact market overview: value and change share a row when space permits. */
 .summary{gap:10px;margin-bottom:10px}.summary>div{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:baseline;column-gap:10px;row-gap:3px;padding:10px 12px;border-radius:8px}.summary>div>span{flex-basis:100%;font-size:11px;line-height:15px}.summary strong{font-size:23px;line-height:28px;margin-top:0}.summary small{font-size:12px}.summary .index-change{font-size:12px;line-height:18px;white-space:nowrap}.summary .index-time{flex-basis:100%;font-size:10px;line-height:14px;margin-top:1px;overflow-wrap:anywhere}.summary .status-text{font-size:14px;line-height:22px;padding:0}.summary .index-unavailable{font-size:12px;line-height:20px;margin:0}

@@ -31,6 +31,7 @@ async function setup(page:Page,failFirst=false){
     const {method,args={}}=params;w.__watchCalls.push({method,args});
     switch(method){
      case 'snapshot':return clone(snapshot);
+     case 'stock_search':return [];
      case 'ma250_scan_start':return clone({...scan,rows,total:rows.length,filtered_total:rows.length,universe:args.universe});
      case 'add_job':{const job='add-'+(++jobNumber);jobs.set(job,{code:args.code,reads:0});return {job};}
      case 'job':{
@@ -94,7 +95,7 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
  for(const width of [1380,1000]){
   await page.setViewportSize({width,height:980});
   await expect(card.locator('.stock')).toHaveCount(8);
-  expect((await card.boundingBox())!.width).toBe(284);
+  expect((await card.boundingBox())!.width).toBe(296);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
   for(const row of await card.locator('.stock').all()){
    const boxes=await row.evaluate(el=>{
@@ -117,7 +118,7 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
    expect(boxes.values[0].x).toBeGreaterThan(boxes.code.right);
    expect(boxes.price.x-boxes.values[2].right).toBeGreaterThanOrEqual(10);
    for(let i=0;i<3;i++){
-    expect(boxes.values[i].font).toBe(9);expect(boxes.labels[i].font).toBe(6);
+    expect(boxes.values[i].font).toBe(10);expect(boxes.labels[i].font).toBe(6);
     expect(boxes.labels[i].overflow).toBe(false);
     expect(boxes.values[i].overflow).toBe(false);
     expect(boxes.values[i].y).toBe(boxes.values[0].y);
@@ -133,4 +134,65 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
  await page.locator('.stocks .stock').filter({hasText:'中文在线'}).click();
  await expect(page.locator('.detail h2')).toContainText('中文在线');
  expect(errors).toEqual([]);
+});
+
+
+test('watchlist folds horizontally and restores input, selected stock and chart size without trading calls',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await setup(page);
+ await page.locator('.stocks .stock').filter({hasText:'中文在线'}).click();
+ await expect(page.locator('.detail h2')).toContainText('中文在线');
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const card=page.locator('.watchlist'),content=card.locator('.watchlist-content'),chart=page.getByLabel('日K线及成交量');
+ await expect(chart).toBeVisible();
+ const search=card.getByRole('combobox');await search.fill('三孚');
+ for(const width of [1380,1000]){
+  await page.setViewportSize({width,height:980});
+  await expect.poll(()=>page.locator('.workspace').evaluate(el=>getComputedStyle(el).marginLeft)).toBe(width<=1150?'170px':'202px');
+  const before=(await chart.boundingBox())!.width;
+  const toggle=card.getByRole('button',{name:'折叠我的自选',exact:true});
+  await expect(toggle).toHaveAttribute('aria-expanded','true');
+  expect(await toggle.getAttribute('aria-controls')).toBe(await content.getAttribute('id'));
+  await toggle.press('Enter');
+  await expect(content).toBeHidden();
+  expect((await card.boundingBox())!.width).toBe(32);
+  await expect.poll(async()=>(await chart.boundingBox())!.width).toBeGreaterThan(before+250);
+  await expect.poll(async()=>(await chart.locator('canvas').first().boundingBox())!.width).toBeCloseTo((await chart.boundingBox())!.width,0);
+  await expect(page.locator('.detail h2')).toContainText('中文在线');
+  await expect(card.locator('.stock')).toHaveCount(8);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+  await page.screenshot({path:`outputs/watchlist-collapsed-${width}.png`,fullPage:true});
+  await card.getByRole('button',{name:'展开我的自选',exact:true}).press('Space');
+  await expect(content).toBeVisible();await expect(search).toHaveValue('三孚');
+  expect((await card.boundingBox())!.width).toBe(296);
+  await expect.poll(async()=>(await chart.boundingBox())!.width).toBeCloseTo(before,0);
+  await expect(page.locator('.detail h2')).toContainText('中文在线');
+ }
+ const writes=await page.evaluate(()=>(window as any).__watchCalls.filter((c:any)=>c.method==='add_job'||c.method==='set_config'||c.method.startsWith('broker_')||(c.method.startsWith('trading_')&&c.method!=='trading_chart')));
+ expect(writes).toEqual([]);expect(errors).toEqual([]);
+});
+
+test('watchlist fold preference survives navigation and reload and can be reversed',async({page})=>{
+ await setup(page);await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
+ await page.getByRole('button',{name:'年线信号',exact:true}).click();
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();
+ await expect(page.getByRole('button',{name:'展开我的自选',exact:true})).toHaveAttribute('aria-expanded','false');
+ await page.reload();
+ await expect(page.getByRole('button',{name:'展开我的自选',exact:true})).toHaveAttribute('aria-expanded','false');
+ await page.getByRole('button',{name:'展开我的自选',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'我的自选',exact:true})).toBeVisible();
+ await page.reload();
+ await expect(page.getByRole('button',{name:'折叠我的自选',exact:true})).toHaveAttribute('aria-expanded','true');
+});
+
+test('watchlist remains usable when its layout preference cannot be stored',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{
+  const read=Storage.prototype.getItem,write=Storage.prototype.setItem;
+  Storage.prototype.getItem=function(key){if(key==='stock-monitor-watchlist-collapsed-v1')throw new DOMException('blocked','SecurityError');return read.call(this,key);};
+  Storage.prototype.setItem=function(key,value){if(key==='stock-monitor-watchlist-collapsed-v1')throw new DOMException('blocked','SecurityError');return write.call(this,key,value);};
+ });
+ await setup(page);await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
+ await expect(page.locator('.watchlist-content')).toBeHidden();
+ await page.getByRole('button',{name:'展开我的自选',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'我的自选',exact:true})).toBeVisible();expect(errors).toEqual([]);
 });

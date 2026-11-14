@@ -24,3 +24,32 @@ test('four real raw-backed preview curves retain matching average values',async(
   await chart.screenshot({path:'outputs/client-clean-curve-'+code+'.png'});
  }
 });
+
+
+test('folding the watchlist preserves loaded chart data, candle zoom and the chart instance across views',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');await expect(page.getByRole('heading',{name:'我的自选',exact:true})).toBeVisible();
+ await expect(page.locator('.detail h2')).toContainText('宏昌电子');
+ const heading=await page.locator('.detail h2').innerText();
+ for(const [view,label] of [['分时','分时价格及分钟成交量'],['日K','日K线及成交量'],['周K','周K线及成交量']]){
+  await page.getByRole('button',{name:view,exact:true}).click();
+  const chart=page.getByLabel(label);await expect(chart.locator('canvas').first()).toBeVisible();
+  const inspect=(zoom=false)=>chart.evaluate(async(el,zoom)=>{
+   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]),c=e.getInstanceByDom(el);
+   if(zoom)c.dispatchAction({type:'dataZoom',start:20,end:80});
+   const o=c.getOption();return {id:el.getAttribute('_echarts_instance_'),data:o.series[0].data,zoom:o.dataZoom?.map((z:any)=>({start:z.start,end:z.end}))||[]};
+  },zoom);
+  const before=await inspect(view!=='分时'),width=(await chart.boundingBox())!.width;
+  expect(before.data.length).toBeGreaterThan(0);
+  await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
+  await expect.poll(async()=>(await chart.boundingBox())!.width).toBeGreaterThan(width+250);
+  await expect.poll(async()=>await inspect()).toEqual(before);
+  await expect.poll(async()=>(await chart.locator('canvas').first().boundingBox())!.width).toBeCloseTo((await chart.boundingBox())!.width,0);
+  await page.screenshot({path:`outputs/watchlist-loaded-collapsed-${view}.png`,fullPage:true});
+  await page.getByRole('button',{name:'展开我的自选',exact:true}).click();
+  await expect.poll(async()=>(await chart.boundingBox())!.width).toBeCloseTo(width,0);
+  await expect.poll(async()=>await inspect()).toEqual(before);
+  await expect(page.locator('.detail h2')).toHaveText(heading);
+ }
+ expect(errors).toEqual([]);
+});
