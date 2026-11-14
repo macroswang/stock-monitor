@@ -46,19 +46,24 @@
 /* Share one toolbar row; wrap naturally when the detail column gets narrow. */
 .minute-chart-controls{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding:4px 20px 2px}.minute-chart-controls>.t-direction{flex:0 0 auto;margin:0;min-height:26px}.minute-chart-controls>.chart-display-options{flex:1 1 280px;padding:0}.minute-chart-controls>.t-cost-settings{flex:0 0 100%;min-width:0;margin:0 0 2px}.minute-chart-controls>.t-cost-settings summary{padding:4px 0}.minute-chart-controls .t-direction button{padding:4px 10px}.chart-caption{padding-top:10px}
 /* Compact each watch row while keeping all quote fields and the full list. */
-.watchlist>.card-heading{padding:12px 14px}.watchlist>.add{padding:0 10px 9px}.watchlist>.add input{padding:7px 9px}.watchlist>.add button{padding:6px 9px}
-.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;padding:6px 10px;gap:4px 8px}
-.watchlist .stock.selected{padding-left:7px}
-.watchlist .stock>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-width:0}
-.watchlist .stock>div:first-child>strong{width:100%;line-height:17px}
-.watchlist .stock small{margin-top:0;font-size:10px;line-height:11px;letter-spacing:.2px;white-space:nowrap}
-.watchlist .stock .trading-source{margin:0;padding:1px 4px;font-size:9px;line-height:12px;border-radius:3px;white-space:nowrap}
-.watchlist .stock-right>strong{font-size:14px;font-weight:600;line-height:17px}
-.watchlist .stock-right>small{margin-top:5px;line-height:14px}
-.watchlist .watch-quote-details{grid-column:1/-1;gap:4px;margin-top:0;padding-top:4px}
-.watchlist .watch-metric{gap:1px}
-.watchlist .stock .watch-metric strong{font-size:12px;line-height:15px}
-.watchlist .watch-metric>span{font-size:10px;line-height:11px}
+.market-grid{grid-template-columns:260px minmax(0,1fr)}
+.watchlist>.card-heading{padding:7px 8px}.watchlist>.card-heading h2{font-size:12px;line-height:16px}.watchlist>.card-heading>span{font-size:9px}
+.watchlist>.add{padding:0 7px 6px;gap:4px}.watchlist>.add input{padding:4px 6px;font-size:10px;line-height:14px}.watchlist>.add button{padding:3px 7px;font-size:11px;line-height:16px}
+.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 98px 38px;align-items:center;padding:2px 7px;gap:5px;min-height:36px}
+.watchlist .stock.selected{padding-left:4px}
+.watchlist .watch-stock-identity{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0}
+.watchlist .watch-stock-title{display:flex;align-items:center;gap:0;min-width:0;max-width:100%;white-space:nowrap}
+.watchlist .watch-stock-title>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:500}
+.watchlist .stock small{margin-top:0;font-size:9px;line-height:12px;letter-spacing:0;white-space:nowrap}
+.watchlist .watch-stock-title>small{flex-shrink:0;margin-left:5px;font-size:6px;line-height:7px}
+.watchlist .stock .trading-source{order:-1;margin:3px 0;padding:0 3px;font-size:6px;line-height:8px;border-radius:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.watchlist .stock-right{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;align-self:center;margin:0;min-width:0}
+.watchlist .stock-right>strong{font-size:9px;font-weight:600;line-height:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.watchlist .stock-right>small{margin-top:1px;font-size:6px;line-height:8px}
+.watchlist .watch-quote-details{width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0;padding:0;border:0}
+.watchlist .watch-metric{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px}
+.watchlist .stock .watch-metric strong{font-size:8px;line-height:10px;font-weight:500;letter-spacing:-.2px}
+.watchlist .watch-metric>span{font-size:6px;line-height:8px}
 
 /* Compact market overview: value and change share a row when space permits. */
 .summary{gap:10px;margin-bottom:10px}.summary>div{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:baseline;column-gap:10px;row-gap:3px;padding:10px 12px;border-radius:8px}.summary>div>span{flex-basis:100%;font-size:11px;line-height:15px}.summary strong{font-size:23px;line-height:28px;margin-top:0}.summary small{font-size:12px}.summary .index-change{font-size:12px;line-height:18px;white-space:nowrap}.summary .index-time{flex-basis:100%;font-size:10px;line-height:14px;margin-top:1px;overflow-wrap:anywhere}.summary .status-text{font-size:14px;line-height:22px;padding:0}.summary .index-unavailable{font-size:12px;line-height:20px;margin:0}
@@ -208,12 +213,12 @@
 .macd-panel-heading{display:contents}.macd-panel-heading strong{color:#d6e2f3;font-size:10px;font-weight:600}.macd-panel-heading>span{display:none}.macd-panel-heading time{order:3;margin-left:auto;color:#9cafc8}
 .macd-panel-values{display:flex;gap:12px;margin-left:auto}.macd-dif{color:#ff9f43}.macd-dea{color:#57a6ff}
 .macd-unavailable{position:absolute;left:65px;right:72px;top:85%;text-align:center;font-size:11px;color:#8296b2;pointer-events:none}
-.minute-detail .detail-top{padding:7px 12px 4px;align-items:center;flex-wrap:nowrap;gap:7px 12px}.minute-detail .detail-identity{display:flex;align-items:baseline;gap:4px 12px;min-width:0;overflow:hidden}.minute-detail h2{flex:0 0 auto;font-size:17px;line-height:24px}.minute-detail .detail-top p{min-width:0;margin:0;font-size:10px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.minute-detail .detail-actions{gap:5px;flex-wrap:nowrap}.minute-detail .detail-actions button{padding:3px 8px;line-height:18px;border-radius:6px;white-space:nowrap}.minute-detail .chart-toolbar{padding:2px 12px 4px;align-items:center;flex-wrap:nowrap;background:#101b2c}.minute-detail .tabs{padding:2px;border:1px solid #1d2c42;border-radius:6px}.minute-detail .tabs button{min-width:52px;padding:2px 9px;font-size:11px;line-height:19px}.minute-detail .chart-date-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0}.minute-detail .chart-toolbar select,.minute-detail .chart-toolbar>div>button{margin-left:0;padding:2px 7px;font-size:10px;line-height:19px;border-radius:6px}
+.detail .detail-top{padding:5px 12px 3px;align-items:center;flex-wrap:nowrap;gap:7px 12px}.detail .detail-identity{display:flex;align-items:baseline;gap:4px 12px;min-width:0;overflow:hidden}.detail h2{flex:0 0 auto;font-size:15px;line-height:20px}.detail h2 small{font-size:9px;margin-left:7px}.detail .detail-top p{min-width:0;margin:0;font-size:9px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.detail .detail-actions{gap:5px;flex-wrap:nowrap}.detail .detail-actions button{padding:2px 6px;font-size:10px;line-height:16px;border-radius:6px;white-space:nowrap}.detail .chart-toolbar{padding:2px 12px 4px;align-items:center;flex-wrap:nowrap;background:#101b2c}.detail .tabs{padding:2px;border:1px solid #1d2c42;border-radius:6px}.detail .tabs button{min-width:46px;padding:1px 8px;font-size:9px;line-height:17px}.detail .chart-date-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0}.detail .chart-date-actions select,.detail .chart-date-actions>button{margin-left:0;padding:1px 6px;font-size:9px;line-height:17px;border-radius:6px}
 .minute-detail .chart-caption{padding:6px 16px 0;line-height:16px}
-.minute-detail .minute-chart-controls{gap:2px 10px;padding:3px 16px 2px}.minute-detail .minute-chart-controls>.t-direction{min-height:22px;gap:4px;font-size:10px}.minute-detail .t-direction>span{margin-right:2px}.minute-detail .minute-chart-controls .t-direction button{padding:3px 7px;font-size:10px}
-.minute-detail .minute-chart-controls>.chart-display-options{flex:1 1 auto;gap:3px 10px}.minute-detail .chart-display-options .opening-volume-toggle{font-size:10px;min-height:20px;gap:4px}
+.minute-detail .minute-chart-controls{gap:2px 10px;padding:3px 16px 2px}.minute-detail .minute-chart-controls>.t-direction{min-height:20px;gap:4px;font-size:9px}.minute-detail .t-direction>span{margin-right:2px}.minute-detail .minute-chart-controls .t-direction button{padding:2px 6px;font-size:9px;line-height:14px}
+.minute-detail .minute-chart-controls>.chart-display-options{flex:1 1 auto;gap:3px 10px}.minute-detail .chart-display-options .opening-volume-toggle{font-size:9px;min-height:18px;gap:4px}.minute-detail .chart-display-options .opening-volume-toggle input{width:11px;height:11px}
 .minute-detail .minute-chart-controls>.t-cost-settings{flex:0 0 100%;margin:0;font-size:10px}.minute-detail .minute-chart-controls>.t-cost-settings[open]{flex-basis:100%}.minute-detail .t-cost-settings summary{padding:2px 0}
-@media(max-width:1150px){.minute-detail .detail-top,.minute-detail .chart-toolbar{flex-wrap:wrap}.minute-detail .detail-identity{flex:1 1 100%}.minute-detail .chart-date-actions{margin-left:auto}.minute-detail .minute-chart-controls>.t-cost-settings{flex-basis:100%}.macd-panel-header{gap:5px}.macd-panel-values{gap:7px}.macd-panel-heading strong{font-size:9px}}
+@media(max-width:1150px){.detail .detail-top,.detail .chart-toolbar{flex-wrap:wrap}.detail .detail-identity{flex:1 1 100%}.detail .chart-date-actions{margin-left:auto}.minute-detail .minute-chart-controls>.t-cost-settings{flex-basis:100%}.macd-panel-header{gap:5px}.macd-panel-values{gap:7px}.macd-panel-heading strong{font-size:9px}}
 @media(max-height:720px){.chart.compact-chart.macd-chart{height:360px}}
 
 .detail-top>div:first-child{min-width:0;flex:1}
@@ -233,7 +238,7 @@
 .turning-cap-count{color:#8fa3bf;font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.2px}
 .chart-display-options .turning-mode-select{display:flex;align-items:center;gap:5px;margin:0;min-height:24px;white-space:nowrap;font-size:12px;color:#bac9dd}
 .turning-mode-select select{font-size:11px;padding:3px 6px;background:#1d2a3f;color:#d5e0f1;border:1px solid #34465e;border-radius:4px}
-.minute-detail .chart-display-options .turning-mode-select{font-size:10px;min-height:20px}
+.minute-detail .chart-display-options .turning-mode-select{font-size:9px;min-height:18px}
 .stock-chart-panel .turning-mode-select{display:none}
 
 /* 日K/周K 浮窗：紧凑版（用户 2026-11-12 反馈：浮窗偏大，需紧凑） */

@@ -11,6 +11,9 @@ class AnnualSignals:
         self.app, self.capacity = app, capacity
         self.memo, self.lock = OrderedDict(), threading.RLock()
         self.hits, self.misses = 0, 0
+        self.research_memo = OrderedDict()
+        self.research_lock = threading.RLock()
+        self.research_hits, self.research_misses = 0, 0
 
     def revision(self, code):
         from .ma250_sessions import eligible_sessions
@@ -37,4 +40,27 @@ class AnnualSignals:
             self.memo[key] = result
             while len(self.memo) > self.capacity:
                 self.memo.popitem(last=False)
+            return result
+
+    def research_report(self, code):
+        # Separate lazy cache: alert callers of report() never compute E2.
+        from .ma250_e2 import analyze, research_spec
+        revision = self.revision(code)
+        key = (code, *revision, research_spec()['rule_id'])
+        with self.research_lock:
+            if key in self.research_memo:
+                self.research_hits += 1
+                self.research_memo.move_to_end(key)
+                return self.research_memo[key]
+            self.research_misses += 1
+            formal = self.report(code)
+            rows = [r['data'] for r in self.app.store.getcache(code, 'daily') if r['day'] <= revision[-1]]
+            result = analyze(rows, self.app.market_regime.above_map(), formal=formal)
+            if revision != self.revision(code):
+                return dict(signals=[], **research_spec(), error='日线或指数正在更新，请刷新E2研究参考')
+            for old in [item for item in self.research_memo if item[0] == code]:
+                del self.research_memo[old]
+            self.research_memo[key] = result
+            while len(self.research_memo) > self.capacity:
+                self.research_memo.popitem(last=False)
             return result

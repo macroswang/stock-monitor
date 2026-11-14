@@ -6,7 +6,9 @@ export type HistoryDay={date:string;status:string;message:string;signal_count:nu
 export type Ma250Signal={key?:string;date:string;close:number;ma250:number;ma5:number;distance_pct:number;touch_date:string;touch_low:number;touch_depth_pct:number;pullback_pct:number;stop:number;strong?:boolean;strong_reasons?:string[];market_above?:boolean|null;higher_low?:boolean;prior_low?:number|null;macd_hist?:number;atr20_pct?:number|null;version?:string};
 export type Ma250Breakout={date:string;close:number;ma250:number;margin_pct:number;slope60_pct:number|null;volume_ratio:number|null;days_below:number;market_above?:boolean|null;quality?:boolean;kind?:string};
 export type Ma250Pullback={signals:Ma250Signal[];breakouts?:Ma250Breakout[];latest?:{date:string;close:number;ma250:number|null;distance_pct:number|null;status:string;bars:number}|null;version?:string;parameters?:Record<string,number>;error?:string|null};
-export type HistoryView={code:string;daily:Daily[];days:HistoryDay[];events:Event[];minute_days:string[];ma250?:Ma250Pullback;source:SourceInfo};
+export type E2Signal={key:string;date:string;source_date:string;source_high:number;confirmation_day:number;close:number;ma250:number;ma5:number;distance_pct:number;stop:number;research_only:true};
+export type E2Research={signals:E2Signal[];research_only:true;rule_id:string;error?:string|null};
+export type HistoryView={code:string;daily:Daily[];days:HistoryDay[];events:Event[];minute_days:string[];ma250?:Ma250Pullback;e2?:E2Research;source:SourceInfo};
 export type Message={id:string;category:string;title:string;body:string;event_key?:string;created_at:string;read_at?:string;payload:Partial<Event>&{status?:string;detail?:string;alert_label?:string};local_delivery?:string;local_detail?:string;delivery?:string};
 
 export type IndexQuote={code:string;name:string;price:string;previous_close:string;change:string;percent:string;timestamp:string;source:string};

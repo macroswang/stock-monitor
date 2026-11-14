@@ -5,6 +5,7 @@ use std::os::unix::process::CommandExt;
 use tauri::{Manager,menu::{Menu,MenuItem},tray::TrayIconBuilder};
 use tauri_plugin_notification::NotificationExt;
 use serde_json::Value;
+mod startup;
 
 /// One request for the Python sidecar.
 struct Job{method:String,args:Value,reply:Sender<Result<Value,String>>}
@@ -181,8 +182,15 @@ fn main(){
  .plugin(tauri_plugin_single_instance::init(|app,_,_|{if let Some(w)=app.get_webview_window("main"){let _=w.show();let _=w.set_focus();}}))
  .plugin(tauri_plugin_notification::init())
  .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent,None))
+ .on_page_load(|webview,payload|{
+  if webview.label()=="main" { if let Some(startup)=webview.try_state::<startup::Startup>() {
+   startup.log(match payload.event(){tauri::webview::PageLoadEvent::Started=>"page_started",tauri::webview::PageLoadEvent::Finished=>"page_finished"});
+  }}
+ })
  .setup(|app|{
   let dir=app.path().app_data_dir()?;std::fs::create_dir_all(&dir)?;
+  let startup=startup::Startup::new(dir.clone());startup.log("native_setup");app.manage(startup);
+  startup::arm_fallback(app.handle().clone());
   let (child,input,output)=launch(&dir)?;
   let engine=Arc::new(Engine::new(dir,child,input,output));
   app.manage(engine.clone());
@@ -218,7 +226,7 @@ fn main(){
   Ok(())
  })
  .on_window_event(|window,event|{if let tauri::WindowEvent::CloseRequested{api,..}=event{api.prevent_close();let _=window.hide();}})
- .invoke_handler(tauri::generate_handler![rpc,restart_core])
+ .invoke_handler(tauri::generate_handler![rpc,restart_core,startup::frontend_ready])
  .build(tauri::generate_context!()).expect("客户端启动失败")
  .run(|app,event|{
   #[cfg(target_os="macos")]

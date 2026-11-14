@@ -111,6 +111,11 @@ def research_exit(bars,f,signal,entry,policy,sessions):
 
 def research_entry(code,bars,f,signal_i,signal,policy,sessions,market):
     if policy=='open':return entry_for(bars,signal_i,code,sessions)
+    if policy=='break3':
+        from core.ma250_e2 import confirmation_for
+        decision=confirmation_for(bars,f,signal_i,signal,market)
+        if decision['index'] is not None:return entry_for(bars,decision['index'],code,sessions)
+        return dict(status=decision['status'],index=None,date=None,price=None)
     i=signal_i;duration=1 if policy=='hold2' else 3
     at=bisect_right(sessions,bars[i]['date']);allowed=set(sessions[at:at+duration])
     for j in range(i+1,min(len(bars),i+duration+1)):

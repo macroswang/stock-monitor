@@ -2,4 +2,4 @@
 
 Keep this in sync with package.json / src-tauri/tauri.conf.json at release time.
 """
-VERSION = '0.6.96'
+VERSION = '0.6.105'

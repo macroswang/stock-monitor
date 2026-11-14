@@ -24,15 +24,15 @@ const mounts=async(page:any,signal:Record<string,unknown>)=>{
  return {chart,date,touch,inspect,toggle:page.getByRole('checkbox',{name:'年线信号'})};
 };
 
-test('strong annual-line signal uses a distinct marker, tooltip and count',async({page})=>{
+test('strong annual-line signal retains its marker and tooltip with controls hidden',async({page})=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  const {chart,date,touch,inspect,toggle}=await mounts(page,{strong:true,strong_reasons:[],market_above:true,higher_low:true});
  await expect.poll(async()=>(await inspect()).markers).toEqual([date]);
  const drawn=await inspect();
  expect(drawn.labels).toContain('年线回踩·强');
  expect(drawn.areas).toContainEqual([touch,date]);
- await expect(toggle).toBeChecked();
- await expect(page.getByText('强 1',{exact:false})).toBeVisible();
+ await expect(toggle).toHaveCount(0);
+ expect(drawn.strong).toEqual([true]);
  const point=await chart.evaluate(async(el,args)=>{
   const source=await fetch('/src/Chart.tsx').then(response=>response.text());
   const echarts=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);
@@ -43,9 +43,6 @@ test('strong annual-line signal uses a distinct marker, tooltip and count',async
  await expect(chart.locator('.quote-tooltip')).toContainText('年线回踩（强）');
  await expect(chart.locator('.quote-tooltip')).toContainText('强信号：');
  await page.mouse.move(0,0);
- await toggle.uncheck();
- await expect.poll(async()=>(await inspect()).markers).toEqual([]);
- await toggle.check();
  await expect.poll(async()=>(await inspect()).markers).toEqual([date]);
  expect(errors).toEqual([]);
 });

@@ -1,12 +1,16 @@
 /* 可复用行情图表面板（股票池行详情内嵌；分时/日K/周K） */
 .stock-chart-panel{display:grid;gap:4px;min-width:0;background:#0b1422;border:1px solid #27354c;border-radius:6px;overflow:hidden}
-.scp-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;padding:3px 6px;background:#101c2c;border-bottom:1px solid #1f2b3f}
-.stock-chart-panel .tabs{display:flex;background:#0e1829;padding:2px;border-radius:5px;flex:0 0 auto}
-.stock-chart-panel .tabs button{border:0;background:none;padding:3px 10px;font-size:11px;color:#8198b8;border-radius:4px;line-height:16px}
+.scp-header{display:flex;align-items:center;justify-content:space-between;gap:7px 12px;min-width:0;padding:5px 12px 3px;background:#111d2e}
+.scp-identity{display:flex;align-items:baseline;gap:4px 12px;min-width:0;overflow:hidden;flex:1}
+.scp-title{flex:0 0 auto;margin:0;font-size:15px;font-weight:600;line-height:20px;color:#e4eaf5;white-space:nowrap}
+.scp-title small{margin-left:7px;font-size:9px;font-weight:400;color:#748cae}
+.scp-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;padding:2px 12px 4px;background:#101b2c;border-bottom:1px solid #25334a}
+.stock-chart-panel .tabs{display:flex;background:#0e1829;padding:2px;border:1px solid #1d2c42;border-radius:6px;flex:0 0 auto}
+.stock-chart-panel .tabs button{border:0;background:none;height:19px;min-width:46px;padding:1px 8px;font-size:9px;color:#8198b8;border-radius:4px;line-height:17px}
 .stock-chart-panel .tabs button.chosen{color:#b1d0ff;background:#243a59}
 .stock-chart-panel .tabs button[role=tab][aria-selected=true]{color:#b1d0ff;background:#243a59}
-.scp-state{font-size:10px;color:#8fa6c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
-.scp-expand{flex:0 0 auto;font-size:10px;line-height:14px;padding:2px 8px;height:20px;border-radius:4px}
+.scp-state{font-size:9px;line-height:14px;color:#8297b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.stock-chart-panel .scp-expand{flex:0 0 auto;height:22px;font-size:10px;line-height:16px;padding:2px 6px;border-radius:6px}
 .scp-message,.scp-error{margin:0;padding:10px 8px;font-size:11px;color:#8fa6c4}
 .scp-error{color:#f3ce88}
 .scp-chart{min-width:0;padding:0 2px 2px}

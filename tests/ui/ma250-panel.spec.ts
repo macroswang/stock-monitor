@@ -58,6 +58,8 @@ test('missing volume and stale index remain explicit in a narrow layout',async({
  await expect(page.getByText('突破·观察',{exact:true})).toBeVisible();
  await expect(page.getByText('量能待核',{exact:true})).toBeVisible();
  await expect(page.getByText('待更新',{exact:true})).toBeVisible();
+ await expect(page.locator('.ma250-coverage')).not.toHaveAttribute('open','');
+ await page.locator('.ma250-coverage summary').click();
  await expect(page.getByText(/历史不足 1 只 · 窗口不可用 1 只/)).toBeVisible();
  await expect(page.getByRole('button',{name:'刷新扫描'})).toBeEnabled();
 });

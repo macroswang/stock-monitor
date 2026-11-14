@@ -47,6 +47,7 @@ class Ma250Scan:
 
     def view(self,args=None):
         from .ma250_pullback import rule_spec
+        from .ma250_e2 import research_spec
         from .market_regime import CODE,KIND
         args=args or {}
         mode=args.get('universe') if args.get('universe') in ('watch','watch_pool','all') else 'watch_pool'
@@ -55,19 +56,26 @@ class Ma250Scan:
         revisions={r['code']:r['revision'] for r in self.app.store.query(
             "SELECT code,revision FROM cache_revision WHERE kind='daily'")}
         key=(mode,recent,tuple(sorted(names.items())),tuple((c,revisions.get(c,0)) for c in sorted(names)),
-             self.app.store.cache_revision(CODE,KIND),tuple(days),rule_spec()['rule_id'])
+             self.app.store.cache_revision(CODE,KIND),tuple(days),rule_spec()['rule_id'],research_spec()['rule_id'])
         with self.lock:
             cached=self.memo.get(key)
         if cached is None or args.get('force'):
-            allowed=set(days);rows=[];coverage=dict(ready=0,insufficient=0,quality_blocked=0,invalid=0);latest=None
+            allowed=set(days);rows=[];coverage=dict(ready=0,insufficient=0,quality_blocked=0,invalid=0);latest=None;research_unavailable=0;data_issues=[]
             for code,name in names.items():
                 report=self.app.annual_signals.report(code)
                 last=report['latest']
                 if report['error']:
-                    coverage['invalid']+=1;continue
+                    coverage['invalid']+=1
+                    from .ma250_diagnostics import describe
+                    data_issues.append(describe(code,name,[],report));continue
                 if last:latest=max(latest or last['date'],last['date'])
                 state=last.get('readiness','ready' if last.get('ready') else 'insufficient') if last else 'insufficient'
                 coverage[state]+=1
+                if state!='ready':
+                    from .ma250_diagnostics import describe
+                    completed=self.app.annual_signals.revision(code)[-1]
+                    bars=[r['data'] for r in self.app.store.getcache(code,'daily') if r['day']<=completed]
+                    data_issues.append(describe(code,name,bars,report))
                 for signal in report['signals']:
                     if signal['date'] not in allowed:continue
                     rows.append(dict(signal,code=code,name=name,kind='pullback',quality=signal['strong'],
@@ -77,11 +85,16 @@ class Ma250Scan:
                     rows.append(dict(item,code=code,name=name,strong=False,strong_reasons=[],
                                      distance_pct=item['margin_pct'],pullback_pct=None,touch_date=None,
                                      touch_low=None,atr20_pct=None))
+                research=self.app.annual_signals.research_report(code)
+                research_unavailable+=int(bool(research.get('error') or research.get('unverified_sources')))
+                for item in research['signals']:
+                    if item['date'] not in allowed:continue
+                    rows.append(dict(item,code=code,name=name,strong=False,strong_reasons=[],quality=False))
             # Stable priority, newest first within each quality tier.
             rows.sort(key=lambda r:r['code'])
             rows.sort(key=lambda r:r['date'],reverse=True)
             rows.sort(key=lambda r:(not r['strong'],not r.get('quality')))
-            cached=dict(rows=rows,coverage=coverage,latest=latest)
+            cached=dict(rows=rows,coverage=coverage,latest=latest,research_unavailable=research_unavailable,data_issues=data_issues)
             with self.lock:
                 self.memo={key:cached}  # bounded; annual service retains stock-level work
         all_rows=cached['rows'];kind=args.get('kind','all');query=str(args.get('query') or '').strip().lower()
@@ -94,5 +107,6 @@ class Ma250Scan:
             scanned=cached['coverage']['ready'],processed=len(names),codes=len(names),latest_day=cached['latest'],
             market=self.app.market_regime.view(),rows=selected[(page-1)*size:page*size],total=len(all_rows),
             filtered_total=len(selected),strong_count=sum(r['strong'] for r in all_rows),
-            breakout_count=sum(r['kind']=='breakout' for r in all_rows),coverage=cached['coverage'],
+            breakout_count=sum(r['kind']=='breakout' for r in all_rows),
+            e2_count=sum(r['kind']=='e2' for r in all_rows),research_unavailable=cached['research_unavailable'],coverage=cached['coverage'],data_issues=cached['data_issues'],
             page=page,page_size=size,pages=pages,rule=rule_spec())

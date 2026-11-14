@@ -59,4 +59,4 @@ def view(app,args):
         r['limit_basis']=minute.get(day,{}).get('limit_basis','验证样本历史参考价' if r['limit_up'] else '')
         analyses.append(r)
     return dict(code=code,start=start,end=end,daily=daily,days=analyses,events=list(events.values()),
-        minute_days=sorted(minute),ma250=ma250,source=app.source_info(code))
+        minute_days=sorted(minute),ma250=ma250,e2=app.annual_signals.research_report(code),source=app.source_info(code))
