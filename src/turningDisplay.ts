@@ -1,6 +1,7 @@
 import type {TurningObservation} from './turningObservations';
 import type {TurningQualityQ1} from './turningQualityQ1';
 import type {TurningFinalObservation} from './turningFinal';
+import {filterTurningSpacing} from './turningCombined';
 
 // A display point merges the v2 shape engine (signals) with the independent Q1 layer.
 // The shape event may be a full shape-v2 observation (quality/cap metadata) or a
@@ -21,6 +22,7 @@ const priceKey=(point:TurningDisplayPoint)=>point.kind+'|'+Math.round(point.pric
 //   - Q1 底/顶 both promote to real 底/顶 signals in the display;
 //   - the merged display is hard-capped per kind (3/day) and never repeats the same
 //     kind at the same price (same 股价不同位置只保留一个；v2 信号优先，否则保留先出现者).
+//   - after merging, same-kind emissions need >=10 trading minutes; keep the first.
 export function turningDisplayPoints(shapes:TurningDisplayShape[],quality:TurningQualityQ1[],showShapes:boolean,showQuality:boolean,capPerKind=3):TurningDisplayPoint[]{
  const points=new Map<string,TurningDisplayPoint>();
  if(showShapes)for(const shape of shapes)points.set(`${shape.kind}|${shape.time}`,{kind:shape.kind,time:shape.time,price:shape.price,shape});
@@ -46,5 +48,5 @@ export function turningDisplayPoints(shapes:TurningDisplayShape[],quality:Turnin
   if(seen.has(key))continue;
   seen.add(key);unique.push(point);
  }
- return unique.sort((a,b)=>a.time.localeCompare(b.time));
+ return filterTurningSpacing(unique);
 }

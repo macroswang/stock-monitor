@@ -1220,6 +1220,20 @@ test('入选时间 selection：09:25 映射不显示 00:05、无 selection 回�
 });
 
 // ===== 6d. 今日提醒 alert：无行内铃铛、行标记/动态计数/筛选说明/详情提醒行 =====
+test('今日提醒包含昨收盘后首次入池的今日生效股票，历史重选不计入',async({page})=>{
+  const entries=[
+    makeEntry({code:'sz100001',name:'昨收盘后新入池',added_at:'2026-11-12T15:09:00+08:00',added_day:'2026-11-12',added_selection_at:'2026-11-13T09:25:00+08:00',selection:{first_at:'2026-11-13T09:25:00+08:00',first_day:'2026-11-13',last_day:'2026-11-13',today:1,days:1}}),
+    makeEntry({code:'sz100002',name:'历史股票今日重选',added_at:'2026-11-10T10:00:00+08:00',added_selection_at:'2026-11-10T10:00:00+08:00',selection:{first_day:'2026-11-10',last_day:'2026-11-13',today:1,days:2}}),
+    makeEntry({code:'sz100003',name:'今日新入池',added_at:'2026-11-13T10:00:00+08:00',added_selection_at:'2026-11-13T10:00:00+08:00',selection:{first_day:'2026-11-13',last_day:'2026-11-13',today:1,days:1}}),
+  ];
+  await boot(page,{entries,today:'2026-11-13',calendarToday:'2026-11-13'});
+  await page.getByRole('button',{name:'今日入选 3'}).click();
+  await expect(page.locator('.pt-row')).toHaveCount(3);
+  await page.getByRole('button',{name:'今日提醒 2'}).click();
+  expect((await page.locator('.pt-code').allTextContents()).sort()).toEqual(['100001','100003']);
+  for(const stamp of await page.locator('.pt-time').allTextContents())expect(stamp).toMatch(/^11-13/);
+});
+
 test('今日提醒严格按当天首次加入筛选，历史重选或历史通知不混入，今日入选逻辑不变',async({page})=>{
   const mk=(code:string,added:string,over:Json={})=>makeEntry({code,name:code,
     added_at:added,added_day:added.slice(0,10),

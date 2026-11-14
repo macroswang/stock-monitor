@@ -1,6 +1,8 @@
 import {test,expect,Locator} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {turningFinal,TURNING_FINAL_MODES} from '../../src/turningFinal';
+import {turningDisplayPoints} from '../../src/turningDisplay';
+import {turningQualityQ1} from '../../src/turningQualityQ1';
 const source=JSON.parse(readFileSync('tests/fixtures/zhangle-reconstruction.json','utf8'));
 const slots=[...Array.from({length:120},(_,i)=>571+i),...Array.from({length:120},(_,i)=>781+i)].map(m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
 
@@ -17,16 +19,13 @@ async function rendered(chart:Locator){
  });
 }
 const labels=(events:ReturnType<typeof turningFinal>)=>events.map(m=>[m.kind==='bottom'?'底':'顶',m.time,m.price]);
-const counts=(events:ReturnType<typeof turningFinal>)=>['bottom','top'].map(kind=>events.filter(m=>m.kind===kind).length);
 
 for(const [code,previousClose] of [['sh603938',30.01],['sz002639',15.95]] as const){
- test(`real watchlist and linked minute charts show shape-v2 labels and mode switches: ${code}`,async({page},info)=>{
+ test(`real watchlist and linked minute charts show fixed v2.4 labels: ${code}`,async({page},info)=>{
   const c=source.cases.find((c:any)=>c.code===code&&c.day==='2026-11-10');
   const rows:any[]=[{time:'09:30',close:String(c.opening_price),average:String(c.opening_price),volume:0,complete:true},
    ...c.prices.map((p:number,i:number)=>({time:slots[i],close:String(p),average:String(c.averages[i]),volume:c.volumes[i],complete:true}))];
-  const expected=labels(turningFinal(rows,TURNING_FINAL_MODES.zhangle));
-  const stable=labels(turningFinal(rows,TURNING_FINAL_MODES.stable));
-  const [bottomZh,topZh]=counts(turningFinal(rows,TURNING_FINAL_MODES.zhangle));
+  const expected=labels(turningDisplayPoints(turningFinal(rows,TURNING_FINAL_MODES.zhangle),turningQualityQ1(rows),true,true).filter(p=>p.shape).map(p=>p.shape!));
   expect(expected.length).toBeGreaterThan(0);
   const payload=JSON.parse(readFileSync('public/preview.json','utf8'));
   const daily={date:c.day,open:String(c.opening_price),close:String(c.prices.at(-1)),high:String(Math.max(c.opening_price,...c.prices)),low:String(Math.min(c.opening_price,...c.prices)),volume:String(c.volumes.reduce((a:number,b:number)=>a+b,0)),provisional:true};
@@ -41,14 +40,8 @@ for(const [code,previousClose] of [['sh603938',30.01],['sz002639',15.95]] as con
   await expect.poll(async()=>(await rendered(chart))?.points).toEqual(expected);
   const normal=(await rendered(chart))!;expect(normal.labels.length).toBeGreaterThanOrEqual(expected.length);
   expect(normal.plottedOpening).toBeNull();expect(normal.firstMacd).toBe(0);
-  await expect(page.getByTestId('turning-cap-count')).toHaveText(`底 ${bottomZh}/3 · 顶 ${topZh}/3`);
-  // Mode switch recomputes the chart from the same underlying bars.
-  await page.getByLabel('顶底模式').selectOption('stable');
-  await expect.poll(async()=>(await rendered(chart))?.points).toEqual(stable);
-  const [bottomSt,topSt]=counts(turningFinal(rows,TURNING_FINAL_MODES.stable));
-  await expect(page.getByTestId('turning-cap-count')).toHaveText(`底 ${bottomSt}/3 · 顶 ${topSt}/3`);
-  await page.getByLabel('顶底模式').selectOption('zhangle');
-  await expect.poll(async()=>(await rendered(chart))?.points).toEqual(expected);
+  await expect(page.getByTestId('turning-cap-count')).toHaveCount(0);
+  await expect(page.getByLabel('顶底模式')).toHaveCount(0);
   await page.getByRole('checkbox',{name:'开盘量',exact:true}).uncheck();
   await expect.poll(async()=>(await rendered(chart))?.points).toEqual(expected);
   await page.getByRole('checkbox',{name:'底/顶',exact:true}).uncheck();

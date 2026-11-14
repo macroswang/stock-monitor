@@ -5,6 +5,7 @@ from .provider import now_cn
 from .turning_final import signals as shapes,ZHANGLE,STABLE
 from .turning_final_v3 import signals as shapes_v3
 from .turning_q1 import signals as quality
+from .turning_combined import filter_spacing
 
 
 def bottom_point(data,mode):
@@ -17,7 +18,8 @@ def bottom_point(data,mode):
     kept=main+[p for p in rows if not p.get('shape')][:max(0,3-len(main))]
     unique={}
     for point in kept:unique.setdefault(int(point['price']*100+.5),point)
-    return max(unique.values(),key=lambda p:p['time']) if unique else None
+    spaced=filter_spacing(unique.values())
+    return spaced[-1] if spaced else None
 
 
 class PoolSignals:

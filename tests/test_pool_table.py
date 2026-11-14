@@ -86,6 +86,16 @@ class PoolTableTests(unittest.TestCase):
         (self.app.dir / 'daily-outlook').mkdir(exist_ok=True)
         self.now = datetime(2026, 11, 13, 15, 0, tzinfo=CN)
 
+    def test_first_effective_entry_rolls_after_close_without_changing_raw_timestamp(self):
+        raw='2026-11-12T15:09:47+08:00'
+        self.sync(self.issue(day='2026-11-12',published=raw,picks=[pick('sh600001','甲股份')],directions=[],radar=[]))
+        entry,_=self.view_entry(moment=datetime(2026,11,13,10,0,tzinfo=CN))
+        self.assertEqual(entry['added_at'],raw)
+        self.assertEqual(entry['added_selection_at'],'2026-11-13T09:25:00+08:00')
+        self.sync(self.issue(day='2026-11-13',published='2026-11-13T10:30:00+08:00',picks=[pick('sh600001','甲股份')],directions=[],radar=[]))
+        entry,_=self.view_entry(moment=datetime(2026,11,13,11,0,tzinfo=CN))
+        self.assertEqual(entry['added_selection_at'],'2026-11-13T09:25:00+08:00')
+
     # ---------- helpers ----------
     def issue(self, day='2026-11-09', published=None, picks=None, directions=None, radar=None,
               version=9):

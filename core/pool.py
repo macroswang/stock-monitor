@@ -1177,6 +1177,7 @@ class Pool:
         if category not in groups:
             groups.insert(0, category)
         return dict(code=row['code'], name=row['name'], added_day=row['added_day'], added_at=row['added_at'] or row['added_day'], added_price=added,
+                    added_selection_at=_selection_stamp(row['added_at'] or row['added_day']),
                     source=row['source'], sector=row['sector'], role=row['role'], reason=row['reason'],
                     state=row['state'], entry_tag=row['entry_tag'] or row['state'], category=category,
                     groups=groups, group_name=row['group_name'] or row['sector'] or '其他', updated_at=row['updated_at'],

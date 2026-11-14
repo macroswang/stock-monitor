@@ -227,11 +227,11 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
         <button type="button" aria-pressed={filter.chip==='today'} title="今天有新的有效入选事件（同一股票今天被研判选中；不要求今天是首次入选）" onClick={()=>setFilter(current=>({...current,chip:'today'}))}>今日入选 {counts.today}</button>
         <button type="button" aria-pressed={filter.chip==='multi'} title="历史累计有效入选天数 ≥2 天" onClick={()=>setFilter(current=>({...current,chip:'multi'}))}>多次入选 {counts.multi}</button>
         <button type="button" className="pt-alert-chip" aria-pressed={filter.chip==='alert'}
-          title="只显示今天首次加入股票池的股票；历史股票今天再次入选不计入，也不依据系统通知"
+          title="只显示今天首次有效入池的股票；收盘后或休市入池顺延至下一交易日，历史股票今天再次入选不计入"
           onClick={()=>setFilter(current=>({...current,chip:'alert',period:'all'}))}>今日提醒 {counts.alert}</button>
       </div>
       <label className="pt-field">时间范围<select aria-label="时间范围" value={filter.period} disabled={filter.chip==='alert'}
-        title={filter.chip==='alert'?'今日提醒仅按今天首次加入股票池的日期筛选，与最近一次入选时间范围无关':'按最近一次有效入选日筛选'}
+        title={filter.chip==='alert'?'今日提醒按首次有效入池日筛选，收盘后或休市入池顺延至下一交易日':'按最近一次有效入选日筛选'}
         onChange={event=>setFilter(current=>({...current,period:event.target.value as RowPeriod}))}>
         {PERIOD_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
       </select></label>

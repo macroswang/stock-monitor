@@ -3,6 +3,7 @@ import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 import type {Bar} from '../../src/models';
 import {turningFinal,TURNING_FINAL_MODES} from '../../src/turningFinal';
 import {turningQualityQ1} from '../../src/turningQualityQ1';
+import {turningDisplayPoints} from '../../src/turningDisplay';
 import {turningCombinedForBars,turningCombinedSignals,TURNING_COMBINED_SIGNAL,TURNING_COMBINED_VERSION,TURNING_COMBINED_CAP_PER_KIND} from '../../src/turningCombined';
 
 // Golden cross-language fixture for core/turning_combined.py (shape-v2-q1 trading stream).
@@ -37,6 +38,10 @@ function mergeCases(){
   {name:'same-minute-v2-wins',final:[top],q1:[sameMinute],expected:turningCombinedSignals([top],[sameMinute])},
   {name:'q1-fills-remaining-slots-in-time-order',final:[top],q1:[fill3,fill1,fill2],expected:turningCombinedSignals([top],[fill3,fill1,fill2])},
   {name:'same-display-price-deduped',final:[top],q1:[samePrice,bottomFill,bottomSamePrice],expected:turningCombinedSignals([top],[samePrice,bottomFill,bottomSamePrice])},
+  {name:'spacing-boundaries-and-lunch',final:[event('top','11:25',10,'a'),event('top','13:04',10.1,'b'),event('top','13:05',10.2,'c')],
+   q1:[q1('bottom','11:26',9.8,'d'),q1('bottom','13:05',9.7,'e'),q1('bottom','13:06',9.6,'f')],
+   expected:turningCombinedSignals([event('top','11:25',10,'a'),event('top','13:04',10.1,'b'),event('top','13:05',10.2,'c')],
+    [q1('bottom','11:26',9.8,'d'),q1('bottom','13:05',9.7,'e'),q1('bottom','13:06',9.6,'f')])},
   {name:'cap-and-sort-mixed-kinds',final:[top,event('bottom','10:30',9.8,'v2|bottom|10:28')],
    q1:[fill1,fill2,fill3,bottomFill,bottomSamePrice],expected:turningCombinedSignals([top,event('bottom','10:30',9.8,'v2|bottom|10:28')],[fill1,fill2,fill3,bottomFill,bottomSamePrice])},
  ];
@@ -63,9 +68,10 @@ test('combined golden fixture is in sync with src/turningCombined.ts',()=>{
   const events=c.events;
   expect(events.map((e:any)=>e.time)).toEqual([...events.map((e:any)=>e.time)].sort());
   for(const kind of ['top','bottom'] as const)expect(events.filter((e:any)=>e.kind===kind).length).toBeLessThanOrEqual(3);
-  // every v2 event keeps its slot; Q1-only fill events are also in the chart display merge
+  // Spacing applies to the merged chart/trading stream, including v2 events.
   const v2=turningFinal(caseBars(tencent.find((x:any)=>x.code===c.code&&x.day===c.day)||reconstruction.cases.find((x:any)=>x.code===c.code&&x.day===c.day)),TURNING_FINAL_MODES.zhangle);
-  for(const event of v2)expect(events.some((e:any)=>e.key===event.key)).toBe(true);
+  const source=tencent.find((x:any)=>x.code===c.code&&x.day===c.day)||reconstruction.cases.find((x:any)=>x.code===c.code&&x.day===c.day);
+  expect(events.map((e:any)=>[e.kind,e.time,e.price])).toEqual(turningDisplayPoints(v2,turningQualityQ1(caseBars(source)),true,true).map(e=>[e.kind,e.time,e.price]));
  }
 });
 
@@ -76,7 +82,17 @@ test('combined merge rules: same-minute v2 priority, time-ordered Q1 fill, price
   for(const kind of ['top','bottom'] as const)expect(c.expected.filter((e:any)=>e.kind===kind).length).toBeLessThanOrEqual(3);
  }
  const fill=build().mergeCases.find(c=>c.name==='q1-fills-remaining-slots-in-time-order')!;
- expect(fill.expected.map((e:any)=>e.key)).toEqual(['v2|top|09:43','q1|top|09:48|09:50','q1|top|09:53|09:55']);
+ expect(fill.expected.map((e:any)=>e.key)).toEqual(['v2|top|09:43','q1|top|09:53|09:55']);
  const dedupe=build().mergeCases.find(c=>c.name==='same-display-price-deduped')!;
  expect(dedupe.expected.map((e:any)=>e.key)).toEqual(['v2|top|09:43','q1|bottom|13:03|13:05']);
+ expect(cases.find(c=>c.name==='spacing-boundaries-and-lunch')!.expected.map((e:any)=>e.key)).toEqual(['a','d','c','f']);
+});
+
+test('中文在线 filters the nearby 09:41 top in both chart and trading',()=>{
+ const {bars}=JSON.parse(readFileSync('tests/ui/fixtures/turning-spacing-20261113.json','utf8'));
+ const main=turningFinal(bars,TURNING_FINAL_MODES.zhangle),quality=turningQualityQ1(bars);
+ expect(main.filter((p:any)=>p.kind==='top').map((p:any)=>p.time)).toEqual(['09:34','09:41','10:34']);
+ const trading=turningCombinedSignals(main,quality),display=turningDisplayPoints(main,quality,true,true);
+ expect(trading.filter(p=>p.kind==='top').map(p=>p.time)).toEqual(['09:34','10:34']);
+ expect(display.map(p=>[p.kind,p.time,p.price])).toEqual(trading.map(p=>[p.kind,p.time,p.price]));
 });

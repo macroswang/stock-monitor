@@ -57,14 +57,14 @@ class GoldenParityTests(unittest.TestCase):
         self.assertIn('q1-fills-remaining-slots-in-time-order', names)
         self.assertIn('same-display-price-deduped', names)
 
-    def test_every_v2_signal_keeps_its_slot_and_cap_holds(self):
+    def test_filtered_events_keep_original_fields_and_cap_holds(self):
         for case in GOLDEN['cases']:
             bars = case_bars(SOURCES[case['source']][[c['code'] + c['day'] for c in SOURCES[case['source']]].index(case['code'] + case['day'])])
             v2 = v2_signals(bars, ZHANGLE)
             combined = signals(bars)
             v2_keys = {e['key'] for e in v2}
             combined_keys = {e['key'] for e in combined}
-            self.assertTrue(v2_keys.issubset(combined_keys))
+            self.assertTrue(combined_keys.issubset(v2_keys | {e['key'] for e in q1_signals(bars)}))
             for kind in ('top', 'bottom'):
                 self.assertLessEqual(len([e for e in combined if e['kind'] == kind]), 3)
             self.assertEqual([e['time'] for e in combined], sorted(e['time'] for e in combined))
@@ -89,7 +89,7 @@ class MergeRuleTests(unittest.TestCase):
               dict(key='q1-c', kind='top', time='09:55', price=10.7),
               dict(key='q1-d', kind='top', time='10:00', price=10.9)]
         merged = merge_signals(v2, q1)
-        self.assertEqual([e['key'] for e in merged], ['v2|top|09:40', 'q1-b', 'q1-a'])
+        self.assertEqual([e['key'] for e in merged], ['v2|top|09:40'])
 
     def test_same_display_price_is_deduped(self):
         v2 = [dict(key='v2|top|09:40', kind='top', time='09:41', price=10.43)]
@@ -104,7 +104,18 @@ class MergeRuleTests(unittest.TestCase):
         q1 = [dict(key='q1-1', kind='bottom', time='09:50', price=9.7),
               dict(key='q1-2', kind='bottom', time='09:55', price=9.6)]
         merged = merge_signals(v2, q1)
-        self.assertEqual([e['key'] for e in merged], ['v2-1', 'v2-2', 'q1-1'])
+        self.assertEqual([e['key'] for e in merged], ['v2-1', 'q1-1'])
+
+    def test_zhongwen_spacing_preserves_first_signal_and_pool_summary(self):
+        from core.pool_signals import bottom_point
+        data = json.loads((ROOT / 'ui/fixtures/turning-spacing-20261113.json').read_text())
+        bars = data['bars']
+        self.assertEqual([e['time'] for e in v2_signals(bars, ZHANGLE) if e['kind'] == 'top'],
+                         ['09:34', '09:41', '10:34'])
+        combined = signals(bars)
+        self.assertEqual([e['time'] for e in combined if e['kind'] == 'top'], ['09:34', '10:34'])
+        self.assertEqual(bottom_point(data, 'zhangle')['time'],
+                         [e['time'] for e in combined if e['kind'] == 'bottom'][-1])
 
 
 def _dispatch(case, target_key, side):
@@ -160,7 +171,7 @@ def _dispatch(case, target_key, side):
 
 class CombinedTradingTests(unittest.TestCase):
     def test_q1_only_bottom_triggers_a_buy_plan(self):
-        case = next(c for c in RECON['cases'] if c['code'] == 'sz300058' and c['day'] == '2026-11-10')
+        case = next(c for c in RECON['cases'] if c['code'] == 'sz300502' and c['day'] == '2026-11-10')
         q1_only = next(e for e in signals(case_bars(case))
                        if e['kind'] == 'bottom' and e['key'].startswith('quality-first-Q'))
         _dispatch(case, q1_only['key'], 'buy')

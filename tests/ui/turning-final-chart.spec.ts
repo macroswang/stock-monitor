@@ -17,7 +17,6 @@ const engine=(c:any,mode:ChartMode)=>mode==='v3'?turningFinalV3(chartBars(c)):tu
 const display=(c:any,mode:ChartMode,capPerKind=3)=>turningDisplayPoints(engine(c,mode),turningQualityQ1(c.bars),true,true,capPerKind);
 const kindCount=(events:any[],kind:string)=>events.filter(e=>e.kind===kind).length;
 // 顶/底计数器统计实际显示的同类信号（v2 信号 + 补位的 Q1 信号）。
-const capText=(points:any[])=>`底 ${kindCount(points,'bottom')}/3 · 顶 ${kindCount(points,'top')}/3`;
 const coords=(points:any[])=>points.map(p=>[p.kind==='bottom'?'底':'顶',p.time,p.price]);
 
 async function rendered(chart:Locator){
@@ -65,14 +64,14 @@ async function showTip(chart:Locator,time:string){
 test('default zhangle mode renders high-coverage marks: <=3/kind and Sanzi 09:37 top / 13:45 bottom',async({page})=>{
  const c=cases.find((x:any)=>x.code==='sz000981');
  const chart=await openChart(page,c);
- await expect(page.getByLabel('顶底模式')).toHaveValue('zhangle');
+ await expect(page.getByLabel('顶底模式')).toHaveCount(0);
  const zh=engine(c,'zhangle');
  expect(zh.filter((m:any)=>m.kind==='top').map((m:any)=>m.time)).toContain('09:37');
  expect(zh.filter((m:any)=>m.kind==='bottom').map((m:any)=>m.time)).toContain('13:45');
  for(const kind of ['top','bottom'] as const)expect(kindCount(zh,kind)).toBeLessThanOrEqual(3);
  const expected=display(c,'zhangle');
  await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(expected));
- await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(expected));
+ await expect(page.getByTestId('turning-cap-count')).toHaveCount(0);
  // Signal details keep quality and pair candidate/emission fields compactly.
  await showTip(chart,'09:37');
  const tooltip=chart.locator('.quote-tooltip');
@@ -87,63 +86,24 @@ test('default zhangle mode renders high-coverage marks: <=3/kind and Sanzi 09:37
  await page.screenshot({path:test.info().outputPath('zhangle-sanzi-000981.png')});
 });
 
-test('stable mode is opt-in, persisted, and matches the v2.0 events in the real chart',async({page})=>{
+test('watch minute charts always use v2.4 despite saved modes and hide mode/count controls',async({page})=>{
  const c=cases.find((x:any)=>x.code==='sz000981');
- const chart=await openChart(page,c);
- const stable=engine(c,'stable'),zhangle=engine(c,'zhangle');
- const zhangleSet=new Set(zhangle.map((m:any)=>[m.kind,m.time,m.candidateTime,m.price].join('|')));
- for(const event of stable)expect(zhangleSet.has([event.kind,event.time,event.candidateTime,event.price].join('|'))).toBe(true);
- for(const kind of ['top','bottom'] as const)expect(kindCount(stable,kind)).toBeLessThanOrEqual(3);
- await page.getByLabel('顶底模式').selectOption('stable');
- await expect(page.getByLabel('顶底模式')).toHaveValue('stable');
- expect(await page.evaluate(()=>localStorage.getItem('stock-monitor-turning-mode-v1'))).toBe('stable');
- await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(display(c,'stable')));
- await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(display(c,'stable')));
+ await page.addInitScript(()=>localStorage.setItem('stock-monitor-turning-mode-v1','v3'));
+ const chart=await openChart(page,c),expected=coords(display(c,'zhangle'));
+ await expect.poll(async()=>(await rendered(chart))?.points).toEqual(expected);
+ await expect(page.getByLabel('顶底模式')).toHaveCount(0);
+ await expect(page.getByTestId('turning-cap-count')).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:'底/顶',exact:true})).toBeVisible();
+ await page.evaluate(()=>{localStorage.setItem('stock-monitor-turning-mode-v1','stable');window.dispatchEvent(new Event('turning-display-change'));});
+ await expect.poll(async()=>(await rendered(chart))?.points).toEqual(expected);
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const linked=page.locator('.linked-minute').getByLabel('分时价格及分钟成交量',{exact:true});
+ await expect(linked).toBeVisible();
+ await expect.poll(async()=>(await rendered(linked))?.points).toEqual(expected);
+ await expect(page.getByLabel('顶底模式')).toHaveCount(0);
+ await expect(page.getByTestId('turning-cap-count')).toHaveCount(0);
  await page.reload();
- const reloaded=page.getByLabel('分时价格及分钟成交量',{exact:true});await expect(reloaded).toBeVisible();
- await expect(page.getByLabel('顶底模式')).toHaveValue('stable');
- await expect.poll(async()=>(await rendered(reloaded))?.points).toEqual(coords(display(c,'stable')));
- await page.getByLabel('顶底模式').selectOption('zhangle');
- await expect.poll(async()=>(await rendered(reloaded))?.points).toEqual(coords(display(c,'zhangle')));
- await reloaded.screenshot({path:test.info().outputPath('stable-sanzi-000981.png')});
-});
-
-test('default mode is v2.4; v3 is an opt-in experimental mode with the same 3/3 cap',async({page})=>{
- const c=cases.find((x:any)=>x.code==='sz000981');
- const chart=await openChart(page,c);
- const select=page.getByLabel('顶底模式');
- // Default stays on the auto-trading signal (v2.4); v3 is experimental and opt-in.
- await expect(select).toHaveValue('zhangle');
- expect(await select.locator('option').allTextContents()).toEqual(['贴近涨乐通 v2.4（默认）','贴近涨乐通 v3（实验：顶多底少）','稳健 v2.0']);
- expect(TURNING_FINAL_V3_SIGNAL).toBe('shape-v2'); // trading/autoTradeMarks signal stays v2
- await select.selectOption('v3');
- expect(await page.evaluate(()=>localStorage.getItem('stock-monitor-turning-mode-v1'))).toBe('v3');
- const v3=engine(c,'v3');
- // v3 drops the fallback bottoms: 山子高科 keeps only its main-branch top 09:37.
- expect(v3.map((e:any)=>[e.kind,e.time])).toEqual([['top','09:37']]);
- await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(display(c,'v3')));
- await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(display(c,'v3')));
- // The mode persists across a reload and both cap kinds stay <= 3.
- await page.reload();
- const reloaded=page.getByLabel('分时价格及分钟成交量',{exact:true});await expect(reloaded).toBeVisible();
- await expect(page.getByLabel('顶底模式')).toHaveValue('v3');
- await expect.poll(async()=>(await rendered(reloaded))?.points).toEqual(coords(display(c,'v3')));
- expect((await rendered(reloaded))!.points.filter((p:any)=>p[0]==='顶').length).toBeLessThanOrEqual(3);
- expect((await rendered(reloaded))!.points.filter((p:any)=>p[0]==='底').length).toBeLessThanOrEqual(3);
- await page.getByLabel('顶底模式').selectOption('zhangle');
- await expect.poll(async()=>(await rendered(reloaded))?.points).toEqual(coords(display(c,'zhangle')));
-});
-
-test('v3 experimental mode keeps the 3/3 cap on the 300364 re-merge case',async({page})=>{
- const c=cases.find((x:any)=>x.code==='sz300364'&&x.source==='app-cache-copy');
- const chart=await openChart(page,c);
- await page.getByLabel('顶底模式').selectOption('v3');
- const v3=engine(c,'v3');
- expect(v3.filter((e:any)=>e.kind==='top')).toHaveLength(2);
- expect(v3.filter((e:any)=>e.kind==='bottom')).toHaveLength(1);
- expect(v3.some((e:any)=>e.kind==='bottom'&&e.time==='13:31')).toBe(true);
- await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(display(c,'v3')));
- await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(display(c,'v3')));
+ await expect.poll(async()=>(await rendered(page.getByLabel('分时价格及分钟成交量',{exact:true})))?.points).toEqual(expected);
 });
 
 test('Q1 circles fill only leftover slots, so the displayed stream never exceeds 3/kind',async({page})=>{
@@ -165,7 +125,7 @@ test('Q1 circles fill only leftover slots, so the displayed stream never exceeds
   // Promoted Q1 (either kind) tooltip is the matching signal and names the Q1 source.
   const promoted=shown!.marks.find((m:any)=>m.promoted);
   if(promoted){await showTip(chart,promoted.time);const tip=chart.locator('.quote-tooltip');await expect(tip).toContainText(promoted.kind==='底'?'底信号：':'顶信号：');await expect(tip).toContainText('来源：Q1 质量点');}
-  await expect(page.getByTestId('turning-cap-count')).toHaveText(capText(capped));
+  await expect(page.getByTestId('turning-cap-count')).toHaveCount(0);
   await chart.screenshot({path:test.info().outputPath('display-cap-'+(source)+'-'+code+'.png')});
  }
 });
@@ -182,10 +142,10 @@ test('sz300094 keeps only its three causal tops: the late 13:01 main top yields 
  expect(tops).toHaveLength(3);
  expect(tops.some((e:any)=>e.time==='13:01')).toBe(false);
  await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(display(c,'zhangle')));
- for(const event of tops)expect((await rendered(chart))!.points).toContainEqual(['顶',event.time,event.price]);
+ for(const event of display(c,'zhangle').filter(p=>p.kind==='top'))expect((await rendered(chart))!.points).toContainEqual(['顶',event.time,event.price]);
 });
 
-test('cross-view: the linked K-line minute chart shows the same mode, marks and cap indicator',async({page})=>{
+test('cross-view: the linked K-line minute chart keeps v2.4 marks and hides mode/count controls',async({page})=>{
  const c=cases.find((x:any)=>x.code==='sh600714');
  const chart=await openChart(page,c);
  const zh=engine(c,'zhangle');
@@ -198,9 +158,8 @@ test('cross-view: the linked K-line minute chart shows the same mode, marks and 
  const linked=page.locator('.linked-minute').getByLabel('分时价格及分钟成交量',{exact:true});
  await expect(linked).toBeVisible();
  await expect.poll(async()=>(await rendered(linked))?.points).toEqual(expected);
- await expect(page.locator('.linked-minute').getByTestId('turning-cap-count')).toHaveText(capText(display(c,'zhangle')));
- await page.locator('.linked-minute').getByLabel('顶底模式').selectOption('stable');
- await expect.poll(async()=>(await rendered(linked))?.points).toEqual(coords(display(c,'stable')));
+ await expect(page.locator('.linked-minute').getByTestId('turning-cap-count')).toHaveCount(0);
+ await expect(page.locator('.linked-minute').getByLabel('顶底模式')).toHaveCount(0);
  await page.getByRole('button',{name:'分时',exact:true}).click();
- await expect.poll(async()=>(await rendered(page.getByLabel('分时价格及分钟成交量',{exact:true})))?.points).toEqual(coords(display(c,'stable')));
+ await expect.poll(async()=>(await rendered(page.getByLabel('分时价格及分钟成交量',{exact:true})))?.points).toEqual(expected);
 });

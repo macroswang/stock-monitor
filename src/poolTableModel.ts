@@ -25,7 +25,7 @@ export type Tags = {concept: string[]; theme: string[]; event: string[]; other: 
 export type Driver = {at: string | null; text: string | null};
 export type Fund = {net: number | null; net_yi: number | null; rate: number | null; time: string | null};
 export type Entry = {
-  code: string; name: string; added_day: string; added_at?: string | null; added_price: number;
+  code: string; name: string; added_day: string; added_at?: string | null; added_selection_at?: string | null; added_price: number;
   source: string; sector: string; role: string; reason: string; state: string;
   entry_tag: string; category: string; group_name: string; groups?: string[]; group_rank?: number | null; group_size?: number | null;
   updated_at: string; plan: Plan | null; quote: Quote | null;
@@ -107,9 +107,9 @@ export const clockText = (value: string | null | undefined) => {
 };
 export const TIME_LABEL: Record<string, string> = {'0-3': '0–3%', '3-7': '3–7%', '7+': '7% 以上', lt0: '< 0%', '3+': '3 天及以上'};
 
-/** 首次加入时间按中国时区显示；不采用后来再次入选的研判时间。 */
+/** 首次有效入池时间；收盘后/休市入池顺延，不采用后来再次入选的研判时间。 */
 export function poolAddedStamp(entry: Entry): string {
-  const raw = entry.added_at || entry.added_day || '';
+  const raw = entry.added_selection_at || entry.added_at || entry.added_day || '';
   if (/T.*(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
     const time = new Date(raw);
     if (Number.isFinite(time.getTime())) return new Intl.DateTimeFormat('sv-SE', {
@@ -628,7 +628,7 @@ export function latestSelectionDay(entry: Entry) {
   return selectionOf(entry).last_day;
 }
 export function filterRows(rows: Entry[], filter: RowFilter, anchor: string, calendarToday = anchor) {
-  // 「今日提醒」改为当天首次加入的股票，与研判再次入选和历史通知无关。
+  // 「今日提醒」按首次有效入池日筛选，与研判再次入选和历史通知无关。
   const start = filter.chip === 'alert' ? null : periodStart(anchor, filter.period);
   const search = filter.search.trim().toLowerCase();
   return rows.filter(entry => {

@@ -9,7 +9,8 @@ logic. This module mirrors the chart display merge semantics:
   4) per-kind cap 3: v2 events take the slots, Q1 events fill the remaining slots in time
      order, skipping candidates whose display price (0.01) duplicates an already selected
      same-kind event;
-  5) return the merged list sorted by time; every event keeps its original key/fields
+  5) suppress same-kind emissions less than 10 trading minutes apart, keeping the first;
+  6) return the merged list sorted by time; every event keeps its original key/fields
      (Q1 keys look like quality-first-Q|kind|candidateTime|time).
 The merge is a deterministic function of the current bars; because later v2 events can push
 an earlier Q1 signal out of the merge, live_trading adds an order-level daily cap as a
@@ -24,6 +25,22 @@ SIGNAL = 'shape-v2-q1'
 LABEL = '观量底／顶信号'
 VERSION = 'shape-v2-q1.0'
 DAILY_CAP_PER_KIND = 3
+MIN_SEPARATION = 10
+
+
+def filter_spacing(events):
+    """Keep the first same-kind emission in each 10-trading-minute interval."""
+    last, kept = {}, []
+    for event in sorted(events, key=lambda event: event['time']):
+        hour, minute = map(int, event['time'].split(':'))
+        clock = hour * 60 + minute
+        at = clock - (90 if clock >= 780 else 0)
+        kind = event['kind']
+        if kind in last and at - last[kind] < MIN_SEPARATION:
+            continue
+        last[kind] = at
+        kept.append(event)
+    return kept
 
 
 def _cents(price):
@@ -56,8 +73,7 @@ def merge_signals(final_signals, q1_signals, cap_per_kind=DAILY_CAP_PER_KIND):
         counts[kind] += 1
         minutes.add((kind, event['time']))
         prices[kind].add(cents)
-    selected.sort(key=lambda event: TIMES.index(event['time']))
-    return selected
+    return filter_spacing(selected)
 
 
 def signals(bars):
