@@ -20,6 +20,7 @@ test('SMA warms up on full history, never substitutes short averages for missing
 test('daily and weekly history demand includes the visible window plus MA warm-up',()=>{
  expect(candleHistoryNeed(90,{periods:[5,10,20,250],enabled:[250],visible:true})).toBe(339);
  expect(candleHistoryNeed(120,{periods:[5,10,20,250],enabled:[20,250],visible:true})).toBe(369);
+ expect(candleHistoryNeed(250,{periods:[250],enabled:[250],visible:true})).toBe(499);
  expect(candleHistoryNeed(90,{periods:[250],enabled:[250],visible:false})).toBe(90);
  expect(candleHistoryNeed(90,{periods:[250],enabled:[],visible:true})).toBe(90);
 });

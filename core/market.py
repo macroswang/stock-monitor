@@ -81,19 +81,33 @@ class Market:
       else:errors.append('指数报价暂时不可用')
    if 'sh000001' in self.index_errors:errors.append(self.index_errors['sh000001'])
    self.error='；'.join(errors)
+ def latest_quote(self,code):
+  rows=self.app.store.query('SELECT day,payload FROM cache WHERE code=? AND kind=? ORDER BY day DESC LIMIT 1',(code,'market_quote'))
+  if not rows:return None
+  quote=json.loads(rows[0]['payload'])
+  return quote if quote.get('code')==code and str(quote.get('timestamp',''))[:10]==rows[0]['day'] else None
  def index_view(self,code,day=None):
   if code not in CODES:raise ValueError('不支持的指数')
   if day is not None:day=datetime.fromisoformat(day).date().isoformat()
-  quotes=self.app.store.getcache(code,'market_quote',day) if day else self.app.store.getcache(code,'market_quote')
-  quote=quotes[-1]['data'] if quotes else None
+  # The header needs one quote, never a decoded scan of every cached trading day.
+  if day:
+   quotes=self.app.store.getcache(code,'market_quote',day)
+   quote=quotes[-1]['data'] if quotes else None
+   quote_day=day
+  else:
+   quote=self.latest_quote(code)
+   quote_day=quote['timestamp'][:10] if quote else None
+  if quote and (quote.get('code')!=code or str(quote.get('timestamp',''))[:10]!=quote_day):quote=None
   if day is None:day=quote['timestamp'][:10] if quote else None
   rows=self.app.store.getcache(code,'market_minute',day) if day else []
-  minute=dict(rows[0]['data'],code=code,name=NAMES[code]) if rows else None
+  payload=rows[0]['data'] if rows else None
+  # Never overwrite an explicitly conflicting cached identity with the requested one.
+  minute=dict(payload,code=code,name=NAMES[code]) if payload and payload.get('date')==day and payload.get('code',code)==code else None
   return dict(quotes=[quote] if quote else [],minute=minute,error=self.index_errors.get(code,''))
  def view(self,day):
   items=[]
   for code in CODES:
-   rows=self.app.store.getcache(code,'market_quote')
-   if rows:items.append(rows[-1]['data'])
+   quote=self.latest_quote(code)
+   if quote:items.append(quote)
   rows=self.app.store.getcache('sh000001','market_minute',day) if day else []
   return dict(quotes=items,minute=rows[0]['data'] if rows else None,error=self.error)

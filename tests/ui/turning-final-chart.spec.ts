@@ -106,15 +106,22 @@ test('watch minute charts always use v2.4 despite saved modes and hide mode/coun
  await expect.poll(async()=>(await rendered(page.getByLabel('分时价格及分钟成交量',{exact:true})))?.points).toEqual(expected);
 });
 
-test('Q1 circles fill only leftover slots, so the displayed stream never exceeds 3/kind',async({page})=>{
- // App-cache copies (2026-11-12 蓝色光标/中文在线) are the fixtures where the uncapped
- // shape+Q1 merge really exceeds 3; the chart must still render at most 3 per kind.
+test('Q1 fill obeys cap before spacing and renders the existing frozen stream',async({page})=>{
+ // Cap allocation precedes 10-minute spacing. BlueFocus's 10:19 top is
+ // removed after allocation; the empty slot is not refilled by the 11:02 top.
  for(const [code,source] of [['sz300058','app-cache-copy'],['sz300364','app-cache-copy'],['sz300058','tencent'],['sh600714','tencent']] as const){
   const c=cases.find((x:any)=>x.code===code&&x.source===source);
   const chart=await openChart(page,c);
   const uncapped=display(c,'zhangle',Infinity),capped=display(c,'zhangle',3);
   for(const kind of ['top','bottom'] as const)expect(capped.filter((p:any)=>p.kind===kind).length).toBeLessThanOrEqual(3);
-  if(source==='app-cache-copy')expect(['top','bottom'].some(kind=>uncapped.filter((p:any)=>p.kind===kind).length>3)).toBe(true);
+  if(source==='app-cache-copy'&&code==='sz300058'){
+   expect(coords(uncapped).filter(p=>p[0]==='顶')).toEqual([['顶','10:11',14.74],['顶','10:23',15.22],['顶','11:02',15.41]]);
+   expect(coords(capped)).toEqual([['底','09:44',13.35],['顶','10:11',14.74],['顶','10:23',15.22],['底','13:54',14.76],['底','14:47',14.64]]);
+  }
+  if(source==='app-cache-copy'&&code==='sz300364'){
+   expect(uncapped.filter(p=>p.kind==='bottom')).toHaveLength(6);
+   expect(coords(capped)).toEqual([['底','09:33',28.56],['顶','09:36',28.73],['底','09:44',28.38],['顶','10:28',29.08],['底','13:26',27.96]]);
+  }
   await expect.poll(async()=>(await rendered(chart))?.points).toEqual(coords(capped));
   const shown=await rendered(chart);
   for(const kind of ['top','bottom'] as const)expect(shown!.points.filter((p:any)=>p[0]===(kind==='bottom'?'底':'顶')).length).toBeLessThanOrEqual(3);

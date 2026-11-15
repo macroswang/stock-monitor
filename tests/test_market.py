@@ -75,3 +75,31 @@ class MacdIndexFeedTests(unittest.TestCase):
    self.assertIsNone(app.call('index_minute',dict(code='sh000001',day='2026-10-16'))['minute'])
    with self.assertRaises(ValueError):app.call('index_minute',dict(code='not-an-index',day='2026-10-16'))
    app.store.db.close()
+
+class IndexCacheReviewTests(unittest.TestCase):
+ def test_latest_quote_reads_one_indexed_row_without_decoding_older_cache(self):
+  with tempfile.TemporaryDirectory() as td:
+   app=App(td,False)
+   try:
+    app.store.execute('INSERT INTO cache VALUES(?,?,?,?)',('sh000001','market_quote','2026-10-15','invalid old JSON'))
+    q=dict(code='sh000001',timestamp='2026-10-16T15:00:00+08:00',price='3600')
+    app.store.cache('sh000001','market_quote','2026-10-16',q)
+    app.store.cache('sh000001','market_minute','2026-10-16',dict(code='sh000001',date='2026-10-16',bars=[]))
+    original=app.store.getcache
+    def limited(code,kind,day=None):
+     self.assertFalse(kind=='market_quote' and day is None)
+     return original(code,kind,day)
+    with patch.object(app.store,'getcache',side_effect=limited),patch('core.market.get') as network:
+     result=app.call('index_minute',dict(code='sh000001'));self.assertEqual(app.call('market',dict(day='2026-10-16'))['quotes'],result['quotes']);network.assert_not_called()
+    self.assertEqual(result['quotes'],[dict(q,cached_at=result['quotes'][0]['cached_at'])]);self.assertEqual(result['minute']['date'],'2026-10-16')
+   finally:app.stop.set();app.store.db.close()
+ def test_explicit_conflicting_cached_code_or_date_is_not_silently_relabelled(self):
+  with tempfile.TemporaryDirectory() as td:
+   app=App(td,False)
+   try:
+    for payload in [dict(code='sz399001',date='2026-10-16',bars=[]),dict(code='sh000001',date='2026-10-15',bars=[])]:
+     app.store.cache('sh000001','market_minute','2026-10-16',payload)
+     self.assertIsNone(app.call('index_minute',dict(code='sh000001',day='2026-10-16'))['minute'])
+    app.store.cache('sh000001','market_quote','2026-10-16',dict(code='sh000001',timestamp='2026-10-17T15:00:00+08:00'))
+    self.assertEqual(app.call('index_minute',dict(code='sh000001'))['quotes'],[])
+   finally:app.stop.set();app.store.db.close()

@@ -158,16 +158,21 @@ test('missing brokerage capacity stays unknown and explicit refresh uses only th
  expect(await page.evaluate(()=> (window as any).capacitySyncs)).toEqual(['e2e-b']);expect((await rpc('e2e_state')).orders.ths).toEqual([]);
 });
 
-test('a submitted default quantity stays frozen when refreshed funds change after an unknown receipt',async({page})=>{
+test('a submitted default quantity stays frozen when funds refresh after an interrupted IPC response',async({page})=>{
  await setup(page);await page.evaluate(()=>{
   const w=window as any,original=w.testTradingRpc;w.defaultCash='5973.01';
   w.testTradingRpc=async(method:string,args:any)=>{const result=await original(method,args);return method==='trading_view'?{...result,accounts:result.accounts.map((a:any)=>({...a,funds:{...a.funds,available:w.defaultCash}}))}:result;};
  });
  const ticket=await manualTicket(page);await ticket.getByLabel('真实委托券商账户').selectOption('e2e-a');await ticket.getByLabel('真实委托限价').fill('2.24');await expect(ticket.getByLabel('真实委托股数')).toHaveValue('2600');
- await rpc('e2e_fault',{broker:'zhangle',kind:'lose_receipt'});await ticket.getByRole('button',{name:'确认买入',exact:true}).click();await expect(ticket.getByRole('status')).toContainText('未收到明确回执');
+ // Native submission closes the ticket under the current manual-order workflow.
+ // Interrupt the IPC result instead: that is the branch retaining an unknown draft.
+ await page.evaluate(()=>{const w=window as any,original=w.testTradingRpc;let lost=false;w.testTradingRpc=(method:string,args:any)=>method==='job'&&!lost?(lost=true,Promise.reject(Error('隔离测试：IPC 回执中断'))):original(method,args);});
+ await ticket.getByRole('button',{name:'确认买入',exact:true}).click();await expect(ticket.getByRole('alert')).toContainText('结果待核实');
+ await expect.poll(async()=> (await rpc('broker_requests',{id:'e2e-a'}))[0]?.status).toBe('unknown');
+ const originalRequest=await rpc('broker_requests',{id:'e2e-a'});
  await page.evaluate(()=>{(window as any).defaultCash='1000';});await ticket.getByRole('switch',{name:'真实委托'}).click();await ticket.getByRole('switch',{name:'真实委托'}).click();
  await expect(ticket.getByLabel('可买卖数量',{exact:true})).toContainText('400 股');await expect(ticket.getByLabel('真实委托股数')).toHaveValue('2600');await expect(ticket.getByRole('button',{name:'确认买入',exact:true})).toBeDisabled();
- expect((await rpc('e2e_state')).orders.zhangle).toMatchObject([{quantity:2600}]);expect(await rpc('broker_requests',{id:'e2e-a'})).toHaveLength(1);
+ expect((await rpc('e2e_state')).orders.zhangle).toMatchObject([{quantity:2600}]);expect(await rpc('broker_requests',{id:'e2e-a'})).toEqual(originalRequest);expect(originalRequest).toHaveLength(1);
 });
 
 test('a complete empty holding shows zero sellable while an incomplete snapshot stays unknown',async({page})=>{
@@ -229,6 +234,8 @@ test('manual order closes and shows B without reading the receipt, then manual s
  const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'B',source:'manual',status:'unknown',order_price:'2.24'}]);
  expect((await rpc('e2e_state')).orders.ths).toHaveLength(1);
  await rpc('e2e_manual_fill',{broker:'ths',price:'2.23'});await rpc('e2e_repeat');
+ // The simulated broker clock advanced to 09:56; align the browser before plotting that fill.
+ await page.clock.runFor(60000);
  await page.getByRole('button',{name:'同步券商成交',exact:true}).click();
  await expect.poll(plot.read).toMatchObject([{label:'B',source:'broker_cache',fill_price:2.23,ordered_at:'2026-11-04T09:56:00+08:00'}]);
  expect((await rpc('e2e_state')).orders.ths).toHaveLength(1);

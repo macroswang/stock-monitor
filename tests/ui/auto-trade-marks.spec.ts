@@ -51,7 +51,9 @@ test('auction and afternoon-open orders anchor to visible chart minutes without 
 });
 test('auto-trade missing-record detection follows the combined v2.4+Q1 trading stream',()=>{
  const reconstruction=JSON.parse(readFileSync('tests/fixtures/zhangle-reconstruction.json','utf8'));
- const c=reconstruction.cases.find((x:any)=>x.code==='sz300058'&&x.day==='2026-11-10');
+ // 10-23 has a surviving Q1-only bottom. The old 11-10 case's 10:00 Q1
+ // is correctly suppressed by the 09:52 bottom under the 10-minute rule.
+ const c=reconstruction.cases.find((x:any)=>x.code==='sz300058'&&x.day==='2026-10-23');
  const times=[...Array.from({length:120},(_,i)=>571+i),...Array.from({length:120},(_,i)=>781+i)]
   .map((m:number)=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
  const bars:Bar[]=[{time:'09:30',close:String(c.opening_price),average:String(c.opening_price),volume:0,complete:true},
@@ -62,11 +64,25 @@ test('auto-trade missing-record detection follows the combined v2.4+Q1 trading s
  // A Q1-only bottom fills the remaining slot: it is part of the trading stream exactly
  // like a v2 signal, so a missing execution record must be detected for it.
  const q1=combined.find((e:any)=>e.key.startsWith('quality-first-Q')&&e.kind==='bottom');
- expect(q1).toBeTruthy();
+ expect(q1).toMatchObject({key:'quality-first-Q|bottom|11:20|11:25',time:'11:25',price:11.6});
  expect(v2.some((e:any)=>e.key===q1!.key)).toBe(false);
  const data:AutoTradeChart={code:c.code,day:c.day,accounts:[{id:'a',broker_name:'银河',account_masked:'400***162',buy_enabled:true,sell_enabled:true}],points:[]};
  const expectedId='missing|a|'+q1!.key;
  expect(autoTradeRecords(data,combined,c.day).some(r=>r.point.id===expectedId)).toBe(true);
  expect(autoTradeRecords(data,v2,c.day).some(r=>r.point.id===expectedId)).toBe(false);
  expect(autoTradeMarks(data,combined,c.day)).toEqual([]); // gaps never render as B/S
+});
+
+test('a Q1 bottom suppressed by spacing creates neither a missing-order record nor B/S',()=>{
+ const reconstruction=JSON.parse(readFileSync('tests/fixtures/zhangle-reconstruction.json','utf8'));
+ const c=reconstruction.cases.find((x:any)=>x.code==='sz300058'&&x.day==='2026-11-10');
+ const times=[...Array.from({length:120},(_,i)=>571+i),...Array.from({length:120},(_,i)=>781+i)].map(m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`);
+ const bars:Bar[]=[{time:'09:30',close:String(c.opening_price),average:String(c.opening_price),volume:0,complete:true},...c.prices.map((p:number,i:number)=>({time:times[i],close:String(p),average:String(c.averages[i]),volume:c.volumes[i],complete:true}))];
+ const v2=turningFinal(bars,TURNING_FINAL_MODES.zhangle),quality=turningQualityQ1(bars),combined=turningCombinedSignals(v2,quality);
+ expect(v2.find(p=>p.kind==='bottom')).toMatchObject({time:'09:52',price:13.13});
+ expect(quality).toEqual([expect.objectContaining({key:'quality-first-Q|bottom|09:58|10:00',time:'10:00',price:13.1})]);
+ expect(combined.map(e=>[e.kind,e.time])).toEqual([['top','09:41'],['bottom','09:52'],['top','10:48']]);
+ const data:AutoTradeChart={code:c.code,day:c.day,accounts:[{id:'a',broker_name:'银河',account_masked:'400***162',buy_enabled:true,sell_enabled:true}],points:[]};
+ expect(autoTradeRecords(data,combined,c.day).some(r=>r.point.signal_key===quality[0].key)).toBe(false);
+ expect(autoTradeMarks(data,combined,c.day)).toEqual([]);
 });

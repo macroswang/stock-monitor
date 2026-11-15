@@ -1,138 +1,76 @@
 import {test,expect} from '@playwright/test';
-import {readFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
+import {indexSparkline} from '../../src/indexSparkline';
 
-test.beforeEach(async({page})=>{await page.clock.install({time:new Date('2026-10-31T08:00:00Z')});});
+const files=['market-overview-preview.json','szse-preview.json','chinext-preview.json'];
+const codes=['sh000001','sz399001','sz399006'],names=['上证指数','深证成指','创业板指'];
+const feeds=files.map((file,i)=>{const data=JSON.parse(readFileSync('public/'+file,'utf8'));return {...data,quotes:data.quotes.filter((q:any)=>q.code===codes[i]),minute:{...data.minute,code:codes[i]}};});
+const now=Date.parse('2026-11-15T10:00:00+08:00');
+const copy=(v:any)=>structuredClone(v);
 
-test('首页展示当前行情与行业概念，历史对比留在大盘广度',async({page})=>{
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('3599.02')).toBeVisible();
- await expect(home.getByText('10833.78')).toBeVisible();
- await expect(home.getByText('2413.63')).toBeVisible();
- await expect(home.getByText('指数下跌、个股跌多涨少', {exact:false})).toBeVisible();
- await expect(home.getByText('2026-10-30 · 截至 15:00')).toBeVisible();
- await expect(home.getByText('酿酒行业',{exact:true})).toBeVisible();
- await expect(home.getByText('日期推定',{exact:false})).toBeVisible();
- await home.getByRole('button',{name:'概念',exact:true}).click();
- await home.getByText('数据详情',{exact:true}).click();
- await expect(home.getByText('新浪概念资金流',{exact:false})).toBeVisible();
- await expect(home.getByText('融资融券',{exact:true})).toBeVisible();
- await expect(home.getByText('概念之间可有重叠',{exact:false})).toBeVisible();
- await expect(page.getByRole('region',{name:'首页市场判断'})).toHaveCount(0);
- await expect(home.getByRole('button',{name:'30日'})).toHaveCount(0);
- await home.getByRole('button',{name:'查看大盘广度'}).click();
- await expect(page.getByRole('region',{name:'市场趋势图'})).toBeVisible();
- await expect(page.getByRole('region',{name:'市场趋势图'}).getByRole('button',{name:'30日'})).toBeVisible();
+test('all three miniatures use their own confirmed index cache, a zero baseline and truthful colour',()=>{
+ for(const [i,feed] of feeds.entries()){
+  const before=copy(feed),spark=indexSparkline(feed,codes[i],now)!;expect(spark).not.toBeNull();expect(spark.day).toBe(feed.minute.date);
+  expect(spark.points[0].value).toBe(Number(feed.minute.bars[0].close));expect(spark.until).toBe('15:00');expect(spark.baseline).toBe(20);
+  const last=Number(feed.minute.bars.at(-1).close)-Number(feed.minute.previous_close);expect(spark.color).toBe(last>0?'#ef6568':last<0?'#36b898':'#8c9db6');
+  expect(spark.line).not.toContain('NaN');expect(spark.area).toContain(',20 Z');expect(feed).toEqual(before);
+ }
 });
 
-test('缺失或不一致的数据不生成操作建议',async({page})=>{
- const market=JSON.parse(await readFile('public/market-overview-preview.json','utf8'));
- market.quotes[0].price=Number(market.quotes[0].price)+100;
- await page.route('**/market-overview-preview.json',route=>route.fulfill({json:market}));
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('行情暂不可用').first()).toBeVisible();
- await expect(home.getByText('市场数据暂未同步，先等待更新。')).toBeVisible();
- await expect(home.getByText('分时数据暂不可用')).toBeVisible();
- await expect(home.getByText('暂缓加仓',{exact:false})).toHaveCount(0);
+test('missing, inconsistent, duplicate, cross-index or future-cached data never draws a fake sparkline',()=>{
+ const feed=feeds[0];
+ const variants=[{...feed,minute:null},{...feed,minute:{...feed.minute,code:'sz399001'}},{...feed,minute:{...feed.minute,date:'2026-10-29'}},{...feed,minute:{...feed.minute,previous_close:'1'}},{...feed,minute:{...feed.minute,bars:[]}},{...feed,minute:{...feed.minute,bars:[feed.minute.bars[0],feed.minute.bars[0]]}},{...feed,minute:{...feed.minute,cached_at:'2026-11-16T09:00:00+08:00'}},{...feed,quotes:[{...feed.quotes[0],price:'1'}]}];
+ for(const value of variants)expect(indexSparkline(value,codes[0],now)).toBeNull();
 });
 
-test('未来采集的缓存不能冒充当前行情',async({page})=>{
- const market=JSON.parse(await readFile('public/market-overview-preview.json','utf8'));
- market.collected_at='2026-11-01T09:00:00+08:00';
- await page.route('**/market-overview-preview.json',route=>route.fulfill({json:market}));
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('行情暂不可用').first()).toBeVisible();
- await expect(home.getByText('市场数据暂未同步，先等待更新。')).toBeVisible();
+test('pending minute stays hidden until reached, sparse data breaks the line and lunch remains continuous',()=>{
+ const feed=copy(feeds[0]),stamp='2026-10-30T10:30:20+08:00';feed.quotes[0].timestamp=stamp;feed.collected_at=stamp;
+ feed.minute.cached_at=stamp;feed.minute.bars=feed.minute.bars.filter((b:any)=>b.time<='10:31');
+ const first=indexSparkline(feed,codes[0],Date.parse(stamp))!;expect(first.until).toBe('10:30');expect(first.points.some(p=>p.time==='10:31')).toBe(false);
+ expect(indexSparkline(feed,codes[0],Date.parse(stamp)+50000)!.until).toBe('10:30');
+ feed.minute.cached_at='2026-10-30T10:31:10+08:00';expect(indexSparkline(feed,codes[0],Date.parse(stamp)+50000)!.until).toBe('10:31');
+ feed.minute.cached_at=stamp;
+ feed.minute.bars=feed.minute.bars.filter((b:any)=>b.time!=='10:00');expect(indexSparkline(feed,codes[0],Date.parse(stamp))!.line.split('M')).toHaveLength(3);
+ const whole=indexSparkline(feeds[0],codes[0],now)!;expect(whole.line.split('M')).toHaveLength(2);expect(whole.points.some(p=>p.time==='13:00')).toBe(false);
 });
 
-test('盘中快照同步才给出判断，过期后不继续使用',async({page})=>{
- const capture=JSON.parse(await readFile('fixtures/market-core-rpc-20261030.json','utf8'));
- await page.clock.setFixedTime(new Date(capture.finished_at));
- const market={quotes:[capture.quote],minute:null,error:'',collected_at:capture.finished_at};
- await page.route('**/market-overview-preview.json',route=>route.fulfill({json:market}));
- await page.route('**/breadth-csi300-preview.json',route=>route.fulfill({json:{days:[capture.day],running:false,error:''}}));
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('盘中采样',{exact:false})).toBeVisible();
- await expect(home.getByText('指数下跌、个股跌多涨少',{exact:false})).toBeVisible();
- await page.clock.setFixedTime(new Date(Date.parse(capture.finished_at)+8*60*1000));
- await page.reload();
- await expect(home.getByText('市场数据暂未同步，先等待更新。')).toBeVisible();
- await expect(home.getByText('盘中采样',{exact:false})).toHaveCount(0);
+test('top index cells contain three independent filled miniature charts and no market-trend block',async({page})=>{
+ await page.clock.install({time:new Date(now)});await page.goto('/');
+ const header=page.locator('.market-header');await expect(header.locator('.overview-index')).toHaveCount(3);
+ for(const name of names){const mini=header.getByRole('img',{name:name+'当日缩略分时',exact:true});await expect(mini).toBeVisible();await expect(mini.locator('.index-spark-area')).toHaveAttribute('fill',/url\(#/);}
+ await expect(page.locator('.home-overview')).toHaveCount(0);await expect(page.getByText('市场趋势',{exact:true})).toHaveCount(0);
+ for(const width of [1380,1000]){
+  await page.setViewportSize({width,height:980});
+  await expect(async()=>{for(const mini of await header.locator('.index-sparkline').all()){const box=(await mini.boundingBox())!;expect(box.width).toBeGreaterThan(15);expect(box.height).toBe(40);}expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);}).toPass();
+  await page.screenshot({path:`outputs/index-miniatures-${width}.png`,fullPage:true});
+ }
 });
 
-test('transient minute errors and transport failures retain a labelled chart, then recover',async({page})=>{
- const market=JSON.parse(await readFile('public/market-overview-preview.json','utf8'));
- await page.goto('/?sample=csi300');const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('2026-10-30 · 截至 15:00',{exact:true})).toBeVisible();
- await page.route('**/market-overview-preview.json',route=>route.fulfill({json:{...market,error:'上证分时暂时不可用'}}));
- await page.clock.fastForward(15500);
- await expect(home.getByText('2026-10-30 · 截至 15:00 · 缓存',{exact:true})).toBeVisible();
- await page.unroute('**/market-overview-preview.json');await page.route('**/market-overview-preview.json',route=>route.abort());
- await page.clock.fastForward(15500);
- await expect(home.getByText('2026-10-30 · 截至 15:00 · 缓存',{exact:true})).toBeVisible();
- await expect(home.getByText('分时数据暂不可用')).toHaveCount(0);
- await page.unroute('**/market-overview-preview.json');await page.route('**/market-overview-preview.json',route=>route.fulfill({json:market}));
- await page.clock.fastForward(15500);await expect(home.getByText('2026-10-30 · 截至 15:00',{exact:true})).toBeVisible();
+test('one missing index leaves the other two miniatures intact and transport failures are labelled cache until recovery',async({page})=>{
+ await page.clock.install({time:new Date(now)});await page.goto('/');const header=page.locator('.market-header'),mini=header.getByRole('img',{name:'深证成指当日缩略分时',exact:true});
+ await expect(header.locator('.index-sparkline')).toHaveCount(3);
+ await page.route('**/szse-preview.json',r=>r.abort());await page.clock.fastForward(15500);
+ await expect(mini.locator('title')).toContainText('缓存');await expect(header.locator('.index-sparkline')).toHaveCount(3);
+ await page.unroute('**/szse-preview.json');await page.route('**/szse-preview.json',r=>r.fulfill({json:{quotes:[],minute:null}}));await page.clock.fastForward(15500);
+ await expect(header.locator('.index-sparkline')).toHaveCount(2);await expect(header.getByText('暂无分时',{exact:true})).toHaveCount(1);
+ await page.unroute('**/szse-preview.json');await page.clock.fastForward(15500);await expect(header.locator('.index-sparkline')).toHaveCount(3);
 });
 
-test('pending next-minute label is withheld while confirmed index history stays visible',async({page})=>{
- const market=JSON.parse(await readFile('public/market-overview-preview.json','utf8'));
- market.quotes=market.quotes.map((q:any)=>({...q,timestamp:'2026-10-30T10:30:20+08:00'}));
- market.minute.bars=market.minute.bars.filter((b:any)=>b.time<='10:31');
- market.minute.cached_at='2026-10-30T10:30:20+08:00';market.collected_at='2026-10-30T10:30:20+08:00';
- await page.clock.setFixedTime(new Date(market.collected_at));
- await page.route('**/market-overview-preview.json',route=>route.fulfill({json:market}));
- await page.goto('/?sample=csi300');const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('2026-10-30 · 截至 10:30',{exact:true})).toBeVisible();
- await expect(home.getByText('分时数据暂不可用')).toHaveCount(0);
+test('header cache reads share one 15-second cadence and stop when leaving self-watch',async({page})=>{
+ await page.clock.install({time:new Date(now)});const counts=[0,0,0];
+ for(const [i,file] of files.entries())await page.route('**/'+file,r=>{counts[i]++;return r.fulfill({json:feeds[i]});});
+ await page.goto('/');await expect(page.locator('.market-header .index-sparkline')).toHaveCount(3);await page.waitForLoadState('networkidle');const before=[...counts];
+ await page.clock.fastForward(15500);await expect.poll(()=>counts.map((n,i)=>n-before[i])).toEqual([1,1,1]);
+ await page.getByRole('button',{name:'数据管理',exact:true}).click();const left=[...counts];await page.clock.fastForward(31000);expect(counts).toEqual(left);
+ await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect(page.locator('.market-header .index-sparkline')).toHaveCount(3);expect(counts.map((n,i)=>n-left[i])).toEqual([1,1,1]);
 });
 
-test('sector transport failure preserves prior values as delayed data, and expiry is visibly cached',async({page})=>{
- const sector=JSON.parse(await readFile('public/sector-flow-preview.json','utf8'));
- await page.goto('/?sample=csi300');const panel=page.getByRole('region',{name:'行业资金观察'});
- await expect(panel.getByText('酿酒行业',{exact:true})).toBeVisible();
- await page.route('**/sector-flow-preview.json',route=>route.abort());
- await page.clock.fastForward(5500);
- await expect(panel.getByText('酿酒行业',{exact:true})).toBeVisible();await expect(panel).toContainText('延迟');
- await page.unroute('**/sector-flow-preview.json');
- await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:{snapshot:null,cached_snapshot:sector.snapshot,stale:true,error:'已过期',refresh_seconds:30}}));
- await page.clock.fastForward(5500);await expect(panel.getByText('酿酒行业',{exact:true})).toBeVisible();
- await expect(panel.getByText('更新延迟',{exact:true})).toBeVisible();
- await panel.getByText('数据详情',{exact:true}).click();
- await expect(panel).toContainText('当前为上次快照');
- await expect(panel).not.toContainText('可先观察');
-});
-
-test('partial sector coverage is explicit and missing outflow is not described as no outflow',async({page})=>{
- const sector=JSON.parse(await readFile('public/sector-flow-preview.json','utf8'));
- sector.snapshot={...sector.snapshot,verified_count:39,total:48,excluded_count:9,outflow:[]};
- await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:sector}));
- await page.goto('/?sample=csi300');const panel=page.getByRole('region',{name:'行业资金观察'});
- await expect(panel.getByText('部分数据',{exact:true})).toBeVisible();
- await expect(panel.getByText('暂无数据',{exact:true})).toBeVisible();
- await expect(panel.getByText('39 / 48',{exact:true})).not.toBeVisible();
- await panel.getByText('数据详情',{exact:true}).click();
- await expect(panel.getByText('39 / 48',{exact:true})).toBeVisible();
- await expect(panel).not.toContainText('当前没有符合方向');await expect(panel).not.toContainText('可先观察');
-});
-
-test('technical page notes stay collapsed while current data status stays visible',async({page})=>{
- await page.goto('/?sample=csi300');
- await expect(page.getByText('模拟成交：B买 / S卖',{exact:false})).toHaveCount(0);
- await expect(page.getByText('白字彩底为已确认形态',{exact:false})).toHaveCount(0);
- await expect(page.getByText('仅展示已核对板块',{exact:false})).toHaveCount(0);
- const home=page.getByRole('region',{name:'首页市场趋势'});
- await expect(home.getByText('日期推定',{exact:true})).toBeVisible();
- await expect(home.locator('.info-note').first()).not.toHaveAttribute('open','');
- await expect(home.getByText('新浪行业资金流',{exact:true})).not.toBeVisible();
- await home.getByText('数据详情',{exact:true}).click();
- await expect(home.getByText('新浪行业资金流',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'大盘广度',exact:true}).click();
- const breadth=page.getByRole('region',{name:'市场趋势图'});
- await expect(breadth).toBeVisible();
- const notes=page.locator('.info-note:visible');expect(await notes.count()).toBeGreaterThanOrEqual(2);
- for(const note of await notes.all())await expect(note).not.toHaveAttribute('open','');
+test('removed trend heading and compact controls give their height only to the main price pane',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('stock-monitor-overview-collapsed','true'));await page.goto('/');const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
+ const baseline=[{width:1380,height:980,y:228,chart:730,grids:[184,132,96,80,96]},{width:1000,height:680,y:228,chart:430,grids:[106,82,35,30,35]}];
+ for(const b of baseline){await page.setViewportSize({width:b.width,height:b.height});await expect(async()=>{
+  const box=(await chart.boundingBox())!;expect(box.y).toBe(b.y-64);expect(box.height).toBe(b.chart+64);
+  const grids=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el);return [0,1,2,3,4].map(i=>c.getModel().getComponent('grid',i).coordinateSystem.getRect().height);});
+  expect(grids).toEqual(b.grids.map((v,i)=>v+(i===0?64:0)));
+ }).toPass();}
 });

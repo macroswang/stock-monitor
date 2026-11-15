@@ -26,6 +26,7 @@ import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
 import {splitMinuteVolume} from './volumeFlow';
 import {resolvedPriceLimits,intradayPriceScale,pricePercent} from './priceLimits';
 import {dailyGaps} from './dailyGaps';
+import {candleChangeText} from './candleTooltip';
 import {dailyPatterns,dailyPatternStatus} from './dailyPatterns';
 import {dailyPatternOverlay,dailyPatternColors} from './dailyPatternOverlay';
 import {selectDailyPatterns} from './dailyPatternSelection';
@@ -38,13 +39,19 @@ import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
 import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber,readMacdParameters,macdParametersKey,type MacdParameters} from './minuteMacd';
 import MacdSettings from './MacdSettings';
-import {volumeDisplayMaximum} from './volumeScale';
+import {minuteTimeCutoff,reachedPriceRange,type IntradayRangeReference} from './pricePresentation';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
-// Give both volume panes a little more room while keeping the stack in view.
-function minutePanelLayout(height:number,priceExpansion=0){
- const auxiliaryHeight=Math.max(350,height-priceExpansion),auxiliary=Math.min(320,118+Math.max(0,auxiliaryHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3),indexVolume=volume;
- const price=height-22-4*22-volume-2*macd-indexVolume-32;
- const heights=[price,volume,macd,indexVolume,macd],grids:{top:number;height:number}[]=[],headers:number[]=[];
+// The index cards moved to the header release a 36px row plus 16px margins.
+const STOCK_VOLUME_EXPANSION=52;
+// Removing the 48px trend heading and 8px trailing gap releases 56px.
+const PRICE_TREND_EXPANSION=56;
+// Compact direction controls release 8px for price; volume/MACD heights stay fixed.
+const CONTROLS_PRICE_EXPANSION=8;
+function minutePanelLayout(height:number,priceExpansion=0,stockVolumeExpansion=0){
+ const baseHeight=height-stockVolumeExpansion;
+ const auxiliaryHeight=Math.max(350,baseHeight-priceExpansion),auxiliary=Math.min(320,118+Math.max(0,auxiliaryHeight-350)*.7),volume=Math.round(auxiliary*.25),macd=Math.round(auxiliary*.3),indexVolume=volume;
+ const price=baseHeight-22-4*22-volume-2*macd-indexVolume-32;
+ const heights=[price,volume+stockVolumeExpansion,macd,indexVolume,macd],grids:{top:number;height:number}[]=[],headers:number[]=[];
  let top=22;
  for(const [i,h] of heights.entries()){grids.push({top,height:h});top+=h;if(i<4){headers.push(top+6);top+=22;}}
  return {grids,headers};
@@ -81,7 +88,7 @@ const renderPaperConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
 };
 export type BottomSignal={day:string;time:string;price:number};
 
-export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,benchmark,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string};volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
+export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,rangeReference,minuteCachedAt,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string;timestamp?:string};rangeReference?:IntradayRangeReference;volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minuteCachedAt?:string;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
  // Opening quotes seed R1 only; plotted prices, volumes, MACD and Q1 keep their original input.
  const shapeBars=shapeOpening?[...shapeOpening,...minute]:minute;
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
@@ -108,6 +115,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const macdIndex=benchmarkForStock(stockCode),hasMacd=!isCandleView(view)&&!!macdIndex;
  const macdDataReady=!!macdIndex&&macdBenchmark?.code===macdIndex.code&&macdBenchmark.date===selectedDay&&macdBenchmark.bars.some(b=>minuteSlots.includes(b.time)&&Number(b.close)>0);
  const macdHeaders=useRef<(HTMLDivElement|null)[]>([]),volumeHeaders=useRef<(HTMLDivElement|null)[]>([]),refreshMacd=useRef<((index?:number)=>void)|null>(null);
+ const minuteZoom=useRef({start:0,end:100});
  const [costs,setCosts]=useState<TCosts>(()=>{try{const saved=JSON.parse(localStorage.getItem('stock-monitor-t-costs-v4')||'null');return saved&&tProfit(10,10,saved)?saved:defaultTCosts;}catch{return defaultTCosts;}});
  const [showOpening,setShowOpening]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-opening')!=='false';}catch{return true;}});
  const [showShapes,setShowShapes]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-turning-shapes-v1')!=='false';}catch{return true;}});
@@ -118,7 +126,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const turningMode=fixedTurningMode||preferredTurningMode;
  const updateTurningMode=(mode:TurningChartMode)=>{setTurningMode(mode);try{localStorage.setItem(TURNING_MODE_KEY,mode);window.dispatchEvent(new window.Event('turning-display-change'));}catch{}};
  const [plotHeight,setPlotHeight]=useState(0);
- const minutePanels=minutePanelLayout(plotHeight||350,compact?0:30);
+ const minutePanels=minutePanelLayout(plotHeight||(compact?350:350+STOCK_VOLUME_EXPANSION+PRICE_TREND_EXPANSION+CONTROLS_PRICE_EXPANSION),compact?0:30+PRICE_TREND_EXPANSION+CONTROLS_PRICE_EXPANSION,compact?0:STOCK_VOLUME_EXPANSION);
  const [showTriggered,setShowTriggered]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-trigger-volume')!=='false';}catch{return true;}});
  const [showDailyPatterns]=useState(()=>{try{return localStorage.getItem('stock-monitor-show-daily-patterns-v1')!=='false';}catch{return true;}});
  const dayPatterns=useMemo(()=>view==='daily'&&!annualLineFocus?selectDailyPatterns(dailyPatterns(daily)):[],[daily,view,annualLineFocus]);
@@ -163,7 +171,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   if(!isCandleView(view)&&selectedDay)bottomCallback.current?.(latestBottom?{day:selectedDay,time:latestBottom.time,price:latestBottom.price}:null);
  },[stockCode,view,selectedDay,latestBottom?.time,latestBottom?.price]);
  const chosen=choice?.scope===scope&&(choice.kind==='位置'?minute.some(b=>b.time===choice.time&&b.complete):choice.kind?selectableTurns.some(m=>m.time===choice.time&&(m.kind==='bottom'?'底':'顶')===choice.kind):visibleMarks.some(m=>m.coord[0]===choice.time))?choice:latestMark?{scope,time:latestMark.coord[0],price:latestMark.coord[1]}:null;
- const quotePrices=[...minute.map(b=>+b.close),...(currentPrice?[currentPrice.price]:[])];
+ const displayClock=Date.now(),displayCutoff=selectedDay?minuteTimeCutoff(selectedDay,displayClock,minuteCachedAt):displayClock;
+ const displayedMinute=minute.filter(b=>displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${b.time}:00+08:00`)<=displayCutoff));
+ const displayedPrice=currentPrice&&displayCutoff!==null&&(!selectedDay||Date.parse(currentPrice.timestamp||`${selectedDay}T${currentPrice.time}+08:00`)<=displayCutoff)?currentPrice:undefined;
+ const rangePrices=reachedPriceRange(rangeReference,stockCode,selectedDay,previousClose,displayCutoff);
+ const quotePrices=[...displayedMinute.map(b=>+b.close),...(displayedPrice?[displayedPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
  const [tradeHint,setTradeHint]=useState<{scope:string;text:string}|null>(null);
  const contextTrade=(event:React.MouseEvent<HTMLDivElement>)=>{
@@ -183,7 +195,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  };
  const scopeRef=useRef(scope);scopeRef.current=scope;
  const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef('');
- const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),minute.map(b=>[b.time,b.close,b.volume,b.complete,b.average]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,benchmark,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,currentPrice?.price,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),minuteCachedAt,daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,displayedPrice?.price,rangePrices,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Fit the comparison stack to the remaining viewport without reacting to scroll.
@@ -193,12 +205,11 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const fit=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
    if(!node.getClientRects().length)return;
    const top=node.getBoundingClientRect().top+window.scrollY;
-   const height=Math.round(Math.max(350,document.documentElement.clientHeight-top-22));
+   const height=Math.round(Math.max(350+STOCK_VOLUME_EXPANSION+PRICE_TREND_EXPANSION+CONTROLS_PRICE_EXPANSION,document.documentElement.clientHeight-top-22));
    const value=height+'px';if(node.style.getPropertyValue('--minute-chart-height')!==value)node.style.setProperty('--minute-chart-height',value);
   });};
   const observer=new ResizeObserver(fit),shell=node.parentElement;
   for(const sibling of node.closest('.detail')?.children||[])if(shell&&sibling.compareDocumentPosition(shell)&Node.DOCUMENT_POSITION_FOLLOWING)observer.observe(sibling);
-  const overview=document.querySelector('.home-overview');if(overview)observer.observe(overview);
   window.addEventListener('resize',fit);fit();
   return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--minute-chart-height');};
  },[hasMacd,compact]);
@@ -222,7 +233,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
    if(params.componentType==='series'&&params.name&&/^\d{4}-\d{2}-\d{2}$/.test(params.name))select.current?.(params.name);
   });
   chart.on('dblclick',params=>{if(isCandleView(plot.current.view)&&params.componentType==='series'&&params.name)open.current?.(params.name);});
-  chart.on('datazoom',()=>{const z=(chart.getOption()?.dataZoom as {start?:number;end?:number}[])?.[0];const d=plot.current.daily;if(isCandleView(plot.current.view)&&d.length&&z){windowDates.current=[d[Math.round((d.length-1)*(z.start??0)/100)]?.date,d[Math.round((d.length-1)*(z.end??100)/100)]?.date];candleWindows.current.set(plot.current.stockCode+'|'+plot.current.view,{dates:windowDates.current,lastDate:d.at(-1)!.date});}});
+  chart.on('datazoom',()=>{const z=(chart.getOption()?.dataZoom as {start?:number;end?:number}[])?.[0];const d=plot.current.daily;if(isCandleView(plot.current.view)&&d.length&&z){windowDates.current=[d[Math.round((d.length-1)*(z.start??0)/100)]?.date,d[Math.round((d.length-1)*(z.end??100)/100)]?.date];candleWindows.current.set(plot.current.stockCode+'|'+plot.current.view,{dates:windowDates.current,lastDate:d.at(-1)!.date});}else if(!isCandleView(plot.current.view)){minuteZoom.current={start:z?.start??0,end:z?.end??100};refreshMacd.current?.();}});
   chart.on('updateAxisPointer',event=>{const value=(event as {axesInfo?:{axisDim?:string;value:unknown}[]}).axesInfo?.find(a=>a.axisDim==='x')?.value;const index=typeof value==='number'?value:typeof value==='string'?minuteSlots.indexOf(value):-1;if(Number.isInteger(index)&&index>=0&&index<minuteSlots.length)refreshMacd.current?.(index);});
   const rememberPointer=(event:{offsetX:number;offsetY:number})=>{pointer.current={x:event.offsetX,y:event.offsetY,scope:scopeRef.current};};
   chart.getZr().on('mousemove',rememberPointer);chart.getZr().on('mousedown',rememberPointer);
@@ -233,7 +244,9 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  },[]);
  useEffect(()=>{
   const chart=instance.current;if(!chart)return;const isDay=isCandleView(view);const labels=isDay?daily.map(b=>b.date):minuteSlots;
-  const byTime=new Map(minute.map(b=>[b.time,b]));const aligned=labels.map(t=>byTime.get(t));
+  const clock=Date.now(),displayMinute=isDay?minute:displayedMinute;
+  const reached=(time:string)=>isDay||displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${time}:00+08:00`)<=displayCutoff);
+  const byTime=new Map(displayMinute.map(b=>[b.time,b]));const aligned=labels.map(t=>byTime.get(t));
   const gaps=view==='daily'?dailyGaps(daily):[];
   const visibleGaps=gaps.filter(g=>!g.filledOn).slice(-1);
   const patternSeries=isDay&&showDailyPatterns?dailyPatternOverlay(dayPatterns,()=>chart.getWidth()):[];
@@ -241,7 +254,19 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   const tradePoints=!isDay&&paperOrders!==undefined?paperChartMarks(paperOrders.filter(f=>f.stamp.slice(0,10)===selectedDay)):executionPoints;
   const tradesByTime=new Map<string,typeof executionPoints>();for(const t of executionPoints){const arr=tradesByTime.get(t.time)||[];arr.push(t);tradesByTime.set(t.time,arr);}
   const candleByDate=new Map(daily.map(b=>[b.date,b]));
-  const tradeAnchors=tradePoints.filter(m=>labels.includes(m.time)).map(m=>{
+  // A 7px marker extends 3.5px toward the candle: a 5px center offset leaves
+  // its tip only 1.5 CSS px away (about 3 physical px on a Retina display).
+  // Preserve signal close values and keep the entire marker outside the wick.
+  // ECharts recomputes these display-only offsets on zoom and resize.
+  const annualMarkerOffset=(value:unknown,side:'above'|'below'):[number,number]=>{
+   const offset=side==='below'?5:-5;
+   if(!Array.isArray(value))return [0,offset];
+   const [date,close]=value as [string,number],edge=Number(candleByDate.get(date)?.[side==='below'?'low':'high']);
+   if(!Number.isFinite(edge)||edge<=0||!Number.isFinite(close)||close<=0)return [0,offset];
+   const edgeY=chart.convertToPixel({yAxisIndex:0},edge) as number,closeY=chart.convertToPixel({yAxisIndex:0},close) as number;
+   return [0,Number.isFinite(edgeY)&&Number.isFinite(closeY)?(side==='below'?Math.max(0,edgeY-closeY)+offset:Math.min(0,edgeY-closeY)+offset):offset];
+  };
+  const tradeAnchors=tradePoints.filter(m=>labels.includes(m.time)&&reached(m.time)).map(m=>{
    const candle=candleByDate.get(m.time),value=isDay?(m.value==='B'?candle?.low:candle?.high):byTime.get(m.time)?.close;
    return {...m,anchor:Number(value)>0?Number(value):m.price};
   });
@@ -252,32 +277,31 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   // display mode may switch to stable, but order matching must follow the trading rule.
  // Auto-trade annotations follow the backend trading stream: v2.4 + Q1 fill (shape-v2-q1).
  const autoTradeShapes=isDay?[]:turningCombinedSignals(turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),q1Turns),shapes=isDay||!showShapes?[]:finalTurns;
-  const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time));
+  const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time)&&reached(m.time));
   const quality=isDay||!showQuality?[]:q1Turns;
-  const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality);
+  const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality).filter(point=>reached(point.time));
   const volume=isDay?daily.map(b=>+b.volume/10000):aligned.map(b=>b?b.volume/100:null);
   const splits=aligned.map(b=>b?splitMinuteVolume(b,volumeFlow?.day===selectedDay?volumeFlow:undefined):null);
   const colors=isDay?daily.map(b=>+b.close>=+b.open?'#ef6568':'#36b898'):aligned.map((b,i)=>!b||!aligned[i-1]||+b.close>=+aligned[i-1]!.close?'#ef6568':'#36b898');
-  const indexByTime=new Map(benchmark?.bars.map(b=>[b.time,+b.close])||[]);
-  const canOverlay=!isDay&&!!benchmark&&!!previousClose&&previousClose>0&&+benchmark.previous_close>0;
-  const indexLine=aligned.map(b=>b&&canOverlay&&indexByTime.has(b.time)?indexByTime.get(b.time)!/+benchmark!.previous_close*previousClose!:null);
   const averages=aligned.map(b=>b?.average&&Number.isFinite(+b.average)&&+b.average>0?+b.average:null);
   const showPercent=!isDay&&Number.isFinite(previousClose)&&Number(previousClose)>0&&minute.length>0;
-  const stockMacd=hasMacd?minuteMacd(minute,macdParameters):[],stockTimes=minute.filter(b=>minuteSlots.includes(b.time)&&Number(b.close)>0).map(b=>b.time).sort(),firstStockTime=stockTimes[0]||'',lastStockTime=stockTimes.at(-1)||'';
+  const stockMacd=hasMacd?minuteMacd(displayMinute,macdParameters):[],stockTimes=displayMinute.filter(b=>minuteSlots.includes(b.time)&&Number(b.close)>0).map(b=>b.time).sort(),firstStockTime=stockTimes[0]||'',lastStockTime=stockTimes.at(-1)||'';
   const matchingMacdIndex=!!macdIndex&&macdBenchmark?.code===macdIndex.code&&macdBenchmark.date===selectedDay;
-  const indexBars=matchingMacdIndex?macdBenchmark!.bars.filter(b=>b.time>=firstStockTime&&b.time<=lastStockTime):[];
+  const indexCutoff=matchingMacdIndex?minuteTimeCutoff(macdBenchmark!.date,clock,macdBenchmark!.cached_at):null;
+  const indexBars=matchingMacdIndex&&indexCutoff!==null?macdBenchmark!.bars.filter(b=>b.time>=firstStockTime&&b.time<=lastStockTime&&Date.parse(`${macdBenchmark!.date}T${b.time}:00+08:00`)<=indexCutoff):[];
   const indexMacd=hasMacd?minuteMacd(indexBars,macdParameters):[];
   const indexVolumeByTime=new Map<string,number|null>();
   for(const b of indexBars)indexVolumeByTime.set(b.time,indexVolumeByTime.has(b.time)?null:Number.isSafeInteger(b.volume_lots)&&b.volume_lots!>=0?b.volume_lots!:null);
   const indexVolume=labels.map(t=>{const lots=indexVolumeByTime.get(t);return lots===undefined||lots===null?null:lots/10000;});
-  const volumeMax=isDay?undefined:volumeDisplayMaximum(volume),indexVolumeMax=volumeDisplayMaximum(indexVolume);
   const indexPrices=new Map<string,number>();for(const b of indexBars)indexPrices.set(b.time,indexPrices.has(b.time)?NaN:Number(b.close));
   let indexPrevious=Number(macdBenchmark?.previous_close),indexColor='#ef6568',indexStarted=false;
   const indexVolumeColors=labels.map(time=>{const close=indexPrices.get(time);if(!Number.isFinite(close)||!close||close<=0){if(indexStarted)indexPrevious=NaN;return '#8c9db6';}const color=Number.isFinite(indexPrevious)?close>indexPrevious?'#ef6568':close<indexPrevious?'#36b898':indexColor:'#8c9db6';indexPrevious=close;indexStarted=true;if(color!=='#8c9db6')indexColor=color;return color;});
   const macdYAxis=2+Number(showPercent),axisIndices=hasMacd?[0,1,2,3,4]:[0,1];
   let lastHeaderIndex=-2;
   refreshMacd.current=hasMacd?(index)=>{
-   const idx=index??stockMacd.reduce((last,p,i)=>p?i:last,-1);if(idx===lastHeaderIndex)return;lastHeaderIndex=idx;
+   const z=minuteZoom.current;
+   const lo=Math.max(0,Math.round((labels.length-1)*(z?.start??0)/100)),hi=Math.min(labels.length-1,Math.round((labels.length-1)*(z?.end??100)/100));
+   const idx=index!==undefined&&index>=lo&&index<=hi?index:stockMacd.reduce((last,p,i)=>p&&i>=lo&&i<=hi?i:last,-1);if(idx===lastHeaderIndex)return;lastHeaderIndex=idx;
    for(const [i,values] of [volume,indexVolume].entries()){
     const header=volumeHeaders.current[i],value=values[idx];if(!header)continue;
     const time=header.querySelector('time'),number=header.querySelector('.volume-value');
@@ -288,14 +312,17 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
     for(const [key,value] of [['time',labels[idx]||''],['dif',`DIF ${p?macdNumber(p.dif):'—'}`],['dea',`DEA ${p?macdNumber(p.dea):'—'}`],['histogram',`MACD ${p?macdNumber(p.histogram):'—'}`]]){const el=header.querySelector<HTMLElement>(`[data-macd="${key}"]`);if(el){el.textContent=value;if(key==='histogram')el.style.color=p&&p.histogram<0?'#36b898':'#ef6568';}}
    }
   }:null;
-  // Benchmark overlays cannot expand the stock's price axis beyond its actual limit.
-  const priceValues=[...automatic.map(m=>m.price),...tradePoints.map(m=>m.price),...minute.map(b=>+b.close),...averages,...(currentPrice?[currentPrice.price]:[])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
-  const priceScale=showPercent?intradayPriceScale(previousClose,priceValues,priceLimits):{};
+  // Only reached stock prices and annotations set the display range; index data cannot expand it.
+  const priceValues=[...automatic.map(m=>m.price),...tradePoints.filter(m=>reached(m.time)).map(m=>m.price),...displayMinute.flatMap(b=>[+b.close,Number(b.high),Number(b.low)]),...rangePrices,...averages,...(displayedPrice?[displayedPrice.price]:[])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
+  const priceScale=showPercent?intradayPriceScale(previousClose,priceValues):{};
   const limitLines=[{kind:'涨停',value:priceLimits.up,color:'#ef6568',position:'insideEndBottom'},{kind:'跌停',value:priceLimits.down,color:'#36b898',position:'insideEndTop'}].filter(row=>row.value!==undefined&&row.value>=Number(priceScale.min)&&row.value<=Number(priceScale.max)).map(row=>({name:row.kind,yAxis:row.value,lineStyle:{color:row.color,type:'dashed',width:1},label:{show:true,position:row.position,color:row.color,fontSize:10,formatter:`${row.kind} ${row.value!.toFixed(2)}（${pricePercent(row.value!,Number(previousClose))}）`}}));
+  const axisRich={rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}};
+  const priceLabel=(value:number)=>`{${Math.abs(value-Number(previousClose))<.000001?'flat':value>Number(previousClose)?'rise':'fall'}|${value.toFixed(2)}}`;
+  const previousLine=showPercent?[{name:'昨收',yAxis:Number(previousClose),lineStyle:{color:'#8c9db6',type:'dashed',width:1},label:{show:false}}]:[];
   const percentLabel=(value:number)=>{const pct=(value/Number(previousClose)-1)*100,rounded=Math.abs(pct)<.005?0:pct;return `{${rounded>0?'rise':rounded<0?'fall':'flat'}|${rounded>0?'+':''}${rounded.toFixed(2)}%}`;};
 
   const marks=isDay?[]:
-    topVolumeMarks(minute,events,showOpening,showTriggered);
+    topVolumeMarks(displayMinute,events,showOpening,showTriggered);
   const key=view+labels.join('|');const old=chart.getOption()?.dataZoom as {start?:number;end?:number}[]|undefined;
   let zoom=key===labelsKey.current?{start:old?.[0]?.start??0,end:old?.[0]?.end??100}:{start:0,end:100};labelsKey.current=key;
   if(isDay&&labels.length){const candleKey=stockCode+'|'+view,saved=candleWindows.current.get(candleKey),selectionChanged=candleSelections.current.get(candleKey)!==selectedCandle;const {lo,hi}=dailyViewport(labels,saved?.dates||[],!saved||selectionChanged?selectedCandle:undefined,saved?.lastDate||'',candleSizes[view]);candleSelections.current.set(candleKey,selectedCandle);lastDailyDate.current=labels.at(-1)||'';zoom={start:lo/Math.max(1,labels.length-1)*100,end:hi/Math.max(1,labels.length-1)*100};windowDates.current=[labels[lo],labels[hi]];candleWindows.current.set(stockCode+'|'+view,{dates:windowDates.current,lastDate:lastDailyDate.current});}
@@ -327,8 +354,9 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
     itemStyle:{color:m.value==='开盘量'?'#8798b2':'#e9ad58'},
     label:m.value==='高'?{show:true,formatter:'高',position:layout.position,distance:layout.distance,offset:[-16,0],color:'#fff',backgroundColor:'#9b6b16',borderColor:'#e9ad58',borderWidth:.6,borderRadius:3,width:14,height:14,fontSize:9,fontWeight:600,lineHeight:14,padding:0,align:'center'}:{show:true,formatter:m.value,fontSize:8,color:'#a7b6cc',position:'top',distance:4}};
   });
+  minuteZoom.current={start:zoom.start,end:zoom.end};
   chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
-   legend:{show:!isDay,data:['价格','均价',...(canOverlay?['上证走势']:[])],top:0,textStyle:{color:'#9dacc5',...(hasMacd?{fontSize:10}: {})},...(hasMacd?{itemWidth:16,itemHeight:8,itemGap:14}: {})},
+   legend:{show:!isDay,data:['价格','均价'],top:0,textStyle:{color:'#9dacc5',...(hasMacd?{fontSize:10}: {})},...(hasMacd?{itemWidth:16,itemHeight:8,itemGap:14}: {})},
    tooltip:{trigger:'axis',confine:false,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
     extraCssText:(isDay?'padding:4px 7px;':'padding:7px 9px;')+'pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
      const canvas=chart.getDom(),bounds=canvas.getBoundingClientRect(),host=canvas.closest('.detail');
@@ -348,7 +376,9 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
     },
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;if(idx>=0)refreshMacd.current?.(idx);const root=document.createElement('div');root.className='quote-tooltip docked-tooltip '+(isDay?'daily-tooltip':'minute-tooltip');
      if(observations.some(m=>m.time===aligned[idx]?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
-     const rows:string[]=[];if(isDay){const b=daily[idx];if(b){rows.push(view==='weekly'?`周K · ${'startDate' in b?b.startDate:b.date}—${b.date}${b.provisional?'（含盘中数据）':''}`:b.provisional?b.date+' · 盘中日K（未收盘）':b.date,`开盘：${price(b.open)} 元`,`收盘：${price(b.close)} 元`,`最高：${price(b.high)} 元`,`最低：${price(b.low)} 元`,`成交量：${wanShares(b.volume)} 万股`);for(const gap of gaps.filter(g=>g.date===b.date))rows.push(`${gap.provisional?'盘中':''}${gap.direction==='up'?'向上':'向下'}跳空：${price(gap.originalLow)}—${price(gap.originalHigh)} 元`,gap.filledOn?`已回补：${gap.filledOn}`:`未回补：${price(gap.low)}—${price(gap.high)} 元`);const n=events.filter(e=>view==='weekly'?e.trading_date>=(('startDate' in b?b.startDate:b.date) as string)&&e.trading_date<=b.date:e.trading_date===b.date).length;if(n)rows.push(`触发：${n} 次`);for(const n of ma.visible?ma.enabled:[]){const v=maValues.get(n)![idx];rows.push(`MA${n}：${v===null?'—':v.toFixed(2)+' 元'}`);}for(const signal of ma250Signals.filter(s=>s.date===b.date)){rows.push(`年线回踩${signal.strong?'（强）':''}：收 ${price(signal.close)} 元 / MA250 ${price(signal.ma250)} 元（${signal.distance_pct>=0?'+':''}${signal.distance_pct.toFixed(1)}%）`);rows.push(`回踩：${signal.touch_date} 低点 ${price(signal.touch_low)} 元（较年线 ${(-signal.touch_depth_pct).toFixed(1)}%）`);rows.push(`自高点回撤 ${signal.pullback_pct.toFixed(1)}% · 参考止损 ${price(signal.stop)} 元`);if(signal.atr20_pct!==undefined&&signal.atr20_pct!==null)rows.push(`波动：ATR20 ${signal.atr20_pct.toFixed(1)}%`);rows.push(signal.strong?'强信号：指数在年线上、回踩未破年线、未破前低、距年线≤7%':'强信号未满足：'+((signal.strong_reasons||[]).map(reason=>ma250Reason[reason]||reason).join('、')||'指数数据缺失'));}for(const item of ma250Breakouts.filter(item=>item.date===b.date)){rows.push('突破年线'+(item.quality?'（确认）':'（观察）')+'：收 '+price(item.close)+' 元 / MA250 '+price(item.ma250)+' 元（+'+item.margin_pct.toFixed(1)+'%）');rows.push('年线斜率60日 '+(item.slope60_pct===null?'—':(item.slope60_pct>=0?'+':'')+item.slope60_pct.toFixed(1)+'%')+' · 量比 '+(item.volume_ratio===null?'—':item.volume_ratio.toFixed(2))+' · 此前在年线下 '+item.days_below+' 日');}for(const item of e2Signals.filter(item=>item.date===b.date)){rows.push('E2确认 · 研究参考',`源强信号：${item.source_date} · 第${item.confirmation_day}个交易日确认`,`收盘 ${price(item.close)} 元 > 源信号高点 ${price(item.source_high)} 元`,`收盘仍在年线1%以上及MA5以上，沪深300在年线上`,`仅研究参考，不进入正式提醒或自动交易；后续入场需另行判断`);}rows.push(view==='weekly'?'双击查看该周最后交易日分时':'双击查看当天分时');}}
+     const rows:string[]=[];if(isDay){const b=daily[idx];if(b){
+      const changeText=candleChangeText(daily,idx);
+      rows.push(view==='weekly'?`周K · ${'startDate' in b?b.startDate:b.date}—${b.date}${b.provisional?'（含盘中数据）':''}`:b.provisional?b.date+' · 盘中日K（未收盘）':b.date,`涨跌幅：${changeText}`,`开盘：${price(b.open)} 元`,`收盘：${price(b.close)} 元`,`最高：${price(b.high)} 元`,`最低：${price(b.low)} 元`,`成交量：${wanShares(b.volume)} 万股`);for(const gap of gaps.filter(g=>g.date===b.date))rows.push(`${gap.provisional?'盘中':''}${gap.direction==='up'?'向上':'向下'}跳空：${price(gap.originalLow)}—${price(gap.originalHigh)} 元`,gap.filledOn?`已回补：${gap.filledOn}`:`未回补：${price(gap.low)}—${price(gap.high)} 元`);const n=events.filter(e=>view==='weekly'?e.trading_date>=(('startDate' in b?b.startDate:b.date) as string)&&e.trading_date<=b.date:e.trading_date===b.date).length;if(n)rows.push(`触发：${n} 次`);for(const n of ma.visible?ma.enabled:[]){const v=maValues.get(n)![idx];rows.push(`MA${n}：${v===null?'—':v.toFixed(2)+' 元'}`);}for(const signal of ma250Signals.filter(s=>s.date===b.date)){rows.push(`年线回踩${signal.strong?'（强）':''}：收 ${price(signal.close)} 元 / MA250 ${price(signal.ma250)} 元（${signal.distance_pct>=0?'+':''}${signal.distance_pct.toFixed(1)}%）`);rows.push(`回踩：${signal.touch_date} 低点 ${price(signal.touch_low)} 元（较年线 ${(-signal.touch_depth_pct).toFixed(1)}%）`);rows.push(`自高点回撤 ${signal.pullback_pct.toFixed(1)}% · 参考止损 ${price(signal.stop)} 元`);if(signal.atr20_pct!==undefined&&signal.atr20_pct!==null)rows.push(`波动：ATR20 ${signal.atr20_pct.toFixed(1)}%`);rows.push(signal.strong?'强信号：指数在年线上、回踩未破年线、未破前低、距年线≤7%':'强信号未满足：'+((signal.strong_reasons||[]).map(reason=>ma250Reason[reason]||reason).join('、')||'指数数据缺失'));}for(const item of ma250Breakouts.filter(item=>item.date===b.date)){rows.push('突破年线'+(item.quality?'（确认）':'（观察）')+'：收 '+price(item.close)+' 元 / MA250 '+price(item.ma250)+' 元（+'+item.margin_pct.toFixed(1)+'%）');rows.push('年线斜率60日 '+(item.slope60_pct===null?'—':(item.slope60_pct>=0?'+':'')+item.slope60_pct.toFixed(1)+'%')+' · 量比 '+(item.volume_ratio===null?'—':item.volume_ratio.toFixed(2))+' · 此前在年线下 '+item.days_below+' 日');}for(const item of e2Signals.filter(item=>item.date===b.date)){rows.push('E2确认 · 研究参考',`源强信号：${item.source_date} · 第${item.confirmation_day}个交易日确认`,`收盘 ${price(item.close)} 元 > 源信号高点 ${price(item.source_high)} 元`,`收盘仍在年线1%以上及MA5以上，沪深300在年线上`,`仅研究参考，不进入正式提醒或自动交易；后续入场需另行判断`);}rows.push(view==='weekly'?'截至该日 · 双击查看该日分时':'双击查看当天分时');}}
      else{const b=aligned[idx];const hoverPct=b&&Number.isFinite(previousClose)&&Number(previousClose)>0?(+b.close/Number(previousClose)-1)*100:null;const roundedPct=hoverPct!==null&&Math.abs(hoverPct)<.005?0:hoverPct;if(!b)rows.push(labels[idx]||'', '暂无该分钟成交数据');if(b)rows.push(b.time,`价格：${price(b.close)} 元`,`涨跌幅：${roundedPct===null?'暂无昨收':(roundedPct>0?'+':'')+roundedPct.toFixed(2)+'%'}`,`均价：${b.average&&Number.isFinite(+b.average)?price(b.average)+' 元':'暂无成交额数据'}`,`分钟量：${wan(b.volume/100)} 手`,...(!b.complete?['当前分钟（未结束）']:[]));if(b&&chosen){const change=(+b.close/chosen.price-1)*100;rows.push(`基准${chosen.kind||'触发'}：${chosen.time} · ${price(chosen.price)} 元`,`相对${chosen.kind||'触发'}涨跌幅：${change>0?'+':''}${(Math.abs(change)<.005?0:change).toFixed(2)}%`);
      }}
      if(isDay&&showDailyPatterns&&daily[idx])for(const p of dayPatterns.filter(p=>p.lines.some(l=>l.from.index<=idx&&l.to.index>=idx)).slice(-3)){
@@ -383,39 +413,40 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
      refreshTrade.current=null;if(!isDay&&chosen&&aligned[idx])refreshTrade.current=appendTradeTooltip(root,chosen.price,+aligned[idx].close,()=>costsRef.current,aligned[idx].time<chosen.time,aligned[idx].time===chosen.time);return root;}
    },axisPointer:{link:[{xAxisIndex:'all'}]},grid:(hasMacd?minutePanels.grids:[{top:30,height:'55%'},{top:'72%',height:'17%'}]).map(grid=>({left:65,right:showPercent?72:35,...grid})),
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,...timeGrid,axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}},axisPointer:{label:{show:!hasMacd}},axisLabel:{show:!hasMacd,hideOverlap:true,...(!isDay?{interval:timeTick,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t}:{})}},{type:'category',gridIndex:1,data:labels,boundaryGap:isDay,...timeGrid,axisLabel:{show:false},axisPointer:{label:{show:false}},axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}}},...(hasMacd?[2,3,4].map(gridIndex=>({type:'category',gridIndex,data:labels,boundaryGap:false,...timeGrid,axisLabel:{show:gridIndex===4,hideOverlap:true,interval:timeTick,fontSize:10,margin:5,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t},axisPointer:{label:{show:gridIndex===4}},axisLine:{lineStyle:{color:'#3b485b'}}})):[])],
-   yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:(n:number)=>n.toFixed(2)}},{scale:true,gridIndex:1,...(!isDay?{min:0,max:volumeMax}:{}),splitNumber:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:{rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}}}}]:[]),...(hasMacd?[
+   yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:showPercent?priceLabel:(n:number)=>n.toFixed(2),...(showPercent?{rich:axisRich}: {})}},{scale:true,gridIndex:1,...(!isDay?{min:0,max:'dataMax'}:{}),splitNumber:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:axisRich}}]:[]),...(hasMacd?[
     {type:'value',gridIndex:2,...macdRange(stockMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}},
-    {type:'value',gridIndex:3,min:0,max:indexVolumeMax,splitNumber:2,axisLabel:{fontSize:10,formatter:wan},axisPointer:{label:{formatter:(p:{value:number})=>wan(p.value)+' 万手'}},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}}},
+    {type:'value',gridIndex:3,min:0,max:'dataMax',splitNumber:2,axisLabel:{fontSize:10,formatter:wan},axisPointer:{label:{formatter:(p:{value:number})=>wan(p.value)+' 万手'}},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}}},
     {type:'value',gridIndex:4,...macdRange(indexMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}}
    ]:[])],
    dataZoom:[{type:'inside',xAxisIndex:axisIndices,...zoom,...(isDay?{filterMode:'weakFilter',zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:axisIndices,...zoom,bottom:1,height:hasMacd?10:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{filterMode:'weakFilter',zoomLock:true,handleSize:0,brushSelect:false}: {})}],
    series:[isDay?{name:view==='weekly'?'周K':'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#91a2bb',position:'insideTopRight',align:'right',padding:[2,4]},data:[...visibleGaps.map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:g.direction==='up'?'rgba(239,101,104,.035)':'rgba(54,184,152,.035)',borderColor:g.direction==='up'?'rgba(239,101,104,.24)':'rgba(54,184,152,.24)',borderWidth:.7,borderType:'solid'}},{xAxis:daily.at(-1)!.date,yAxis:g.high}]),...ma250Signals.map(s=>[{name:'年线回踩',xAxis:s.touch_date,label:{show:false},itemStyle:{color:'rgba(242,176,74,.05)',borderColor:'rgba(242,176,74,.22)',borderWidth:.7,borderType:'dashed'}},{xAxis:s.date}])]},markPoint:{data:tradeMarks},markLine:{data:[]}}:
-    {name:'价格',type:'line',data:aligned.map(b=>b?+b.close:null),connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:1.2},markLine:{silent:true,symbol:'none',data:limitLines},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...tradeMarks,...observationMarks,...volumeMarkers,...buySignals.filter(e=>labels.includes(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
+    {name:'价格',type:'line',data:aligned.map(b=>b?+b.close:null),connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:.8},markLine:{silent:true,symbol:'none',data:[...previousLine,...limitLines]},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...tradeMarks,...observationMarks,...volumeMarkers,...buySignals.filter(e=>labels.includes(e.time)&&reached(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
     ...(!isDay?[{value:priceLimits.up,name:'涨停走势',color:'#ef6568'},{value:priceLimits.down,name:'跌停走势',color:'#36b898'}].filter(row=>row.value!==undefined).map(row=>({name:row.name,type:'line',data:aligned.map(b=>b&&Math.abs(+b.close-row.value!)<.000001?+b.close:null),connectNulls:false,showSymbol:true,symbol:'circle',symbolSize:3,z:7,silent:true,lineStyle:{color:row.color,width:2.8},itemStyle:{color:row.color}})):[]),
-    ...(canOverlay?[{name:'上证走势',type:'line',data:indexLine,showSymbol:false,connectNulls:false,z:2,lineStyle:{color:'#929aa9',width:1.2,type:'dashed',opacity:0.8},itemStyle:{color:'#929aa9'}}]:[]),
-    ...(!isDay?[{name:'均价',type:'line',data:averages,showSymbol:false,connectNulls:false,lineStyle:{color:'#e9b949',width:1.5},itemStyle:{color:'#e9b949'}}]:[]),
+    ...(!isDay?[{name:'均价',type:'line',data:averages,showSymbol:false,connectNulls:false,lineStyle:{color:'#e9b949',width:1},itemStyle:{color:'#e9b949'}}]:[]),
     ...(isDay?[{name:'成交量（万股）',type:'bar',xAxisIndex:1,yAxisIndex:1,data:volume.map((v,i)=>({value:v,itemStyle:{color:colors[i]}}))}]:[
      {name:'买盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,barWidth:'85%',barMaxWidth:9,itemStyle:{color:'#ef6568'},data:splits.map(b=>b?b.buy/100:null)},
      {name:'卖盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{color:'#36b898'},data:splits.map(b=>b?b.sell/100:null)},
      {name:'中性 / 未分类量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{color:'#718096'},data:splits.map(b=>b?b.verified?(b.neutral+b.unknown)/100:0:null)},
      {name:'总成交量（回退）',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,itemStyle:{opacity:1,color:(params:{dataIndex:number})=>colors[params.dataIndex]},data:splits.map(b=>b?b.verified?0:b.total/100:null)}]),
     ...(isDay&&ma.visible?ma.periods.filter(n=>ma.enabled.includes(n)).map(n=>({name:`MA${n}`,type:'line',data:maValues.get(n)!,showSymbol:false,connectNulls:false,silent:true,z:4,lineStyle:{color:MA_COLORS[ma.periods.indexOf(n)],width:1.2},itemStyle:{color:MA_COLORS[ma.periods.indexOf(n)]}})):[]),
-    ...(isDay&&ma250Signals.length?[{name:'年线回踩信号',type:'scatter',z:7,silent:true,symbol:'triangle',symbolSize:9,symbolOffset:[0,14],
+    ...(isDay&&ma250Signals.length?[{name:'年线回踩信号',type:'scatter',z:7,silent:true,symbol:'triangle',symbolSize:7,symbolOffset:(value:unknown)=>annualMarkerOffset(value,'below'),
      data:ma250Signals.map(s=>({value:[s.date,s.close],ma250Key:s.key||s.date,strong:!!s.strong,
-      symbol:s.strong?'diamond':'triangle',symbolSize:s.strong?10:9,
+      symbol:s.strong?'diamond':'triangle',symbolSize:7,
       itemStyle:{color:s.strong?'#ffe08a':'#f2b04a',borderColor:s.strong?'#ffb300':'#f2b04a',borderWidth:s.strong?1:0},
-      label:{show:true,formatter:s.strong?'年线回踩·强':'年线回踩',position:'bottom',distance:10,color:s.strong?'#fff3c4':'#ffd98a',backgroundColor:s.strong?'#5c4006':'#4a3410',borderColor:s.strong?'#ffb300':'#f2b04a',borderWidth:.6,borderRadius:3,padding:[2,4],fontSize:10}})),
+      labelLine:{show:true,length2:0,lineStyle:{color:s.strong?'#ffb300':'#f2b04a',width:1,type:[2,2]}},
+      label:{show:true,formatter:s.strong?'年线回踩·强':'年线回踩',position:'bottom',distance:24,color:s.strong?'#fff3c4':'#ffd98a',backgroundColor:s.strong?'#5c4006':'#4a3410',borderColor:s.strong?'#ffb300':'#f2b04a',borderWidth:.6,borderRadius:3,padding:[1,4],fontSize:7,height:10,lineHeight:10,verticalAlign:'middle'}})),
      labelLayout:{hideOverlap:true}}]:[]),
     ...(isDay&&e2Signals.length?[{name:'E2研究参考',type:'scatter',z:8,silent:true,symbol:'rect',symbolSize:8,symbolOffset:[0,-16],
      data:e2Signals.map(s=>({value:[s.date,s.close],researchOnly:true,e2Key:s.key,
       itemStyle:{color:'#c6adff',borderColor:'#493568',borderWidth:1},
       label:{show:true,formatter:'E2·研究参考',position:'top',distance:11,color:'#e5d8ff',backgroundColor:'#302044',borderColor:'#9976c6',borderWidth:.6,borderRadius:3,padding:[2,4],fontSize:10}})),
      labelLayout:{hideOverlap:true}}]:[]),
-    ...(isDay&&ma250Breakouts.length?[{name:'年线突破信号',type:'scatter',z:6,silent:true,symbol:'circle',symbolSize:8,
+    ...(isDay&&ma250Breakouts.length?[{name:'年线突破信号',type:'scatter',z:6,silent:true,symbol:'triangle',symbolSize:7,symbolRotate:180,symbolOffset:(value:unknown)=>annualMarkerOffset(value,'above'),
      data:ma250Breakouts.map(b=>({value:[b.date,b.close],breakoutKey:b.date,quality:!!b.quality,
-      symbolSize:b.quality?9:7,
+      symbolSize:7,
       itemStyle:{color:b.quality?'#7fd4ff':'#5aa9e6',borderColor:'#0b2a40',borderWidth:1},
-      label:{show:true,formatter:b.quality?'突破·确认':'突破年线',position:'top',distance:9,color:b.quality?'#d9f4ff':'#b9e2f7',backgroundColor:'#0b2a40',borderColor:'#5aa9e6',borderWidth:.6,borderRadius:3,padding:[2,4],fontSize:10}})),
+      labelLine:{show:true,length2:0,lineStyle:{color:b.quality?'#7fd4ff':'#5aa9e6',width:1,type:[2,2]}},
+      label:{show:true,formatter:b.quality?'突破·确认':'突破年线',position:'top',distance:24,color:b.quality?'#d9f4ff':'#b9e2f7',backgroundColor:'#0b2a40',borderColor:'#5aa9e6',borderWidth:.6,borderRadius:3,padding:[0,2],fontFamily:'"PingFang SC","Microsoft YaHei",sans-serif',fontSize:7,fontWeight:600,lineHeight:10}})),
      labelLayout:{hideOverlap:true}}]:[]),
     ...(!isDay&&automatic.length?[
      {name:'自动委托连线',type:'custom',silent:true,z:8,clip:false,tooltip:{show:false},dimensions:['time','price','offset'],encode:{x:0,y:1},

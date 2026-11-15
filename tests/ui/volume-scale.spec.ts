@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {volumeDisplayMaximum} from '../../src/volumeScale';
 
-test('large stock and index peaks fit in full with headroom and original inputs stay intact',()=>{
+test('optional rounded-headroom mode fits large peaks and original inputs stay intact',()=>{
  const values=[5294,2459,3155,...Array(225).fill(211),...Array(12).fill(1323)],before=[...values];
  expect(volumeDisplayMaximum(values)).toBe(6000);expect(values).toEqual(before);
  expect(volumeDisplayMaximum([500,...Array(240).fill(10)])).toBe(600);
@@ -13,4 +13,19 @@ test('sparse and small-unit volumes fit their peaks; missing and zero data retai
  expect(volumeDisplayMaximum([5000,...Array(18).fill(100)])).toBe(6000);
  expect(volumeDisplayMaximum(Array(241).fill(100))).toBe(120);
  expect(volumeDisplayMaximum([.0211,null,.0002])).toBeCloseTo(.025,8);
+});
+
+test('stock-minute scale follows each new peak and preserves the original sequence',()=>{
+ const values=[255821,190956,110218],before=[...values];
+ expect(volumeDisplayMaximum(values,true)).toBe(255821);
+ expect(volumeDisplayMaximum([...values,400000],true)).toBe(400000);
+ expect(values[0]/volumeDisplayMaximum([...values,400000],true)!).toBeCloseTo(.6395525,7);
+ expect(values).toEqual(before);expect(volumeDisplayMaximum([0,NaN,null],true)).toBeUndefined();
+});
+
+
+test('index ten-thousand-lot scale follows a new larger minute and keeps smaller minutes proportional',()=>{
+ const values=[500,10,null,25],before=[...values];expect(volumeDisplayMaximum(values,true)).toBe(500);
+ expect(volumeDisplayMaximum([...values,800],true)).toBe(800);
+ expect(values[0]/volumeDisplayMaximum([...values,800],true)!).toBe(.625);expect(values).toEqual(before);
 });

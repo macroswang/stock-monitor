@@ -482,21 +482,31 @@ test('daily and weekly tooltips stay inside the chart and switch away from the i
   await page.setViewportSize({width,height:980});await page.evaluate(()=>new Promise<void>(resolve=>{window.scrollTo(0,0);requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()));}));
   const box=(await chart.boundingBox())!,card=(await page.locator('.detail').boundingBox())!;
   const hover=async(fraction:number)=>{
-   const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data.filter((d:string)=>{const x=c.convertToPixel({xAxisIndex:0},d);return x>=65&&x<=c.getWidth()-35;}),i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({xAxisIndex:0},labels[i]),date:labels[i]};},fraction);
-   const cursor={x:box.x+target.xy,y:box.y+150};await page.mouse.move(cursor.x,cursor.y);await expect(tooltip.locator('..')).toBeVisible();await expect(tooltip.locator(':scope>div').first()).toContainText(target.date);
-   const rect=(await tooltip.locator('..').boundingBox())!;expect(cursor.x<rect.x||cursor.x>rect.x+rect.width||cursor.y<rect.y||cursor.y>rect.y+rect.height).toBe(true);
+   let sample:{x:number;y:number;width:number;height:number;font:number;fits:boolean}|null=null;
+   // History/resize updates can replace the tooltip between separate DOM reads.
+   // Sample one connected popup atomically; retain every size and avoidance bound.
+   await expect(async()=>{
+    const target=await chart.evaluate(async(el,f)=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^\"\n]*echarts\.js[^\"\n]*)"/)![1]),c=e.getInstanceByDom(el),labels=c.getOption().xAxis[0].data.filter((d:string)=>{const x=c.convertToPixel({xAxisIndex:0},d);return x>=65&&x<=c.getWidth()-35;}),i=Math.round((labels.length-1)*f);return {xy:c.convertToPixel({xAxisIndex:0},labels[i]),date:labels[i]};},fraction);
+    const cursor={x:box.x+target.xy,y:box.y+150};await page.mouse.move(cursor.x,cursor.y);
+    const state=await tooltip.evaluate(el=>{const host=el.parentElement;if(!el.isConnected||!host?.getClientRects().length)return null;const r=host.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,font:parseFloat(getComputedStyle(el).fontSize),fits:el.scrollWidth<=el.clientWidth+1,date:el.firstElementChild?.textContent||''};});
+    expect(state).not.toBeNull();expect(state!.date).toContain(target.date);expect(Number.isFinite(state!.font)).toBe(true);
+    expect(cursor.x<state!.x||cursor.x>state!.x+state!.width||cursor.y<state!.y||cursor.y>state!.y+state!.height).toBe(true);sample=state;
+   }).toPass({timeout:5000});
+   return sample!;
   };
-  await hover(.35);const first=(await tooltip.locator('..').boundingBox())!;
+  const first=await hover(.35);
   expect(first.y).toBeGreaterThanOrEqual(box.y+7);expect(first.y+first.height).toBeLessThanOrEqual(box.y+box.height);
   expect(Math.abs(first.x+first.width-(card.x+card.width-13))).toBeLessThan(3);
   // 用户 2026-11-12 反馈：日K/周K 浮窗偏大，要求紧凑；收紧尺寸上限防止回退。
   expect(first.width).toBeLessThanOrEqual(260);expect(first.height).toBeLessThanOrEqual(150);
-  expect(await tooltip.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeLessThanOrEqual(9.5);
+  expect(first.font).toBeLessThanOrEqual(9.5);
   await expect(tooltip).toContainText('开盘：');await expect(tooltip).toContainText('成交量：');
-  await tooltip.locator('..').screenshot({path:'../../outputs/compact-tooltip-20261113/'+(view==='周K'?'weekly':'daily')+'-tooltip-compact.png'});
+  // Element screenshots scroll/wait on a transient popup that history updates
+  // may replace. Capture its already verified viewport bounds without moving it.
+  await page.screenshot({path:'../../outputs/compact-tooltip-20261113/'+(view==='周K'?'weekly':'daily')+'-tooltip-compact.png',clip:{x:first.x,y:first.y,width:first.width,height:first.height}});
   expect(await tooltip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   expect(await tooltip.locator('..').evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
-  await hover(.75);const second=(await tooltip.locator('..').boundingBox())!;
+  const second=await hover(.75);
   expect(second.x).toBeLessThan(first.x);expect(Math.abs(second.y-first.y)).toBeLessThan(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:test.info().outputPath(`${view==='周K'?'weekly':'daily'}-overlay-${width}.png`)});
@@ -1002,22 +1012,22 @@ function dailyHistoryFeed(start='2023-01-01'){
 async function dailyWindowState(page:Page){
  return page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c?.getOption();if(!o?.xAxis?.[0]?.data?.length)return null;const labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {count:labels.length,visible:hi-lo+1,rendered:c.getModel().getSeriesByIndex(0).getData().count(),first:labels[0],last:labels.at(-1),visibleFirst:labels[lo],visibleLast:labels[hi],selected:document.querySelector('.linked-minute h3')?.textContent?.match(/\d{4}-\d{2}-\d{2}/)?.[0],zoomLock:z.zoomLock};});
 }
-test('daily entry backfills a short cache to 90 candles; left boundary loads history once and preserves focus',async({page})=>{
+test('daily entry backfills a short cache to 250 candles; left boundary loads history once and preserves focus',async({page})=>{
  const code='sh600519',feed=dailyHistoryFeed();await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:'2026-10-26',selected:'2026-10-26',zoomLock:true});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(1);
- const initial=(await dailyWindowState(page))!;expect(initial.count).toBeGreaterThan(90);const earlier=feed.filter(r=>r.date<initial.first).at(-1)!.date;
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,last:'2026-10-26',selected:'2026-10-26',zoomLock:true});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);
+ const initial=(await dailyWindowState(page))!;expect(initial.count).toBeGreaterThan(250);const earlier=feed.filter(r=>r.date<initial.first).at(-1)!.date;
  await selectDailyDate(page,initial.first);const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowLeft');for(let i=0;i<6;i++)await chart.press('ArrowLeft');
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:earlier});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);expect((await dailyWindowState(page))!.count).toBeGreaterThan(initial.count);await expect(chart).toBeFocused();
- await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,selected:initial.first});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);
- await page.screenshot({path:'docs/daily-90-keyboard-backfill.png'});
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:earlier});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);expect((await dailyWindowState(page))!.count).toBeGreaterThan(initial.count);await expect(chart).toBeFocused();
+ await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,selected:initial.first});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
+ await page.screenshot({path:'docs/daily-250-keyboard-backfill.png'});
  const edge=(await dailyWindowState(page))!.first;await selectDailyDate(page,edge);await chart.focus();await chart.press('ArrowLeft');await expect(page.locator('.daily-load-state')).toBeVisible();await selectDailyDate(page,initial.first);
- await expect(page.locator('.daily-load-state')).toHaveCount(0);await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:initial.first});
+ await expect(page.locator('.daily-load-state')).toHaveCount(0);await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:initial.first});
 });
 test('right boundary fills the next batch for an old daily view without jumping to today',async({page})=>{
  const code='sh600519',feed=dailyHistoryFeed(),old='2024-10-25';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await rpc('__audit_cache',{code,day:old,data:{date:old,source:'tencent',bars:[{time:'09:31',close:'10',volume:10000,complete:true}]}});
  await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByLabel('交易日期').selectOption(old);await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:old,selected:old});const before=dailyLoadRequests.filter(r=>r.code===code).length;
- const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,selected:'2024-10-28'});
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,last:old,selected:old});const before=dailyLoadRequests.filter(r=>r.code===code).length;
+ const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:'2024-10-28'});
  expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(before+1);expect((await dailyWindowState(page))!.last<'2026-10-26').toBe(true);await expect(chart).toBeFocused();
  await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({selected:'2024-10-29'});
 });
@@ -1029,7 +1039,8 @@ test('short actual daily history stays short without fabricating candles or retr
 test('switching stocks while daily backfill is running cannot replace the newly selected chart',async({page})=>{
  const code='sh600519';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:dailyHistoryFeed(),delay:.4});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.locator('.daily-load-state')).toBeVisible();await expect.poll(()=>dailyLoadRequests.some(r=>r.code===code)).toBe(true);
  await page.locator('.stock').filter({hasText:'宏昌电子'}).click();await expect(page.locator('.detail h2')).toContainText('宏昌电子');await expect.poll(async()=>(await rpc('chart',{code,kind:'daily'})).length).toBeGreaterThan(90);
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90,rendered:90,last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
+ const available=(await rpc('chart',{code:'sh603002',kind:'daily'})).length;
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:Math.min(250,available),rendered:Math.min(250,available),last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
 });
 
 test('模拟委托可保存计划并在复盘中记录实际过程',async({page})=>{
@@ -1146,47 +1157,47 @@ test('trigger volume visibility is independent from the opening marker and persi
 async function candleState(page:Page,label='日K线及成交量'){
  return page.getByLabel(label,{exact:true}).evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {labels,visible:hi-lo+1,first:labels[lo],last:labels[hi],candles:o.series[0].data,volume:o.series.find((s:any)=>s.name==='成交量（万股）').data,mas:o.series.filter((s:any)=>/^MA\d+$/.test(s.name)).map((s:any)=>({name:s.name,data:s.data})),axes:o.xAxis.map((a:any)=>a.data),zoomAxes:z.xAxisIndex};});
 }
-async function seedCandleHistory(page:Page){
- const code='sh600519',feed=dailyHistoryFeed();await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:90});return {code,feed};
+async function seedCandleHistory(page:Page,start?:string){
+ const code='sh600519',feed=dailyHistoryFeed(start);await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250});return {code,feed};
 }
 test('daily up down keyboard zoom links price and volume, preserves the date anchor and survives refresh',async({page})=>{
  const {code}=await seedCandleHistory(page),chart=page.getByLabel('日K线及成交量',{exact:true}),initial=await candleState(page);
- await expect(chart).toBeFocused();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page)).visible).toBe(60);expect((await candleState(page)).last).toBe(initial.last);
- await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(90);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(120);
+ await expect(chart).toBeFocused();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page)).visible).toBe(180);expect((await candleState(page)).last).toBe(initial.last);
+ await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(250);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(400);
  const state=await candleState(page);expect(state.axes[0]).toEqual(state.axes[1]);expect(state.zoomAxes).toEqual([0,1]);expect(state.last).toBe(initial.last);
  await rpc('__audit_daily',{code,day:initial.last,data:{date:initial.last,open:'10',close:'11',low:'9',high:'12',volume:'1234567',volume_unit:'shares',source:'test'}});
- await expect.poll(async()=>(await candleState(page)).volume.at(-1).value).toBeCloseTo(123.4567,4);expect((await candleState(page)).visible).toBe(120);await expect(chart).toBeFocused();
- await chart.press('ArrowLeft');await expect.poll(async()=>(await candleState(page)).visible).toBe(120);
+ await expect.poll(async()=>(await candleState(page)).volume.at(-1).value).toBeCloseTo(123.4567,4);expect((await candleState(page)).visible).toBe(400);await expect(chart).toBeFocused();
+ await chart.press('ArrowLeft');await expect.poll(async()=>(await candleState(page)).visible).toBe(400);
  await page.screenshot({path:'outputs/kline-daily-zoom-ma.png'});
 });
 test('weekly candles aggregate actual OHLC and total volume, support zoom and move by weeks',async({page})=>{
- const {feed}=await seedCandleHistory(page);await page.getByRole('button',{name:'周K',exact:true}).click();
- const label='周K线及成交量',chart=page.getByLabel(label,{exact:true});await expect.poll(async()=>(await candleState(page,label)).visible).toBe(90);
+ const {feed}=await seedCandleHistory(page,'2015-01-01');await page.getByRole('button',{name:'周K',exact:true}).click();
+ const label='周K线及成交量',chart=page.getByLabel(label,{exact:true});await expect.poll(async()=>(await candleState(page,label)).visible).toBe(250);
  const state=await candleState(page,label),expected=weeklyBars(feed),last=expected.at(-1)!;
  expect(state.candles.at(-1)).toEqual([+last.open,+last.close,+last.low,+last.high]);expect(state.volume.at(-1).value).toBeCloseTo(+last.volume/10000,8);expect(state.mas.find((s:any)=>s.name==='MA5')!.data.at(-1)).toBe(movingAverage(expected,5).at(-1));expect(state.axes[0]).toEqual(state.axes[1]);
- await chart.focus();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(60);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(90);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(120);expect((await candleState(page,label)).last).toBe(last.date);
+ await chart.focus();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(180);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(250);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page,label)).visible).toBe(400);expect((await candleState(page,label)).last).toBe(last.date);
  await chart.press('ArrowLeft');await expect(page.locator('.linked-minute h3')).toContainText(expected.at(-2)!.date);
  await chart.press('ArrowRight');await expect(page.locator('.linked-minute h3')).toContainText(last.date);
  await page.mouse.move(5,5);await page.screenshot({path:'outputs/kline-weekly-zoom-ma.png'});
 });
 test('persisted MA250 backfills warm-up history and is stable on both daily and weekly views',async({page})=>{
  await page.evaluate(()=>localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify({periods:[250],enabled:[250],visible:true})));
- const code='sh600519',feed=dailyHistoryFeed('2018-01-01');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.05});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();
+ const code='sh600519',feed=dailyHistoryFeed('2015-01-01');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.05});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();
  await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(async()=>{const state=await candleState(page),ma=state.mas.find((s:any)=>s.name==='MA250');return {count:state.labels.length,visible:state.visible,value:ma?.data[state.labels.indexOf(state.first)]};}).toMatchObject({count:expect.any(Number),visible:90,value:expect.any(Number)});
- let state=await candleState(page);expect(state.labels.length).toBeGreaterThanOrEqual(339);const dailyValue=state.mas[0].data[state.labels.indexOf(state.first)];
+ await expect.poll(async()=>{const state=await candleState(page),ma=state.mas.find((s:any)=>s.name==='MA250');return {count:state.labels.length,visible:state.visible,value:ma?.data[state.labels.indexOf(state.first)]};}).toMatchObject({count:expect.any(Number),visible:250,value:expect.any(Number)});
+ let state=await candleState(page);expect(state.labels.length).toBeGreaterThanOrEqual(499);const dailyValue=state.mas[0].data[state.labels.indexOf(state.first)];
  await rpc('__audit_daily',{code,day:state.last,data:{date:state.last,open:'32',close:'32.1',low:'31.9',high:'32.2',volume:'123456',volume_unit:'shares',source:'test'}});
  await expect.poll(async()=>{const next=await candleState(page);return next.mas[0].data[next.labels.indexOf(next.first)];}).toBe(dailyValue);
  await page.getByRole('button',{name:'周K',exact:true}).click();const label='周K线及成交量';
- await expect.poll(async()=>{const next=await candleState(page,label),ma=next.mas.find((s:any)=>s.name==='MA250');return {count:next.labels.length,visible:next.visible,value:ma?.data[next.labels.indexOf(next.first)]};},{timeout:15000}).toMatchObject({count:expect.any(Number),visible:90,value:expect.any(Number)});
- state=await candleState(page,label);expect(state.labels.length).toBeGreaterThanOrEqual(339);expect(state.mas[0].data[state.labels.indexOf(state.first)]).not.toBeNull();
+ await expect.poll(async()=>{const next=await candleState(page,label),ma=next.mas.find((s:any)=>s.name==='MA250');return {count:next.labels.length,visible:next.visible,value:ma?.data[next.labels.indexOf(next.first)]};},{timeout:15000}).toMatchObject({count:expect.any(Number),visible:250,value:expect.any(Number)});
+ state=await candleState(page,label);expect(state.labels.length).toBeGreaterThanOrEqual(499);expect(state.mas[0].data[state.labels.indexOf(state.first)]).not.toBeNull();
  await page.screenshot({path:'outputs/kline-weekly-ma250-warmup.png'});
 });
 test('custom moving averages persist and can be hidden without changing candles or keyboard input behavior',async({page})=>{
  await seedCandleHistory(page);const control=page.getByRole('group',{name:'K线显示设置'});
  await control.getByRole('checkbox',{name:'MA10',exact:true}).uncheck();expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA20','MA30']);
- await control.getByRole('checkbox',{name:'均线',exact:true}).uncheck();expect((await candleState(page)).mas).toEqual([]);expect((await candleState(page)).candles.length).toBeGreaterThan(90);
- await control.locator('summary').click();const input=control.getByRole('textbox',{name:'均线周期'});await input.fill('5, 12, 24, 60');await input.press('ArrowDown');expect((await candleState(page)).visible).toBe(90);await control.getByRole('button',{name:'应用',exact:true}).click();
+ await control.getByRole('checkbox',{name:'均线',exact:true}).uncheck();expect((await candleState(page)).mas).toEqual([]);expect((await candleState(page)).candles.length).toBeGreaterThan(250);
+ await control.locator('summary').click();const input=control.getByRole('textbox',{name:'均线周期'});await input.fill('5, 12, 24, 60');await input.press('ArrowDown');expect((await candleState(page)).visible).toBe(250);await control.getByRole('button',{name:'应用',exact:true}).click();
  expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);
  await page.reload();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(async()=>(await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);
  await control.locator('summary').click();await input.fill('5,0,10');await control.getByRole('button',{name:'应用',exact:true}).click();await expect(control.getByRole('alert')).toContainText('1–250');expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);await page.setViewportSize({width:1000,height:760});const box=(await control.locator('form').boundingBox())!;expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(1000);

@@ -1,7 +1,8 @@
-export const DAILY_WINDOW=90;
+// Equivalent to three zoom-out steps from the previous 90-candle default.
+export const DAILY_WINDOW=250;
 export const DAILY_BATCH_DAYS=365;
 
-/** Preserve the viewed dates as history is prepended; grow short initial data to 90 candles. */
+/** Preserve the viewed dates as history is prepended; grow short initial data to the requested window. */
 export function dailyViewport(dates:string[],previous:string[],selected:string|undefined,lastDate:string,size=DAILY_WINDOW){
  const count=Math.min(size,dates.length);if(!count)return {lo:0,hi:0};
  let lo=previous.length?dates.indexOf(previous[0]):-1;
