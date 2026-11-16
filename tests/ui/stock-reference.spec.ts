@@ -45,6 +45,9 @@ test('compact header shows categories and expands full references without source
  await page.screenshot({path:'docs/stock-reference-20261116/header-expanded.png',fullPage:true});
  for(const tab of ['日K','周K','分时']){
   await page.getByRole('button',{name:tab,exact:true}).click();await expect(summary).toBeVisible();
+  await expect(page.locator('summary').filter({hasText:'运行说明'})).toHaveCount(0);
+  await expect(page.locator('.workspace>footer')).toHaveCount(0);
+  await expect(page.getByText('观量 · 数据留在本机，交易由你决定',{exact:true})).toHaveCount(0);
  }
 });
 
