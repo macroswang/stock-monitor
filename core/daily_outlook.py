@@ -89,7 +89,7 @@ def _day_info(store, day):
     return {key: summary.get(key) for key in _DAY_KEYS}
 
 
-def view(app, day, batch):
+def _view(app, day, batch):
     now = now_cn()
     directory = app.dir / 'daily-outlook'
     live_day, live_batch = (day, batch) if day and batch else _latest_batch(app.store, now)
@@ -102,9 +102,9 @@ def view(app, day, batch):
                     cached = _CACHE.get(key)
                 if cached is not None:
                     report, stamp, covered = cached
-                    # Sector snapshots fill in asynchronously after the first call; retry soon
-                    # instead of serving an incomplete map until the next breadth batch.
-                    if covered or time.monotonic() - stamp < 8:
+                    # Funding can change while the breadth batch stays identical.
+                    published=datetime.fromisoformat(report['issue']['published_at'])
+                    if published<=now and time.monotonic() - stamp < 8:
                         return report
                 issue = json.loads(path.read_text(encoding='utf-8'))
                 stamp = datetime.fromisoformat(issue['published_at'])
@@ -134,7 +134,7 @@ def view(app, day, batch):
                 for service in (app.sector_flow, app.concept_flow):
                     result = service.view()
                     snapshot = result.get('snapshot') or {}
-                    if snapshot.get('date') == live_day and not result.get('error'):
+                    if snapshot.get('date') == live_day:
                         for row in snapshot.get('sectors', []):
                             if row['code'] in wanted:
                                 sectors[row['code']] = dict(change=row['change_percent'], net=row['net_yuan'],
@@ -150,3 +150,28 @@ def view(app, day, batch):
             return report
     return dict(issue=None, quotes=[], sectors={}, day=live_day, batch=live_batch,
                 day_info=_day_info(app.store, live_day) if live_day else None)
+
+
+def view(app, day, batch):
+    # Live observation data is independent of research generation and its cache.
+    # Returning only six leaders per kind keeps the regular RPC small.
+    report=dict(_view(app,day,batch))
+    now=now_cn()
+    from .sector_flow import expected_day
+    wanted=expected_day(now)
+    live={}
+    for kind,service in (('industry',app.sector_flow),('concept',app.concept_flow)):
+        result=service.view()
+        snapshot=result.get('snapshot')
+        if not isinstance(snapshot,dict) or snapshot.get('date')!=wanted:
+            snapshot=None
+        live[kind]=dict(snapshot={key:snapshot.get(key) for key in
+                            ('date','source','collected_at','quote_time','anchor_time','date_inferred',
+                             'verified_count','total','excluded_count','update_verified_count','measure','inflow','outflow')} if snapshot else None,
+                        running=bool(result.get('running')),error=result.get('error') or '',
+                        stale=bool(result.get('stale')))
+    issue=report.get('issue') or {}
+    report['reference_status']='historical' if issue and issue.get('quote_date')!=wanted else 'current' if issue else 'missing'
+    report['expected_date']=wanted
+    report['live_data']=live
+    return report

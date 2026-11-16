@@ -1,0 +1,162 @@
+{
+  "sh603938": {
+    "code": "sh603938",
+    "data": {
+      "code": "sh603938",
+      "industry": [
+        "基础化工",
+        "化学制品",
+        "其他化学制品"
+      ],
+      "boards": [
+        {
+          "name": "河北板块",
+          "code": "155"
+        }
+      ],
+      "concepts": [
+        {
+          "name": "专精特新",
+          "code": "1005"
+        },
+        {
+          "name": "硅能源",
+          "code": "1778"
+        },
+        {
+          "name": "光纤概念",
+          "code": "1660"
+        },
+        {
+          "name": "存储芯片",
+          "code": "1137"
+        },
+        {
+          "name": "工业气体",
+          "code": "981"
+        },
+        {
+          "name": "碳化硅",
+          "code": "977"
+        },
+        {
+          "name": "有机硅概念",
+          "code": "961"
+        },
+        {
+          "name": "半导体概念",
+          "code": "917"
+        },
+        {
+          "name": "氢能源",
+          "code": "864"
+        },
+        {
+          "name": "化工原料",
+          "code": "512"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "2026中报预增",
+          "code": "1749"
+        },
+        {
+          "name": "小盘股",
+          "code": "1643"
+        },
+        {
+          "name": "昨日高振幅",
+          "code": "1633"
+        },
+        {
+          "name": "沪股通",
+          "code": "707"
+        },
+        {
+          "name": "融资融券",
+          "code": "596"
+        }
+      ],
+      "collected_at": "2026-11-16T15:36:02.302769+08:00",
+      "source": "东方财富个股资料",
+      "schema_version": 2,
+      "partial": false
+    },
+    "themes": [],
+    "observations": [],
+    "theme_status": "unavailable",
+    "running": false,
+    "error": ""
+  },
+  "sh688218": {
+    "code": "sh688218",
+    "data": {
+      "code": "sh688218",
+      "industry": [
+        "机械设备",
+        "机器人",
+        "工业机器人"
+      ],
+      "boards": [
+        {
+          "name": "江苏板块",
+          "code": "159"
+        }
+      ],
+      "concepts": [
+        {
+          "name": "专精特新",
+          "code": "1005"
+        },
+        {
+          "name": "低空经济",
+          "code": "1166"
+        },
+        {
+          "name": "小米汽车",
+          "code": "1155"
+        },
+        {
+          "name": "机器人概念",
+          "code": "1090"
+        },
+        {
+          "name": "储能概念",
+          "code": "989"
+        },
+        {
+          "name": "华为汽车",
+          "code": "984"
+        },
+        {
+          "name": "新能源车",
+          "code": "900"
+        },
+        {
+          "name": "特斯拉概念",
+          "code": "644"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "2026中报扭亏",
+          "code": "1750"
+        },
+        {
+          "name": "融资融券",
+          "code": "596"
+        }
+      ],
+      "collected_at": "2026-11-16T15:36:02.335686+08:00",
+      "source": "东方财富个股资料",
+      "schema_version": 2,
+      "partial": false
+    },
+    "themes": [],
+    "observations": [],
+    "theme_status": "unavailable",
+    "running": false,
+    "error": ""
+  }
+}

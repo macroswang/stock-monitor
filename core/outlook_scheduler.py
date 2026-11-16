@@ -4,6 +4,7 @@ import math
 import os
 import re
 import tempfile
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -128,11 +129,21 @@ def select_stocks(rows, quotes, used):
     return [lead,*peers], None
 
 
-def produce(store, now):
+def _stage(label, fn, *args):
+    try:return fn(*args)
+    except Exception as exc:
+        exc.outlook_stage=label
+        raise
+
+
+def produce(store, now, flow_fetch=None, progress=None):
+    flow_fetch=flow_fetch or sector_flow.fetch
+    progress=progress or (lambda stage:None)
+    progress('采集行情、板块资金与新闻')
     with ThreadPoolExecutor(5) as pool:
-        m = pool.submit(market,store,now)
-        sf = [pool.submit(sector_flow.fetch,now,k) for k in ('industry','concept')]
-        nf = [pool.submit(news,r,lid,now) for r,lid in [('domestic',2517),('international',2518)]]
+        m = pool.submit(_stage,'沪深行情',market,store,now)
+        sf = [pool.submit(_stage,'行业资金' if k=='industry' else '概念资金',flow_fetch,now,k) for k in ('industry','concept')]
+        nf = [pool.submit(_stage,'国内新闻' if r=='domestic' else '国际新闻',news,r,lid,now) for r,lid in [('domestic',2517),('international',2518)]]
         summary, quotes = m.result()
         industry,concept = (f.result() for f in sf)
         domestic,international = (f.result() for f in nf)
@@ -140,12 +151,13 @@ def produce(store, now):
         raise ValueError('板块与沪深行情日期未对齐')
     feeds = domestic+international
     boards=industry['sectors']+concept['sectors']
-    pools,discovery=theme_discovery.discover(summary['date'],feeds,boards,store,now)
+    progress('识别题材与公司公告')
+    pools,discovery=_stage('题材识别',theme_discovery.discover,summary['date'],feeds,boards,store,now)
     # Compare up to 40 active stocks per theme, the same turnover limit used for quoted sectors.
     sizes={code:len(members) for code,(_,members) in pools.items()}
     pools={code:(name,sorted(members,key=lambda m: (-float(quotes.get(m[0],{}).get('amount_yuan') or 0),m[0]))[:40])
            for code,(name,members) in pools.items()}
-    themes, custom = disclosure_themes.collect(quotes,summary['date'],summary.get('status')=='closed',pools)
+    themes, custom = _stage('公司公告',disclosure_themes.collect,quotes,summary['date'],summary.get('status')=='closed',pools)
     for t in themes:
         t['matched_count']=sizes[t['code']]
         if t['code'] in discovery['filing_errors']:
@@ -162,6 +174,7 @@ def produce(store, now):
     baskets={t['code']:[(m['code'],m['name']) for m in t['members']] for t in themes}
     def constituents_for(code):
         return baskets[code] if code in baskets else members(code)
+    progress('比较板块与成分股')
     with ThreadPoolExecutor(4) as pool:
         jobs = [(row,head,pool.submit(constituents_for,row['code'])) for _,row,head in ranked]
         for row,head,future in jobs:
@@ -204,6 +217,7 @@ def produce(store, now):
                 coverage=dict(industry=len(industry['sectors']),concept=len(concept['sectors']),disclosed=len(themes),unavailable=missed),
                 news_counts=dict(domestic=len(domestic),international=len(international)),ideas=ideas)
     # The research report is an enrichment, never a reason to drop the screened ideas.
+    progress('生成市场研判')
     try:
         pulse = market_pulse.build(store, summary, quotes, industry, concept, feeds, now)
         issue['pulse'] = pulse
@@ -246,8 +260,19 @@ class OutlookScheduler:
         self.app = app
         self.done = None
         self.state = '等待定时更新'
+        self.status = dict(state=self.state,stage='',last_error='',last_attempt=None,last_success=None,next_retry=None)
 
-    def tick(self, clock=now_cn, generator=produce):
+    def update(self, **values):
+        self.status=dict(self.status,**values)
+
+    def generate(self, store, now):
+        def flow_fetch(stamp, kind):
+            service=self.app.sector_flow if kind=='industry' else self.app.concept_flow
+            return service.snapshot(stamp)
+        return produce(store,now,flow_fetch=flow_fetch,progress=lambda stage:self.update(stage=stage))
+
+    def tick(self, clock=now_cn, generator=None):
+        generator=generator or self.generate
         now = clock()
         slot = due_slot(now)
         if slot==self.done: return
@@ -258,13 +283,22 @@ class OutlookScheduler:
                 if isinstance(issue.get('native_slot'), str) and issue['native_slot'] < slot:
                     break
                 if issue.get('native_slot')==slot and issue.get('screen_version')==SCREEN_VERSION:
-                    self.done=slot;self.state='本期已更新';return
+                    self.done=slot;self.state='本期已更新'
+                    self.update(state=self.state,last_success=issue.get('published_at'),last_error='',stage='',next_retry=None)
+                    return
             except (ValueError,OSError,AttributeError): pass
         self.state='正在筛选'
+        self.update(state=self.state,stage='准备采集',last_attempt=now.isoformat(),next_retry=None)
         try:
             issue = generator(self.app.store,now)
             stamp = clock()
-            if due_slot(stamp)!=slot: return
+            if stamp<now:raise ValueError('系统时间回退，重新核对采集时间')
+            # Crossing a half-hour boundary must not silently discard a completed
+            # report. Keep its original slot; the next iteration handles the new slot.
+            if (stamp-now).total_seconds()>1800:
+                raise ValueError('本轮采集超过 30 分钟，结果已过期，重新采集')
+            if issue.get('quote_date') and issue['quote_date']!=sector_flow.expected_day(stamp):
+                raise ValueError('采集期间交易日已切换，重新采集')
             issue.update(native_slot=slot,published_at=stamp.isoformat(),screen_version=SCREEN_VERSION)
             # Internal maps are for scoring only; keep them out of the stored/served JSON.
             pulse = issue.get('pulse')
@@ -278,8 +312,14 @@ class OutlookScheduler:
                 try:self.app.pool.sync_issue(issue)
                 except Exception:pass
             self.done=slot;self.state='本期已更新'
-        except Exception:
-            self.state='更新未完成，5 分钟后重试'
+            self.update(state=self.state,stage='',last_error='',last_success=stamp.isoformat(),next_retry=None)
+        except Exception as exc:
+            self.state='更新未完成，1 分钟后重试'
+            failed=clock()
+            stage=getattr(exc,'outlook_stage',None) or self.status['stage'] or '研判生成'
+            detail=(type(exc).__name__+'：'+str(exc))[:600]
+            self.update(state=self.state,stage=stage,last_error=detail,next_retry=(failed+timedelta(seconds=60)).isoformat())
+            print(f'[market-outlook] {failed.isoformat()} {stage} {detail}',file=sys.stderr,flush=True)
 
     def run(self):
         while not self.app.stop.is_set():
@@ -287,5 +327,5 @@ class OutlookScheduler:
             now = now_cn()
             next_slot = now.replace(second=0, microsecond=0) + timedelta(minutes=INTERVAL_MINUTES - now.minute % INTERVAL_MINUTES)
             remaining = (next_slot - now).total_seconds()
-            interval = 300 if self.state.startswith('更新未完成') else 10
+            interval = 60 if self.state.startswith('更新未完成') else 10
             self.app.stop.wait(min(interval, remaining))

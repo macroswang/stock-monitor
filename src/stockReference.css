@@ -1,0 +1,25 @@
+.detail .chart-toolbar.stock-reference-toolbar{--stock-toolbar-control-height:25px;flex-wrap:nowrap;gap:8px;min-width:0}
+.detail .stock-reference-toolbar>.tabs,.detail .stock-reference-toolbar>.chart-date-actions{flex:0 0 auto;white-space:nowrap}
+.detail .stock-reference-toolbar>.tabs,.detail .stock-reference-toolbar>.stock-reference{height:var(--stock-toolbar-control-height)}
+.detail .stock-reference-toolbar::after{content:"";flex:2 1 0;min-width:0;order:1}
+.detail .stock-reference-toolbar>.chart-date-actions{order:3}
+.detail .stock-reference-toolbar>.stock-reference{position:relative;flex:1 1 0;min-width:64px;max-width:none;margin-left:auto;order:2;color:#bbcadf;container-type:inline-size;container-name:stock-metadata}
+.stock-reference summary{box-sizing:border-box;height:var(--stock-toolbar-control-height,25px);list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);grid-template-rows:repeat(2,minmax(0,1fr));align-items:center;gap:1px 10px;line-height:11px;padding:0 6px;border:1px solid #2a3b53;border-radius:6px;background:#142236}
+.stock-reference summary::-webkit-details-marker{display:none}
+.stock-reference summary>span{display:flex;align-items:baseline;min-width:0;gap:5px;font-size:9px}
+.stock-reference summary i{font-size:8px;color:#819bb9;font-style:normal;white-space:nowrap;flex-shrink:0}
+.stock-reference summary b{font-size:7px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-reference summary em{margin-left:auto;font-style:normal;color:#8eafd5}
+.stock-reference[open] summary{border-color:#5c80ad}
+.stock-reference-popup{position:fixed;z-index:180;overflow:auto;box-sizing:border-box;border:1px solid #3a5271;border-radius:8px;background:#152338;box-shadow:0 12px 35px #030a17aa;padding:10px 12px;font-size:11px;line-height:1.5;text-align:left;color:#bbcadf}
+.stock-reference-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.stock-reference-heading strong{font-size:12px;color:#d4e3f7}
+.stock-reference-popup .stock-reference-heading button{margin:0;padding:0 6px;font-size:15px;line-height:18px}
+.stock-reference-popup dl{display:grid;grid-template-columns:55px minmax(0,1fr);gap:9px 6px;margin:0}
+.stock-reference-popup dt{color:#87a3c7;padding-top:2px}.stock-reference-popup dd{margin:0;min-width:0}.stock-reference-popup dd p{margin:0 0 4px}
+.stock-reference-tags{display:flex;gap:4px;flex-wrap:wrap}.stock-reference-tags>span{padding:1px 5px;border:1px solid #314863;background:#1c304a;border-radius:4px;overflow-wrap:anywhere;color:#bdd6f0}
+.stock-reference-tags small{font-size:8px;color:#8099b7;margin-left:5px}.stock-reference-muted{color:#8195b1;font-size:10px;margin:5px 0}
+.stock-traits{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:5px;color:#9fb1c9}.stock-traits b{color:#d3e4f9;font-variant-numeric:tabular-nums}.stock-reference-method{display:block;margin-top:6px;color:#718ba9;font-size:9px}
+.stock-reference summary>.stock-reference-compact{display:none}
+@container stock-metadata (max-width:155px){.stock-reference summary{display:flex;min-height:23px;align-items:center;justify-content:center}.stock-reference summary>span{display:none}.stock-reference summary>.stock-reference-compact{display:flex;font-size:9px;white-space:nowrap}}
+@media(max-width:1150px){.detail .stock-reference-toolbar .tabs button{min-width:36px;padding:1px 5px}.detail .stock-reference-toolbar .chart-date-actions{gap:3px}.detail .stock-reference-toolbar .chart-date-actions select{max-width:100px}.detail .stock-reference-toolbar{padding-left:8px;padding-right:8px;gap:5px}}

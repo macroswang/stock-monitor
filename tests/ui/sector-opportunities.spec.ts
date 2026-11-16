@@ -1,10 +1,15 @@
-import {test,expect} from '@playwright/test';
+import {test,expect,type Page} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+
+async function bootSector(page:Page){
+ await page.goto('/?panel=breadth&sample=csi300');
+ await page.evaluate(async()=>{await (await import('/tests/ui/fixtures/sectorHarness.tsx' /* @vite-ignore */)).mount();});
+}
 
 test.beforeEach(async({page})=>{await page.clock.install({time:new Date('2026-10-31T10:00:00Z')});});
 
 test('显示可核对的行业、概念和独立外围报价',async({page})=>{
- await page.goto('/?panel=breadth&sample=csi300');
+ await bootSector(page);
  const panel=page.getByRole('region',{name:'板块机会观察'});
  await expect(panel.getByText('酿酒行业',{exact:true})).toBeVisible();
  await expect(panel.getByText('白酒概念',{exact:true})).toBeVisible();
@@ -23,7 +28,7 @@ test('筛选条件可解释，缺失外围报价不伪造佐证',async({page})=>
  industry.snapshot.measure='大单及超大单净额';industry.snapshot.date_inferred=false;industry.snapshot.quote_time='2026-10-30T15:00:00+08:00';
  await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:industry}));
  await page.route('**/external-market-preview.json',route=>route.fulfill({json:{snapshot:null,error:'',running:false}}));
- await page.goto('/?panel=breadth&sample=csi300');
+ await bootSector(page);
  const panel=page.getByRole('region',{name:'板块机会观察'});
  await expect(panel.getByText('电子信息',{exact:true})).toBeVisible();
  await expect(panel.getByText('大单净流入',{exact:false}).first()).toBeVisible();
@@ -36,7 +41,7 @@ test('外围对照保留来源时间并不改变板块筛选',async({page})=>{
  const industry=JSON.parse(await readFile('public/sector-flow-preview.json','utf8'));
  industry.snapshot.inflow=[{code:'A',name:'电子信息',net_yuan:100000000,change_percent:1.5}];
  await page.route('**/sector-flow-preview.json',route=>route.fulfill({json:industry}));
- await page.goto('/?panel=breadth&sample=csi300');
+ await bootSector(page);
  const panel=page.getByRole('region',{name:'板块机会观察'});
  await expect(panel.getByText('外围对照：纳斯达克 -2.86%',{exact:false})).toBeVisible();
  await expect(panel.getByText('2026-10-30 17:15:59',{exact:true})).toBeVisible();

@@ -269,7 +269,7 @@ async function boot(page:Page,data:unknown,options:{now?:string}={}){
         switch(args.method){
           case 'snapshot':return {watch:[],events:[],config:{},now:new Date().toISOString(),market_open:true};
           case 'market':case 'market_overview':return {quotes:[],minute:null};
-          case 'daily_outlook':return data;
+          case 'daily_outlook':return (window as any).__outlookReport??data;
           default:throw Error('测试未提供 '+args.method);
         }
       }
@@ -475,7 +475,7 @@ test('盘中未核对：警示横幅、研判价标注与“数据未核对”�
   await expect(alert).toContainText('当前研判基准 2026-11-06');
   await expect(alert).toContainText('行情批次与全市场广度快照未对齐');
   await expect(alert).toContainText('今日盘中：上涨 2100 / 下跌 2600');
-  await expect(alert).toContainText('等待面板自动刷新（每 15 秒检查、研判每 30 分钟更新）；核对前不要下单。');
+  await expect(alert).toContainText('等待面板自动刷新（每 20 秒检查、研判每 30 分钟启动，失败 1 分钟后重试）；核对前不要下单。');
   const picks=page.getByRole('region',{name:'建仓清单'});
   await expect(picks.locator('.mo-p-fresh').first()).toHaveText('研判时');
   await expect(picks.locator('.mo-pick-row').first()).toContainText('128.40');
@@ -547,4 +547,52 @@ test('首屏顺序：炒作雷达位于建仓清单上方',async({page})=>{
   expect(radarBox).not.toBeNull();
   expect(picksBox).not.toBeNull();
   expect(radarBox!.y).toBeLessThan(picksBox!.y);
+});
+
+
+test('历史研判明确标注，同时显示今日独立行情和具体失败原因',async({page})=>{
+ const data=structuredClone(report) as any;data.day=liveDay.date;data.day_info=liveDay;data.batch=liveDay.collected_at;
+ data.reference_status='historical';data.expected_date=liveDay.date;
+ data.schedule_info={state:'更新未完成，1 分钟后重试',stage:'行业资金',last_error:'代表股通过 20/48，不足 80%',last_attempt:LIVE_NOW,last_success:NOW,next_retry:'2026-11-09T09:40:00+08:00'};
+ data.live_data={industry:{snapshot:{date:liveDay.date,source:'新浪行业资金流',collected_at:LIVE_NOW,verified_count:46,total:48,date_inferred:true,
+ inflow:[{code:'new_x',name:'今日测试行业',net_yuan:1e8,change_percent:1}],outflow:[]},error:'',running:false},concept:{snapshot:null,error:'概念日期未通过核对',running:false}};
+ await boot(page,data,{now:LIVE_NOW});
+ await expect(page.locator('.mo-history')).toHaveText('历史参考 · 2026-11-06');
+ await expect(page.locator('.mo-history-note')).toContainText('今日结果尚未生成');
+ const state=page.getByRole('region',{name:'当前数据与研判状态'});
+ await expect(state).toContainText('今日测试行业');
+ await expect(state).toContainText('行业资金');await expect(state).toContainText('20/48');
+ await expect(state).toContainText('下次重试 2026-11-09 09:40');
+ await expect(page.getByRole('region',{name:'建仓清单'}).locator('.mo-p-fresh').first()).toHaveText('研判时');
+ await page.setViewportSize({width:1000,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
+});
+
+test('同一行情批次的研判失败变化仍及时更新，恢复后清除失败原因',async({page})=>{
+ await page.clock.install({time:new Date(NOW)});
+ const data=structuredClone(report) as any;
+ data.schedule_info={state:'正在筛选',stage:'行业资金',last_error:'',last_attempt:NOW,last_success:null,next_retry:null};
+ await boot(page,data);
+ const state=page.getByRole('region',{name:'当前数据与研判状态'});
+ await expect(state).toContainText('正在筛选');
+ data.schedule_info={...data.schedule_info,state:'更新未完成，1 分钟后重试',last_error:'连接超时',next_retry:NOW};
+ await page.evaluate(value=>{(window as any).__outlookReport=value;},data);
+ await page.clock.runFor(20001);
+ await expect(state).toContainText('连接超时');
+ data.schedule_info={...data.schedule_info,state:'本期已更新',stage:'',last_error:'',next_retry:null,last_success:NOW};
+ await page.evaluate(value=>{(window as any).__outlookReport=value;},data);
+ await page.clock.runFor(20001);
+ await expect(state).toContainText('本期已更新');
+ await expect(state).not.toContainText('连接超时');
+});
+
+test('没有研判也展示当前资金，缺失来源保持缺失并展示失败原因',async({page})=>{
+ const data:any={issue:null,quotes:[],sectors:{},day:liveDay.date,batch:liveDay.collected_at,day_info:liveDay,
+ schedule_info:{state:'更新未完成，1 分钟后重试',stage:'国内新闻',last_error:'近期新闻不足',last_attempt:LIVE_NOW,last_success:null,next_retry:LIVE_NOW},
+ live_data:{industry:{snapshot:null,error:'行业数据过期',running:false},concept:{snapshot:null,error:'来源断开',running:false}}};
+ await boot(page,data,{now:LIVE_NOW});
+ await expect(page.getByText('今日研判尚未生成',{exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'当前数据与研判状态'})).toContainText('国内新闻');
+ await expect(page.getByRole('region',{name:'当前数据与研判状态'})).toContainText('近期新闻不足');
+ await expect(page.getByRole('region',{name:'当前数据与研判状态'})).toContainText('行业数据过期');
 });

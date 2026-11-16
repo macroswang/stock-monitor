@@ -105,6 +105,8 @@ class App:
         self.annual_signals=AnnualSignals(self)
         self.sector_flow=SectorFlow(self.store,enabled=start_worker)
         self.concept_flow=SectorFlow(self.store,enabled=start_worker,kind='concept')
+        from .stock_profile import StockProfile
+        self.stock_profile=StockProfile(self.store,self.dir,enabled=start_worker)
         self.external_market=ExternalMarket(self.store,enabled=start_worker)
         self.sector_members=SectorMembers();self.sector_members_enabled=start_worker;self.sector_constituents=SectorConstituents()
         self.volume_flow=VolumeFlow(self.store,enabled=start_worker)
@@ -124,6 +126,7 @@ class App:
         if start_worker:
             threading.Thread(target=self.pool.bootstrap,daemon=True).start()
             threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
+            threading.Thread(target=self.sector_flow_loop,daemon=True).start()
             threading.Thread(target=self.loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
@@ -139,6 +142,18 @@ class App:
             threading.Thread(target=self.paper_loop,daemon=True).start()
             threading.Thread(target=self.trading_loop,daemon=True).start()
             threading.Thread(target=self.trading_report_loop,daemon=True).start()
+
+    def sector_flow_loop(self):
+        # Keep the shared observation cache current even when no sector panel is open.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            while not self.stop.is_set():
+                jobs=[pool.submit(flow.refresh) for flow in (self.sector_flow,self.concept_flow)]
+                for job in jobs:
+                    try:job.result()
+                    except Exception:pass
+                stamp=now_cn()
+                in_session=trading_day(stamp.date()) is True and '09:30'<=stamp.strftime('%H:%M')<='15:05'
+                self.stop.wait(5 if in_session else 300)
 
     def trading_loop(self):
         while not self.stop.is_set():
@@ -587,7 +602,9 @@ class App:
         if method=='breadth':return self.breadth.view()
         if method=='daily_outlook':
             from .daily_outlook import view
-            return dict(view(self,args.get('day'),args.get('batch')), schedule=self.outlook_scheduler.state, completed_slot=self.outlook_scheduler.done)
+            return dict(view(self,args.get('day'),args.get('batch')), schedule=self.outlook_scheduler.state,
+                        completed_slot=self.outlook_scheduler.done, schedule_info=self.outlook_scheduler.status)
+        if method=='stock_profile':return self.stock_profile.view(args.get('code',''),args.get('day'))
         if method=='outlook_quotes':
             day=args.get('day');codes=args.get('codes')
             if not isinstance(day,str) or len(day)!=10 or not isinstance(codes,list) or len(codes)>30 or not all(isinstance(c,str) for c in codes):

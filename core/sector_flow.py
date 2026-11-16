@@ -7,6 +7,7 @@ import threading
 import time
 from datetime import datetime, time as clock_time, timedelta
 from decimal import Decimal, InvalidOperation
+from email.utils import parsedate_to_datetime
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -17,6 +18,9 @@ CODE, KIND = 'eastmoney-industry', 'sector_flow_v1'
 # 刷新频率应快于盘中 180 秒的过期阈值，避免正常采集时出现空档。
 REFRESH_SECONDS = 30
 RETRY_SECONDS = 10
+# Cross-provider last trades need not be the same tick. Keep the independent
+# date/freshness gate, then bound drift and reconcile the implied previous close.
+PRICE_DRIFT = Decimal('0.005')
 SOURCE = '东方财富行业板块资金流'
 URL = 'https://push2.eastmoney.com/api/qt/clist/get'
 SOURCE_PAGE = 'https://data.eastmoney.com/bkzj/hy.html'
@@ -24,6 +28,8 @@ SINA_SOURCE = '新浪行业资金流'
 SINA_CONCEPT_SOURCE = '新浪概念资金流'
 SINA_PAGE = 'https://finance.sina.com.cn/realstock/company/plate.shtml'
 SINA_URL = 'https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_bk'
+_SINA_OBSERVED = {}
+_SINA_LOCK = threading.Lock()
 
 
 def expected_day(now):
@@ -93,14 +99,21 @@ def fetch_eastmoney(now):
 
 
 def _sina_page(page,kind='industry'):
-    params={'page':page,'num':1000,'sort':'netamount','asc':0,'fenlei':0 if kind=='industry' else 1}
-    req=Request(SINA_URL+'?'+urlencode(params),headers={'User-Agent':'Mozilla/5.0','Referer':'https://finance.sina.com.cn/'})
-    with urlopen(req,timeout=8) as response:raw=response.read(2_000_001)
+    params={'page':page,'num':1000,'sort':'netamount','asc':0,'fenlei':0 if kind=='industry' else 1,
+            '_':int(time.time()*1000)}
+    req=Request(SINA_URL+'?'+urlencode(params),headers={'User-Agent':'Mozilla/5.0','Referer':'https://finance.sina.com.cn/',
+                                                    'Cache-Control':'no-cache'})
+    with urlopen(req,timeout=8) as response:
+        raw=response.read(2_000_001)
+        stamp=response.headers.get('Date')
+        if isinstance(stamp,str):
+            age=(now_cn()-parsedate_to_datetime(stamp)).total_seconds()
+            if not -5<=age<=180:raise ValueError('新浪响应时间已过期或在未来')
     if len(raw)>2_000_000:raise ValueError('板块数据过大')
     return json.loads(raw)
 
 
-def parse_sina(rows,extra,quotes,now,kind='industry'):
+def parse_sina(rows,extra,quotes,now,kind='industry',prior=None):
     """新浪未提供板块时间：逐板块核对代表股，日期仅作推定。"""
     if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
     now=now.astimezone(CN);day=expected_day(now)
@@ -121,7 +134,14 @@ def parse_sina(rows,extra,quotes,now,kind='industry'):
             output.append(dict(code=code,name=name,net_yuan=float(values[0]),change_percent=float(values[3]*100),
                                stock=stock,stock_price=values[4],stock_change=values[5]))
         output.sort(key=lambda x:x['net_yuan'],reverse=True)
-        verified=[];details={};stamps=[]
+        source_rows={r['category']:r for r in rows}
+        verified=[];details={};stamps=[];rejected={};update_verified=0
+        older={}
+        if prior:
+            earlier,observed=prior
+            if (observed.tzinfo is not None and observed.astimezone(CN).date()==now.date() and
+                    0<(now-observed).total_seconds()<=180):
+                older={r['category']:r for r in earlier if isinstance(r,dict) and 'category' in r}
         session=trading_day(now.date()) is True and (clock_time(9,30)<=now.time()<=clock_time(11,30) or clock_time(13)<=now.time()<clock_time(15))
         # Check each displayed sector's representative, instead of letting one
         # moving price erase the whole screen or endorsing unchecked sectors.
@@ -129,24 +149,56 @@ def parse_sina(rows,extra,quotes,now,kind='industry'):
             try:
                 q=quotes[row['stock']];ts=q['stamp'];price=Decimal(q['price']);previous=Decimal(q['previous'])
                 if (ts.tzinfo is None or ts.astimezone(CN).date().isoformat()!=day or ts>now+timedelta(seconds=5) or
-                    previous<=0 or not price.is_finite() or not previous.is_finite() or abs(price-row['stock_price'])>Decimal('0.0051') or
-                    abs(price/previous-1-row['stock_change'])>Decimal('0.0001') or
-                    (session and (now-ts).total_seconds()>180)):continue
-            except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError):continue
+                    (session and (now-ts).total_seconds()>180)):
+                    rejected['日期或时效不符']=rejected.get('日期或时效不符',0)+1;continue
+                sector_price,sector_change=row['stock_price'],row['stock_change']
+                if (not price.is_finite() or not previous.is_finite() or previous<=0 or price<=0 or
+                        sector_price<=0 or sector_change<=-1):
+                    raise ValueError()
+                implied_previous=sector_price/(1+sector_change)
+                # Sina ratios are rounded; allow one price tick plus ratio rounding.
+                previous_tolerance=Decimal('0.01')+previous*Decimal('0.0001')
+                drift_tolerance=max(Decimal('0.02'),min(price,sector_price)*PRICE_DRIFT)
+                if abs(implied_previous-previous)>previous_tolerance:
+                    rejected['价格或昨收不符']=rejected.get('价格或昨收不符',0)+1;continue
+                if abs(price-sector_price)>drift_tolerance:
+                    # The funding endpoint's representative last trade can lag even
+                    # while its money-flow fields are updating. Verify actual changes
+                    # in two uncached source observations within 180s, not a wider
+                    # arbitrary price tolerance. The lagged price must also have
+                    # traded inside today's independently timestamped price range.
+                    old=older.get(row['code'])
+                    low,high=Decimal(q.get('low','NaN')),Decimal(q.get('high','NaN'))
+                    before=[Decimal(str(old[k])) for k in ('netamount','inamount','outamount')] if old else []
+                    changed=bool(old and old.get('ts_symbol')==row['stock'] and old.get('cate_type')==('0' if kind=='industry' else '1') and
+                                 all(x.is_finite() for x in before) and before[1]>=0 and before[2]>=0 and
+                                 abs(before[0]-before[1]+before[2])<=Decimal('0.1') and
+                                 any(Decimal(str(old[k]))!=Decimal(str(source_rows[row['code']][k]))
+                                     for k in ('netamount','inamount','outamount')))
+                    if not (changed and low.is_finite() and high.is_finite() and 0<low<=high and
+                            low-Decimal('0.0051')<=sector_price<=high+Decimal('0.0051')):
+                        rejected['价格或昨收不符']=rejected.get('价格或昨收不符',0)+1;continue
+                    update_verified+=1
+            except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError):
+                rejected['代表股报价缺失或异常']=rejected.get('代表股报价缺失或异常',0)+1;continue
             verified.append(row);stamps.append(ts)
             if isinstance(q.get('name'),str) and q['name'].strip():
                 row['representative']=dict(code=row['stock'],name=q['name'],time=ts.isoformat(),
                                            change_percent=float((price/previous-1)*100))
             details[row['code']]=dict(code=row['stock'],sector_price=str(row['stock_price']),reference_price=str(price),reference_time=ts.isoformat())
-        if len(verified)<math.ceil(len(output)*.8):raise ValueError()
+        if len(verified)<math.ceil(len(output)*.8):
+            detail='、'.join(f'{key} {value}' for key,value in rejected.items())
+            raise ValueError(f'代表股通过 {len(verified)}/{len(output)}，不足 80%；{detail}')
         picked=verified[:3]+verified[-3:]
         if len({r['stock'] for r in picked})<3:raise ValueError()
-    except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError,OverflowError):
-        raise ValueError('新浪数据日期、金额或代表股价格未通过核对') from None
+    except (KeyError,TypeError,ValueError,InvalidOperation,ZeroDivisionError,OverflowError) as exc:
+        detail=str(exc) if isinstance(exc,ValueError) and str(exc).startswith('代表股通过') else ''
+        raise ValueError('新浪数据日期、金额或代表股价格未通过核对'+('：'+detail if detail else '')) from None
     def simple(row):return {k:row[k] for k in ('code','name','net_yuan','change_percent','representative') if k in row}
     return dict(date=day,source=SINA_SOURCE if kind=='industry' else SINA_CONCEPT_SOURCE,source_url='https://finance.sina.com.cn/temp/guest4377.shtml',
                 quote_time=None,anchor_time=min(stamps).isoformat(),collected_at=now.isoformat(),total=len(output),
-                verified_count=len(verified),excluded_count=len(output)-len(verified),
+                verified_count=len(verified),excluded_count=len(output)-len(verified),validation_rejections=rejected,update_verified_count=update_verified,
+                validation='同日新鲜报价与昨收核对；小幅价差或 180 秒内资金实际更新及当日成交区间验证；日期为推定',
                 measure='买卖方向净额',date_inferred=True,anchor_details=[details[r['code']] for r in picked],sectors=[simple(r) for r in verified],
                 inflow=[simple(r) for r in verified if r['net_yuan']>0][:3],
                 outflow=[simple(r) for r in reversed(verified) if r['net_yuan']<0][:3])
@@ -154,14 +206,16 @@ def parse_sina(rows,extra,quotes,now,kind='industry'):
 
 def _reference_quotes(codes):
     def batch(group):
-        req=Request('https://qt.gtimg.cn/q='+','.join(group),headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/'})
+        req=Request('https://qt.gtimg.cn/q='+','.join(group)+'&_='+str(int(time.time()*1000)),
+                    headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/','Cache-Control':'no-cache'})
         with urlopen(req,timeout=8) as response:text=response.read(100000).decode('gb18030')
         found={}
         for line in text.splitlines():
             if '="' not in line:continue
             code=line.split('=',1)[0].split('_')[-1];fields=line.split('="',1)[1].split('~')
             if code in group and len(fields)>30 and fields[2]==code[2:]:
-                found[code]=dict(name=fields[1],price=fields[3],previous=fields[4],stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
+                found[code]=dict(name=fields[1],price=fields[3],previous=fields[4],high=fields[33] if len(fields)>34 else '',
+                                 low=fields[34] if len(fields)>34 else '',stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN))
         return found
     groups=[codes[i:i+50] for i in range(0,len(codes),50)]
     result={}
@@ -175,10 +229,14 @@ def fetch_sina(now,kind='industry'):
     started=time.monotonic()
     rows=_sina_page(1,kind);extra=_sina_page(2,kind)
     if not isinstance(rows,list) or len(rows)<35:raise ValueError('新浪行业数据不完整')
+    observed=now
+    with _SINA_LOCK:
+        prior=_SINA_OBSERVED.get(kind)
+        if len(rows)<=500 and extra==[]:_SINA_OBSERVED[kind]=(rows,observed)
     codes=list(dict.fromkeys(r['ts_symbol'] for r in rows))
     if any(not isinstance(c,str) or not re.fullmatch(r'(sh[69]|sz[03])\d{5}',c) for c in codes):raise ValueError('股票代码异常')
     quotes=_reference_quotes(codes)
-    return parse_sina(rows,extra,quotes,now+timedelta(seconds=time.monotonic()-started),kind)
+    return parse_sina(rows,extra,quotes,now+timedelta(seconds=time.monotonic()-started),kind,prior=prior)
 
 
 
@@ -306,24 +364,28 @@ def fetch(now,kind='industry'):
     started=time.monotonic()
     # push2 is frequently WAF-blocked; both live hosts cap pages at 100 rows,
     # so the complete-list fallback walks pages before trying Sina.
+    failures=[]
     if kind=='industry':
         try:return fetch_eastmoney(now)
-        except Exception:pass
+        except Exception as exc:failures.append('东财单页：'+type(exc).__name__)
     try:return fetch_eastmoney_paged(now+timedelta(seconds=time.monotonic()-started),kind)
-    except Exception:pass
-    return fetch_sina(now+timedelta(seconds=time.monotonic()-started),kind)
+    except Exception as exc:failures.append('东财分页：'+str(exc))
+    try:return fetch_sina(now+timedelta(seconds=time.monotonic()-started),kind)
+    except Exception as exc:
+        raise ValueError('；'.join(failures+['新浪：'+str(exc)])) from exc
 
 
 class SectorFlow:
     def __init__(self,store,enabled=True,kind='industry'):
         if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
         self.store=store;self.enabled=enabled;self.kind=kind;self.code=CODE if kind=='industry' else 'sina-concept';self.lock=threading.Lock();self.running=False;self.last_attempt=float('-inf');self.error=''
+        self.ready=threading.Event();self.ready.set()
 
     def refresh(self,force=False):
         with self.lock:
             if self.running:return
             if not force and time.monotonic()-self.last_attempt<(RETRY_SECONDS if self.error else REFRESH_SECONDS):return
-            self.running=True;self.last_attempt=time.monotonic()
+            self.running=True;self.ready.clear();self.last_attempt=time.monotonic()
         try:
             now=now_cn();result=fetch(now,self.kind)
             self.store.cache(self.code,KIND,result['date'],result)
@@ -332,13 +394,22 @@ class SectorFlow:
                 with self.store.lock,self.store.db:
                     self.store.db.execute('INSERT OR IGNORE INTO cache VALUES(?,?,?,?)',(self.code,'sector_intraday_v1',result['quote_time'],json.dumps(result,ensure_ascii=False)))
             self.error=''
-        except Exception:
-            self.error='板块资金暂未取得或未通过核对'
+        except Exception as exc:
+            self.error=('板块资金暂未取得或未通过核对：'+type(exc).__name__+' '+str(exc))[:500]
         finally:
-            with self.lock:self.running=False
+            with self.lock:self.running=False;self.ready.set()
 
-    def view(self):
-        if self.enabled and not self.running and time.monotonic()-self.last_attempt>=(RETRY_SECONDS if self.error else REFRESH_SECONDS):
+    def snapshot(self, now):
+        """Research and all UI consumers share one refresh, cache and validation gate."""
+        self.refresh()
+        if not self.ready.wait(60):raise ValueError('板块采集仍未完成（等待超过 60 秒）')
+        report=self.view(refresh=False)
+        if not report['snapshot']:raise ValueError(report['error'] or '板块快照日期或时效未通过核对')
+        if report['snapshot']['date']!=expected_day(now):raise ValueError('板块与研判交易日不一致')
+        return report['snapshot']
+
+    def view(self, refresh=True):
+        if refresh and self.enabled and not self.running and time.monotonic()-self.last_attempt>=(RETRY_SECONDS if self.error else REFRESH_SECONDS):
             threading.Thread(target=self.refresh,daemon=True).start()
         rows=self.store.getcache(self.code,KIND)
         now=now_cn();wanted=expected_day(now)
@@ -353,7 +424,7 @@ class SectorFlow:
                 age=(now-ts).total_seconds()
                 session=trading_day(now.date()) is True and (clock_time(9,30)<=now.time()<=clock_time(11,30) or clock_time(13)<=now.time()<clock_time(15))
                 checked=ts.tzinfo is not None and collected.tzinfo is not None and collected<=now+timedelta(seconds=5) and -5<=age
-                usable=checked and (not session or age<=180)
+                usable=checked and (not session or (age<=180 and (now-collected).total_seconds()<=180))
             except (ValueError,TypeError,KeyError):usable=False;checked=False
         return dict(snapshot=latest if usable else None,cached_snapshot=latest if checked and not usable else None,stale=bool(checked and not usable),running=self.running,error=self.error,expected_date=wanted,source_url=SOURCE_PAGE,refresh_seconds=REFRESH_SECONDS)
 
