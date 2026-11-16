@@ -1,3 +1,6 @@
+import CandleDrawings from './CandleDrawingLayer';
+import {drawingCode} from './candleDrawingModel';
+import type {Request} from './poolTableModel';
 import InfoNote from './InfoNote';
 import {autoTradeMarks,autoTradeDetails,type AutoTradeChart} from './autoTradeMarks';
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
@@ -88,7 +91,7 @@ const renderPaperConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
 };
 export type BottomSignal={day:string;time:string;price:number};
 
-export default function Chart({stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,rangeReference,minuteCachedAt,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string;timestamp?:string};rangeReference?:IntradayRangeReference;volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minuteCachedAt?:string;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
+export default function Chart({drawingRequest,stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,rangeReference,minuteCachedAt,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{drawingRequest?:Request;stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string;timestamp?:string};rangeReference?:IntradayRangeReference;volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minuteCachedAt?:string;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
  // Opening quotes seed R1 only; plotted prices, volumes, MACD and Q1 keep their original input.
  const shapeBars=shapeOpening?[...shapeOpening,...minute]:minute;
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
@@ -247,6 +250,7 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
   window.addEventListener('resize',fit);fit();
   return()=>{cancelAnimationFrame(frame);observer.disconnect();structure.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--watch-chart-height');node.style.removeProperty('--minute-chart-height');};
  },[hasMacd,compact,view]);
+ const [drawingToolbar,setDrawingToolbar]=useState<HTMLDivElement|null>(null);
  const windowDates=useRef<string[]>([]);const lastDailyDate=useRef('');
  const zoomCandles=(direction:number)=>{
   const chart=instance.current,rows=daily;if(!chart||!isCandleView(view)||!rows.length)return;
@@ -511,7 +515,7 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
   else if(isDay&&selectedCandle){const index=labels.indexOf(selectedCandle);if(index>=0)chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});}
  },[contentKey]);
  useEffect(()=>{if(isCandleView(view))ref.current?.focus({preventScroll:true});},[view]);
- return <>{isCandleView(view)&&<CandleControls value={ma} onChange={updateMa} onZoom={zoomCandles}/>} {view==='daily'&&<div className="daily-pattern-controls" role="group" aria-label="日线形态显示选项">
+ return <>{isCandleView(view)&&<CandleControls value={ma} onChange={updateMa} onZoom={zoomCandles}>{drawingRequest&&drawingCode(stockCode)&&<div className="candle-drawing-slot" ref={setDrawingToolbar}/>}</CandleControls>} {view==='daily'&&<div className="daily-pattern-controls" role="group" aria-label="日线形态显示选项">
   {showDailyPatterns&&<><span className="daily-pattern-mode">自动识别 · 同一区域择优显示</span><span className="daily-pattern-legend">{([...new Set(dayPatterns.map(p=>p.kind))]).map(kind=><span key={kind}><i style={{backgroundColor:dailyPatternColors[kind]}}/>{dayPatterns.find(p=>p.kind===kind)!.name}</span>)}</span></>}
  </div>}{!isCandleView(view)&&<TCostSettings value={costs} onChange={updateCosts} displayOptions={<div className="chart-display-options" role="group" aria-label="分时显示选项">
   <label className="opening-volume-toggle"><input type="checkbox" checked={showOpening} onChange={e=>{setShowOpening(e.target.checked);try{localStorage.setItem('stock-monitor-show-opening',String(e.target.checked));}catch{}}}/>开盘量</label>
@@ -520,6 +524,7 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
   {!fixedTurningMode&&<label className="turning-mode-select" title="自动下单与自动标注仍使用 v2.4 信号；v3 实验：顶多底少，相似度F0.5略升但底部覆盖/质量下降">顶底模式<select aria-label="顶底模式" value={turningMode} onChange={e=>updateTurningMode((['v3','stable','zhangle'].includes(e.target.value)?e.target.value:'zhangle') as TurningChartMode)}><option value="zhangle">贴近涨乐通 v2.4（默认）</option><option value="v3">贴近涨乐通 v3（实验：顶多底少）</option><option value="stable">稳健 v2.0</option></select></label>}
 
  </div>}/>}{tradeHint?.scope===scope&&<div className="chart-trade-hint" role="status">{tradeHint.text}</div>}<div className="chart-shell"><div className={'chart'+(compact?' compact-chart':'')+(hasMacd?' macd-chart':'')} ref={ref} onContextMenu={contextTrade} tabIndex={isCandleView(view)?0:undefined} onClick={()=>{if(isCandleView(view))ref.current?.focus();}} onKeyDown={e=>{if(isCandleView(view)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();onMove?.(e.key==='ArrowLeft'?-1:1);}else if(isCandleView(view)&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();zoomCandles(e.key==='ArrowUp'?-1:1);}else if(isCandleView(view)&&e.key==='Enter'&&selectedDay)onOpenDay?.(selectedCandle||selectedDay);}} aria-label={view==='weekly'?'周K线及成交量':view==='daily'?'日K线及成交量':'分时价格及分钟成交量'}/>
+ {isCandleView(view)&&drawingRequest&&drawingCode(stockCode)&&<CandleDrawings key={drawingCode(stockCode)+'|'+view} code={drawingCode(stockCode)} frame={view as 'daily'|'weekly'} rows={daily} chartRef={instance} nodeRef={ref} toolbar={drawingToolbar} request={drawingRequest}/>}
  {stockSwitcher}
  <div className="volume-panel-header" data-volume-grid="1" style={{top:hasMacd?minutePanels.headers[0]:'65%'}} ref={el=>{volumeHeaders.current[0]=el;}}><span>{isCandleView(view)?'成交量（万股）':'成交量（手）'}</span>{hasMacd&&<><span className="volume-value"/><time/></>}</div>
  {hasMacd&&<>

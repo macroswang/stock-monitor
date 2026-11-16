@@ -1,6 +1,6 @@
 [package]
 name = "stock-monitor"
-version = "0.6.142"
+version = "0.6.148"
 edition = "2021"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

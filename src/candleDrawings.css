@@ -1,0 +1,17 @@
+.candle-drawing-slot{min-width:0}
+.candle-drawing-tools{position:relative;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:10px;color:#8fa5c0}
+.candle-drawing-tools button{display:inline-flex;align-items:center;gap:2px;padding:1px 5px;font-size:9px;line-height:17px;border-radius:4px;white-space:nowrap}
+.candle-drawing-tools button[aria-pressed=true]{background:#2b405a;border-color:#7996bb;color:#d5e5fb}
+.candle-drawing-tools small{font-size:9px;white-space:nowrap;color:#849cba}
+.drawing-label{margin-right:2px}.drawing-error{flex-basis:100%;color:#ecc078;font-size:10px;line-height:1.5;max-width:460px}.drawing-error button{margin-left:5px}
+.candle-drawings{position:absolute;inset:0;width:100%;height:100%;z-index:5;overflow:hidden;pointer-events:none;outline:none}
+.candle-drawings.is-drawing{cursor:crosshair;touch-action:none}
+.drawing-capture{fill:transparent}.drawing-shape{fill:none;stroke:#edbe63;stroke-width:1.25;vector-effect:non-scaling-stroke;pointer-events:none}
+rect.drawing-shape{fill:#edbe630b}.selected .drawing-shape{stroke:#ffdf9a;stroke-width:1.5}
+.drawing-hit{stroke:transparent;stroke-width:10;fill:none;pointer-events:stroke;cursor:move;touch-action:none}
+.drawing-handle{fill:#142236;stroke:#ffe1a1;stroke-width:1;pointer-events:all;cursor:crosshair;touch-action:none}
+.is-drawing .drawing-hit,.is-drawing .drawing-handle{pointer-events:none}
+.candle-controls:has(.candle-drawing-slot){flex-wrap:wrap;row-gap:5px}
+@media(max-width:1150px){.candle-drawing-tools{gap:3px}.drawing-label{display:none}}
+
+.drawing-style-label{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#8fa5c0}.candle-drawing-tools .drawing-style-label input[type=color]{width:22px;height:20px;margin:0;padding:1px;border:1px solid #344964;border-radius:4px;cursor:pointer}.candle-drawing-tools .drawing-style-label select{padding:1px 2px;margin:0;line-height:17px;height:20px;font-size:9px;border-radius:4px}

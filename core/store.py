@@ -17,6 +17,8 @@ class Store:
         CREATE TABLE IF NOT EXISTS delivery(key TEXT PRIMARY KEY,status TEXT,attempts INTEGER DEFAULT 0,next_try REAL DEFAULT 0);
         CREATE TABLE IF NOT EXISTS local_delivery(key TEXT PRIMARY KEY,status TEXT,attempts INTEGER DEFAULT 0,next_try REAL DEFAULT 0,detail TEXT);
         CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT);
+        CREATE TABLE IF NOT EXISTS chart_drawings(code TEXT NOT NULL,frame TEXT NOT NULL,
+          revision INTEGER NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(code,frame));
         CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,dedupe_key TEXT UNIQUE,category TEXT,title TEXT,body TEXT,event_key TEXT,payload TEXT,created_at TEXT,read_at TEXT);
         CREATE INDEX IF NOT EXISTS messages_created ON messages(created_at DESC);
         CREATE TABLE IF NOT EXISTS pool(code TEXT PRIMARY KEY,name TEXT,added_day TEXT NOT NULL,added_price REAL,source TEXT NOT NULL,

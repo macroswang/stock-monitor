@@ -237,7 +237,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
     {view==='minute'&&!loading&&(error||!ready)&&<button type="button" onClick={()=>void ensureMinute(true,true)}>重试分时</button>}
     {ready&&<div className="scp-chart">
       {/* stockCode 传 MACD 中性前缀：内嵌面板不请求/展示指数 MACD（契约要求不传高级数据），名称仍用真实 name */}
-      <Chart stockCode={'pool-'+code} stockName={name} minute={minute?.bars||[]} shapeOpening={minute?.shapeOpening||[]}
+      <Chart drawingRequest={request} stockCode={'pool-'+code} stockName={name} minute={minute?.bars||[]} shapeOpening={minute?.shapeOpening||[]}
         daily={daily||[]} ma250={ma250} e2={e2} annualLineFocus={annualLineFocus} view={chartView} selectedDay={activeDay} onSelectDay={day=>setSelectedDay(day)}
         compact onBottomSignal={onBottomSignal} previousClose={minute?.previousClose} benchmark={null}/>
     </div>}

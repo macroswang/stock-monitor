@@ -580,6 +580,12 @@ class App:
             daily_url='https://web.ifzq.gtimg.cn/appstock/app/kline/kline?param='+code+',day,开始日期,结束日期,2000,')
 
     def call(self,method,args):
+        if method in ('chart_drawings', 'chart_drawings_save'):
+            from . import chart_drawings
+            if method == 'chart_drawings':
+                return chart_drawings.load(self.store, args.get('code'), args.get('frame'))
+            return chart_drawings.save(self.store, args.get('code'), args.get('frame'),
+                                       args.get('revision'), args.get('items'))
         if method.startswith("paper_"):
             return self.paper_service().call(method,args)
         if method=='buy_research':
