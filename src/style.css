@@ -226,6 +226,7 @@
 .watch-stock-switcher button:disabled{opacity:.3;cursor:default}
 
 .chart.macd-chart{height:var(--minute-chart-height,max(350px,calc(100dvh - 280px)))}
+.market-workspace .market-grid>.detail>.chart-shell>.chart{height:var(--watch-chart-height,var(--minute-chart-height,460px))}
 .chart.compact-chart.macd-chart{height:420px}
 .macd-panel-header{position:absolute;left:65px;right:72px;display:flex;align-items:center;gap:8px;pointer-events:none;font-size:10px;line-height:14px;color:#aabbd3;white-space:nowrap;font-variant-numeric:tabular-nums}
 .macd-panel-heading{display:contents}.macd-panel-heading strong{color:#d6e2f3;font-size:10px;font-weight:600}.macd-panel-heading>span{display:none}.macd-panel-heading time{order:3;margin-left:auto;color:#9cafc8}

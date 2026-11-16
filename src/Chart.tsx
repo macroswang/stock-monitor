@@ -198,21 +198,55 @@ export default function Chart({stockCode='',stockName='',macdBenchmark,autoTradi
  const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),minuteCachedAt,daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,displayedPrice?.price,rangePrices,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
- // Fit the comparison stack to the remaining viewport without reacting to scroll.
+ // Only the main watch chart consumes the free viewport. Expanded linked
+ // minutes keep their own height and scroll below the primary chart.
  useEffect(()=>{
-  const node=ref.current;if(!node||!hasMacd||compact)return;
+  const node=ref.current;if(!node||compact)return;
+  const shell=node.parentElement,detail=node.closest<HTMLElement>('.market-grid>.detail');
+  const primary=!!detail&&shell?.parentElement===detail;
+  if(!primary&&!hasMacd)return;
   let frame=0;
+  const outerHeight=(el:Element)=>{
+   const style=getComputedStyle(el);
+   return el.getBoundingClientRect().height+(parseFloat(style.marginTop)||0)+(parseFloat(style.marginBottom)||0);
+  };
   const fit=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
    if(!node.getClientRects().length)return;
    const top=node.getBoundingClientRect().top+window.scrollY;
-   const height=Math.round(Math.max(350+STOCK_VOLUME_EXPANSION+PRICE_TREND_EXPANSION+CONTROLS_PRICE_EXPANSION,document.documentElement.clientHeight-top-22));
-   const value=height+'px';if(node.style.getPropertyValue('--minute-chart-height')!==value)node.style.setProperty('--minute-chart-height',value);
+   let reserved=22;
+   if(primary){
+    const workspace=detail.closest('.workspace'),style=getComputedStyle(detail);
+    reserved=(workspace?parseFloat(getComputedStyle(workspace).paddingBottom):14)+(parseFloat(style.borderBottomWidth)||0);
+    for(let sibling=shell!.nextElementSibling;sibling;sibling=sibling.nextElementSibling){
+     if(sibling.classList.contains('linked-minute')){
+      const heading=sibling.querySelector('h3'),linkedStyle=getComputedStyle(sibling);
+      reserved+=(heading?outerHeight(heading):0)+(parseFloat(linkedStyle.paddingTop)||0)+(parseFloat(linkedStyle.paddingBottom)||0)+(parseFloat(linkedStyle.borderTopWidth)||0)+(parseFloat(linkedStyle.borderBottomWidth)||0);
+     }else reserved+=outerHeight(sibling);
+    }
+   }
+   const minimum=hasMacd?350+STOCK_VOLUME_EXPANSION+PRICE_TREND_EXPANSION+CONTROLS_PRICE_EXPANSION:460;
+   const height=Math.round(Math.max(minimum,document.documentElement.clientHeight-top-reserved));
+   const property=primary?'--watch-chart-height':'--minute-chart-height',value=height+'px';
+   if(node.style.getPropertyValue(property)!==value)node.style.setProperty(property,value);
   });};
-  const observer=new ResizeObserver(fit),shell=node.parentElement;
-  for(const sibling of node.closest('.detail')?.children||[])if(shell&&sibling.compareDocumentPosition(shell)&Node.DOCUMENT_POSITION_FOLLOWING)observer.observe(sibling);
+  const observer=new ResizeObserver(fit);
+  for(const sibling of detail?.children||[]){
+   if(!shell||sibling===shell)continue;
+   if(sibling.classList.contains('linked-minute')){const heading=sibling.querySelector('h3');if(heading)observer.observe(heading);}
+   else observer.observe(sibling);
+  }
+  // Includes notices above the detail and visibility changes when returning
+  // from another panel. Stable rounded height writes settle after one resize.
+  const workspace=primary?detail.closest('.workspace'):null;
+  const observeNotices=()=>{for(const child of workspace?.children||[])if(child.matches('header,.toast,.notice'))observer.observe(child);};
+  const structure=new MutationObserver(records=>{
+   for(const record of records)for(const removed of record.removedNodes)if(removed instanceof Element)observer.unobserve(removed);
+   observeNotices();fit();
+  });
+  if(workspace){observer.observe(workspace);observeNotices();structure.observe(workspace,{childList:true});}
   window.addEventListener('resize',fit);fit();
-  return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--minute-chart-height');};
- },[hasMacd,compact]);
+  return()=>{cancelAnimationFrame(frame);observer.disconnect();structure.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--watch-chart-height');node.style.removeProperty('--minute-chart-height');};
+ },[hasMacd,compact,view]);
  const windowDates=useRef<string[]>([]);const lastDailyDate=useRef('');
  const zoomCandles=(direction:number)=>{
   const chart=instance.current,rows=daily;if(!chart||!isCandleView(view)||!rows.length)return;

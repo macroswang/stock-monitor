@@ -11,6 +11,9 @@ function fixture(){
 }
 async function tip(page:Page,view:'日K'|'周K',date:string){
  const chart=page.getByLabel(view==='日K'?'日K线及成交量':'周K线及成交量',{exact:true});
+ // The viewport fit and ECharts resize each run on the next render cycle.
+ // Hover only after both have settled; keep the exact OHLC/return assertions.
+ await chart.evaluate(async()=>{for(let i=0;i<3;i++)await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));});
  await chart.evaluate(async(el,date)=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el),o=c.getOption(),index=o.xAxis[0].data.indexOf(date);
   if(index<0)throw Error('Missing test candle '+date);c.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});
