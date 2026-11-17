@@ -3,7 +3,7 @@ import {drawingCode} from './candleDrawingModel';
 import type {Request} from './poolTableModel';
 import InfoNote from './InfoNote';
 import {autoTradeMarks,autoTradeDetails,type AutoTradeChart} from './autoTradeMarks';
-import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import * as echarts from 'echarts';
 import type {Bar,Daily,Event,IndexMinute,Ma250Pullback,E2Research,VolumeFlow} from './models';
 import {price,wan,wanShares} from './format';
@@ -38,6 +38,8 @@ import CandleControls from './CandleControls';
 import {isCandleView,weeklyBars,candleDate,movingAverage,readMovingAverages,candleHistoryNeed,MA_COLORS,type MovingAverages} from './candleData';
 import {defaultTCosts,tProfit} from './tCosts';
 import type {TCosts} from './tCosts';
+import {MinuteOptionPatch} from './minuteOptionPatch';
+import {CanvasFrameSurface} from './canvasFrameSurface';
 import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
 import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber,readMacdParameters,macdParametersKey,type MacdParameters} from './minuteMacd';
@@ -153,7 +155,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const costsRef=useRef(costs);costsRef.current=costs;
  const refreshTrade=useRef<(()=>void)|null>(null);
  const updateCosts=(next:TCosts)=>{costsRef.current=next;setCosts(next);refreshTrade.current?.();if(tProfit(10,10,next)){try{localStorage.setItem('stock-monitor-t-costs-v4',JSON.stringify(next));}catch{}}};
- const scope=view+'|'+(selectedDay||events[0]?.trading_date||'');
+ const scope=stockCode+'|'+view+'|'+(selectedDay||events[0]?.trading_date||'');
  const [choice,setChoice]=useState<{scope:string;time:string;price:number;kind?:'底'|'顶'|'位置'}|null>(null);
  useEffect(()=>setChoice(null),[scope]);
  const visibleMarks=isCandleView(view)?[]:topVolumeMarks(minute,events,showOpening,showTriggered);
@@ -178,6 +180,12 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const displayedMinute=minute.filter(b=>displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${b.time}:00+08:00`)<=displayCutoff));
  const displayedPrice=currentPrice&&displayCutoff!==null&&(!selectedDay||Date.parse(currentPrice.timestamp||`${selectedDay}T${currentPrice.time}+08:00`)<=displayCutoff)?currentPrice:undefined;
  const rangePrices=reachedPriceRange(rangeReference,stockCode,selectedDay,previousClose,displayCutoff);
+ // Cache timestamps still gate every reached point, but an updated collection
+ // time alone must not invalidate an otherwise identical picture.
+ const indexRenderCutoff=macdBenchmark?minuteTimeCutoff(macdBenchmark.date,displayClock,macdBenchmark.cached_at):null;
+ const indexRenderKey=macdBenchmark?[macdBenchmark.code,macdBenchmark.date,macdBenchmark.previous_close,
+  macdBenchmark.bars.filter(b=>indexRenderCutoff!==null&&Date.parse(`${macdBenchmark.date}T${b.time}:00+08:00`)<=indexRenderCutoff)
+   .map(b=>[b.time,b.close,b.volume_lots])]:null;
  const quotePrices=[...displayedMinute.map(b=>+b.close),...(displayedPrice?[displayedPrice.price]:[])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
  const [tradeHint,setTradeHint]=useState<{scope:string;text:string}|null>(null);
@@ -197,14 +205,18 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   onPaperTrade({time,price,kind:'分时右键委托',side:'buy',inChart:true});
  };
  const scopeRef=useRef(scope);scopeRef.current=scope;
- const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef(''),pointerLeft=useRef(false);
+ const pointer=useRef<{x:number;y:number;scope:string}|null>(null),renderedScope=useRef(''),renderedStructure=useRef(''),pointerLeft=useRef(false);
+ const minutePatch=useRef<MinuteOptionPatch|null>(null);
+ const minuteSurface=useRef<CanvasFrameSurface|null>(null);
+ const latestTooltip=useRef<((params:unknown)=>HTMLElement)|null>(null);
+ const stableTooltip=useRef((params:unknown)=>latestTooltip.current?.(params));
  const leavePointer=()=>{pointer.current=null;pointerLeft.current=true;instance.current?.dispatchAction({type:'hideTip'});};
- const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),minuteCachedAt,daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,macdBenchmark,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,displayedPrice?.price,rangePrices,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,indexRenderKey,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,displayedPrice?.price,rangePrices,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Only the main watch chart consumes the free viewport. Expanded linked
  // minutes keep their own height and scroll below the primary chart.
- useEffect(()=>{
+ useLayoutEffect(()=>{
   const node=ref.current;if(!node||compact)return;
   const shell=node.parentElement,detail=node.closest<HTMLElement>('.market-grid>.detail');
   const primary=!!detail&&shell?.parentElement===detail;
@@ -214,7 +226,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
    const style=getComputedStyle(el);
    return el.getBoundingClientRect().height+(parseFloat(style.marginTop)||0)+(parseFloat(style.marginBottom)||0);
   };
-  const fit=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
+  const measure=()=>{
    if(!node.getClientRects().length)return;
    const top=node.getBoundingClientRect().top+window.scrollY;
    let reserved=22;
@@ -232,7 +244,8 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
    const height=Math.round(Math.max(minimum,document.documentElement.clientHeight-top-reserved));
    const property=primary?'--watch-chart-height':'--minute-chart-height',value=height+'px';
    if(node.style.getPropertyValue(property)!==value)node.style.setProperty(property,value);
-  });};
+  };
+  const fit=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(measure);};
   const observer=new ResizeObserver(fit);
   for(const sibling of detail?.children||[]){
    if(!shell||sibling===shell)continue;
@@ -242,13 +255,13 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   // Includes notices above the detail and visibility changes when returning
   // from another panel. Stable rounded height writes settle after one resize.
   const workspace=primary?detail.closest('.workspace'):null;
-  const observeNotices=()=>{for(const child of workspace?.children||[])if(child.matches('header,.toast,.notice'))observer.observe(child);};
+  const observeNotices=()=>{for(const child of workspace?.children||[])if(child.matches('header,.notice'))observer.observe(child);};
   const structure=new MutationObserver(records=>{
    for(const record of records)for(const removed of record.removedNodes)if(removed instanceof Element)observer.unobserve(removed);
    observeNotices();fit();
   });
   if(workspace){observer.observe(workspace);observeNotices();structure.observe(workspace,{childList:true});}
-  window.addEventListener('resize',fit);fit();
+  window.addEventListener('resize',fit);measure();
   return()=>{cancelAnimationFrame(frame);observer.disconnect();structure.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--watch-chart-height');node.style.removeProperty('--minute-chart-height');};
  },[hasMacd,compact,view]);
  const [drawingToolbar,setDrawingToolbar]=useState<HTMLDivElement|null>(null);
@@ -262,7 +275,12 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   pointer.current=null;setCandleSizes(old=>({...old,[view]:next.desired}));onHistoryNeed?.(candleHistoryNeed(next.desired,ma));
   ref.current?.focus({preventScroll:true});
  };
- useEffect(()=>{if(!ref.current)return;const chart=echarts.init(ref.current,undefined,{renderer:'canvas'});instance.current=chart;
+ useLayoutEffect(()=>{if(!ref.current)return;const chart=echarts.init(ref.current,undefined,{renderer:'canvas',useDirtyRect:true});instance.current=chart;setPlotHeight(ref.current.clientHeight);
+  // ECharts reapplies the background on every setOption; zrender then marks
+  // every layer unpainted, defeating dirty rectangles even for a data patch.
+  // Deduplicate only immutable string backgrounds through the public API.
+  const zr=chart.getZr(),setBackground=zr.setBackgroundColor.bind(zr);
+  zr.setBackgroundColor=color=>{if(typeof color!=='string'||zr.getBackgroundColor()!==color)setBackground(color);};
   chart.on('click',params=>{
    if(!isCandleView(plot.current.view)&&params.componentType==='markPoint'){
     const data=params.data as {value?:unknown;coord?:[string,number];turningKind?:'底'|'顶'}|undefined;
@@ -278,11 +296,25 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   chart.getZr().on('mousemove',rememberPointer);chart.getZr().on('mousedown',rememberPointer);
   chart.getZr().on('globalout',()=>{leavePointer();refreshMacd.current?.();});
   chart.getZr().on('click',event=>{if(event.target||isCandleView(plot.current.view)||!chart.containPixel({gridIndex:0},[event.offsetX,event.offsetY]))return;const coord=chart.convertFromPixel({gridIndex:0},[event.offsetX,event.offsetY]) as number[];const all=[...Array.from({length:121},(_,i)=>570+i),...Array.from({length:120},(_,i)=>781+i)];const m=all[Math.round(coord[0])];if(m===undefined)return;const time=`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;if(plot.current.minute.some(b=>b.time===time&&b.complete)&&Number.isFinite(coord[1])&&coord[1]>0)setChoice({scope:scopeRef.current,time,price:Math.round(coord[1]*100)/100,kind:'位置'});});
-  const observer=new ResizeObserver(()=>{chart.resize();setPlotHeight(chart.getHeight());});observer.observe(ref.current);
-  return()=>{observer.disconnect();chart.dispose();instance.current=null;};
+  const observer=new ResizeObserver(()=>{
+   const node=ref.current;if(!node)return;const width=node.clientWidth,height=node.clientHeight;
+   if(width<=0||height<=0)return;
+   if(chart.getWidth()!==width||chart.getHeight()!==height)chart.resize({width,height,silent:true});
+   setPlotHeight(old=>old===height?old:height);
+  });observer.observe(ref.current);
+  return()=>{observer.disconnect();if(minuteSurface.current){chart.off('rendered',minuteSurface.current.rendered);minuteSurface.current.dispose();minuteSurface.current=null;}chart.dispose();instance.current=null;};
  },[]);
- useEffect(()=>{
-  const chart=instance.current;if(!chart)return;const isDay=isCandleView(view);const labels=isDay?daily.map(b=>b.date):minuteSlots;
+ useLayoutEffect(()=>{
+  const chart=instance.current,node=ref.current;if(!chart||!node||isCandleView(view))return;
+  let surface:CanvasFrameSurface;try{surface=new CanvasFrameSurface(node);}catch{return;}
+  minuteSurface.current=surface;
+  chart.on('rendered',surface.rendered);surface.rendered();
+  return()=>{if(!chart.isDisposed())chart.off('rendered',surface.rendered);surface.dispose();minuteSurface.current=null;};
+ },[view]);
+ useLayoutEffect(()=>{
+  // Initialization records the real height before paint. Do not build a
+  // temporary fallback grid and immediately rebuild it during the same mount.
+  const chart=instance.current;if(!chart||!plotHeight)return;const isDay=isCandleView(view);const labels=isDay?daily.map(b=>b.date):minuteSlots;
   const clock=Date.now(),displayMinute=isDay?minute:displayedMinute;
   const reached=(time:string)=>isDay||displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${time}:00+08:00`)<=displayCutoff);
   const byTime=new Map(displayMinute.map(b=>[b.time,b]));const aligned=labels.map(t=>byTime.get(t));
@@ -394,7 +426,13 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
     label:m.value==='高'?{show:true,formatter:'高',position:layout.position,distance:layout.distance,offset:[-16,0],color:'#fff',backgroundColor:'#9b6b16',borderColor:'#e9ad58',borderWidth:.6,borderRadius:3,width:14,height:14,fontSize:9,fontWeight:600,lineHeight:14,padding:0,align:'center'}:{show:true,formatter:m.value,fontSize:8,color:'#a7b6cc',position:'top',distance:4}};
   });
   minuteZoom.current={start:zoom.start,end:zoom.end};
-  chart.setOption({backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
+  const sameScope=renderedScope.current===scope;
+  const structure=[hasMacd,showPercent].join('|');
+  // Stable series IDs preserve models, legend choices and interaction state.
+  // replaceMerge removes vanished overlays instead of keeping ghost marks.
+  // Navigation or a different axis structure still gets an isolated reset.
+  const mergeMinute=!isDay&&sameScope&&renderedStructure.current===structure;
+  const option={backgroundColor:'transparent',animation:false,textStyle:{color:'#9dacc5',fontFamily:'sans-serif'},
    legend:{show:!isDay,data:['价格','均价'],top:0,textStyle:{color:'#9dacc5',...(hasMacd?{fontSize:10}: {})},...(hasMacd?{itemWidth:16,itemHeight:8,itemGap:14}: {})},
    tooltip:{trigger:'axis',confine:false,enterable:false,className:'interactive-price-tooltip',transitionDuration:0,showDelay:0,hideDelay:100,axisPointer:{type:'cross',lineStyle:{color:'#a8bad1',type:'dashed'},crossStyle:{color:'#a8bad1',type:'dashed'}},backgroundColor:'#162238',borderColor:'#34465e',textStyle:{color:'#e7edf7'},
     extraCssText:(isDay?'padding:4px 7px;':'padding:7px 9px;')+'pointer-events:none;',position:(point:number[],_params:unknown,_dom:HTMLElement,_rect:unknown,size:{contentSize:number[];viewSize:number[]})=>{
@@ -506,15 +544,31 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
     ...(!isDay?[{name:'高量标签连线',type:'custom',silent:true,z:6,clip:false,tooltip:{show:false},renderItem:renderHighVolumeConnector,
      dimensions:['time','price','direction','distance'],encode:{x:0,y:1},data:volumeMarkers.filter(m=>m.value==='高').map(m=>[m.coord[0],m.coord[1],m.connectorDirection,m.connectorDistance])}]:[]),
     ...(!isDay?[{name:'底顶标签连线',type:'custom',silent:true,z:6,clip:false,tooltip:{show:false},renderItem:renderTurningConnector,
-     dimensions:['time','price','direction','distance'],encode:{x:0,y:1},data:observationMarks.filter(m=>m.label.show).map(m=>({value:[m.coord[0],m.coord[1],m.connectorDirection,m.connectorDistance],itemStyle:{color:m.itemStyle.color}}))}]:[])]
-  },{notMerge:true});
-  refreshMacd.current?.();
+     dimensions:['time','price','direction','distance'],encode:{x:0,y:1},data:observationMarks.filter(m=>m.label.show).map(m=>({value:[m.coord[0],m.coord[1],m.connectorDirection,m.connectorDistance],itemStyle:{color:m.itemStyle.color}}))}]:[])].map(series=>isDay?series:{...series,id:'minute:'+series.name})
+  };
+  const dependencies={xAxis:gridStep,yAxis:previousClose,'minute:总成交量（回退）':colors,'minute:指数成交量':indexVolumeColors};
+  if(!isDay){latestTooltip.current=option.tooltip.formatter;option.tooltip.formatter=stableTooltip.current as typeof option.tooltip.formatter;}
+  const apply=()=>{
+   if(mergeMinute&&minutePatch.current){
+    const patch=minutePatch.current.next(option,dependencies);
+    if(Object.keys(patch.option).length)chart.setOption(patch.option,{notMerge:false,...(patch.replaceSeries?{replaceMerge:['series']}: {})});
+   }else{
+    chart.setOption(option,{notMerge:true});
+    minutePatch.current=!isDay?new MinuteOptionPatch(option,dependencies):null;
+   }
+  };
+  if(minuteSurface.current)minuteSurface.current.update(apply);else apply();
+  renderedStructure.current=structure;
   // Refresh data under the cursor without jumping back to the selected day.
   // Explicit day/view navigation still takes priority over the previous hover.
-  const sameScope=renderedScope.current===scope;renderedScope.current=scope;
-  if(sameScope&&pointer.current?.scope===scope)chart.dispatchAction({type:'updateAxisPointer',currTrigger:'mousemove',x:pointer.current.x,y:pointer.current.y});
+  renderedScope.current=scope;
+  const retainedPointer=sameScope&&pointer.current?.scope===scope?pointer.current:null;
+  if(retainedPointer)chart.dispatchAction({type:'updateAxisPointer',currTrigger:'mousemove',x:retainedPointer.x,y:retainedPointer.y});
   else if(isDay&&selectedCandle&&(!sameScope||!pointerLeft.current)){const index=labels.indexOf(selectedCandle);if(index>=0)chart.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:index});}
   else if(pointerLeft.current)chart.dispatchAction({type:'hideTip'});
+  const hoveringData=retainedPointer&&Array.from({length:hasMacd?5:2},(_,gridIndex)=>gridIndex)
+   .some(gridIndex=>chart.containPixel({gridIndex},[retainedPointer.x,retainedPointer.y]));
+  if(!hoveringData)refreshMacd.current?.();
  },[contentKey]);
  useEffect(()=>{if(isCandleView(view))ref.current?.focus({preventScroll:true});},[view]);
  return <>{isCandleView(view)&&<CandleControls value={ma} onChange={updateMa} onZoom={zoomCandles}>{drawingRequest&&drawingCode(stockCode)&&<div className="candle-drawing-slot" ref={setDrawingToolbar}/>}</CandleControls>} {view==='daily'&&<div className="daily-pattern-controls" role="group" aria-label="日线形态显示选项">

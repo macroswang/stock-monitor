@@ -9,6 +9,7 @@ from core.store import Store
 from core.live_trading import LiveTrading
 from core.provider import CN
 from executor.brokers.base import BrokerCredentials
+from tests.native_depth import selection
 
 class AutomaticFlowTests(unittest.TestCase):
  def setUp(self):
@@ -23,7 +24,8 @@ class AutomaticFlowTests(unittest.TestCase):
    self.store.execute('INSERT INTO broker_accounts(id,broker,account) VALUES(?,?,?)',(ident,'ths',account));self.accounts[ident]=account
    client=Mock();client.spec.supports_order=True;client.ensure_ready.return_value=dict(account_verified=True,account_display=account)
    client.holdings.return_value=dict(complete=True,funds=dict(available='10000'),positions=[dict(code='sz000981',name='山子高科',quantity=1200,sellable=1000,price='2.13')])
-   def submit(*,side,code,quantity,price,before_confirm,ident=ident,**_):
+   def submit(*,side,code,quantity,price,before_confirm,ident=ident,**kwargs):
+    if kwargs.get('price_policy'):kwargs['on_price'](selection(side=side,code=code,price=price))
     before_confirm();before_confirm()
     return dict(status='accepted',submitted=True,order_id='contract-'+ident,confirm=dict(side=side,code=code,quantity=quantity,price=price))
    client.submit_order.side_effect=submit
@@ -100,6 +102,7 @@ class AutomaticFlowTests(unittest.TestCase):
 
  def test_both_journals_and_plan_are_durable_before_native_confirmation(self):
   def lost(*,before_confirm,**kwargs):
+   kwargs['on_price'](selection(side=kwargs['side'],code=kwargs['code'],price=kwargs['price']))
    before_confirm()
    run=self.store.query('SELECT * FROM trading_runs ORDER BY rowid DESC')[0]
    self.assertEqual(run['status'],'sending');self.assertEqual(json.loads(run['payload'])['plan']['account_id'],'a')
@@ -111,9 +114,10 @@ class AutomaticFlowTests(unittest.TestCase):
   self.signal('another');self.signal();self.assertEqual(self.clients['a'].submit_order.call_count,2)
   self.assertEqual([r['status'] for r in self.store.query('SELECT status FROM broker_requests')],['unknown','unknown'])
 
- def test_sell_price_change_before_confirm_keeps_configured_limit(self):
+ def test_sell_price_change_before_confirm_keeps_bound_opponent_limit(self):
   clicked=[]
   def changed(*,before_confirm,**kwargs):
+   kwargs['on_price'](selection(side=kwargs['side'],code=kwargs['code'],price=kwargs['price']))
    self.app.quotes['sz000981']={**self.app.quotes['sz000981'],'price':'2.10'}
    before_confirm();clicked.append(True)
    return dict(status='accepted',submitted=True)
@@ -129,6 +133,7 @@ class AutomaticFlowTests(unittest.TestCase):
  def test_sell_price_improves_at_final_confirmation_and_account_stays_bound(self):
   confirmed=[]
   def improved(*,before_confirm,**kwargs):
+   kwargs['on_price'](selection(side=kwargs['side'],code=kwargs['code'],price=kwargs['price']))
    self.app.quotes['sz000981']={**self.app.quotes['sz000981'],'price':'2.20'}
    before_confirm();confirmed.append(True)
    return dict(status='accepted',submitted=True,order_id='contract-a')
@@ -153,6 +158,7 @@ class AutomaticFlowTests(unittest.TestCase):
  def test_final_expired_quote_never_crosses_sending_and_has_audit(self):
   clicked=[]
   def stale(*,before_confirm,**kwargs):
+   kwargs['on_price'](selection(side=kwargs['side'],code=kwargs['code'],price=kwargs['price']))
    self.now+=timedelta(seconds=31)
    before_confirm();clicked.append(True)
    return dict(status='accepted',submitted=True)

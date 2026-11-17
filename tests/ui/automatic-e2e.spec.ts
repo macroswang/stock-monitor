@@ -52,11 +52,33 @@ async function manualTicket(page:Page){
   return instance.convertToPixel({xAxisIndex:0,yAxisIndex:0},[option.xAxis[0].data[i],(Math.min(...prices)+Math.max(...prices))/2]);
  });
  const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1],{button:'right'});
- const ticket=page.getByRole('dialog');await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
+ const ticket=page.getByRole('dialog',{name:/买卖确认/});await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
  await expect(ticket.getByRole('switch',{name:'真实委托'})).toHaveAttribute('aria-checked','true');return ticket;
 }
 test.afterEach(()=>{backend?.stdin.end();backend?.kill();for(const p of pending)p.reject(Error('Test ended'));pending=[];});
 test.setTimeout(45000);
+
+test('opponent prices bind native ask1/bid1 to both journals and reconcile without repricing old orders',async({page})=>{
+ await setup(page);await rpc('e2e_depth_spread',{spread:'0.01'});
+ await expect(page.getByText('信号源：图中顶／底（候选即发） · 新实盘委托：买入取卖一、卖出取买一',{exact:true})).toBeVisible();
+ const buy=await rpc('e2e_feed',{kind:'bottom'});
+ for(const broker of ['zhangle','ths'])expect(buy.orders[broker][0]).toMatchObject({side:'buy',price:'2.25',filled:0});
+ const journals=await rpc('e2e_price_journals');expect(journals).toHaveLength(2);
+ for(const request of journals){
+  expect(request.payload).toMatchObject({price:'2.25',intent:{price:'2.24'},price_selection:{book_side:'ask1',price:'2.25'}});
+ }
+ const rows=await records(page);await expect(rows).toHaveCount(2);await expect(rows.first()).toContainText('2.25元');await expect(rows.first()).toContainText('券商卖一');
+ await rpc('e2e_depth_spread',{spread:'0.02'});
+ expect((await rpc('e2e_repeat')).orders).toEqual(buy.orders);
+ const partial=await rpc('e2e_reconcile',{fraction:.5});expect(partial.runs.map((r:any)=>r.status)).toEqual(['partial','partial']);
+ const full=await rpc('e2e_reconcile',{fraction:1});expect(full.runs.map((r:any)=>r.status)).toEqual(['filled','filled']);
+ const sell=await rpc('e2e_feed',{kind:'top'});
+ for(const broker of ['zhangle','ths'])expect(sell.orders[broker][1]).toMatchObject({side:'sell',price:'2.25',filled:0});
+ for(const r of sell.runs)expect(r.payload.plan).toMatchObject({price:'2.25',price_policy:'broker-opponent-best-v1'});
+ const settled=await rpc('e2e_reconcile',{fraction:1});expect(settled.runs.map((r:any)=>r.status)).toEqual(['filled','filled','filled','filled']);
+ for(const broker of ['zhangle','ths'])expect(settled.orders[broker][0]).toEqual({...buy.orders[broker][0],filled:buy.orders[broker][0].quantity});
+ expect((await rpc('e2e_repeat')).orders).toEqual(settled.orders);
+});
 
 test('tickets default to real on every open without submitting or selecting simulation automatically',async({page},info)=>{
  await setup(page);const ticket=await manualTicket(page);await expect(ticket.getByLabel('真实委托券商账户')).toHaveValue('');
@@ -73,7 +95,7 @@ test('a holding-entry real ticket initializes its price from the delayed quote w
  const account=await rpc('paper_create',{cash:10000});await rpc('paper_seed',{account:account.id,code:'sz000981',shares:100,cost:'2.00'});
  await openSimulation(page);const row=page.locator('.paper-positions tbody tr').filter({hasText:'山子高科'});await expect(row).toBeVisible();
  await page.evaluate(()=>{const w=window as any,original=w.testTradingRpc;w.testTradingRpc=async(method:string,args:any)=>{const result=await original(method,args);if(method==='paper_quote'){w.defaultRealQuote=result.price/100;await new Promise(r=>setTimeout(r,300));}return result;};});
- await row.getByRole('button',{name:'买入',exact:true}).click();const ticket=page.getByRole('dialog');await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
+ await row.getByRole('button',{name:'买入',exact:true}).click();const ticket=page.getByRole('dialog',{name:/买卖确认/});await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
  await expect.poll(()=>page.evaluate(()=> (window as any).defaultRealQuote||0)).toBeGreaterThan(0);
  await expect(ticket.getByLabel('真实委托限价')).toHaveValue(String(await page.evaluate(()=> (window as any).defaultRealQuote)));
  expect((await rpc('e2e_state')).orders.zhangle).toEqual([]);expect((await rpc('paper_snapshot')).orders).toEqual([]);
@@ -197,7 +219,7 @@ test('manual real buy uses the selected account and existing gateway without a p
  await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('2300');
  await expect(submit).toBeEnabled();await expect(ticket.getByRole('checkbox')).toHaveCount(0);
  await page.screenshot({path:info.outputPath('manual-real-buy.png')});await submit.click();
- await expect(ticket).toHaveCount(0);await expect(page.locator('.toast')).toContainText('待手动同步成交');
+ await expect(ticket).toHaveCount(0);await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText('待手动同步成交');
  const state=await rpc('e2e_state');expect(state.orders.zhangle).toMatchObject([{side:'buy',code:'000981',quantity:2300,price:'2.24'}]);expect(state.orders.ths).toEqual([]);
  const requests=await rpc('broker_requests',{id:'e2e-a'});expect(requests).toHaveLength(1);expect(requests[0].status).toBe('unknown');expect(requests[0].request_id).not.toMatch(/^auto_/);
  const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'B',source:'manual',status:'unknown',order_price:'2.24'}]);

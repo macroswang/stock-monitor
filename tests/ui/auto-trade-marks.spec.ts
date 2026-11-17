@@ -110,3 +110,11 @@ test('a Q1 bottom suppressed by spacing creates neither a missing-order record n
  expect(autoTradeRecords(data,combined,c.day).some(r=>r.point.signal_key===quality[0].key)).toBe(false);
  expect(autoTradeMarks(data,combined,c.day)).toEqual([]);
 });
+
+test('next-session zero-fill cleanup hides B/S but keeps the historical execution record',()=>{
+ const archived={...point,filled:0,archived_unfilled:true};const data=view([archived]);
+ expect(autoTradeMarks(data,[],day)).toEqual([]);
+ expect(autoTradeRecords(data,[],day)).toHaveLength(1);
+ expect(data.points[0]).toEqual(archived);
+ expect(autoTradeMarks(view([{...point,filled:100,status:'partial'},{...point,id:'unknown',status:'unknown'}]),[],day)).toHaveLength(2);
+});

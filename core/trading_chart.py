@@ -341,8 +341,47 @@ def legacy_receipt_id(row, payload, ack):
         return ''
 
 
+def _archive_after(day,now):
+    """Display cleanup starts on the next verified exchange session, not a weekday guess."""
+    if day>=now.date().isoformat():return False
+    from .breadth import _next_verified_trading_day
+    following=_next_verified_trading_day(date.fromisoformat(day))
+    return following is not None and following<=now.date()
+
+
+def _verified_unfilled(row,payload,ack,day,now):
+    """Never infer non-execution from an acknowledgement or a missing fill row.
+
+    An intraday accepted/zero snapshot can still fill later. Only a post-close
+    zero snapshot, or a terminal zero result, qualifies for display cleanup.
+    This projection cannot change order status, paired cycles or durable evidence.
+    """
+    try:
+        v=payload.get('verification',{});status=row['status']
+        if (payload.get('mode')!='live' or status not in ('accepted','cancelled','rejected') or
+            row.get('request_status')!=status or v.get('origin')!='broker_auto' or
+            v.get('status')!=status or shares(v.get('filled'))!=0 or ack.get('verification')!=v or
+            payload.get('reconciliation',{}).get('ok') is not True or ack.get('reconciliation',{}).get('ok') is not True or
+            not v.get('source') or not re.fullmatch(r'[a-f0-9]{64}',v.get('evidence_hash',''))):return False
+        expected,request_day=request_plan(dict(payload=row['request_payload'],account_id=row['account_id'],created_at=row['request_at']))
+        plan=payload.get('plan',{})
+        if (request_day!=day or expected['code']!=row['code'][2:] or expected['side']!=row['side'] or
+            plan.get('account_id')!=row['account_id'] or plan.get('code')!=row['code'] or plan.get('side')!=row['side'] or
+            shares(plan.get('quantity'))!=expected['quantity'] or amount(plan.get('price'))!=amount(expected['price'])):return False
+        ident=known_id(ack)
+        if ident:
+            if v.get('order_id')!=ident:return False
+        elif _native_submission_evidence(row,payload,ack,day) is None:return False
+        observed=datetime.fromisoformat(v['observed_at']);checked=datetime.fromisoformat(v['at'])
+        if observed.tzinfo is None or checked.tzinfo is None or not datetime.fromisoformat(row['request_at'])<=observed<=checked<=now:return False
+        close=datetime.fromisoformat(day+'T15:00:00+08:00')
+        return status in ('cancelled','rejected') or observed>=close
+    except (KeyError,ValueError,TypeError):return False
+
+
 def chart(store,code,day):
     date.fromisoformat(day)
+    now=now_cn();archive=_archive_after(day,now)
     accounts=[]
     for r in store.query('SELECT r.account_id,r.payload,a.broker,a.account FROM trading_rules r JOIN broker_accounts a ON a.id=r.account_id WHERE r.code=?',(code,)):
         rule=json.loads(r['payload'])
@@ -377,8 +416,14 @@ def chart(store,code,day):
             created_at=r['created_at'],ordered_at=sent,order_price=plan.get('price'),quantity=plan.get('quantity'),order_id=order_id or receipt_id,
             filled=v.get('filled'),fill_price=fill_price,message=p.get('message',''),reconciliation=p.get('reconciliation'),
             attempted=r['request_status'] in ('sending','accepted','unknown','partial','filled','cancelled','rejected'),receipt_accepted=bool(receipt_id),receipt_message=receipt.get('message',''),admission=p.get('admission'),source='automatic'))
+        if archive and _verified_unfilled(r,p,ack,day,now):points[-1]['archived_unfilled']=True
     manual,manual_owners=_manual_submissions(store,code,day)
     owners=points+manual_owners
     points.extend(manual)
     points.extend(_cached_fills(store,code,day,points,native_keys,native_evidence,owners))
+    # New verified fills must always remain visible, even if a prior zero result
+    # was eligible for cleanup before the fill cache was merged.
+    for point in points:
+        if point.get('archived_unfilled') and (point.get('filled')!=0 or point.get('status') not in ('accepted','cancelled','rejected')):
+            point.pop('archived_unfilled',None)
     return dict(code=code,day=day,accounts=accounts,points=points)

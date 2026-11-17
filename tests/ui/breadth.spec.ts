@@ -816,44 +816,34 @@ test('a pre-close sample labelled closed remains unavailable on the next day',as
  await expect(page.locator('.market-summary-action')).toContainText('暂不依据它调整仓位');
 });
 
-test('market refresh failure pauses current advice on both home and trend page',async({page})=>{
+test('market refresh failure pauses current advice on the breadth page',async({page})=>{
  await page.clock.install({time:new Date('2026-10-30T20:00:00Z')});
  const report=JSON.parse(await readFile('public/breadth-csi300-preview.json','utf8'));
  report.error='全市场数据获取失败';
  await page.route('**/breadth-csi300-preview.json',route=>route.fulfill({json:report}));
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场判断'});
- await expect(home).toContainText('市场数据更新失败');
- await expect(home).not.toContainText('先不加仓');
- await home.getByRole('button',{name:'查看市场趋势'}).click();
+ await page.goto('/?panel=breadth&sample=csi300');
  const summary=page.getByRole('region',{name:'市场状态与操作参考'}).locator('.market-summary');
  await expect(summary).toContainText('市场数据更新失败，等待恢复后再查看操作参考');
  await expect(summary.locator('.market-summary-action')).not.toContainText('分批减仓');
  await expect(page.getByRole('img',{name:/上涨股成交额占比柱状图/})).toBeVisible();
  report.error='';
- await page.goto('/?sample=csi300');
- await expect(home).toContainText('先不加仓；空仓继续观望');
- await home.getByRole('button',{name:'查看市场趋势'}).click();
+ await page.reload();
  await expect(summary.locator('.market-summary-action')).toContainText('先不加仓；空仓继续观望');
 });
 
-test('index refresh failure pauses advice even when the last index snapshot exists',async({page})=>{
+test('index refresh failure pauses breadth advice even when the last index snapshot exists',async({page})=>{
  await page.clock.install({time:new Date('2026-10-30T20:00:00Z')});
  const report=JSON.parse(await readFile('public/index-csi300-preview.json','utf8'));
  report.error='指数更新失败';
  await page.route('**/index-csi300-preview.json',route=>route.fulfill({json:report}));
- await page.goto('/?sample=csi300');
- const home=page.getByRole('region',{name:'首页市场判断'});
- await expect(home).toContainText('指数数据更新失败');
- await expect(home).not.toContainText('分批减仓');
- await home.getByRole('button',{name:'查看市场趋势'}).click();
+ await page.goto('/?panel=breadth&sample=csi300');
  const summary=page.getByRole('region',{name:'市场状态与操作参考'}).locator('.market-summary');
  await expect(summary.locator('.market-summary-action')).toContainText('指数数据更新失败，等待恢复后再查看操作参考');
  await expect(summary.locator('.market-summary-action')).not.toContainText('分批减仓');
  await expect(page.getByRole('img',{name:/上涨股成交额占比柱状图/})).toBeVisible();
  report.error='';
- await page.goto('/?sample=csi300');
- await expect(home).toContainText('先不加仓；空仓继续观望');
+ await page.reload();
+ await expect(summary.locator('.market-summary-action')).toContainText('先不加仓；空仓继续观望');
 });
 
 test('a failed breadth request pauses advice while preserving the chart',async({page})=>{

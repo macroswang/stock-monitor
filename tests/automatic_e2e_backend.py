@@ -27,6 +27,7 @@ from executor.trade import TradePage, CODE_ID, SUBMIT_ID, DIALOG_OK_ID, DIALOG_C
 from executor.ths_order import ThsOrderPage
 from executor.zhangle import Zhangle
 from tests.test_zhangle_preparation import InputDevice, poll
+from tests.native_depth import native_depth
 from tests.test_executor_trade import DialogTests, TRADE_FOCUS
 from tests.test_executor_ths_order import form as ths_form, confirmation as ths_confirm, settings as ths_settings, n as ths_node
 
@@ -35,7 +36,7 @@ def forbidden(*_a,**_k):raise AssertionError('E2E simulator attempted real devic
 class NativeBroker:
     def __init__(self,broker,number,clock,quantity):
         self.broker,self.number,self.clock,self.quantity=broker,number,clock,quantity
-        self.orders=[];self.wrong_account=False;self.lose_receipt=False;self.gate=threading.Event();self.gate.set()
+        self.orders=[];self.depth_spread='0.00';self.wrong_account=False;self.lose_receipt=False;self.gate=threading.Event();self.gate.set()
         self.device=ZhangleDevice(self) if broker=='zhangle' else ThsDevice(self)
 
     def accept(self,side,code,quantity,price):
@@ -58,7 +59,7 @@ class ZhangleDevice(InputDevice):
         if self.phase=='receipt':
             if self.owner.lose_receipt:return []
             return parse_nodes(DialogTests.RESULT_ERROR_XML.replace('当前时间不允许委托','委托提交成功,合同号:'+self.owner.orders[-1]['order_id']))
-        return super().nodes()
+        return super().nodes()+native_depth('zhangle',getattr(self,'depth_mid','2.24'),self.owner.depth_spread)
     def tap_node(self,node):
         suffix=node.resource_id.rsplit('/',1)[-1]
         if suffix==SUBMIT_ID:self.taps.append(suffix);self.phase='confirm'
@@ -79,6 +80,7 @@ class ThsDevice:
         if self.phase=='settings':return ths_settings()+[ths_node('','iv_close')]
         nodes=ths_form(self.side)
         nodes[2]=replace(nodes[2],text=self.code);nodes[4]=replace(nodes[4],text=self.price);nodes[5]=replace(nodes[5],text=self.quantity)
+        nodes += native_depth('ths',getattr(self,'depth_mid','2.24'),self.owner.depth_spread)
         nodes += [ths_node('买 入' if self.side=='buy' else '卖 出',y=600),ths_node('','quick_setting_image'),
             ths_node('中国银河证券','page_title_view'),ths_node(self.owner.number,'account_info_view')]
         if self.phase=='search':nodes += [ths_node('','stock_search'),ths_node(self.search,'stockcode_tv',y=300)]
@@ -116,7 +118,7 @@ class Adapter(BrokerAdapter):
     def holdings(self,**_kwargs):return dict(complete=True,positions=self.owner.positions(),funds=dict(available='100000'))
     def submit_order(self,side,code,quantity,price=None,**kwargs):
         if not self.owner.gate.wait(10):raise AssertionError('Simulated device wait expired')
-        device=self.adb;device.phase='form';device.code='';device.price='';device.quantity='';device.side=side
+        device=self.adb;device.depth_mid=price;device.phase='form';device.code='';device.price='';device.quantity='';device.side=side
         page=TradePage(device) if self.owner.broker=='zhangle' else ThsOrderPage(device,expected_account=self.owner.number)
         return page.submit(side,code,quantity,price,**kwargs)
     def order_report(self,order_id,day,expected):
@@ -219,6 +221,11 @@ class Harness:
             order.update(filled=order['quantity'],fill_price=args['price'],fill_time=self.clock[0].strftime('%H:%M:%S'))
             return True
         if method=='e2e_state':return self.state()
+        if method=='e2e_price_journals':
+            return [dict(account_id=r['account_id'],status=r['status'],payload=json.loads(r['payload'])) for r in self.app.store.query('SELECT * FROM broker_requests ORDER BY rowid')]
+        if method=='e2e_depth_spread':
+            for owner in self.owners.values():owner.depth_spread=args['spread']
+            return True
         if method=='e2e_fault':
             owner=self.owners[args['broker']];setattr(owner,args['kind'],True);return True
         if method=='e2e_repeat':self.tick(self.clock[0].strftime('%H:%M:%S'));return self.state()

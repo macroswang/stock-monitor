@@ -389,26 +389,52 @@ def submit_order(
     secrets: SecretStore | None = None,
     request_id: str | None = None,
     authorize=None,
+    price_policy=None,
+    on_price=None,
 ) -> dict:
     if not isinstance(request_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,80}", request_id):
         raise ValueError("委托缺少有效请求号，不能提交")
-    payload = json.dumps(dict(account_id=account_id, side=side, code=code, quantity=quantity,
-                              price=price, max_value=max_value, dry_run=dry_run), sort_keys=True)
+    from executor.market_price import OPPONENT_POLICY, validate_selection
+    if price_policy is not None and (price_policy!=OPPONENT_POLICY or not request_id.startswith('auto_') or on_price is None):
+        raise ValueError('对手价仅允许经自动执行入口提交并核验实际价格')
+    intent=dict(account_id=account_id,side=side,code=code,quantity=quantity,price=price,max_value=max_value,dry_run=dry_run)
+    journal=dict(intent)
+    if price_policy:
+        intent['price_policy']=price_policy
+        journal.update(price_policy=price_policy,intent=dict(intent))
+    payload=json.dumps(journal,sort_keys=True)
     stamp = now_cn().isoformat()
     # 用事务占用请求号。重复请求只读旧结果，未知结果跨重启保留，不自动再点一次。
     with store.lock, store.db:
         store.db.execute("BEGIN IMMEDIATE")
         old = store.db.execute("SELECT * FROM broker_requests WHERE request_id=?", (request_id,)).fetchone()
         if old:
-            if old["payload"] != payload:
+            old_intent=json.loads(old['payload']).get('intent')
+            changed=(old_intent!=intent) if old_intent is not None else (old["payload"]!=payload)
+            if changed:
                 raise ValueError("同一请求号不能修改委托参数")
             return json.loads(old["result"]) if old["result"] else {"request_id": request_id, "submitted": False, "status": "unknown", "message": "该请求已登记，不会重复提交"}
         # Device/OS locks serialize active submissions. Historical outcomes do
         # not lock an account; only this immutable request ID prevents replay.
         store.db.execute("INSERT INTO broker_requests VALUES(?,?,?,'prepared',NULL,?,?)", (request_id, account_id, payload, stamp, stamp))
     dispatched = False
+    selected=None
+    def bind_price(evidence):
+        nonlocal selected
+        if dispatched or selected is not None:raise BrokerError('已绑定的委托不能再次改价')
+        actual=validate_selection(evidence,code,side)
+        on_price(dict(evidence,price=actual))
+        journal.update(price=actual,price_selection=dict(evidence,price=actual))
+        with store.lock,store.db:
+            changed=store.db.execute("UPDATE broker_requests SET payload=?,updated_at=? WHERE request_id=? AND status='prepared'",
+                (json.dumps(journal,sort_keys=True),now_cn().isoformat(),request_id)).rowcount
+            if changed!=1:raise BrokerError('委托准备记录已变化，未发送委托')
+        selected=dict(evidence,price=actual)
     def before_confirm():
         nonlocal dispatched
+        if price_policy:
+            if selected is None:raise BrokerError('尚未绑定券商买一或卖一，禁止提交')
+            if not dispatched:validate_selection(selected,code,side)
         if authorize is not None:
             authorize()
         with store.lock,store.db:
@@ -426,7 +452,12 @@ def submit_order(
         if ready.get('maintenance') is True and not dry_run:raise BrokerError('券商正在清算维护，数据可能不准确，本次不发送委托')
         result = client.submit_order(side=side, code=code, quantity=quantity, price=price,
                                      max_value=max_value, dry_run=dry_run, before_confirm=before_confirm,
+                                     **({'price_policy':price_policy,'on_price':bind_price} if price_policy else {}),
                                      **({'wait_for_receipt': False} if not request_id.startswith('auto_') else {}))
+        if price_policy and (result.get('submitted') or result.get('status')=='accepted') and (selected is None or not dispatched):
+            # A broken adapter contract cannot be treated as a verified order or
+            # as definitely unsent. Keep the request unresolved and non-replayable.
+            result=dict(status='unknown',submitted=False,message='券商回报缺少实际价格绑定或持久化提交证据，请核对委托；本请求不自动重发')
         if result.get('receipt_pending') is True and result.get('submitted') is True:
             result['submitted_at'] = now_cn().isoformat()
         if result.get("status") not in ("accepted", "rejected", "preview", "unknown"):
@@ -437,6 +468,7 @@ def submit_order(
         from executor.trade import TradePreparationError
         if isinstance(exc, TradePreparationError):result['preparation']=exc.diagnostics
     result["request_id"] = request_id
+    if selected is not None:result['price_selection']=selected
     store.execute("UPDATE broker_requests SET status=?,result=?,updated_at=? WHERE request_id=?",
                   (result["status"], json.dumps(result, ensure_ascii=False), now_cn().isoformat(), request_id))
     return result

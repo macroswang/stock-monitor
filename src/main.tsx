@@ -28,7 +28,8 @@ import StockSearch from './StockSearch';
 import StockReference from './StockReference';
 import WatchQuoteDetails from './watchQuote';
 import type {WatchQuote} from './watchQuote';
-import {cachedPriceRangeReference,tradingDayTimestamp,type CachedRangeMetadata} from './pricePresentation';
+import {cachedPriceRangeReference,minuteTimeCutoff,tradingDayTimestamp,type CachedRangeMetadata} from './pricePresentation';
+import {IntradayRangeReferenceCache} from './intradayRangeReference';
 import SourceCard from './SourceCard';
 import ArchivePanel from './ArchivePanel';
 import LiveTrading from './LiveTrading';
@@ -191,11 +192,14 @@ function App(){
  const quoteStamp=dayQuote?tradingDayTimestamp(dayQuote.timestamp,day):null;
  const matchingQuote=dayQuote&&quoteStamp!==null&&(dayQuote.code==null||dayQuote.code===code)?dayQuote:undefined;
  const stockBase=Number((cache.find(c=>c.day===day)?.data as {previous_close?:string})?.previous_close||matchingQuote?.previous_close);
- const minuteReference=cache.find(c=>c.day===day)?.data as ({limit_up?:string;limit_down?:string}&CachedRangeMetadata)|undefined;
+ const minuteReference=cache.find(c=>c.day===day)?.data as ({limit_up?:string;limit_down?:string;cached_at?:string}&CachedRangeMetadata)|undefined;
  const limitUp=Number(matchingQuote?.limit_up||minuteReference?.limit_up)||undefined;
  const limitDown=Number(matchingQuote?.limit_down||minuteReference?.limit_down)||undefined;
  const currentPrice=matchingQuote?{price:Number(matchingQuote.price),time:new Date(quoteStamp!+8*3600000).toISOString().slice(11,19),timestamp:matchingQuote.timestamp}:undefined;
- const rangeReference=matchingQuote?{code:matchingQuote.code??code,day,timestamp:matchingQuote.timestamp,previousClose:Number(matchingQuote.previous_close),high:Number(matchingQuote.high),low:Number(matchingQuote.low)}:cachedPriceRangeReference(minuteReference,code,day);
+ const rangeCache=useRef(new IntradayRangeReferenceCache());
+ const rangeReference=rangeCache.current.resolve(
+  matchingQuote?{code:matchingQuote.code??code,day,timestamp:matchingQuote.timestamp,previousClose:Number(matchingQuote.previous_close),high:Number(matchingQuote.high),low:Number(matchingQuote.low)}:undefined,
+  cachedPriceRangeReference(minuteReference,code,day),code,day,stockBase,minuteTimeCutoff(day,Date.now(),minuteReference?.cached_at));
  const refresh=async()=>{const seq=++snapshotSequence.current;try{const data=await api<Snapshot>('snapshot',{code:currentCode.current});if(seq===snapshotSequence.current){setSnapshot(data);setConnectionError('');}}catch(e){if(seq===snapshotSequence.current)setConnectionError(String(e));}};
  useEffect(()=>{if(!preview)isEnabled().then(setAutostart).catch(()=>{});},[]);
  useDisplayPolling(true,refresh,3000);
@@ -263,6 +267,17 @@ function App(){
   return()=>{active=false;};
  },[code,day,view,cache.length,marketActive]);
  async function action(fn:()=>Promise<unknown>,success?:string){if(busy)return;setBusy(true);setMessage('');try{await fn();if(success)setMessage(success);await refresh();}catch(e){setMessage(String(e));}finally{setBusy(false);}}
+ async function removeWatch(target:Watch){
+  if(busy)return;
+  const previous=snapshot;setBusy(true);setMessage('');setRemoveTarget(null);
+  // Removal is immediately reflected in the local view. The authoritative
+  // snapshot still follows, while a rejected backend operation restores the
+  // exact prior list instead of leaving a phantom deletion on screen.
+  setSnapshot(old=>old?{...old,watch:old.watch.filter(stock=>stock.code!==target.code)}:old);
+  try{await api('remove',{code:target.code});setMessage('已移除自选，历史数据保留');await refresh();}
+  catch(e){setSnapshot(previous);setMessage(String(e));}
+  finally{setBusy(false);}
+ }
  async function localTest(delay:number){if(preview)throw Error('请在桌面客户端测试');let allowed=await isPermissionGranted();if(!allowed)allowed=await requestPermission()==='granted';if(!allowed)throw Error('系统通知权限未开启');const result=await api<{message:string}>('test_local',{delay});setMessage(result.message);}
  const selected=snapshot?.watch.find(w=>w.code===code);const mdata=cache.find(c=>c.day===day)?.data as {bars?:Bar[];cached_at?:string}|undefined;
  const minute=(mdata?.bars||[]).filter(b=>(b.time>='09:31'&&b.time<='11:30')||(b.time>='13:01'&&b.time<='15:00'));
@@ -316,12 +331,12 @@ function App(){
  };
 
  const dayEvents=events.filter(e=>e.symbol===code.slice(2)&&e.trading_date===day&&e.mode!=='test');
- return <div className={'shell'+(sidebarCollapsed?' sidebar-collapsed':'')}>{removeTarget&&<div className="modal-overlay"><section className="card modal" role="dialog" aria-modal="true" aria-labelledby="remove-title"><h2 id="remove-title">移除自选股票</h2><p>确认移除 {removeTarget.name}（{removeTarget.code}）？</p><p className="muted">停止该股票监控，已有缓存和触发记录保留。</p><div className="form-row"><button disabled={busy} onClick={()=>setRemoveTarget(null)}>取消</button><button className="primary" disabled={busy} onClick={()=>action(async()=>{await api('remove',{code:removeTarget.code});setRemoveTarget(null);},'已移除自选，历史数据保留')}>确认移除</button></div></section></div>}<aside className="rail" id="primary-navigation" aria-label="主导航"><button className="rail-toggle" aria-label={sidebarCollapsed?'展开侧栏':'折叠侧栏'} title={sidebarCollapsed?'展开侧栏':'折叠侧栏'} aria-expanded={!sidebarCollapsed} aria-controls="primary-navigation" onClick={toggleSidebar}><span aria-hidden="true">{sidebarCollapsed?'›':'‹'}</span></button><div className="brand"><span className="logo">量</span><div>观量<small>STOCK MONITOR</small></div></div><p className="eyebrow">工作空间</p>
+ return <div className={'shell'+(sidebarCollapsed?' sidebar-collapsed':'')}>{removeTarget&&<div className="modal-overlay"><section className="card modal" role="dialog" aria-modal="true" aria-labelledby="remove-title"><h2 id="remove-title">移除自选股票</h2><p>确认移除 {removeTarget.name}（{removeTarget.code}）？</p><p className="muted">停止该股票监控，已有缓存和触发记录保留。</p><div className="form-row"><button disabled={busy} onClick={()=>setRemoveTarget(null)}>取消</button><button className="primary" disabled={busy} onClick={()=>removeWatch(removeTarget)}>确认移除</button></div></section></div>}<aside className="rail" id="primary-navigation" aria-label="主导航"><button className="rail-toggle" aria-label={sidebarCollapsed?'展开侧栏':'折叠侧栏'} title={sidebarCollapsed?'展开侧栏':'折叠侧栏'} aria-expanded={!sidebarCollapsed} aria-controls="primary-navigation" onClick={toggleSidebar}><span aria-hidden="true">{sidebarCollapsed?'›':'‹'}</span></button><div className="brand"><span className="logo">量</span><div>观量<small>STOCK MONITOR</small></div></div><p className="eyebrow">工作空间</p>
  {[['market','自选监控'],['breadth','大盘广度'],['modes','市场机会'],['ma250','年线信号'],['pool','股票池'],['trading','自动交易'],['paper','模拟交易'],['data','数据管理'],['settings','设置与通知']].map(([id,name])=><button className={'nav '+(panel===id?'active':'')} key={id} aria-label={name} title={name} onClick={()=>setPanel(id)}><span className="nav-icon"><NavIcon name={id}/></span><span className="nav-label">{name}</span></button>)}
  <div className="rail-bottom" title={snapshot?.market_open?'交易时段':'非交易时段'}><i className={snapshot?.market_open?'dot':'dot idle'}/><span className="rail-state-label">{snapshot?.market_open?'交易时段':'非交易时段'}</span><p>本机独立监控<br/>{snapshot?.config.trading_paused===false?(snapshot.config.trading_mode==='live'?'自动实盘执行中':'自动策略试运行中'):'自动交易默认暂停'}</p><small>{preview?appVersion:`v${appVersion||'—'}`} · 规则 {snapshot?.rule||'—'}</small></div></aside>
  <div className={'workspace'+(panel==='market'?' market-workspace':panel==='modes'?' opportunity-workspace':'')}><header className={panel==='market'?'market-header':panel==='ma250'?'annual-header':undefined}><div className="workspace-heading"><span className="eyebrow">个人行情工作台</span><h1>{({market:'自选监控',breadth:'大盘广度',modes:'市场机会',ma250:'年线信号',pool:'股票池',paper:'模拟交易',trading:'自动交易',buy:'买点历史研究',events:'触发记录',data:'数据与缓存',settings:'设置与通知'} as Record<string,string>)[panel]}</h1></div>{panel==='market'&&<div className="market-inline-status">监控 {snapshot?.watch.filter(w=>w.enabled).length||0} / {snapshot?.watch.length||0} 只 · {connectionError?'连接中断':!snapshot?.config.monitor?'已暂停':snapshot?.market_open?'采样监控中':'休市'}</div>}{panel==='market'&&<div className="market-header-indexes"><MarketIndexStrip request={api}/></div>}<div className="header-right"><span className="chip">{preview?(panel==='modes'?'浏览器本地计划':'只读界面预览'):'本地运行'}</span><label className="switch"><input type="checkbox" checked={snapshot?.config.monitor||false} onChange={e=>action(()=>api('config',{monitor:e.target.checked}))}/>持续监控</label></div></header>
  {connectionError&&<div className="notice" role="alert">监控连接中断：{connectionError}。当前图表为缓存，请重启客户端恢复监控。</div>}
- {message&&<div className="toast" role="status">{message}<button onClick={()=>setMessage('')}>×</button></div>}
+ {message&&<div className="app-message-layer"><section className="card app-message-box" role="dialog" aria-modal="false" aria-label="操作提示"><div className="app-message-copy"><strong>操作提示</strong><p role="status">{message}</p></div><button type="button" className="primary" onClick={()=>setMessage('')}>知道了</button><button type="button" className="app-message-close" aria-label="关闭提示" onClick={()=>setMessage('')}>×</button></section></div>}
  {visitedPanels.current.has('ma250')&&<div hidden={panel!=='ma250'}><Ma250Panel request={api} active={visible&&panel==='ma250'} watchCodes={(snapshot?.watch||[]).map(w=>w.code)} readOnly={preview} onAddWatch={async target=>{const added=await waitJob<{cache_warning?:string}>('add_job',{code:target});await refresh();setMessage(added.cache_warning||'已加入自选');}}/></div>}
  {visitedPanels.current.has('modes')&&<div hidden={panel!=='modes'}><ModeJournal active={visible&&panel==='modes'} request={api} preview={preview} watch={(snapshot?.watch||[]).map(w=>w.code+' '+w.name)} onBreadth={()=>setPanel('breadth')} onPaper={()=>setPanel('paper')}/></div>}
  {visitedPanels.current.has('pool')&&<div hidden={panel!=='pool'}><FocusPool request={api} preview={preview} active={visible&&panel==='pool'}

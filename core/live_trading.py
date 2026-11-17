@@ -17,6 +17,7 @@ from .provider import now_cn, symbol
 from .turning_combined import SIGNAL, LABEL
 from .trading_quantity import order_quantity,quantity as sized_quantity,migrate_rule
 from .trading_price import PRICE_POLICY, price_guard, rejection_message
+from executor.market_price import OPPONENT_POLICY,validate_selection
 from .trading_quantity import BUY_CASH_RESERVE_RATE, BUY_CASH_RESERVE_FIXED, buy_cash_required
 from .trading_costs import paired_profit
 from executor.runtime import DeviceBusy, OperationInterrupted, budget
@@ -129,7 +130,7 @@ class LiveTrading:
 
     def settings(self):
         c = self.store.config()
-        return dict(paused=c.get('trading_paused', True), mode=c.get('trading_mode', 'trial'), signal=SIGNAL,signal_label=LABEL,signal_notice=c.get('trading_signal_notice',''))
+        return dict(paused=c.get('trading_paused', True), mode=c.get('trading_mode', 'trial'), signal=SIGNAL,signal_label=LABEL,signal_notice=c.get('trading_signal_notice',''),order_price_policy=OPPONENT_POLICY)
 
     def configure(self, args):
         with self.lock:
@@ -998,17 +999,33 @@ class LiveTrading:
                     if not watch or not watch[0]['enabled'] or not self.store.config().get('monitor',False):
                         raise ValueError('自选监控已停止，已阻止提交')
                     self.check_price(run,payload,quote,rule,'before_submit')
+                    if payload.get('price_selection') and run['side']=='buy':
+                        latest_sync=self.store.query('SELECT payload FROM trading_sync WHERE account_id=?',(run['account_id'],))
+                        available=number(json.loads(latest_sync[0]['payload']).get('funds',{}).get('available')) if latest_sync else None
+                        if available is None or buy_cash_required(plan['value'])>available:
+                            raise ValueError('按券商卖一价计算后可用资金不足或无法核验，未发送委托')
                     if paired and self.cycle_mode(cycle)!=payload['mode']:
                         raise ValueError('成对T执行模式已改变，已阻止提交')
                     if paired and paired['leg']=='buy':
-                        latest=self.paired_gate(current,json.loads(cycle['payload'] or '{}').get('sell_price'),quote.get('price'),plan['quantity'])
+                        execution_price=plan['price'] if payload.get('price_selection') else quote.get('price')
+                        latest=self.paired_gate(current,json.loads(cycle['payload'] or '{}').get('sell_price'),execution_price,plan['quantity'])
                         payload['profit_gate']=latest;self.persist_progress(run,payload)
                         if not latest['allowed']:
                             raise ValueError('确认前预计净收益 %.2f 元，低于门槛 %.2f 元，已阻止回补' % (latest['net'],current['minimum_net_profit']))
+            def on_price(evidence):
+                with self.lock:
+                    actual=validate_selection(evidence,run['code'][2:],run['side'])
+                    plan.setdefault('estimated_price',plan['price'])
+                    plan.update(price=actual,value=float(Decimal(actual)*plan['quantity']),price_policy=OPPONENT_POLICY)
+                    payload['price_selection']=dict(evidence,price=actual)
+                    self.persist_progress(run,payload)
+                    # The native price, not the earlier quote estimate, must pass
+                    # funds, daily bounds, control state and paired-profit checks.
+                    authorize()
             # Existing durable broker gateway owns final account verification and deduplication.
             gateway_started=time.monotonic()
             try:
-                result = brokers.submit_order(self.store,run['account_id'],run['side'],run['code'][2:],plan['quantity'],plan['price'],None,request_id='auto_'+run['id'],authorize=authorize)
+                result = brokers.submit_order(self.store,run['account_id'],run['side'],run['code'][2:],plan['quantity'],plan['price'],None,request_id='auto_'+run['id'],authorize=authorize,price_policy=OPPONENT_POLICY,on_price=on_price)
             finally:
                 payload['timings']['gateway_ms']=round((time.monotonic()-gateway_started)*1000,1)
             self.verified_sync.pop(run['account_id'],None)

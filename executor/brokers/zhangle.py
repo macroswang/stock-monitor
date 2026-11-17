@@ -75,6 +75,8 @@ class ZhangleAdapter(BrokerAdapter):
         dry_run: bool = False,
         before_confirm=None,
         wait_for_receipt=True,
+        price_policy=None,
+        on_price=None,
     ) -> dict:
         page = TradePage(self.adb)
         return page.submit(
@@ -86,6 +88,8 @@ class ZhangleAdapter(BrokerAdapter):
             dry_run=dry_run,
             before_confirm=before_confirm,
             wait_for_receipt=wait_for_receipt,
+            price_policy=price_policy,
+            on_price=on_price,
         )
 
     # ----- 查询 ------------------------------------------------------------

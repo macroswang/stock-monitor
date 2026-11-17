@@ -17,11 +17,11 @@ test('primary minute, daily and weekly charts fill the freed viewport and follow
   await expect(page.locator('.market-grid>.detail>.chart-shell>.chart')).toBeVisible();
   await expect.poll(async()=>{const b=await bounds(page);return Math.abs(b.viewport-b.bottom-b.padding);}).toBeLessThan(2);
   const tall=await bounds(page);expect(tall.height).toBeGreaterThan(460);
-  // A transient history notice changes chart top without changing the final
-  // workspace height (the shell has a viewport minimum height).
-  await page.evaluate(()=>{const note=document.createElement('div');note.className='toast';note.id='test-history-notice';note.textContent='历史数据补充提示';document.querySelector('.market-workspace>header')!.after(note);});
+  // A transient popup must float above the workspace without consuming chart
+  // height or causing the chart to resize.
+  await page.evaluate(()=>{const note=document.createElement('div');note.className='app-message-layer';note.id='test-history-notice';note.textContent='历史数据补充提示';document.body.append(note);});
   await expect.poll(async()=>{const b=await bounds(page);return Math.abs(b.viewport-b.bottom-b.padding);}).toBeLessThan(2);
-  expect((await bounds(page)).height).toBeLessThan(tall.height);
+  expect((await bounds(page)).height).toBe(tall.height);
   await page.evaluate(()=>document.querySelector('#test-history-notice')!.remove());
   await expect.poll(async()=>Math.abs((await bounds(page)).height-tall.height)).toBeLessThan(2);
 

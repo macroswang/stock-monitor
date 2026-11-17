@@ -124,5 +124,7 @@ class BrokerAdapter:
         dry_run: bool = False,
         before_confirm=None,
         wait_for_receipt: bool = True,
+        price_policy=None,
+        on_price=None,
     ) -> dict:
         raise NotImplementedError("该券商尚未实现下单")

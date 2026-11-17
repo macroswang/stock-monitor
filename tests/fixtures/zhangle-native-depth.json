@@ -1,0 +1,567 @@
+{
+  "source": "native_read_only",
+  "code": "000981",
+  "quantity_empty": true,
+  "ask1": "2.06",
+  "bid1": "2.05",
+  "nodes": [
+    {
+      "text": "",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_list",
+      "class_name": "android.widget.ListView",
+      "bounds": [
+        820,
+        330,
+        1060,
+        870
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": true
+    },
+    {
+      "text": "卖5",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        339,
+        894,
+        372
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.10",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        339,
+        973,
+        372
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "3.15万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        339,
+        1042,
+        372
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "卖4",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        391,
+        894,
+        424
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.09",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        391,
+        973,
+        424
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "1.67万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        391,
+        1042,
+        424
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "卖3",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        443,
+        894,
+        476
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.08",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        443,
+        973,
+        476
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "1.11万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        443,
+        1042,
+        476
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "卖2",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        495,
+        894,
+        528
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.07",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        495,
+        973,
+        528
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "1.17万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        495,
+        1042,
+        528
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "卖1",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        547,
+        894,
+        580
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.06",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        547,
+        973,
+        580
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.70万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        547,
+        1042,
+        580
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "买1",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        614,
+        894,
+        647
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.05",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        614,
+        990,
+        647
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "6227",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        990,
+        614,
+        1042,
+        647
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "买2",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        666,
+        894,
+        699
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.04",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        666,
+        972,
+        699
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "1.38万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        972,
+        666,
+        1042,
+        699
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "买3",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        718,
+        894,
+        751
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.03",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        718,
+        973,
+        751
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.94万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        718,
+        1042,
+        751
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "买4",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        770,
+        894,
+        803
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.02",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        770,
+        973,
+        803
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "1.50万",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        973,
+        770,
+        1042,
+        803
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "买5",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_label",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        840,
+        822,
+        894,
+        855
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "2.01",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_price",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        894,
+        822,
+        990,
+        855
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    },
+    {
+      "text": "9919",
+      "resource_id": "com.lphtsccft:id/hq_jy_normal_ai_count",
+      "class_name": "android.widget.TextView",
+      "bounds": [
+        990,
+        822,
+        1042,
+        855
+      ],
+      "clickable": false,
+      "enabled": true,
+      "password": false,
+      "checked": false,
+      "selected": false,
+      "description": "",
+      "focused": false
+    }
+  ]
+}

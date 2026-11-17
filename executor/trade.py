@@ -503,6 +503,8 @@ class TradePage:
         timeout: float = 20.0,
         before_confirm=None,
         wait_for_receipt: bool = True,
+        price_policy=None,
+        on_price=None,
     ) -> dict:
         """Fill, submit, verify the confirmation dialog and confirm it.
 
@@ -532,6 +534,12 @@ class TradePage:
             )
 
         _, nodes = self.snapshot()
+        if price_policy is not None:
+            from .market_price import OPPONENT_POLICY,prepare_opponent
+            if price_policy!=OPPONENT_POLICY or on_price is None:raise TradeError('缺少已核验的自动对手价入口')
+            form,nodes,evidence=prepare_opponent('zhangle',side,code,quantity,lambda:self.snapshot()[1],read_form,self._fill)
+            limit=Decimal(form.price)
+            on_price(evidence)
         current = read_form(nodes)
         # 预填后仍要重新核对，防止用户手工切换方向或更改输入。
         if current.side != side or current.code != code or current.quantity != str(quantity):

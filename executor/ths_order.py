@@ -219,7 +219,7 @@ class ThsOrderPage:
         self.adb.tap_node(cancel)
         self.wait(lambda ns:find_by_id(ns,'dialog_title') is None and read_form(ns) is not None)
 
-    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True):
+    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True,price_policy=None,on_price=None):
         self._pending_plan=None
         self._last_form_nodes=None
         if not dry_run and before_confirm is None:raise ThsError('真实委托必须经过持久化请求入口')
@@ -232,7 +232,13 @@ class ThsOrderPage:
         form=self.preview(side,code,quantity,price)
         if not self.confirmation_required(self._last_form_nodes):
             raise ThsError('券商开启了免二次确认，已阻止委托；请先在券商内关闭该设置')
-        nodes=self._last_form_nodes if self._last_form_nodes is not None else self.snapshot();current=read_form(nodes)
+        nodes=self._last_form_nodes if self._last_form_nodes is not None else self.snapshot()
+        if price_policy is not None:
+            from .market_price import OPPONENT_POLICY,prepare_opponent
+            if price_policy!=OPPONENT_POLICY or on_price is None:raise ThsError('缺少已核验的自动对手价入口')
+            form,nodes,evidence=prepare_opponent('ths',side,code,quantity,self.snapshot,read_form,self.fill)
+            on_price(evidence)
+        current=read_form(nodes)
         if current!=form:raise ThsError('检查设置后委托表单已变化，未提交')
         self.verify_account(nodes)
         stock_name=find_by_id(nodes,'stockname')
