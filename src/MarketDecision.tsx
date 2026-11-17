@@ -1,3 +1,4 @@
+import {useDisplayPolling} from './useDisplayPolling';
 import React,{useEffect,useState} from 'react';
 import type {BreadthDay} from './MarketBreadth';
 import type {MarketData} from './models';
@@ -43,17 +44,17 @@ function lastCompletedWeek(reference:string):string|null{
  return null;
 }
 
-export default function MarketDecision({request,day,previous,byAmount,market,stage,feedError='',compact=false,onOpen,preview=false}:{request:Request;day:BreadthDay|undefined;previous:BreadthDay|undefined;byAmount:boolean;market:MarketData;stage:'unknown'|'early'|'late';feedError?:string;compact?:boolean;onOpen?:()=>void;preview?:boolean}){
+export default function MarketDecision({active=true,request,day,previous,byAmount,market,stage,feedError='',compact=false,onOpen,preview=false}: {active?:boolean;request:Request;day:BreadthDay|undefined;previous:BreadthDay|undefined;byAmount:boolean;market:MarketData;stage:'unknown'|'early'|'late';feedError?:string;compact?:boolean;onOpen?:()=>void;preview?:boolean}){
  const [report,setReport]=useState<Report>({daily:[],error:''});
  const [pcr,setPcr]=useState<(PcrReport|null)[]|null>(null);
  const [csi300,setCsi300]=useState<CSI300Report|null>(null);
  // Age out a live observation even when all pending requests remain stalled.
  const [,setClock]=useState(()=>Date.now());
- useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),15000);return()=>clearInterval(timer);},[]);
+ useDisplayPolling(active,()=>setClock(Date.now()),15000);
  // A slow older response must never replace a newer result or error.
- useEffect(()=>{let alive=true,sequence=0;const load=async()=>{const current=++sequence;try{const data=await requestWithTimeout(request<Report>('index_technical'));if(alive&&current===sequence)setReport(data);}catch{if(alive&&current===sequence)setReport({daily:[],error:'指数数据获取失败'});}};void load();const timer=setInterval(load,30000);return()=>{alive=false;clearInterval(timer);};},[request]);
- useEffect(()=>{let alive=true,reading=false;const load=async()=>{if(reading)return;reading=true;const data=await Promise.allSettled(['510050','510300'].map(security_code=>requestWithTimeout(request<PcrReport>('option_pcr',{security_code}))));if(alive)setPcr(data.map(x=>x.status==='fulfilled'?x.value:null));reading=false;};void load();const timer=setInterval(load,compact?180000:30000);return()=>{alive=false;clearInterval(timer);};},[request,compact]);
- useEffect(()=>{let alive=true,reading=false;setCsi300(null);const load=async()=>{if(!day?.date||reading)return;reading=true;try{const result=await requestWithTimeout(request<CSI300Report|null>('csi300',{day:day.date}));if(alive)setCsi300(result);}catch{if(alive)setCsi300(null);}finally{reading=false;}};void load();const timer=setInterval(load,compact?180000:30000);return()=>{alive=false;clearInterval(timer);};},[request,day?.date,day?.collected_at,compact]);
+ useEffect(()=>{if(!active)return;let alive=true,sequence=0;const load=async()=>{const current=++sequence;try{const data=await requestWithTimeout(request<Report>('index_technical'));if(alive&&current===sequence)setReport(data);}catch{if(alive&&current===sequence)setReport({daily:[],error:'指数数据获取失败'});}};void load();const timer=setInterval(load,30000);return()=>{alive=false;clearInterval(timer);};},[request,active]);
+ useEffect(()=>{if(!active)return;let alive=true,reading=false;const load=async()=>{if(reading)return;reading=true;const data=await Promise.allSettled(['510050','510300'].map(security_code=>requestWithTimeout(request<PcrReport>('option_pcr',{security_code}))));if(alive)setPcr(data.map(x=>x.status==='fulfilled'?x.value:null));reading=false;};void load();const timer=setInterval(load,compact?180000:30000);return()=>{alive=false;clearInterval(timer);};},[request,compact,active]);
+ useEffect(()=>{if(!active)return;let alive=true,reading=false;setCsi300(null);const load=async()=>{if(!day?.date||reading)return;reading=true;try{const result=await requestWithTimeout(request<CSI300Report|null>('csi300',{day:day.date}));if(alive)setCsi300(result);}catch{if(alive)setCsi300(null);}finally{reading=false;}};void load();const timer=setInterval(load,compact?180000:30000);return()=>{alive=false;clearInterval(timer);};},[request,day?.date,day?.collected_at,compact,active]);
  const breadth=day?.advancing_percent;
  const now=Date.now(),indexStamp=typeof report.collected_at==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?\+08:00$/.test(report.collected_at)?Date.parse(report.collected_at):NaN;
  const indexLast=report.daily.at(-1)?.date;

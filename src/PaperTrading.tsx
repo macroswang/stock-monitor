@@ -1,3 +1,4 @@
+import {useDisplayPolling} from './useDisplayPolling';
 import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {maxBuyShares,fractionShares} from './paperTicket';
@@ -42,7 +43,7 @@ function PaperReview({order,onSave,busy}:{order:Order;onSave:(value:string)=>voi
  useEffect(()=>setValue(order.review||''),[order.id,order.review]);
  return <details className="paper-record-details"><summary>复盘</summary><label>记录实际操作与计划的差异<textarea aria-label={`复盘 ${order.id}`} value={value} maxLength={500} onChange={e=>setValue(e.target.value)}/></label><button disabled={busy||value===(order.review||'')} onClick={()=>onSave(value)}>保存复盘</button></details>;
 }
-export default function PaperTrading({request,point,context,brokerSources,onClosePoint,onOpenStock,onAccountState,onManageAccount,onOrderResult}:{brokerSources?:Record<string,BrokerSource[]>;onManageAccount?:()=>void;onOrderResult?:(message:string,chartTarget?:{code:string;day:string})=>void;onAccountState?:(state:{id:string;revision:number}|null)=>void;request:Request;point:PaperPoint|null;context?:PaperPoint;onClosePoint:()=>void;onOpenStock:(code:string,day:string)=>void}){
+export default function PaperTrading({active=true,request,point,context,brokerSources,onClosePoint,onOpenStock,onAccountState,onManageAccount,onOrderResult}: {active?:boolean;brokerSources?:Record<string,BrokerSource[]>;onManageAccount?:()=>void;onOrderResult?:(message:string,chartTarget?:{code:string;day:string})=>void;onAccountState?:(state:{id:string;revision:number}|null)=>void;request:Request;point:PaperPoint|null;context?:PaperPoint;onClosePoint:()=>void;onOpenStock:(code:string,day:string)=>void}){
  const [data,setData]=useState<Snapshot>({accounts:[],account:null,positions:[],orders:[]});
  const [historyLimit,setHistoryLimit]=useState(200);
  const [account,setAccount]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
@@ -54,7 +55,7 @@ export default function PaperTrading({request,point,context,brokerSources,onClos
  const [brokerPoint,setBrokerPoint]=useState<PaperPoint|null>(null);
  const id=useRef(''),sequence=useRef(0),ticketSeq=useRef(0);
  const refresh=async(selected=account)=>{const seq=++sequence.current;const d=await request<Snapshot>('paper_sync',selected?{account:selected,history_limit:historyLimit}:{});if(seq!==sequence.current)return;setData(d);onAccountState?.(d.account?{id:d.account.id,revision:d.account.revision||0}:null);if(d.account&&d.account.id!==selected)setAccount(d.account.id);};
- useEffect(()=>{let active=true,running=false;const update=async()=>{if(running)return;running=true;try{await refresh();}catch(e){if(active)setError(String(e));}finally{running=false;}};void update();const timer=setInterval(()=>{void update();},3000);return()=>{active=false;sequence.current++;clearInterval(timer);};},[account,historyLimit]);
+ useDisplayPolling(active||!!ticket,async()=>{try{await refresh();}catch(e){setError(String(e));}},3000,account+'|'+historyLimit);
  const open=async(p:PaperPoint)=>{const seq=++ticketSeq.current,next={...p,brokerSources:brokerSources?.[p.code]||[]};setTicket(next);setTicketMode('broker');setBrokerPoint(p.price?next:null);setQuote(null);setLimitPrice(String(p.price||''));setPlanReason('');setPlanInvalidation('');setPlanBudget('');setError('');id.current=crypto.randomUUID();try{const q=await request<Quote>('paper_quote',{code:p.code,stamp:p.stamp});if(seq===ticketSeq.current){setQuote(q);setLimitPrice(String(p.price||q.price/100));setBrokerPoint(old=>old||next);}}catch(e){if(seq===ticketSeq.current){setError(String(e));setBrokerPoint(old=>old||next);}}};
  useEffect(()=>{if(point)void open(point);},[point]);
  const close=()=>{ticketSeq.current++;setTicket(null);setQuote(null);onClosePoint();};

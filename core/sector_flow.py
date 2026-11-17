@@ -378,10 +378,15 @@ def fetch(now,kind='industry'):
 class SectorFlow:
     def __init__(self,store,enabled=True,kind='industry'):
         if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
+        from .sector_observations import SectorObservationCache
+        self.observation_lock=threading.RLock();self.observation_cache=SectorObservationCache(store,CODE if kind=='industry' else 'sina-concept')
         self.store=store;self.enabled=enabled;self.kind=kind;self.code=CODE if kind=='industry' else 'sina-concept';self.lock=threading.Lock();self.running=False;self.last_attempt=float('-inf');self.error=''
         self.ready=threading.Event();self.ready.set()
 
     def refresh(self,force=False):
+        # The existing collector also releases unused display memory; no new
+        # timer, data deletion or changes to collection/trading schedules.
+        with self.observation_lock:self.observation_cache.expire_if_idle()
         with self.lock:
             if self.running:return
             if not force and time.monotonic()-self.last_attempt<(RETRY_SECONDS if self.error else REFRESH_SECONDS):return
@@ -392,7 +397,9 @@ class SectorFlow:
             if result.get('source')==SOURCE and result.get('quote_time') and result.get('observations'):
                 # 仅保存来源提供时间的完整快照，重复时间不覆盖既有样本。
                 with self.store.lock,self.store.db:
-                    self.store.db.execute('INSERT OR IGNORE INTO cache VALUES(?,?,?,?)',(self.code,'sector_intraday_v1',result['quote_time'],json.dumps(result,ensure_ascii=False)))
+                    from .sector_observations import COMPRESSED,encode_snapshot
+                    self.store.db.execute('INSERT OR IGNORE INTO cache SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM cache WHERE code=? AND kind=? AND day=?)',
+                        (self.code,COMPRESSED,result['quote_time'],encode_snapshot(result),self.code,'sector_intraday_v1',result['quote_time']))
             self.error=''
         except Exception as exc:
             self.error=('板块资金暂未取得或未通过核对：'+type(exc).__name__+' '+str(exc))[:500]
@@ -428,11 +435,14 @@ class SectorFlow:
             except (ValueError,TypeError,KeyError):usable=False;checked=False
         return dict(snapshot=latest if usable else None,cached_snapshot=latest if checked and not usable else None,stale=bool(checked and not usable),running=self.running,error=self.error,expected_date=wanted,source_url=SOURCE_PAGE,refresh_seconds=REFRESH_SECONDS)
 
-    def intraday(self):
-        from .sector_events import build_observations
+    def intraday(self,since=None):
         view=self.view();snapshot=view.get('snapshot');now=now_cn()
         if not snapshot or snapshot.get('source')!=SOURCE or not snapshot.get('quote_time'):
             return dict(events=[],series={},date=view.get('expected_date'),status='来源未提供可靠的板块时间，无法计算盘中异动')
         day=snapshot['date']
-        rows=self.store.query('SELECT payload FROM cache WHERE code=? AND kind=? AND day>=? AND day<? ORDER BY day',(self.code,'sector_intraday_v1',day+'T00',day+'T24'))
-        return build_observations([json.loads(r['payload']) for r in rows],now,day)
+        # Separate from refresh's lock: no network IO or live rules use this cache.
+        with self.observation_lock:
+            result=self.observation_cache.read(day,now)
+            if since and since==result['series_revision']:
+                result=dict(result,series_unchanged=True);result.pop('series')
+            return result

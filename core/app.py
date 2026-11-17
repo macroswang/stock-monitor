@@ -103,6 +103,8 @@ class App:
         self.market_regime=MarketRegime(self.store)
         from .ma250_service import AnnualSignals
         self.annual_signals=AnnualSignals(self)
+        from .read_cache import ReadCache
+        self.read_cache=ReadCache()
         self.sector_flow=SectorFlow(self.store,enabled=start_worker)
         self.concept_flow=SectorFlow(self.store,enabled=start_worker,kind='concept')
         from .stock_profile import StockProfile
@@ -568,18 +570,41 @@ class App:
             local_delivery=e['local_delivery'],local_detail=e['local_detail']) for e in self.store.query(sql,params)]
 
     def source_info(self,code):
-        minute=self.store.getcache(code,'minute');daily=self.store.getcache(code,'daily')
+        def coverage(kind):
+            row=self.store.query('SELECT min(day) AS first,max(day) AS last FROM cache WHERE code=? AND kind=?',(code,kind))[0]
+            return [row['first'],row['last']] if row['first'] else []
+        minute=coverage('minute');daily=coverage('daily')
+        latest=self.store.query("SELECT json_extract(payload,'$.cached_at') AS stamp FROM cache WHERE code=? AND kind='minute' ORDER BY day DESC LIMIT 1",(code,))
         return dict(selected=self.store.config().get('provider','tencent'),providers=SOURCES,
             quote_time=self.quotes.get(code,{}).get('timestamp'),
-            minute_coverage=[minute[0]['day'],minute[-1]['day']] if minute else [],
-            daily_coverage=[daily[0]['day'],daily[-1]['day']] if daily else [],
-            cache_time=minute[-1]['data'].get('cached_at') if minute else None,
+            minute_coverage=minute,daily_coverage=daily,
+            cache_time=latest[0]['stamp'] if latest else None,
             quote_url='https://qt.gtimg.cn/q='+code,
             minute_url='https://web.ifzq.gtimg.cn/appstock/app/day/query?code='+code,
             history_minute_url='https://quotes.sina.cn/cn/api/jsonp_v2.php/=/CN_MarketDataService.getKLineData?symbol='+code+'&scale=1&ma=no&datalen=1970',
             daily_url='https://web.ifzq.gtimg.cn/appstock/app/kline/kline?param='+code+',day,开始日期,结束日期,2000,')
 
+    def history_revision(self,code):
+        annual=self.annual_signals.revision(code)
+        return [*annual,self.store.cache_revision(code,'minute'),self.store.cache_revision(code,'daily_live'),
+                *[f"{r['name']}:{r['revision']}" for r in self.store.query('SELECT name,revision FROM view_revision ORDER BY name')]]
+
+    def client_revisions(self,code):
+        if not code:return {}
+        code=symbol(code)
+        indexes=('sh000001','sz399001','sz399006')
+        return dict(code=code,history=self.history_revision(code),
+            chart=[self.store.cache_revision(code,k) for k in ('minute','daily','daily_live')],
+            market=[self.store.cache_revision(c,k) for c in indexes for k in ('market_quote','market_minute')])
+
     def call(self,method,args):
+        if method=='paper_account_state':
+            if not (self.dir/'paper.sqlite3').exists():return None
+            service=self.paper_service()
+            with service.lock:
+                account=args.get('account')
+                rows=service.db.execute("SELECT id,json_extract(state,'$.revision') AS revision FROM accounts "+('WHERE id=? ' if account else '')+'ORDER BY rowid DESC LIMIT 1',(account,) if account else ()).fetchall()
+                return dict(id=rows[0]['id'],revision=rows[0]['revision'] or 0) if rows else None
         if method in ('chart_drawings', 'chart_drawings_save'):
             from . import chart_drawings
             if method == 'chart_drawings':
@@ -627,7 +652,7 @@ class App:
         if method=='sector_intraday':
             kind=args.get('kind','industry')
             if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
-            return (self.sector_flow if kind=='industry' else self.concept_flow).intraday()
+            return (self.sector_flow if kind=='industry' else self.concept_flow).intraday(args.get('since'))
         if method in ('sector_flow','sector_flow_refresh'):
             kind=args.get('kind','industry')
             if kind not in ('industry','concept'):raise ValueError('不支持的板块类型')
@@ -679,7 +704,7 @@ class App:
                 events=self.event_rows()
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
-                    config=config,now=now_cn().isoformat(),market_open=trading(now_cn()),
+                    config=config,now=now_cn().isoformat(),market_open=trading(now_cn()),data_revisions=self.client_revisions(args.get('code')),
                     last_poll=self.last_poll,data_dir=str(self.dir),version=VERSION,rule='running_max_inclusive_v1',
                     pool_count=self.pool.count(),market_regime=self.market_regime.view())
         if method=='stock_search':
@@ -793,8 +818,8 @@ class App:
         if method=='chart':
             code=symbol(args['code']); kind=args.get('kind','minute')
             if kind not in ('minute','daily'): raise ValueError('无效数据类型')
-            rows=self.store.getcache(code,kind,args.get('day') if kind=='minute' else None)
-            if kind=='daily':rows=[dict(day=r['day'],data=daily_view(code,r['data'])) for r in self.daily_cache.rows(code)]
+            key=('chart',code,kind,args.get('day'),self.store.cache_revision(code,kind),self.store.cache_revision(code,'daily_live') if kind=='daily' else 0)
+            rows=self.read_cache.get(key,lambda:[dict(day=r['day'],data=daily_view(code,r['data'])) for r in self.daily_cache.rows(code)] if kind=='daily' else self.store.getcache(code,kind,args.get('day')))
             return rows
         if method=='download': return self.start_job(lambda:self.call('download_work',args))
         if method=='job': return self.jobs.get(args['job'],{'status':'failed','error':'下载任务不存在，请重新发起'})

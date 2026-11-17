@@ -1,3 +1,4 @@
+import {usePageVisible} from './useDisplayPolling';
 import React,{useEffect,useId,useState} from 'react';
 import type {MarketData} from './models';
 import {quoteView} from './marketOverview';
@@ -11,8 +12,9 @@ const empty:MarketData={quotes:[],minute:null};
 
 export default function MarketIndexStrip({request}:{request:Request}){
  const [data,setData]=useState<Record<string,MarketData>>({}),[now,setNow]=useState(()=>Date.now()),id=useId();
+ const visible=usePageVisible();
  useEffect(()=>{
-  let alive=true,reading=false;
+  if(!visible)return;let alive=true,reading=false;
   const load=async()=>{if(reading)return;reading=true;
    await Promise.all(indexes.map(async([code])=>{try{
     const value=await requestWithTimeout(request<MarketData>('index_minute',{code}));
@@ -23,7 +25,7 @@ export default function MarketIndexStrip({request}:{request:Request}){
   };
   void load();const timer=setInterval(()=>{setNow(Date.now());void load();},15000);
   return()=>{alive=false;clearInterval(timer);};
- },[request]);
+ },[request,visible]);
  return <div className="overview-indexes" aria-label="三大指数">{indexes.map(([code,name])=>{
   const market=data[code]||empty,view=quoteView(market.quotes.find(q=>q.code===code),market.error,now),spark=indexSparkline(market,code,now,view),gradient=id+'-'+code;
   return <div className="overview-index" key={code}>

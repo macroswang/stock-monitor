@@ -1,3 +1,4 @@
+import {useDisplayPolling} from './useDisplayPolling';
 import InfoNote from './InfoNote';
 import MarketPanorama from './MarketPanorama';
 import React,{useEffect,useRef,useState} from 'react';
@@ -71,7 +72,7 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
  const [stage,setStage]=useState<'unknown'|'early'|'late'>('unknown');
  // The chart interpretation must age out even if requests never finish.
  const [,setClock]=useState(()=>Date.now());
- useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),15000);return()=>clearInterval(timer);},[]);
+ useDisplayPolling(active,()=>setClock(Date.now()),15000);
  const ref=useRef<HTMLDivElement>(null),chart=useRef<echarts.ECharts|null>(null),alive=useRef(true),reading=useRef(false);
  const load=async()=>{if(reading.current)return;reading.current=true;try{const r=await request<Report>('breadth');if(alive.current){setReport(r);setError('');}}catch(e){if(alive.current)setError(String(e));}finally{reading.current=false;}};
  useEffect(()=>{
@@ -157,8 +158,8 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
   {day&&stale&&<div className="breadth-preview-notice" role="status">{day.date} 的盘中快照已过期，以下数据仅供回看；请刷新后再判断当前市场。</div>}
   {timingInvalid&&<div className="breadth-preview-notice" role="status">盘中快照时间信息异常，暂不用于市场判断；请刷新数据。</div>}
   {(error||report.error)&&<div className="breadth-error" role="status">{error||report.error}；已保留上次有效统计。</div>}
-  <MarketPanorama request={request} preview={preview} day={report.days.at(-1)} breadthError={error||report.error} watch={watch} onOpenStock={onOpenStock}/>
-  <MarketDecision request={request} day={day} previous={previousDay} byAmount={true} market={market} stage={stage} feedError={error||report.error}/>
+  <MarketPanorama active={active} request={request} preview={preview} day={report.days.at(-1)} breadthError={error||report.error} watch={watch} onOpenStock={onOpenStock}/>
+  <MarketDecision active={active} request={request} day={day} previous={previousDay} byAmount={true} market={market} stage={stage} feedError={error||report.error}/>
   <section className="market-trend" id="breadth-structure" aria-label="市场趋势图">
    <div className="market-trend-header"><div><h3>市场宽度与成交趋势</h3><p>{days.length?`${dateWindow.known?`最近${span}个交易日 · `:''}${dateWindow.start||days[0].date} 至 ${days.at(-1)!.date} · ${days.length} 条记录${dateWindow.known?'':span===120?'（按记录数展示）':'（交易日历不足，按记录数展示）'} · `:''}点击查看某日判断；缺失或来源变化时断开</p></div><div className="market-trend-ranges" role="group" aria-label="图表时间范围">{[30,60,90].map(n=><button key={n} type="button" aria-pressed={span===n} onClick={()=>changeSpan(n)}>{n}日</button>)}<button type="button" aria-label="查看最新市场数据" disabled={!selected||day?.date===days.at(-1)?.date} onClick={()=>setSelected('')}>最新</button></div></div>
    <div className="breadth-key"><span><i style={{background:'#e65d50'}}/>上涨股{byAmount?'成交额':'成交量'}占比（左轴）</span><span><i style={{background:'#5186e0'}}/>上涨家数占比（左轴）</span><span><i style={{background:'#c6d14f'}}/>TRIN{byAmount?' · 成交额对照':''}（右轴）</span></div>
@@ -191,9 +192,9 @@ export default function MarketBreadth({request,market,preview=false,mode,setMode
   {day&&day.status!=='incomplete'&&<div className="breadth-stats"><div><span>{day.date} · {state(day)}{stale?' · 快照已过期，仅供回看':timingInvalid?' · 时间异常，仅供回看':''} · {byAmount?'成交额对照':'成交股数'}</span><strong style={{color:color(value(day))}}>{fmt(value(day),3)}</strong></div><div><span>上涨家数占比</span><strong>{pct(day.advancing_percent)}</strong><small>上涨 {day.advance} / 下跌 {day.decline} / 平盘 {day.flat}</small></div><div><span>上涨股{byAmount?'成交额':'成交量'}占比</span><strong>{pct(proportion(day))}</strong><small>仅比较上涨与下跌两组</small></div><div><span>{day.historical?'历史日线覆盖':'股票列表覆盖'}</span><strong>{day.covered}<em> / {day.expected}</em></strong><small>停牌 / 零成交 {day.suspended} 只</small></div></div>}
   <InfoNote>{report.history_note||'每日积累完整市场快照。'}{days.length>0&&` 共收录 ${report.days.length} 个日期，当前显示 ${days.length} 个；盘中暂值单独标示，日期间隔不代表连续交易日。`}<br/>红柱显示上涨股{byAmount?'成交额':'成交量'}占比。{byAmount&&' 成交额是对照口径，旧数据可能没有该字段。'}{day&&<><br/>{day.historical?'历史底表获取于':'采集于'} {day.collected_at.slice(0,19).replace('T',' ')} 北京时间 · {day.source}{day.reconciliation_note&&<> · {day.reconciliation_note}</>}</>}</InfoNote>
   <AdvanceDeclinePanel days={days} selected={day} onSelect={setSelected}/>
-  {day&&<OptionPCRPanel request={request} selectedDate={day.date} intradayDate={day.status!=='closed'?day.date:''}/>}
-  <EquityBondPanel request={request} selectedDate={day?.date||''} intradayDate={day&&day.status!=='closed'?day.date:''}/>
-  <IndexTechnicalPanel request={request} selectedDate={day?.date||''} intradayDate={day&&day.status!=='closed'?day.date:''}/>
+  {day&&<OptionPCRPanel active={active} request={request} selectedDate={day.date} intradayDate={day.status!=='closed'?day.date:''}/>}
+  <EquityBondPanel active={active} request={request} selectedDate={day?.date||''} intradayDate={day&&day.status!=='closed'?day.date:''}/>
+  <IndexTechnicalPanel active={active} request={request} selectedDate={day?.date||''} intradayDate={day&&day.status!=='closed'?day.date:''}/>
   <InstitutionDisclosure/>
   <details className="breadth-method"><summary>计算口径与数据明细</summary><p>TRIN = (上涨家数 × 下跌股成交量) ÷ (下跌家数 × 上涨股成交量)。涨跌相对当日昨收；按整只股票的当日累计成交股数分组，不使用主动买盘、卖盘量。平盘、停牌及零成交不进入公式。上涨家数占比 = 上涨 ÷（上涨 + 下跌 + 平盘）；上涨股成交量占比 = 上涨股成交量 ÷（上涨股成交量 + 下跌股成交量）。缺一组或分母为0时显示“—”。</p><p>成交额对照将公式中的成交股数替换为成交额，红柱同步改为上涨股成交额占上涨与下跌两组成交额的比例。历史行情使用日线成交额；腾讯报价的成交额按来源精度换算，缺少某只股票的有效成交额时整日不显示此口径。它不是资金净流入。</p><p>数据来源：腾讯逐股报价，新浪沪深股票代码表；不包含北交所、B股及基金，部分存托凭证可能不在列表中。列表覆盖率以新浪列表为分母。普通A股原始量以手计，换算为股仍保留手级取整精度；科创板原始量以股计。盘中{report.interval_seconds===180?'约每3分钟启动检查，耗时较长时会延后':'每次采集结束后约5分钟检查'}，收盘15:15后核对；采集并非同一瞬间，盘中值会变动。收盘后没有完整数据的日期不补造，也不使用当前自选股推算大盘。</p><p>TRIN低于1表示上涨组的平均成交量大于下跌组，不能证明机构买入、空头回补或未来涨跌。</p>
    <p>标准 MCL 以每日上涨家数减下跌家数为输入，分别按 0.10 和 0.05 指数平滑后相减；首日差值初始化，至少连续 39 个同来源、同股票范围的完整收盘交易日才显示。缺少已核对日历、交易日缺失、数据不完整或来源变化时重新累计。初始化会影响数值；此值为独立研究计算。</p><p>历史复核使用 BaoStock 当日日线及 Money Tree 数据交叉核对，按沪深当日股票排除 689 类存托凭证，近似日常新浪列表，但历史名单未逐日与新浪完全核对。历史日线是收盘口径，与盘中采样不能直接视为同一时点。</p>

@@ -18,6 +18,10 @@ class Provider:
 app.provider=Provider()
 from unittest.mock import Mock,patch
 paper_clock=patch("core.paper.now_cn",return_value=datetime(2026,10,23,10,0,tzinfo=CN)).start()
+# Match production's independent paper-account worker. Hidden display panels
+# must not be responsible for matching pending simulated orders.
+from threading import Thread
+Thread(target=app.paper_loop,daemon=True).start()
 app.archive.provider=Mock();app.archive.provider.minutes.return_value=[]
 for line in sys.stdin:
  try:

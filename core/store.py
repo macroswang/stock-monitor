@@ -67,6 +67,30 @@ class Store:
         if not had_revisions:
             self.db.execute("INSERT OR IGNORE INTO cache_revision SELECT DISTINCT code,kind,0 FROM cache WHERE kind IN ('daily','index_regime_v1')")
             self.db.commit()
+        # Read-view invalidation also covers raw SQL writes and deletions. Keep
+        # the existing annual counters unchanged (no double increment).
+        self.db.executescript('''
+        CREATE TRIGGER IF NOT EXISTS read_cache_insert AFTER INSERT ON cache
+          WHEN NEW.kind NOT IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(NEW.code,NEW.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TRIGGER IF NOT EXISTS read_cache_update AFTER UPDATE ON cache
+          WHEN NEW.kind NOT IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(NEW.code,NEW.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TRIGGER IF NOT EXISTS read_cache_delete AFTER DELETE ON cache
+          WHEN OLD.kind NOT IN ('daily','index_regime_v1') BEGIN
+          INSERT INTO cache_revision VALUES(OLD.code,OLD.kind,1)
+          ON CONFLICT(code,kind) DO UPDATE SET revision=revision+1; END;
+        CREATE TABLE IF NOT EXISTS view_revision(name TEXT PRIMARY KEY,revision INTEGER NOT NULL);
+        ''')
+        for table in ('events','delivery','local_delivery','instruments','config'):
+            for operation in ('INSERT','UPDATE','DELETE'):
+                self.db.execute(f'''CREATE TRIGGER IF NOT EXISTS read_{table}_{operation.lower()}
+                  AFTER {operation} ON {table} BEGIN
+                  INSERT INTO view_revision VALUES('{table}',1)
+                  ON CONFLICT(name) DO UPDATE SET revision=revision+1; END''')
+        self.db.commit()
         for column in ('category', 'group_name', 'entry_tag', 'added_at', 'groups_json'):
             try:
                 self.db.execute(f'ALTER TABLE pool ADD COLUMN {column} TEXT')
@@ -120,9 +144,11 @@ class Store:
         payload=dict(payload)
         payload.setdefault('cached_at',now_cn().isoformat())
         self.execute('INSERT OR REPLACE INTO cache VALUES(?,?,?,?)',(code,kind,day,json.dumps(payload,ensure_ascii=False)))
-    def getcache(self,code,kind,day=None):
-        rows=self.query('SELECT day,payload FROM cache WHERE code=? AND kind=? '+('AND day=? ' if day else '')+'ORDER BY day',
-                        (code,kind,day) if day else (code,kind))
+    def getcache(self,code,kind,day=None,*,start=None,end=None):
+        sql='SELECT day,payload FROM cache WHERE code=? AND kind=?';args=[code,kind]
+        for clause,value in (('day=?',day),('day>=?',start),('day<=?',end)):
+            if value is not None:sql+=' AND '+clause;args.append(value)
+        rows=self.query(sql+' ORDER BY day',args)
         return [dict(day=r['day'],data=json.loads(r['payload'])) for r in rows]
     def cache_revision(self,code,kind):
         rows=self.query('SELECT revision FROM cache_revision WHERE code=? AND kind=?',(code,kind))

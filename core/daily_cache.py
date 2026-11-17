@@ -19,9 +19,9 @@ class DailyCache:
             high=str(values['high']),low=str(values['low']),volume=str(values['volume']),volume_unit='shares',
             source='tencent',adjustment='none',provisional=True,quote_time=quote['timestamp']))
 
-    def rows(self,code):
-        rows={r['day']:r for r in self.app.store.getcache(code,'daily')}
-        for live in self.app.store.getcache(code,'daily_live'):
+    def rows(self,code,start=None,end=None):
+        rows={r['day']:r for r in self.app.store.getcache(code,'daily',start=start,end=end)}
+        for live in self.app.store.getcache(code,'daily_live',start=start,end=end):
             final=rows.get(live['day'])
             if final is None or final['data'].get('cached_at','')<live['day']+'T15:15':rows[live['day']]=live
         return [rows[day] for day in sorted(rows)]

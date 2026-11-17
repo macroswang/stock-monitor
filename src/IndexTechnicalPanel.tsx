@@ -6,13 +6,13 @@ type Report={daily:Row[];weekly:Row[];running:boolean;error:string;collected_at?
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 const fmt=(n:number|null|undefined)=>n==null||!Number.isFinite(n)?'—':n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-export default function IndexTechnicalPanel({request,selectedDate,intradayDate}:{request:Request;selectedDate:string;intradayDate:string}){
+export default function IndexTechnicalPanel({active=true,request,selectedDate,intradayDate}: {active?:boolean;request:Request;selectedDate:string;intradayDate:string}){
  const [report,setReport]=useState<Report>({daily:[],weekly:[],running:false,error:''});
  const [period,setPeriod]=useState<'daily'|'weekly'>('daily'),[selected,setSelected]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  useEffect(()=>{setSelected('');},[selectedDate]);
  const ref=useRef<HTMLDivElement>(null),chart=useRef<echarts.ECharts|null>(null),alive=useRef(true),reading=useRef(false);
  const load=async()=>{if(reading.current)return;reading.current=true;try{const data=await request<Report>('index_technical');if(alive.current){setReport(data);setError('');}}catch(e){if(alive.current)setError(String(e));}finally{reading.current=false;}};
- useEffect(()=>{alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request]);
+ useEffect(()=>{if(!active)return;alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request,active]);
  useEffect(()=>{if(!ref.current)return;const c=echarts.init(ref.current,'dark',{renderer:'canvas'});chart.current=c;const resize=new ResizeObserver(()=>c.resize());resize.observe(ref.current);c.on('click',p=>{if(p.name&&/^\d{4}-\d{2}-\d{2}$/.test(p.name))setSelected(p.name);});return()=>{resize.disconnect();c.dispose();chart.current=null;};},[]);
  const available=(period==='daily'?report.daily:report.weekly).filter(r=>(!selectedDate||r.date<=selectedDate)&&(!intradayDate||r.date<intradayDate));
  const rows=available.slice(period==='daily'?-90:-60);

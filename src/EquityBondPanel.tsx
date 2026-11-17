@@ -7,14 +7,14 @@ type Report={days:Row[];running:boolean;error:string;latest_eligible:string|null
 type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 const fmt=(v:number|null|undefined,n=2)=>v==null||!Number.isFinite(v)?'—':v.toFixed(n);
 
-export default function EquityBondPanel({request,selectedDate,intradayDate}:{request:Request;selectedDate:string;intradayDate:string}){
+export default function EquityBondPanel({active=true,request,selectedDate,intradayDate}: {active?:boolean;request:Request;selectedDate:string;intradayDate:string}){
  const [report,setReport]=useState<Report>({days:[],running:false,error:'',latest_eligible:null});
  const [error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [chosenDate,setChosenDate]=useState(selectedDate);
  useEffect(()=>{setChosenDate(selectedDate);},[selectedDate]);
  const ref=useRef<HTMLDivElement>(null),chart=useRef<echarts.ECharts|null>(null),alive=useRef(true),reading=useRef(false);
  const load=async()=>{if(reading.current)return;reading.current=true;try{const data=await request<Report>('equity_bond');if(alive.current){setReport(data);setError('');}}catch(e){if(alive.current)setError(String(e));}finally{reading.current=false;}};
- useEffect(()=>{alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request]);
+ useEffect(()=>{if(!active)return;alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request,active]);
  useEffect(()=>{if(!ref.current)return;const c=echarts.init(ref.current,'dark',{renderer:'canvas'});chart.current=c;const resize=new ResizeObserver(()=>c.resize());resize.observe(ref.current);return()=>{resize.disconnect();c.dispose();chart.current=null;};},[]);
  useEffect(()=>{if(!chart.current)return;const slots:(Row|null)[]=[];report.days.filter(r=>(!chosenDate||r.date<=chosenDate)&&(!intradayDate||r.date<intradayDate)).forEach((r,i)=>{if(i&&r.gap_before)slots.push(null);slots.push(r);});
   chart.current.setOption({animation:false,backgroundColor:'transparent',grid:{left:54,right:28,top:22,bottom:38},tooltip:{trigger:'axis',confine:true,formatter:(params:any)=>{const d=slots[params[0]?.dataIndex];return d?`${d.date}<br/>上交所股票市盈率：${fmt(d.pe)} 倍<br/>国债 10 年（11:30）：${fmt(d.bond_yield,4)}%<br/>股债差：${fmt(d.spread)} 个百分点`:'数据间隔';}},xAxis:{type:'category',data:slots.map((d,i)=>d?.date||`gap-${i}`),axisLabel:{color:'#9eafc7',hideOverlap:true,formatter:(s:string)=>s.startsWith('gap-')?'…':s.slice(5)},axisLine:{lineStyle:{color:'#69778a'}}},yAxis:{type:'value',scale:true,axisLabel:{color:'#9eafc7'},splitLine:{lineStyle:{color:'#28313d'}}},series:[{name:'股债差',type:'line',connectNulls:false,symbol:'circle',symbolSize:5,lineStyle:{color:'#80b8ff',width:2},itemStyle:{color:'#80b8ff'},data:slots.map(d=>d?.spread??null)}]},true);

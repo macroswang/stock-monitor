@@ -36,12 +36,18 @@ def analyze(code,day,data,daily=None):
 
 def view(app,args):
     code=symbol(args['code']);start,end=bounds(args)
-    rows=app.daily_cache.rows(code)
+    key=('history',code,start,end,tuple(app.history_revision(code)))
+    result=app.read_cache.get(key,lambda:_view(app,code,start,end))
+    # Live quote timestamps are presentation metadata, not historical signals.
+    return dict(result,source=app.source_info(code))
+
+def _view(app,code,start,end):
+    rows=app.daily_cache.rows(code,start,end)
     daily=[daily_view(code,r['data']) for r in rows if start<=r['day']<=end]
     # The annual-line marker always uses completed bars; an intraday provisional
     # candle can neither create nor remove a signal.
     ma250=app.annual_signals.report(code)
-    minute={r['day']:r['data'] for r in app.store.getcache(code,'minute') if start<=r['day']<=end}
+    minute={r['day']:r['data'] for r in app.store.getcache(code,'minute',start=start,end=end)}
     recorded=app.event_rows(code=code,start=start,end=end,limit=None)
     days=sorted(set(r['date'] for r in daily)|set(minute)|{e['trading_date'] for e in recorded})
     lookup={r['date']:r for r in daily};analyses=[];events={e['key']:e for e in recorded}
@@ -59,4 +65,4 @@ def view(app,args):
         r['limit_basis']=minute.get(day,{}).get('limit_basis','验证样本历史参考价' if r['limit_up'] else '')
         analyses.append(r)
     return dict(code=code,start=start,end=end,daily=daily,days=analyses,events=list(events.values()),
-        minute_days=sorted(minute),ma250=ma250,e2=app.annual_signals.research_report(code),source=app.source_info(code))
+        minute_days=sorted(minute),ma250=ma250,e2=app.annual_signals.research_report(code))

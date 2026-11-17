@@ -8,7 +8,7 @@ type Request=<T>(method:string,args?:Record<string,unknown>)=>Promise<T>;
 const fmt=(n:number|null|undefined,digits=3)=>n==null||!Number.isFinite(n)?'—':n.toFixed(digits);
 const next=(a:string,b:string)=>{const x=new Date(a+'T00:00:00Z'),y=new Date(b+'T00:00:00Z');const d=(y.getTime()-x.getTime())/86400000;return d===1||(d===3&&x.getUTCDay()===5&&y.getUTCDay()===1);};
 
-export default function OptionPCRPanel(props:{request:Request;selectedDate:string;intradayDate:string}){
+export default function OptionPCRPanel(props:{active?:boolean;request:Request;selectedDate:string;intradayDate:string}){
  const [product,setProduct]=useState('510050');
  const [chosenDate,setChosenDate]=useState(props.selectedDate);
  const [revision,setRevision]=useState(0);
@@ -16,18 +16,18 @@ export default function OptionPCRPanel(props:{request:Request;selectedDate:strin
  return <section className="option-panel" id="breadth-option-pcr" aria-label="期权PCR比较">
   <div className="option-heading"><div><h3>期权 PCR <small>成交量口径</small></h3><p>选择标的，查看收盘曲线</p></div>
    <label>期权标的 <select aria-label="期权标的" value={product} onChange={e=>setProduct(e.target.value)}><option value="510050">上证50ETF（510050）</option><option value="510300">沪深300ETF（510300）</option><option value="etf-exchanges">沪深ETF期权合计</option><option value="cffex-IO">沪深300股指期权（IO）</option><option value="cffex-HO">上证50股指期权（HO）</option><option value="cffex-MO">中证1000股指期权（MO）</option></select></label></div>
-  {!product.startsWith('cffex-')&&<PCRComparison request={props.request} chosenDate={chosenDate} revision={revision} intradayDate={props.intradayDate}/>}
+  {!product.startsWith('cffex-')&&<PCRComparison enabled={props.active!==false} request={props.request} chosenDate={chosenDate} revision={revision} intradayDate={props.intradayDate}/>}
   <PCRContent key={product} {...props} product={product} chosenDate={chosenDate} setChosenDate={setChosenDate} onUpdated={()=>setRevision(x=>x+1)}/>
  </section>;
 }
 
-function PCRComparison({request,chosenDate,revision,intradayDate}:{request:Request;chosenDate:string;revision:number;intradayDate:string}){
+function PCRComparison({enabled,request,chosenDate,revision,intradayDate}: {enabled:boolean;request:Request;chosenDate:string;revision:number;intradayDate:string}){
  const [reports,setReports]=useState<(Report|null)[]>([null,null]);
  const [loaded,setLoaded]=useState(false);
- useEffect(()=>{let active=true,reading=false;
+ useEffect(()=>{if(!enabled)return;let active=true,reading=false;
   const load=async()=>{if(reading)return;reading=true;const results=await Promise.allSettled(['510050','510300'].map(security_code=>request<Report>('option_pcr',{security_code})));if(active){setReports(results.map(r=>r.status==='fulfilled'?r.value:null));setLoaded(true);}reading=false;};
   void load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};
- },[request,revision]);
+ },[request,revision,enabled]);
  const common=reports[0]?.days.filter(r=>reports[1]?.days.some(other=>other.date===r.date)).at(-1)?.date;
  const date=chosenDate||common||'';
  const rows=reports.map(r=>r?.days.find(d=>d.date===date&&(!intradayDate||d.date<intradayDate)));
@@ -46,7 +46,7 @@ function PCRComparison({request,chosenDate,revision,intradayDate}:{request:Reque
  </div>;
 }
 
-function PCRContent({request,product,selectedDate,chosenDate,setChosenDate,onUpdated,intradayDate}:{request:Request;selectedDate:string;intradayDate:string;product:string;chosenDate:string;setChosenDate:(date:string)=>void;onUpdated:()=>void}){
+function PCRContent({active=true,request,product,selectedDate,chosenDate,setChosenDate,onUpdated,intradayDate}: {active?:boolean;request:Request;selectedDate:string;intradayDate:string;product:string;chosenDate:string;setChosenDate:(date:string)=>void;onUpdated:()=>void}){
  const aggregate=product==='etf-exchanges';
  const index=product.startsWith('cffex-'),indexProduct=product.slice(6);
  const label=index?({'IO':'沪深300股指','HO':'上证50股指','MO':'中证1000股指'} as Record<string,string>)[indexProduct]:aggregate?'沪深ETF合计':product==='510300'?'沪深300ETF':'上证50ETF';
@@ -54,7 +54,7 @@ function PCRContent({request,product,selectedDate,chosenDate,setChosenDate,onUpd
  const [error,setError]=useState(''),[busy,setBusy]=useState(false);
  const ref=useRef<HTMLDivElement>(null),chart=useRef<echarts.ECharts|null>(null),alive=useRef(true),reading=useRef(false);
  const load=async()=>{if(reading.current)return;reading.current=true;try{const r=await request<Report>(index?'index_option_pcr':aggregate?'etf_option_pcr':'option_pcr',index?{product:indexProduct}:aggregate?{}:{security_code:product});if(alive.current){setReport(r);setError('');}}catch(e){if(alive.current)setError(String(e));}finally{reading.current=false;}};
- useEffect(()=>{alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request]);
+ useEffect(()=>{if(!active)return;alive.current=true;void load();const timer=setInterval(load,30000);return()=>{alive.current=false;clearInterval(timer);};},[request,active]);
  useEffect(()=>{if(!ref.current)return;const c=echarts.init(ref.current,'dark',{renderer:'canvas'});chart.current=c;const observer=new ResizeObserver(()=>c.resize());observer.observe(ref.current);return()=>{observer.disconnect();c.dispose();chart.current=null;};},[]);
  useEffect(()=>{
   if(!chart.current)return;

@@ -1,3 +1,4 @@
+import {useDisplayPolling} from './useDisplayPolling';
 import {useEffect,useRef,useState} from 'react';
 import BrokerAccounts from './BrokerAccounts';
 import {plannedQuantity,quantityDescription,type QuantityRule} from './tradingQuantity';
@@ -69,7 +70,7 @@ function QuantityEditor({code,side,rule,onChange}:{code:string;side:'buy'|'sell'
  </>;
 }
 
-export default function LiveTrading({api,onRestartCore,onOpenStock,setupStock}:{api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void;setupStock?:{code:string;name:string}}){
+export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,setupStock}: {active?:boolean;api:Api;onRestartCore?:()=>Promise<unknown>;onOpenStock?:(code:string)=>void;setupStock?:{code:string;name:string}}){
  const [data,setData]=useState<View|null>(null),[tab,setTab]=useState('positions'),[selected,setSelected]=useState('');
  const [pauseBusy,setPauseBusy]=useState(false),[preparing,setPreparing]=useState(false);
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState('');
@@ -101,7 +102,8 @@ export default function LiveTrading({api,onRestartCore,onOpenStock,setupStock}:{
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('keydown',onKey);prior?.focus();};
  },[!!edit,!!mapping,!!target,liveConfirm]);
  const load=async()=>{const seq=++sequence.current;const d=await api<View>('trading_view');if(mounted.current&&seq===sequence.current)setData(d);};
- useEffect(()=>{mounted.current=true;let loading=false;const refresh=async()=>{if(loading||running.current)return;loading=true;try{await load();}catch(e){if(mounted.current)setError(String(e));}finally{loading=false;}};void refresh();const timer=setInterval(refresh,5000);return()=>{mounted.current=false;sequence.current++;clearInterval(timer);};},[]);
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;sequence.current++;};},[]);
+ useDisplayPolling(active,async()=>{if(running.current)return;try{await load();}catch(e){if(mounted.current)setError(String(e));}},5000);
  async function run(fn:()=>Promise<unknown>,message=''){
   if(running.current)return;
   running.current=true;setBusy(true);setError('');setNotice('');
