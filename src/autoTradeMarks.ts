@@ -1,6 +1,6 @@
 /** Read-only annotations. Signal/plan/acknowledgement/fill remain distinct. */
 export type AutoTradeAccount={id:string;broker_name:string;account_masked:string;buy_enabled:boolean;sell_enabled:boolean};
-export type AutoTradePoint={id:string;source?:'automatic'|'broker_cache'|'manual';account_id:string;broker_name:string;account_masked:string;code:string;day:string;side:'buy'|'sell';status:string;mode:string;signal_key?:string;signal_time?:string;reference_price?:number|string;created_at:string;ordered_at?:string;order_price?:number|string;quantity?:number;order_id?:string;filled?:number;fill_price?:number|string;message:string;attempted:boolean;receipt_accepted?:boolean;receipt_message?:string;cache_observed_at?:string;broker_state?:string;reconciliation?:{ok:boolean;message:string};admission?:{allowed:boolean;reason:string}};
+export type AutoTradePoint={id:string;source?:'automatic'|'broker_cache'|'manual';account_id:string;broker_name:string;account_masked:string;code:string;day:string;side:'buy'|'sell';status:string;execution_status?:string;mode:string;signal_key?:string;signal_time?:string;reference_price?:number|string;created_at:string;ordered_at?:string;filled_at?:string;order_price?:number|string;quantity?:number;order_id?:string;filled?:number;fill_price?:number|string;message:string;attempted:boolean;receipt_accepted?:boolean;receipt_message?:string;cache_observed_at?:string;broker_state?:string;reconciliation?:{ok:boolean;message:string};admission?:{allowed:boolean;reason:string}};
 export type AutoTradeChart={code:string;day:string;accounts:AutoTradeAccount[];points:AutoTradePoint[]};
 export const autoTradeStatus:Record<string,string>={pending:'等待核验，尚未下单',processing:'核验中，尚未下单',sending:'提交中',accepted:'券商已受理，成交尚未回报',unknown:'未收到明确回执',partial:'已核实部分成交',filled:'已核实成交',cancelled:'已核实撤销',rejected:'已拒绝',skipped:'已跳过，未下单',trial:'试运行，未下单',not_sent:'已核实未发出',unrecorded:'没有执行记录'};
 export const autoTradePrice=(n:unknown)=>n!==null&&n!==undefined&&Number.isFinite(Number(n))&&Number(n)>0?Number(n):null;
@@ -41,12 +41,14 @@ export function autoTradeDetails(p:AutoTradePoint){
  const order=autoTradePrice(p.order_price),fill=autoTradePrice(p.fill_price),submitted=p.attempted&&p.mode==='live'&&['sending','accepted','unknown','partial','filled','cancelled','rejected'].includes(p.status);
  return [`${p.broker_name} ${p.account_masked} · ${p.source==='broker_cache'?'券商成交':p.source==='manual'?'手动委托':'自动'}${p.side==='buy'?'买入':'卖出'}`,
   `状态：${autoTradeState(p)}`,
+  ...(p.execution_status?[`执行记录状态：${autoTradeStatus[p.execution_status]||p.execution_status}（成交缓存仅更新图表）`]:[]),
   ...(order?[`${p.source==='broker_cache'?'委托价格':submitted?'委托限价':'计划限价'}：${order.toFixed(2)} 元${p.quantity?` · ${p.quantity} 股`:''}`]:p.quantity?[`委托数量：${p.quantity} 股`]:[]),
   ...(p.signal_time?[`信号时间：${p.signal_time}${p.reference_price?` · ${Number(p.reference_price).toFixed(2)} 元`:''}`]:[]),
   ...(p.source==='broker_cache'?[`成交时间：${p.ordered_at?.slice(11,19)||'未记录'}`]:submitted?[`提交时间：${p.ordered_at?.slice(11,19)||'未记录'}`]:[]),
+  ...(p.source!=='broker_cache'&&p.filled_at?[`券商成交时间：${p.filled_at.slice(11,19)}`]:[]),
   ...(p.order_id?[`委托编号：${p.order_id}`]:[]),
   ...((submitted||p.source==='broker_cache')&&['filled','partial','cancelled'].includes(p.status)&&p.filled!==undefined&&p.filled>0?[`已核实成交：${p.filled} 股 · ${fill?'均价 '+fill.toFixed(2)+' 元':'成交均价未记录'}`]:[]),
-  ...(p.source==='broker_cache'&&p.cache_observed_at?[`缓存更新：${p.cache_observed_at.slice(11,19)}`]:[]),
+  ...(p.cache_observed_at?[`缓存更新：${p.cache_observed_at.slice(11,19)}`]:[]),
   ...(p.message?[`说明：${submissionNote(p.message)}`]:[]),
   ...(p.receipt_message?[`券商回包：${p.receipt_message}`]:[]),
  ];

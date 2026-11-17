@@ -64,8 +64,8 @@ export const SORT_OPTIONS: {value: string; label: string; key: SortKey; dir: 'as
 ];
 export type RowChip = 'all' | 'today' | 'multi' | 'alert';
 export type RowPeriod = 'all' | 'today' | '3d' | '5d';
-export type RowFilter = {chip: RowChip; period: RowPeriod; search: string};
-export const DEFAULT_ROW_FILTER: RowFilter = {chip: 'all', period: 'all', search: ''};
+export type RowFilter = {chip: RowChip; period: RowPeriod; search: string; minSelectionDays?: number};
+export const DEFAULT_ROW_FILTER: RowFilter = {chip: 'all', period: 'all', search: '', minSelectionDays: 0};
 export const PERIOD_OPTIONS: {value: RowPeriod; label: string}[] = [
   {value: 'all', label: '全部时间'}, {value: 'today', label: '今日'}, {value: '3d', label: '近3日'}, {value: '5d', label: '近5日'},
 ];
@@ -77,6 +77,7 @@ export function readStoredTerminal(): {filter: RowFilter; sort: SortState} {
     if (!raw) return {filter: DEFAULT_ROW_FILTER, sort: DEFAULT_SORT};
     const parsed = JSON.parse(raw) as {filter?: Partial<RowFilter>; sort?: Partial<SortState>};
     const filter = {...DEFAULT_ROW_FILTER, ...(parsed.filter || {})};
+    filter.minSelectionDays = Number.isSafeInteger(filter.minSelectionDays) && Number(filter.minSelectionDays) > 0 ? filter.minSelectionDays : 0;
     if (!['all', 'today', 'multi', 'alert'].includes(filter.chip)) filter.chip = 'all';
     const sort = parsed.sort && parsed.sort.key && parsed.sort.dir ? {key: parsed.sort.key, dir: parsed.sort.dir} : DEFAULT_SORT;
     return {filter, sort};
@@ -634,6 +635,7 @@ export function filterRows(rows: Entry[], filter: RowFilter, anchor: string, cal
   return rows.filter(entry => {
     const selection = selectionOf(entry);
     const episodes = episodesOf(entry);
+    if (filter.minSelectionDays && episodes.total < filter.minSelectionDays) return false;
     if (filter.chip === 'today' && selection.today <= 0) return false;
     if (filter.chip === 'multi' && episodes.total < 2) return false;
     if (filter.chip === 'alert' && poolAddedDay(entry) !== calendarToday) return false;

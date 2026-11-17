@@ -19,6 +19,30 @@ test('verified fill and limit stay separate without adding prices to the reminde
  const p={...point,status:'filled',fill_price:'27.88',filled:200};expect(autoTradeMarks(view([p]),[],day)[0]).toMatchObject({label:'B',price:27.88});expect(autoTradeDetails(p).join(' ')).toContain('委托限价：27.90');expect(autoTradeDetails(p).join(' ')).toContain('均价 27.88');
  expect(autoTradeMarks(view([{...p,fill_price:undefined}]),[],day)[0]).toMatchObject({label:'B',price:27.90});
 });
+test('a delayed verified fill updates one automatic S while retaining submission and execution times',()=>{
+ const p:AutoTradePoint={...point,side:'sell',status:'filled',ordered_at:day+'T10:13:00+08:00',filled_at:day+'T10:18:35+08:00',order_id:'delayed-contract',order_price:'28.31',fill_price:'28.310',filled:200};
+ const marks=autoTradeMarks(view([p]),[],day);
+ expect(marks).toHaveLength(1);expect(marks[0]).toMatchObject({label:'S',time:'10:13',price:28.31});
+ const details=autoTradeDetails(p).join(' ');expect(details).toContain('提交时间：10:13:00');expect(details).toContain('券商成交时间：10:18:35');expect(details).toContain('委托编号：delayed-contract');
+});
+test('cumulative partial and final cache projections keep one B or S and retain execution-state provenance',()=>{
+ for(const side of ['buy','sell'] as const)for(const filled of [100,600,2300]){
+  const p:AutoTradePoint={...point,side,status:filled===2300?'filled':'partial',execution_status:'accepted',quantity:2300,filled,fill_price:'27.88',filled_at:day+'T14:05:00+08:00',cache_observed_at:day+'T14:06:00+08:00'};
+  const marks=autoTradeMarks(view([p]),[],day);expect(marks).toHaveLength(1);
+  expect(marks[0]).toMatchObject({label:side==='buy'?'B':'S',time:'14:04',price:27.88});
+  const details=autoTradeDetails(p).join(' ');expect(details).toContain(`已核实成交：${filled} 股`);
+  expect(details).toContain('执行记录状态：券商已受理，成交尚未回报');expect(details).toContain('缓存更新：14:06:00');
+ }
+});
+test('different contracts at identical minute and price remain two independently visible B or S marks',()=>{
+ for(const side of ['buy','sell'] as const){
+  const points=['contract-a','contract-b'].map((order_id,i)=>({...point,id:String(i),order_id,side}));
+  const marks=autoTradeMarks(view(points),[],day);expect(marks).toHaveLength(2);
+  expect(marks.map(m=>m.point.order_id)).toEqual(['contract-a','contract-b']);
+  expect(marks[0].offset).not.toBe(marks[1].offset);
+  expect(marks.every(m=>m.label===(side==='buy'?'B':'S'))).toBe(true);
+ }
+});
 test('legacy missing records remain account-scoped in details and never create B/S',()=>{
  const data={...view([point]),accounts:[{id:'a',broker_name:'银河',account_masked:'400***162',buy_enabled:true,sell_enabled:true},{id:'b',broker_name:'华泰',account_masked:'666***623',buy_enabled:true,sell_enabled:true}]};
  const shapes=[{key:'signal',kind:'bottom',time:'14:03',price:27.89}],records=autoTradeRecords(data,shapes,day);expect(records).toHaveLength(2);expect(records[1].point.status).toBe('unrecorded');expect(records[1].point.account_id).toBe('b');expect(autoTradeMarks(data,shapes,day)).toHaveLength(1);expect(data.points).toHaveLength(1);

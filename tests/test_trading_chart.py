@@ -101,6 +101,214 @@ class TradingChartTests(unittest.TestCase):
    self.assertEqual(points[0]['fill_price'],'2.18');self.assertEqual(points[0]['order_price'],'2.16')
   self.assertEqual(self.store.db.total_changes,before)
   self.assertEqual(json.loads(self.store.query('SELECT result FROM broker_requests')[0]['result']),{})
+ def delayed_native_sell(self,status='filled',filled=2300):
+  row,payload=self.native_sell()
+  verification=json.loads(self.store.query('SELECT payload FROM trading_runs')[0]['payload'])['verification']
+  verification.update(status=status,filled=filled,observed_at='2026-11-03T13:50:00+08:00',evidence_hash='a'*64)
+  ack=dict(verification=verification,receipt_recovery=dict(method='native_order_list',submitted_at='2026-11-03T13:44:20+08:00'),
+           acknowledgement=dict(confirm=dict(name='山子高科',code='000981',side='sell',price='2.16',quantity=2300)))
+  self.store.execute("UPDATE trading_runs SET status=?,payload=json_set(payload,'$.verification',json(?))",(status,json.dumps(verification)))
+  self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(ack),))
+  row.update(time='13:49:35',filled=filled,amount=str(filled*2.18))
+  payload['rows']=[row];self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+  return row,payload,ack
+ def test_delayed_native_fill_merges_without_changing_execution_journal_or_submission_anchor(self):
+  row,payload,ack=self.delayed_native_sell();before=self.store.db.total_changes
+  original_cache=self.store.getcache('broker-account:a',CACHE_KIND,'2026-11-03')[0]['data']
+  with patch('core.brokers.submit_order',side_effect=AssertionError('submit')),patch('core.brokers.order_report',side_effect=AssertionError('broker IO')):
+   points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);point=points[0]
+  self.assertEqual(point['source'],'automatic');self.assertEqual(point['order_id'],'1199281')
+  self.assertEqual(point['ordered_at'],'2026-11-03T13:44:20+08:00')
+  self.assertEqual(point['filled_at'],'2026-11-03T13:49:35+08:00')
+  self.assertEqual(point['filled'],2300);self.assertEqual(point['fill_price'],'2.18')
+  self.assertEqual(self.store.db.total_changes,before)
+  self.assertEqual(json.loads(self.store.query('SELECT result FROM broker_requests')[0]['result']),ack)
+  self.assertEqual(self.store.getcache('broker-account:a',CACHE_KIND,'2026-11-03')[0]['data'],original_cache)
+ def test_delayed_native_fill_rejects_ambiguous_contracts_and_conflicting_values(self):
+  row,payload,_=self.delayed_native_sell()
+  for change in [dict(average='2.19'),dict(filled=2200),dict(quantity=2400),dict(amount='1'),dict(name='其他股票'),dict(code='603938'),dict(date='2026-11-04'),dict(time='13:43:00'),dict(time='13:51:00')]:
+   with self.subTest(change=change):
+    self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[dict(row,**change)]))
+    self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2 if change.get('code')!='603938' and change.get('date')!='2026-11-04' else 1)
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row,dict(row,order_id='1199282')]))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),3)
+ def test_delayed_native_fill_requires_the_durable_original_evidence(self):
+  _,_,ack=self.delayed_native_sell()
+  changes=[dict(verification={}),dict(receipt_recovery={}),dict(acknowledgement={}),
+           dict(verification=dict(ack['verification'],native_order_key='0'*64)),
+           dict(verification=dict(ack['verification'],evidence_hash='bad'))]
+  for change in changes:
+   with self.subTest(change=change):
+    self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(ack,**change)),))
+    self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+ def test_later_native_reverification_does_not_restore_a_duplicate_from_an_older_valid_cache(self):
+  _,_,ack=self.delayed_native_sell();v=dict(ack['verification'],observed_at='2026-11-03T15:02:00+08:00')
+  self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.verification',json(?))",(json.dumps(v),))
+  self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(ack,verification=v)),))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),1)
+ def test_delayed_partial_fill_is_one_marker_and_does_not_double_the_cumulative_quantity(self):
+  self.delayed_native_sell(status='partial',filled=100)
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['filled'],100);self.assertEqual(points[0]['status'],'partial')
+ def test_cumulative_fill_refreshes_keep_one_marker_for_both_buy_and_sell(self):
+  row,payload,ack=self.delayed_native_sell(status='partial',filled=100)
+  original=self.store.query('SELECT payload FROM trading_runs')[0]['payload']
+  for side,limit,prices in [('sell','2.16',['2.18','2.19','2.20']),('buy','2.20',['2.18','2.17','2.16'])]:
+   with self.subTest(side=side):
+    from executor.ths_orders import order_key
+    v=dict(ack['verification'],native_order_key=order_key(dict(date='2026-11-03',time='13:44:21',name='山子高科',side=side,price=limit,quantity=2300)))
+    p=json.loads(original);p['verification']=v;p['plan'].update(side=side,price=limit)
+    b=dict(ack,verification=v,acknowledgement=dict(confirm=dict(name='山子高科',code='000981',side=side,price=limit,quantity=2300)))
+    self.store.execute('UPDATE trading_runs SET side=?,payload=?',(side,json.dumps(p)))
+    self.store.execute("UPDATE broker_requests SET payload=json_set(payload,'$.side',?,'$.price',?),result=?",(side,limit,json.dumps(b)))
+    for filled,average in zip([100,600,2300],prices):
+     cache=dict(payload,observed_at='2026-11-03T15:01:06+08:00',rows=[dict(row,side=side,time='13:50:35',filled=filled,average=average,amount=str(filled*float(average)))])
+     if filled==100:cache['rows'][0]['time']='13:49:35'
+     self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',cache)
+     before=self.store.db.total_changes
+     for _ in range(3):
+      points=chart(self.store,'sz000981','2026-11-03')['points']
+      self.assertEqual(len(points),1);self.assertEqual(points[0]['filled'],filled)
+      self.assertEqual(float(points[0]['fill_price']),float(average))
+      self.assertEqual(points[0]['status'],'filled' if filled==2300 else 'partial')
+      self.assertEqual(points[0]['ordered_at'],'2026-11-03T13:44:20+08:00')
+     self.assertEqual(self.store.db.total_changes,before)
+    self.assertEqual(self.store.query('SELECT payload FROM trading_runs')[0]['payload'],json.dumps(p))
+ def test_older_partial_cache_does_not_restore_duplicate_or_reduce_newer_verified_fill(self):
+  row,payload,_=self.delayed_native_sell()
+  row.update(filled=100,amount='218',time='13:45:00')
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,observed_at='2026-11-03T13:46:00+08:00',rows=[row]))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['filled'],2300);self.assertEqual(points[0]['status'],'filled')
+ def test_idless_same_minute_price_is_not_an_order_identity_for_buy_or_sell(self):
+  self.seed()
+  self.store.execute("UPDATE broker_requests SET result='{}'")
+  for side in ['buy','sell']:
+   self.store.execute("UPDATE trading_runs SET side=?,payload=json_set(payload,'$.plan.side',?)",(side,side))
+   payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[dict(code='000981',side=side,date='2026-11-03',time='13:37:59',price='2.16',filled=2300,average='2.16')])
+   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+   self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+ def test_competing_unverified_submission_blocks_inferred_contract_even_with_different_filled_quantity(self):
+  self.delayed_native_sell(status='partial',filled=100)
+  self.seed('two',status='unknown')
+  self.store.execute("UPDATE trading_runs SET side='sell',payload=json_set(payload,'$.plan.side','sell') WHERE id='two'")
+  self.store.execute("UPDATE broker_requests SET result='{}',payload=json_set(payload,'$.side','sell') WHERE request_id='auto_two'")
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),3);self.assertEqual([p['order_id'] for p in points[:2]],['',''])
+ def test_repeated_identical_contract_group_rows_do_not_duplicate_or_sum_cumulative_fills(self):
+  row,payload,_=self.delayed_native_sell(status='partial',filled=100)
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row,dict(row)]))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['filled'],100)
+ def test_accepted_native_submission_can_display_new_partial_cache_without_settling_execution(self):
+  row,payload,ack=self.delayed_native_sell(status='accepted',filled=0)
+  row.update(filled=100,amount='218',time='13:50:30')
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row]))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['filled'],100)
+  self.assertEqual(points[0]['status'],'partial');self.assertEqual(points[0]['execution_status'],'accepted')
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'accepted')
+  self.assertEqual(json.loads(self.store.query('SELECT result FROM broker_requests')[0]['result']),ack)
+ def test_distinct_known_contracts_at_same_price_keep_separate_buy_and_sell_markers(self):
+  self.seed();self.seed('two')
+  for side in ['buy','sell']:
+   self.store.execute("UPDATE trading_runs SET side=?,payload=json_set(payload,'$.plan.side',?)",(side,side))
+   payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[
+    dict(code='000981',side=side,date='2026-11-03',time='13:38:59',order_id='contract-'+ident,filled=2300,average='2.16') for ident in ['one','two']])
+   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+   for _ in range(2):
+    points=chart(self.store,'sz000981','2026-11-03')['points']
+    self.assertEqual(len(points),2);self.assertEqual({p['order_id'] for p in points},{'contract-one','contract-two'})
+ def test_known_contract_is_reserved_before_inference_regardless_of_cache_row_order(self):
+  row,payload,_=self.delayed_native_sell(status='partial',filled=100)
+  self.seed('two',status='filled',verification=dict(origin='broker_auto',status='filled',filled=100,average='2.18'))
+  self.store.execute("UPDATE trading_runs SET side='sell',payload=json_set(payload,'$.plan.side','sell') WHERE id='two'")
+  other=dict(row,order_id='contract-two')
+  for rows in [[other,row],[row,other]]:
+   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=rows))
+   points=chart(self.store,'sz000981','2026-11-03')['points']
+   self.assertEqual(len(points),2);self.assertEqual({p['order_id'] for p in points},{'1199281','contract-two'})
+ def test_hidden_synced_manual_submission_still_blocks_ambiguous_automatic_inference(self):
+  self.delayed_native_sell(status='partial',filled=100)
+  stamp='2026-11-03T13:44:30+08:00'
+  request=dict(account_id='a',code='000981',side='sell',price='2.16',quantity=2300,dry_run=False)
+  result=dict(submitted=True,submitted_at=stamp)
+  self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('manual-sell','a',json.dumps(request),'unknown',json.dumps(result),stamp,stamp))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),2);self.assertEqual(points[0]['order_id'],'');self.assertEqual(points[1]['source'],'broker_cache')
+ def test_synced_manual_known_contract_remains_visible_as_one_cached_fill(self):
+  stamp='2026-11-03T13:44:30+08:00';day='2026-11-03'
+  request=dict(account_id='a',code='000981',side='buy',price='2.20',quantity=100,dry_run=False)
+  result=dict(submitted=True,submitted_at=stamp,order_id='manual-contract')
+  self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('manual-buy','a',json.dumps(request),'accepted',json.dumps(result),stamp,stamp))
+  payload=dict(account_id='a',account_verified=True,complete=True,day=day,observed_at=day+'T15:05:00+08:00',rows=[dict(code='000981',side='buy',date=day,time='13:45:00',order_id='manual-contract',filled=100,average='2.18')])
+  self.store.cache('broker-account:a',CACHE_KIND,day,payload)
+  points=chart(self.store,'sz000981',day)['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['source'],'broker_cache');self.assertEqual(points[0]['order_id'],'manual-contract')
+ def test_impossible_cumulative_changes_are_not_associated(self):
+  row,payload,_=self.delayed_native_sell(status='partial',filled=100)
+  changes=[dict(filled=50,average='2.18',amount='109'), # Newer cache cannot go backwards.
+           dict(filled=200,average='2.16',amount='432'), # Incremental 2.14 violates 2.16 limit.
+           dict(filled=100,average='2.19',amount='219')]
+  for change in changes:
+   with self.subTest(change=change):
+    self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[dict(row,**change)]))
+    self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+ def test_conflicting_duplicate_contract_rows_are_not_used_as_two_fills_or_as_matching_evidence(self):
+  row,payload,_=self.delayed_native_sell(status='partial',filled=100)
+  other=dict(row,filled=200,amount='436')
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row,other]))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1);self.assertEqual(points[0]['order_id'],'');self.assertEqual(points[0]['filled'],100)
+ def test_invalid_new_native_evidence_cannot_fall_back_to_legacy_exact_key(self):
+  row,payload,ack=self.delayed_native_sell()
+  row['time']='13:44:21'
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row]))
+  self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(dict(ack,receipt_recovery={})),))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+ def test_empty_cache_refresh_then_restoration_is_stateless_and_keeps_one_marker(self):
+  row,payload,_=self.delayed_native_sell()
+  before=self.store.query('SELECT payload FROM trading_runs')[0]['payload']
+  for rows,ident in [([row],'1199281'),([],''),([row],'1199281'),([dict(row),dict(row)],'1199281')]:
+   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=rows))
+   points=chart(self.store,'sz000981','2026-11-03')['points']
+   self.assertEqual(len(points),1);self.assertEqual(points[0]['order_id'],ident)
+  self.assertEqual(self.store.query('SELECT payload FROM trading_runs')[0]['payload'],before)
+ def test_native_association_rejects_conflicting_receipts_and_mismatched_original_submit_time(self):
+  _,_,ack=self.delayed_native_sell()
+  for changed in [dict(ack,order_id='first',result=dict(order_id='second')),
+                  dict(ack,receipt_recovery=dict(ack['receipt_recovery'],submitted_at='2026-11-03T13:44:21+08:00'))]:
+   self.store.execute('UPDATE broker_requests SET result=?',(json.dumps(changed),))
+   points=chart(self.store,'sz000981','2026-11-03')['points']
+   self.assertEqual(len(points),2);self.assertEqual(points[0]['order_id'],'')
+ def test_cache_with_fill_before_verified_zero_fill_is_contradictory(self):
+  row,payload,_=self.delayed_native_sell(status='accepted',filled=0)
+  row.update(filled=100,amount='218',time='13:49:30')
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',dict(payload,rows=[row]))
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),2);self.assertEqual(points[0]['status'],'accepted');self.assertEqual(points[0]['filled'],0)
+ def test_delayed_fill_does_not_merge_two_possible_native_submissions(self):
+  _,_,ack=self.delayed_native_sell()
+  from executor.ths_orders import order_key
+  r=self.store.query('SELECT * FROM trading_runs')[0]
+  p=json.loads(r['payload']);p['verification']['native_order_key']=order_key(dict(date=r['day'],time='13:45:21',name='山子高科',side='sell',price='2.16',quantity=2300))
+  self.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',('two',r['account_id'],r['code'],r['side'],'second-signal',r['day'],r['status'],json.dumps(p),r['created_at'],r['updated_at']))
+  b=self.store.query('SELECT * FROM broker_requests')[0]
+  second_ack=dict(ack,verification=p['verification'],receipt_recovery=dict(method='native_order_list',submitted_at='2026-11-03T13:45:20+08:00'))
+  self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_two',b['account_id'],b['payload'],b['status'],json.dumps(second_ack),b['created_at'],b['updated_at']))
+  self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),3)
+ def test_delayed_fill_rejects_future_verification_or_cache_observation(self):
+  from datetime import datetime
+  from core.provider import CN
+  self.delayed_native_sell()
+  for now,merged in [(datetime(2026,11,3,13,49,30,tzinfo=CN),False),(datetime(2026,11,3,13,50,1,tzinfo=CN),False),(datetime(2026,11,3,15,2,tzinfo=CN),True)]:
+   with self.subTest(now=now),patch('core.trading_chart.now_cn',return_value=now):
+    points=chart(self.store,'sz000981','2026-11-03')['points']
+    self.assertEqual(len(points),1)  # Future caches are excluded, not rendered as a second fill.
+    self.assertEqual(points[0]['source'],'automatic')
+    self.assertEqual(points[0]['order_id'],'1199281' if merged else '')
+    self.assertEqual('filled_at' in points[0],merged)
  def test_native_merge_preserves_separate_same_minute_orders_and_conflicting_fill_evidence(self):
   row,payload=self.native_sell()
   for change in [dict(time='13:44:22'),dict(average='2.19'),dict(filled=2200),dict(quantity=2400),dict(name='其他股票')]:

@@ -132,7 +132,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   },[data,entries]);
   const calendarToday=data?.calendar_today||anchor;
   // 筛选计数跟随时间范围和搜索。
-  const visibleBase=useMemo(()=>filterRows(entries,{...filter,chip:'all'},anchor,calendarToday),[entries,filter.period,filter.search,anchor,calendarToday]);
+  const visibleBase=useMemo(()=>filterRows(entries,{...filter,chip:'all'},anchor,calendarToday),[entries,filter.period,filter.search,filter.minSelectionDays,anchor,calendarToday]);
   const counts=useMemo(()=>rowCounts(visibleBase,anchor,calendarToday),[visibleBase,anchor,calendarToday]);
   // 契约 §7：先筛选/搜索，再分组（排序作用于组内），空组自然消失。
   const filteredRows=useMemo(()=>filterRows(entries,filter,anchor,calendarToday),[entries,filter,anchor,calendarToday]);
@@ -230,6 +230,10 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
           title="只显示今天首次有效入池的股票；收盘后或休市入池顺延至下一交易日，历史股票今天再次入选不计入"
           onClick={()=>setFilter(current=>({...current,chip:'alert',period:'all'}))}>今日提醒 {counts.alert}</button>
       </div>
+      <label className="pt-field">入选天数 ≥<input className="pt-days-input" type="number" min="1" step="1" inputMode="numeric"
+        aria-label="最低入选天数" placeholder="不限" value={filter.minSelectionDays||''}
+        title="累计入选至少指定天数；输入3包含恰好3天，留空不限制"
+        onChange={event=>{const days=event.currentTarget.valueAsNumber;setFilter(current=>({...current,minSelectionDays:Number.isSafeInteger(days)&&days>0?days:0}));}}/>天</label>
       <label className="pt-field">时间范围<select aria-label="时间范围" value={filter.period} disabled={filter.chip==='alert'}
         title={filter.chip==='alert'?'今日提醒按首次有效入池日筛选，收盘后或休市入池顺延至下一交易日':'按最近一次有效入选日筛选'}
         onChange={event=>setFilter(current=>({...current,period:event.target.value as RowPeriod}))}>
@@ -240,7 +244,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
       </select></label>
       <input className="pt-search" aria-label="搜索代码/名称/标签" placeholder="搜索 代码/名称/标签" value={filter.search}
         onChange={event=>setFilter(current=>({...current,search:event.target.value}))}/>
-      {(filter.chip!=='all'||filter.period!=='all'||filter.search)&&<button type="button" className="pt-link" onClick={resetFilter}>清除筛选</button>}
+      {(filter.chip!=='all'||filter.period!=='all'||filter.search||filter.minSelectionDays)&&<button type="button" className="pt-link" onClick={resetFilter}>清除筛选</button>}
       <span className="pt-toolbar-spacer"/>
       <button type="button" className={backtestOpen?'pt-toggle is-on':'pt-toggle'} aria-pressed={backtestOpen} aria-controls="pt-backtest"
         onClick={()=>setBacktestOpen(open=>!open)}>回测</button>

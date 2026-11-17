@@ -41,6 +41,7 @@
 /* 用户第九轮：今日提醒 chip 与行内提醒标记 */
 .pool-terminal .pt-toggle.is-on{background:#1c3049;border-color:#547ab0;color:#eef6ff;box-shadow:inset 0 -2px #80beff}
 .pt-field{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#8fa6c4;white-space:nowrap}
+.pool-terminal .pt-days-input{width:50px;padding:0 4px}
 .pt-search{width:160px}
 .pt-toolbar-spacer,.pt-spacer{flex:1 1 auto}
 .pt-link{background:none!important;border:none!important;color:#9cc3ff!important;padding:0 2px!important;height:auto!important;line-height:1.4!important;text-decoration:underline;font-size:11px!important}

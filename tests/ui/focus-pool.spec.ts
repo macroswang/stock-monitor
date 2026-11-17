@@ -1,7 +1,7 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
 import {existsSync,mkdirSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {auditGrouping,entryTime,groupKey,NOISE_TOKENS,relatedTagsOf,relatedTagsText,rowCounts,type Entry} from '../../src/poolTableModel';
+import {auditGrouping,entryTime,filterRows,groupKey,NOISE_TOKENS,relatedTagsOf,relatedTagsText,rowCounts,type Entry} from '../../src/poolTableModel';
 
 // 股票池「瀑布流分组卡片 + 同义词归并 + 组头单行 + 回测」验收测试（2026-11-11 第四轮）。
 // 依据 docs/pool-table/contract.md §12-§12.3 与当前 src/FocusPool.tsx / src/poolTableModel.ts。
@@ -212,6 +212,7 @@ const BACKTEST_DATA:Json={
 };
 
 type BootOptions={
+  preserveTerminal?:boolean;
   entries?:Json[];
   backtest?:Json;
   trading?:boolean;
@@ -228,6 +229,7 @@ type BootOptions={
 // Tauri rpc mock：pool / pool_backtest 为主，其余为主应用启动所需的最小响应。
 async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
   const config={
+    preserveTerminal:options.preserveTerminal===true,
     entries:options.entries??ENTRIES,
     backtest:options.backtest??BACKTEST_DATA,
     trading:options.trading!==false,
@@ -244,7 +246,7 @@ async function boot(page:Page,options:BootOptions={}):Promise<Locator>{
   await page.addInitScript((config:Json)=>{
     try{
       localStorage.removeItem('stock-monitor-pool-terminal-v1');
-      localStorage.removeItem('stock-monitor-pool-terminal-v2');
+      if(!config.preserveTerminal)localStorage.removeItem('stock-monitor-pool-terminal-v2');
       localStorage.removeItem('stock-monitor-pool-view');
       localStorage.removeItem('stock-monitor-pool-filters-v2');
     }catch{}
@@ -1264,7 +1266,8 @@ test('今日提醒严格按当天首次加入筛选，历史重选或历史通�
   await expect(chips.getByRole('button',{name:'今日提醒 3'})).toHaveAttribute('aria-pressed','true');
   await expect(page.getByLabel('时间范围')).toHaveValue('all');
   await expect(page.getByLabel('时间范围')).toBeDisabled();
-  await expect(page.locator('.pt-filter-note')).toContainText('仅显示 2026-11-12 首次加入');
+  // 紧凑布局已将说明移到按钮提示；保留上方实际股票/日期的筛选断言。
+  await expect(chips.getByRole('button',{name:'今日提醒 3'})).toHaveAttribute('title','只显示今天首次有效入池的股票；收盘后或休市入池顺延至下一交易日，历史股票今天再次入选不计入');
   for(const stamp of await page.locator('.pt-time').allTextContents())expect(stamp).toMatch(/^11-12/);
   await expect(page.getByRole('button',{name:'按入池时间排序'})).toBeVisible();
   await expect(page.getByRole('button',{name:'消息中心',exact:true})).toHaveCount(0);
@@ -2117,4 +2120,62 @@ test('股票池展开当天缓存只有上午数据时，收盘后自动补全�
   });
   expect(value).toBe(10.2);
   await page.screenshot({path:'../../outputs/stock-pool-stale-fix-20261113/screenshots/pool-after-close-full-day.png'});
+});
+
+const selectionDayFilterEntries=()=>[
+  makeEntry({code:'sz000300',name:'两天样本',episodes:{total:2,today:1},tags:{theme:['天数筛选']}}),
+  makeEntry({code:'sz000301',name:'三天样本',episodes:{total:3,today:1},tags:{theme:['天数筛选']}}),
+  makeEntry({code:'sz000302',name:'四天样本',episodes:{total:4,today:1},selection:{days:1,today:1,last_day:'2026-11-11'},tags:{theme:['天数筛选']}}),
+  makeEntry({code:'sz000303',name:'五天样本',episodes:{total:5,today:0,first_at:'2026-11-06T10:00:00+08:00',last_at:'2026-11-06T10:00:00+08:00'},tags:{theme:['天数筛选']}}),
+  makeEntry({code:'sz000304',name:'缺失天数样本',episodes:null,tags:{theme:['天数筛选']}}),
+];
+
+test('最低入选天数：包含等于阈值的股票，支持指定天数，沿用列表累计天数',()=>{
+  const rows=selectionDayFilterEntries() as Entry[];
+  const original=JSON.stringify(rows);
+  expect(filterRows(rows,{chip:'all',period:'all',search:'',minSelectionDays:3},'2026-11-11').map(row=>row.name)).toEqual(['三天样本','四天样本','五天样本']);
+  expect(filterRows(rows,{chip:'all',period:'all',search:'',minSelectionDays:4},'2026-11-11').map(row=>row.name)).toEqual(['四天样本','五天样本']);
+  expect(filterRows(rows,{chip:'all',period:'all',search:'',minSelectionDays:6},'2026-11-11')).toHaveLength(0);
+  expect(filterRows(rows,{chip:'all',period:'all',search:''},'2026-11-11')).toHaveLength(5);
+  expect(JSON.stringify(rows)).toBe(original);
+});
+
+test('最低入选天数：可叠加筛选、更新计数、清除并在重新打开页面后保留',async({page})=>{
+  await boot(page,{entries:selectionDayFilterEntries(),preserveTerminal:true});
+  const threshold=page.getByRole('spinbutton',{name:'最低入选天数',exact:true});
+  const names=page.locator('.pt-row .pt-name-text');
+  const chips=page.getByRole('group',{name:'入选筛选'});
+  await expect(threshold).toHaveValue('');
+  await expect(names).toHaveCount(5);
+  await threshold.fill('3');
+  await expect(names).toHaveCount(3);
+  await expect(page.locator('.pt-row').filter({hasText:'三天样本'})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'全部 3',exact:true})).toBeVisible();
+  await threshold.fill('4');
+  await expect(names).toHaveCount(2);
+  expect((await names.allTextContents()).sort()).toEqual(['五天样本','四天样本'].sort());
+  await expect(chips.getByRole('button',{name:'全部 2',exact:true})).toBeVisible();
+  await expect(chips.getByRole('button',{name:'今日入选 1',exact:true})).toBeVisible();
+  await chips.getByRole('button',{name:'今日入选 1',exact:true}).click();
+  await expect(names).toHaveText('四天样本');
+  await chips.getByRole('button',{name:'全部 2',exact:true}).click();
+  await page.getByLabel('时间范围',{exact:true}).selectOption('today');
+  await expect(names).toHaveText('四天样本');
+  await page.getByLabel('时间范围',{exact:true}).selectOption('all');
+  await page.getByLabel('搜索代码/名称/标签').fill('五天');
+  await expect(names).toHaveText('五天样本');
+  await expect(chips.getByRole('button',{name:'全部 1',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'清除筛选',exact:true}).click();
+  await expect(threshold).toHaveValue('');
+  await expect(names).toHaveCount(5);
+  await expect(page.getByLabel('搜索代码/名称/标签')).toHaveValue('');
+  await expect(page.getByRole('button',{name:'清除筛选',exact:true})).toHaveCount(0);
+  await threshold.fill('4');
+  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('stock-monitor-pool-terminal-v2')||'{}').filter?.minSelectionDays)).toBe(4);
+  await page.reload();
+  await page.getByRole('button',{name:'股票池',exact:true}).click();
+  await expect(threshold).toHaveValue('4');
+  await expect(names).toHaveCount(2);
+  await threshold.fill('');
+  await expect(names).toHaveCount(5);
 });
