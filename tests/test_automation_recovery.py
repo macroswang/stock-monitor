@@ -21,6 +21,7 @@ class AutomationRecoveryTests(unittest.TestCase):
     self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'pending')
     self.assertEqual(self.store.query('SELECT * FROM broker_requests'),[]);native.assert_not_called()
   finally:guard.release();runtime._locks.pop(serial,None)
+  self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0)")
   with patch('core.live_trading.brokers.holdings',return_value=self.snapshot),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
    self.service.drain()
    self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'accepted');self.assertEqual(submit.call_count,1)
@@ -119,14 +120,26 @@ class AutomationRecoveryTests(unittest.TestCase):
   self.service.configure(dict(paused=True))
   with patch('core.live_trading.brokers.list_accounts',return_value=[dict(id='a',supports_order=False,supports_order_report=False)]),self.assertRaisesRegex(ValueError,'本机下单'):
    self.service.configure(dict(paused=False))
- def test_restart_closes_proven_unsubmitted_preparation_without_replaying_it(self):
+ def test_restart_preserves_proven_unsubmitted_preparation_for_retry(self):
   from core.live_trading import LiveTrading
+  self.service.configure(dict(mode='live',confirm_live=True))
   self.arm();self.observe('one');run=self.store.query('SELECT * FROM trading_runs')[0]
   self.store.execute("UPDATE trading_runs SET status='processing'")
   self.store.execute('INSERT INTO broker_requests VALUES(?,?,?,?,?,?,?)',('auto_'+run['id'],'a','{}','prepared',None,self.now.isoformat(),self.now.isoformat()))
   restored=LiveTrading(self.app)
   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'failed')
-  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'skipped')
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'pending')
+
+ def test_restart_preserves_admitted_live_order_before_broker_journal(self):
+  from core.live_trading import LiveTrading
+  self.service.configure(dict(mode='live',confirm_live=True))
+  self.arm();self.observe('one')
+  self.now+=timedelta(seconds=1)
+  restored=LiveTrading(self.app)
+  with patch('core.live_trading.brokers.holdings',return_value={**self.snapshot,'observed_at':self.now.isoformat()}),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+   restored.drain(reports=False)
+  self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'accepted')
+  submit.assert_called_once()
  def test_persisted_maintenance_requires_fresh_authentication_to_clear(self):
   from core import brokers
   from executor.brokers.base import BrokerCredentials

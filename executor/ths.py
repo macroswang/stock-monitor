@@ -79,6 +79,22 @@ class ThsManualRequired(ThsError):
     """SMS / face / device verification: a human must finish it."""
 
 
+class ThsConnectionInterrupted(ThsError):
+    """The broker explicitly requires a network reconnect before any order work."""
+
+
+def reconnect_requested(nodes: list[Node]) -> bool:
+    return any(node.text.strip() == "重新连接" and node.enabled for node in nodes)
+
+
+def reconnect_button(nodes: list[Node]) -> Node | None:
+    matches = [
+        node for node in nodes
+        if node.text.strip() == "重新连接" and node.enabled and node.clickable
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
 @dataclass(frozen=True)
 class ThsStatus:
     app_foreground: bool
@@ -226,6 +242,14 @@ class ThsTrade:
                 time.sleep(2.0)
                 settle = 0
                 continue
+            if reconnect_requested(nodes):
+                reconnect = reconnect_button(nodes)
+                if reconnect is None:
+                    raise ThsConnectionInterrupted("券商要求重新连接，但重连按钮无法唯一识别")
+                self.adb.tap_node(reconnect)
+                time.sleep(1.0)
+                settle = 0
+                continue
             if is_trade_page(nodes):
                 return nodes
             tab = self._trade_tab(nodes)
@@ -243,6 +267,8 @@ class ThsTrade:
             self.adb.keyevent(4)
             time.sleep(1.0)
         _, nodes = self._snapshot()
+        if reconnect_requested(nodes):
+            raise ThsConnectionInterrupted("券商重新连接后仍未恢复，等待后重新核验")
         if is_trade_page(nodes):
             return nodes
         raise ThsError("无法切换到同花顺“交易”标签，请确认 App 已登录且能正常打开")

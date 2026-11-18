@@ -19,7 +19,7 @@ test('primary minute, daily and weekly charts fill the freed viewport and follow
   const tall=await bounds(page);expect(tall.height).toBeGreaterThan(460);
   // A transient popup must float above the workspace without consuming chart
   // height or causing the chart to resize.
-  await page.evaluate(()=>{const note=document.createElement('div');note.className='app-message-layer';note.id='test-history-notice';note.textContent='历史数据补充提示';document.body.append(note);});
+  await page.evaluate(()=>{const note=document.createElement('div');note.className='app-message-slide';note.id='test-history-notice';note.textContent='历史数据补充提示';document.body.append(note);});
   await expect.poll(async()=>{const b=await bounds(page);return Math.abs(b.viewport-b.bottom-b.padding);}).toBeLessThan(2);
   expect((await bounds(page)).height).toBe(tall.height);
   await page.evaluate(()=>document.querySelector('#test-history-notice')!.remove());

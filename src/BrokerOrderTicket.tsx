@@ -77,6 +77,7 @@ export default function BrokerOrderTicket({request,point,initialPrice,visible=tr
  };
  const direction=side==='buy'?'买入':'卖出';
  return <div className={side==='buy'?'ticket-buy':'ticket-sell'}>
+  <div className="ticket-manual-note" role="note">手动真实限价委托：按下方价格提交，不读取对手盘。自动交易的新委托才会买入取卖一、卖出取买一。</div>
   {fixedSource?<div className="ticket-row"><span className="ticket-label">账户</span><span className="ticket-account" aria-label="真实委托券商账户">{fixedSource.broker_name} {fixedSource.account_masked}</span></div>:<div className="ticket-row"><label className="ticket-label" htmlFor="broker-ticket-account">账户</label><select id="broker-ticket-account" aria-label="真实委托券商账户" value={account} disabled={locked||syncing} onChange={e=>edit(()=>{setAccount(e.target.value);setShares(null);})}><option value="">请选择券商账户</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.broker_name} {a.account_masked}</option>)}</select></div>}
   {!loading&&!accounts.length&&!error&&<div className="ticket-warning">{sources.length?'来源账户已停用或暂不支持下单，请核对证券账户。':'暂无可下单的券商账户，请先在证券账户中绑定。'}</div>}
   <div className="ticket-row"><span className="ticket-label">方向</span><div className="ticket-direction">{(['buy','sell'] as const).map(value=><button key={value} aria-pressed={side===value} disabled={locked} onClick={()=>edit(()=>{if(value!==side){onSide(value);setShares(null);}})}>{value==='buy'?'买入':'卖出'}</button>)}</div></div>

@@ -53,6 +53,7 @@ async function manualTicket(page:Page){
  });
  const box=(await chart.boundingBox())!;await page.mouse.click(box.x+xy[0],box.y+xy[1],{button:'right'});
  const ticket=page.getByRole('dialog',{name:/买卖确认/});await expect(ticket).toHaveAttribute('aria-label','真实买卖确认');
+ await expect(ticket.getByRole('note')).toHaveText('手动真实限价委托：按下方价格提交，不读取对手盘。自动交易的新委托才会买入取卖一、卖出取买一。');
  await expect(ticket.getByRole('switch',{name:'真实委托'})).toHaveAttribute('aria-checked','true');return ticket;
 }
 test.afterEach(()=>{backend?.stdin.end();backend?.kill();for(const p of pending)p.reject(Error('Test ended'));pending=[];});
@@ -219,7 +220,7 @@ test('manual real buy uses the selected account and existing gateway without a p
  await ticket.getByLabel('真实委托限价').fill('2.24');await ticket.getByLabel('真实委托股数').fill('2300');
  await expect(submit).toBeEnabled();await expect(ticket.getByRole('checkbox')).toHaveCount(0);
  await page.screenshot({path:info.outputPath('manual-real-buy.png')});await submit.click();
- await expect(ticket).toHaveCount(0);await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText('待手动同步成交');
+ await expect(ticket).toHaveCount(0);await expect(page.getByRole('status',{name:'操作提示'})).toContainText('待手动同步成交');
  const state=await rpc('e2e_state');expect(state.orders.zhangle).toMatchObject([{side:'buy',code:'000981',quantity:2300,price:'2.24'}]);expect(state.orders.ths).toEqual([]);
  const requests=await rpc('broker_requests',{id:'e2e-a'});expect(requests).toHaveLength(1);expect(requests[0].status).toBe('unknown');expect(requests[0].request_id).not.toMatch(/^auto_/);
  const plot=await markers(page);await expect.poll(plot.read).toMatchObject([{label:'B',source:'manual',status:'unknown',order_price:'2.24'}]);

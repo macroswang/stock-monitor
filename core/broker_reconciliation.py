@@ -13,6 +13,7 @@ from . import brokers
 from .provider import now_cn, CN
 
 OPEN = ('accepted', 'unknown', 'partial')
+NATIVE_SOURCES = {'ths':'ths_native_today_order','zhangle':'zhangle_native_today_order'}
 
 
 def amount(value):
@@ -69,6 +70,18 @@ def request_plan(row):
     return dict(code=code, side=p['side'], quantity=qty, price=str(price)), created.astimezone(CN).date().isoformat()
 
 
+def native_confirmation(request_payload, result, broker):
+    captured = request_payload.get('native_confirmation')
+    if captured:
+        return captured
+    confirm = (result.get('acknowledgement') or result).get('confirm') or {}
+    if broker != 'zhangle' or not confirm:
+        return confirm
+    # Older Huatai adapters returned the native confirm after the final tap.
+    side = {'委托买入':'buy','委托卖出':'sell'}.get(confirm.get('title'))
+    return dict(confirm, side=side) if side else {}
+
+
 def validate_report(report, row, order_id, expected, day, previous, now):
     if report.get('account_id') != row['account_id'] or report.get('account_verified') is not True:
         raise ValueError('回报与原委托的证券账户不一致')
@@ -123,11 +136,14 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         recovery=report.get('receipt_recovery') or {}
         try:submitted=datetime.fromisoformat(recovery['submitted_at'])
         except (ValueError,TypeError,KeyError):raise ValueError('缺少当日委托关联的原始提交时间') from None
-        if (report.get('source')!='ths_native_today_order' or report.get('order_id') or
+        source=report.get('source')
+        names_match=(isinstance(confirm,dict) and
+                     ((confirm.get('name') and confirm['name']==report.get('name'))
+                      or (source==NATIVE_SOURCES['zhangle'] and not confirm.get('name'))))
+        if (source not in NATIVE_SOURCES.values() or report.get('order_id') or
             recovery.get('method')!='native_order_list' or recovery!=previous.get('receipt_recovery') or
             submitted.tzinfo is None or submitted.date().isoformat()!=day or not created<=submitted<=observed or
-            not -2<=(broker_at-submitted).total_seconds()<=15 or not isinstance(confirm,dict) or
-            not confirm.get('name') or confirm.get('name')!=report.get('name') or
+            not -2<=(broker_at-submitted).total_seconds()<=15 or not names_match or
             confirm.get('code')!=expected['code'] or confirm.get('side')!=expected['side'] or
             shares(confirm.get('quantity'))!=expected['quantity'] or amount(confirm.get('price'))!=amount(expected['price']) or
             report.get('native_order_key')!=order_key(report)):
@@ -146,7 +162,7 @@ def validate_report(report, row, order_id, expected, day, previous, now):
         raise ValueError('缺少完整的券商回报证据')
     execution={}
     if fills_report:execution=dict(average=str(average),amount=str(money))
-    if native_order and filled:
+    if native_order and filled and (report.get('source')==NATIVE_SOURCES['ths'] or report.get('average') is not None):
         average=amount(report.get('average'));limit=amount(expected['price'])
         if average<=0 or (expected['side']=='buy' and average>limit) or (expected['side']=='sell' and average<limit):raise ValueError('当日委托成交均价与限价不一致')
         execution['average']=str(average)
@@ -205,16 +221,26 @@ class Reconciler:
             if not ident:
                 if not run:raise ValueError('缺少可核验的自动委托记录')
                 accounts=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(account_id,))
-                if not accounts or accounts[0]['broker']!='ths':raise ValueError('该券商缺少委托号时暂不能自动关联')
-                submitted=json.loads(run['payload']).get('price_checks',{}).get('before_submit',{}).get('checked_at')
+                if not accounts or accounts[0]['broker'] not in NATIVE_SOURCES:raise ValueError('该券商缺少委托号时暂不能自动关联')
+                broker=accounts[0]['broker']
+                request_payload=json.loads(original['payload'])
+                submitted=(request_payload.get('submission_started_at') or
+                           json.loads(run['payload']).get('price_checks',{}).get('before_submit',{}).get('checked_at'))
                 if not submitted:raise ValueError('缺少原始提交时间，不能自动关联成交')
-                confirm=result.get('acknowledgement',result).get('confirm') or {}
-                if isinstance(confirm,dict) and confirm.get('name'):
+                confirm=native_confirmation(request_payload,result,broker)
+                if broker=='zhangle' and not confirm:
+                    raise ValueError('缺少原始涨乐通最终确认凭据，待核实')
+                if confirm and (broker=='zhangle' or confirm.get('name')):
                     if (confirm.get('code')!=expected['code'] or confirm.get('side')!=expected['side'] or
                         shares(confirm.get('quantity'))!=expected['quantity'] or amount(confirm.get('price'))!=amount(expected['price'])):
                         raise ValueError('原始券商确认与委托计划不一致')
-                    expected=dict(expected,name=confirm['name'])
+                    acknowledgement = result.get('acknowledgement') or dict(result)
+                    result['acknowledgement'] = dict(acknowledgement,confirm=confirm)
+                    if confirm.get('name'):
+                        expected=dict(expected,name=confirm['name'])
                 recovered_report=brokers.discover_order_report(self.store,account_id,day,expected,submitted,secrets=secrets)
+                if recovered_report.get('kind')=='native_order' and recovered_report.get('source')!=NATIVE_SOURCES[broker]:
+                    raise ValueError('回报来源与券商不符')
                 if recovered_report.get('receipt_recovery',{}).get('submitted_at')!=submitted:raise ValueError('成交关联的提交时间与原记录不一致')
                 ident=recovered_report.get('order_id','')
                 if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident) and not (ident=='' and recovered_report.get('kind')=='native_order'):
@@ -236,7 +262,8 @@ class Reconciler:
                     raise ValueError('同一账户交易日的券商委托已属于另一请求，需人工核对')
                 if (native_key and other_day==day and other['status'] in ('accepted','partial','filled','cancelled','unknown','sending') and
                     all(other_plan[k]==expected[k] for k in ('code','side','quantity')) and amount(other_plan['price'])==amount(expected['price'])):
-                    other_submit=json.loads(other['run_payload'] or '{}').get('price_checks',{}).get('before_submit',{}).get('checked_at')
+                    other_submit=(json.loads(other['payload']).get('submission_started_at') or
+                                  json.loads(other['run_payload'] or '{}').get('price_checks',{}).get('before_submit',{}).get('checked_at'))
                     broker_at=datetime.fromisoformat(day+'T'+recovered_report['time']).replace(tzinfo=CN)
                     at=datetime.fromisoformat(other_submit or other['created_at'])
                     # A second indistinguishable local submission cannot claim
@@ -274,6 +301,8 @@ class Reconciler:
                 if check['ok']:
                     payload['verification'] = result['verification']
                     payload['message'] = check['message']
+                elif status == 'unknown':
+                    payload['message'] = '券商回报待核实：'+check['message']
                 self.store.db.execute('UPDATE trading_runs SET status=?,payload=?,updated_at=? WHERE id=?',
                                       (status, json.dumps(payload), checked, run['id']))
             self.store.db.execute('UPDATE broker_requests SET status=?,result=?,updated_at=? WHERE request_id=?',
@@ -301,8 +330,11 @@ class Reconciler:
                 ident = known_id(result)
                 if not ident:
                     accounts=self.store.query('SELECT broker FROM broker_accounts WHERE id=?',(row['account_id'],))
-                    if not accounts or accounts[0]['broker']!='ths' or not row['request_id'].startswith('auto_'):continue
-                last = datetime.fromisoformat(result.get('reconciliation', {}).get('at', row['created_at']))
-                if (now-last).total_seconds() < (300 if historical else 60):continue
+                    if not accounts or accounts[0]['broker'] not in NATIVE_SOURCES:continue
+                    if accounts[0]['broker']=='zhangle' and not native_confirmation(json.loads(row['payload']),result,'zhangle'):continue
+                check=result.get('reconciliation', {})
+                last = datetime.fromisoformat(check.get('at', row['updated_at']))
+                wait_seconds=300 if historical else (5 if not check else 15) if row['status']=='unknown' else 60
+                if (now-last).total_seconds() < wait_seconds:continue
             except (ValueError, TypeError):continue
             return self.reconcile(row['account_id'], row['request_id'])

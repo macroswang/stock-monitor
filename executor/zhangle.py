@@ -417,6 +417,28 @@ class Zhangle:
             raise LoginError("点击“交易”后没有进入交易页")
         return page
 
+    def reconnect_trade(self, focus, nodes, timeout):
+        if PACKAGE not in focus:
+            return focus, nodes
+        prompts = [node for node in nodes if node.text.strip() == '重新连接'
+                   and node.resource_id.startswith(PACKAGE + ':')]
+        if not prompts:
+            return focus, nodes
+        buttons = [node for node in prompts if node.enabled and node.clickable]
+        if len(buttons) != 1:
+            raise LoginError('涨乐通重连按钮无法唯一核验')
+        self.adb.tap_node(buttons[0])
+
+        def ready():
+            current_focus, current_nodes = self.snapshot()
+            if PACKAGE in current_focus and not any(node.text.strip() == '重新连接' for node in current_nodes):
+                return current_focus, current_nodes
+
+        recovered = wait_until(ready, timeout=timeout, interval=.5)
+        if not recovered:
+            raise LoginError('涨乐通暂未恢复连接，稍后核实')
+        return recovered
+
     def ensure_trade_ready(
         self,
         account: str | None = None,
@@ -434,6 +456,7 @@ class Zhangle:
         """
         # 先读一次当前页面。已经在交易主页时无需再次往返首页/登录检查。
         focus, nodes = self.snapshot()
+        focus, nodes = self.reconnect_trade(focus, nodes, timeout)
         if PACKAGE in focus and is_trade_page(nodes):
             result = self.status(focus, nodes)
         elif skip_login_check:

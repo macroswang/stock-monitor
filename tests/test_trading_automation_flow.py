@@ -60,6 +60,11 @@ class AutomaticFlowTests(unittest.TestCase):
  def test_duplicate_signal_never_submits_twice_without_human_steps(self):
   self.signal();self.signal()
   self.clients['a'].submit_order.assert_called_once();self.assertEqual(len(self.store.query('SELECT * FROM broker_requests')),1)
+  run=self.store.query('SELECT * FROM trading_runs')[0]
+  with self.assertRaisesRegex(ValueError,'已有券商受理'):
+   self.service.resolve(run['id'],'not_sent','',0,'模拟误标未发出')
+  self.service.drain(reports=False)
+  self.clients['a'].submit_order.assert_called_once()
 
  def test_sanfu_1316_two_lots_reach_bound_gateway_despite_small_minute_volume(self):
   # Recorded 2026-11-05 incident, with synthetic accounts and a fake broker.
@@ -114,6 +119,33 @@ class AutomaticFlowTests(unittest.TestCase):
   self.signal('another');self.signal();self.assertEqual(self.clients['a'].submit_order.call_count,2)
   self.assertEqual([r['status'] for r in self.store.query('SELECT status FROM broker_requests')],['unknown','unknown'])
 
+ def test_verified_confirmation_without_final_tap_reuses_the_original_request(self):
+  self.store.execute("UPDATE broker_accounts SET broker='zhangle' WHERE id='a'")
+  client=self.clients['a']
+  accepted=client.submit_order.side_effect
+  accepted_attempts=[]
+  def disconnected(*,on_confirmation,before_confirm,**kwargs):
+   if client.submit_order.call_count>1:
+    accepted_attempts.append(True)
+    return accepted(before_confirm=before_confirm,**kwargs)
+   kwargs['on_price'](selection(side='sell',code='000981',price=kwargs['price']))
+   before_confirm()
+   on_confirmation(dict(code='000981',name='山子高科',side='sell',
+                        price=kwargs['price'],quantity=kwargs['quantity']))
+   raise TimeoutError('确认框已核验，最终确认操作前断线')
+  client.submit_order.side_effect=disconnected
+  with patch('core.brokers._adapter',return_value=({},BrokerCredentials('zhangle',self.accounts['a']),client)):
+   self.signal(kind='top')
+   original=self.store.query('SELECT * FROM broker_requests')[0]
+   self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'pending')
+   self.assertEqual(accepted_attempts,[])
+   self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0)")
+   self.service.drain(reports=False)
+   self.service.drain(reports=False)
+  rows=self.store.query('SELECT request_id,status FROM broker_requests')
+  self.assertEqual(rows,[dict(request_id=original['request_id'],status='accepted')])
+  self.assertEqual(accepted_attempts,[True])
+
  def test_sell_price_change_before_confirm_keeps_bound_opponent_limit(self):
   clicked=[]
   def changed(*,before_confirm,**kwargs):
@@ -167,5 +199,5 @@ class AutomaticFlowTests(unittest.TestCase):
   self.assertEqual(clicked,[])
   self.assertEqual(self.store.query('SELECT status FROM broker_requests')[0]['status'],'failed')
   run=self.store.query('SELECT * FROM trading_runs')[0];payload=json.loads(run['payload'])
-  self.assertEqual(run['status'],'failed');self.assertIn('等待新报价',payload['message'])
+  self.assertEqual(run['status'],'pending');self.assertIn('等待新报价',payload['message'])
   self.assertEqual(payload['price_checks']['before_submit']['quote_age_ms'],31000)

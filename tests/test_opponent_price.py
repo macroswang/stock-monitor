@@ -194,7 +194,7 @@ class NativeOpponentSubmitTests(unittest.TestCase):
      owner,adapter=self.broker(kind);hook=Mock();guard=Mock()
      result=self.submit(adapter,side,hook,guard)
      self.assertEqual(result['status'],'accepted');self.assertEqual(result['confirm']['price'],price);self.assertEqual(owner.orders[0]['price'],price);self.assertEqual(owner.orders[0]['quantity'],100)
-     hook.assert_called_once();self.assertEqual(hook.call_args.args[0]['price'],price);self.assertEqual(guard.call_count,2)
+     hook.assert_called_once();self.assertEqual(hook.call_args.args[0]['price'],price);self.assertEqual(guard.call_count,1 if kind=='ths' else 2)
  def test_missing_depth_stops_both_native_brokers_before_first_order_tap(self):
   for kind in ('zhangle','ths'):
    with self.subTest(kind=kind):
@@ -212,4 +212,22 @@ class NativeOpponentSubmitTests(unittest.TestCase):
      tap(node)
      if node.resource_id.rsplit('/',1)[-1] in ('btn_transaction',SUBMIT_ID):owner.device.price='2.20'
     with patch.object(owner.device,'tap_node',side_effect=changed),self.assertRaises((TradeError,ThsError)):self.submit(adapter,'buy',hook,guard)
-    self.assertEqual(owner.orders,[]);hook.assert_called_once();self.assertEqual(hook.call_args.args[0]['price'],'2.25');self.assertEqual(guard.call_count,1)
+    self.assertEqual(owner.orders,[]);hook.assert_called_once();self.assertEqual(hook.call_args.args[0]['price'],'2.25');self.assertEqual(guard.call_count,0 if kind=='ths' else 1)
+
+ def test_native_failure_before_final_confirmation_has_broker_specific_evidence(self):
+  from executor.trade import TradeConfirmationCancelled
+  owner,adapter=self.broker('ths');guard=Mock();tap=owner.device.tap_node
+  def interrupted(node):
+   if node.resource_id.endswith('/btn_transaction'):raise TimeoutError('重连')
+   tap(node)
+  with patch.object(owner.device,'tap_node',side_effect=interrupted),self.assertRaises(TimeoutError):
+   self.submit(adapter,'sell',Mock(),guard)
+  guard.assert_not_called()
+  self.assertEqual(owner.orders,[])
+
+  owner,adapter=self.broker('zhangle')
+  guard=Mock(side_effect=[None,TimeoutError('行情等待更新')])
+  with self.assertRaises(TradeConfirmationCancelled):
+   self.submit(adapter,'sell',Mock(),guard)
+  self.assertEqual(owner.orders,[])
+  self.assertEqual(owner.device.phase,'form')

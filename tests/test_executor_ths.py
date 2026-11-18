@@ -75,6 +75,12 @@ LOGGED_IN_XML = f"""<hierarchy rotation="1">
 </hierarchy>
 """
 
+RECONNECT_XML = f"""<hierarchy rotation="1">
+{node("网络连接异常")}
+{node("重新连接", "reconnect_button", "[390,900][690,1010]", clickable="true", cls="android.widget.Button")}
+</hierarchy>
+"""
+
 FOCUS = "Window{5e6fd82 u0 com.hexin.plat.android/com.hexin.plat.android.Hexin}"
 OTHER_FOCUS = "Window{111 u0 com.lphtsccft/com.lphtsccft.zhangle.main.MainActivity}"
 
@@ -101,8 +107,9 @@ class FakeAdb:
 
     def tap_node(self, node):
         self.calls.append(("tap", node.text))
-        if self.after_tap is not None and node.resource_id.endswith(
-            ("frontview_account_info", "nobindlist")
+        if self.after_tap is not None and (
+            node.resource_id.endswith(("frontview_account_info", "nobindlist"))
+            or node.text == "重新连接"
         ):
             self.opened = True
 
@@ -167,6 +174,13 @@ class ReadStatusTests(unittest.TestCase):
 
 
 class EnsureLoginTests(unittest.TestCase):
+    def test_reconnect_prompt_is_recovered_before_identity_verification(self):
+        adb = FakeAdb(RECONNECT_XML, after_tap=LOGGED_IN_XML)
+        with patch('executor.ths.time.sleep'):
+            result = ThsTrade(adb).ensure_logged_in(account="4004000000000162", password=None)
+        self.assertTrue(result['account_verified'])
+        self.assertEqual(adb.calls, [("tap", "重新连接")])
+
     def test_incomplete_signed_in_identity_is_reread_without_actions(self):
         for missing in ('qs_name_text', 'account_text'):
             initial = '\n'.join(line for line in LOGGED_IN_XML.splitlines() if f'id/{missing}"' not in line)

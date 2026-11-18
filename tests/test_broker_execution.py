@@ -81,7 +81,7 @@ class ExecutionJournalTests(unittest.TestCase):
         self.assertEqual(self.submit()["status"], "failed")
         self.client.submit_order.assert_not_called()
 
-    def test_preparation_evidence_is_journaled_without_replaying_the_request(self):
+    def test_manual_pre_submit_failure_is_journaled_without_replaying(self):
         from executor.trade import TradePreparationError
         evidence=dict(stage='code',attempts=2,steps=[dict(stage='code_readback',code='',editor_value='00098')])
         self.client.submit_order.side_effect=TradePreparationError('股票代码预填失败',evidence)

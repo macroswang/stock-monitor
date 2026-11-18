@@ -77,6 +77,7 @@ class ZhangleAdapter(BrokerAdapter):
         wait_for_receipt=True,
         price_policy=None,
         on_price=None,
+        on_confirmation=None,
     ) -> dict:
         page = TradePage(self.adb)
         return page.submit(
@@ -90,6 +91,7 @@ class ZhangleAdapter(BrokerAdapter):
             wait_for_receipt=wait_for_receipt,
             price_policy=price_policy,
             on_price=on_price,
+            on_confirmation=on_confirmation,
         )
 
     # ----- 查询 ------------------------------------------------------------
@@ -113,6 +115,11 @@ class ZhangleAdapter(BrokerAdapter):
         from ..order_report import zhangle_report
         from core.provider import now_cn
         return zhangle_report(self.adb,getattr(self,'_verified_account',None),order_id,day,expected,now_cn())
+
+    def discover_order_report(self,day,expected,submitted_at):
+        from ..order_report import discover_zhangle_order
+        from core.provider import now_cn
+        return discover_zhangle_order(self.adb,getattr(self,'_verified_account',None),day,expected,submitted_at,now_cn())
 
     def filled_orders(self,day):
         from ..order_report import zhangle_filled_orders

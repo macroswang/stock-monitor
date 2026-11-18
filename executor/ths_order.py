@@ -219,7 +219,7 @@ class ThsOrderPage:
         self.adb.tap_node(cancel)
         self.wait(lambda ns:find_by_id(ns,'dialog_title') is None and read_form(ns) is not None)
 
-    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True,price_policy=None,on_price=None):
+    def submit(self,side,code,quantity,price=None,max_value=1000,dry_run=False,before_confirm=None,wait_for_receipt=True,price_policy=None,on_price=None,on_confirmation=None):
         self._pending_plan=None
         self._last_form_nodes=None
         if not dry_run and before_confirm is None:raise ThsError('真实委托必须经过持久化请求入口')
@@ -251,7 +251,9 @@ class ThsOrderPage:
         expected='买入' if side=='buy' else '卖出'
         labels=[n.text.replace(' ','') for n in nodes if n.text.strip() and button and button.bounds[0]<=n.center[0]<=button.bounds[2] and button.bounds[1]<=n.center[1]<=button.bounds[3]]
         if not button or not button.enabled or labels!=[expected]:raise ThsError('委托按钮与买卖方向不符')
-        if not dry_run:before_confirm()
+        # Automatic orders verified that the first tap only opens a dialog.
+        # The price callback already ran the preflight authorization.
+        if not dry_run and price_policy is None:before_confirm()
         self.adb.tap_node(button)
         nodes=self.wait(lambda ns:parse_confirmation(ns) is not None)
         confirmation=parse_confirmation(nodes)
@@ -267,6 +269,8 @@ class ThsOrderPage:
         if dry_run:
             self.cancel_confirmation()
             return dict(status='preview',submitted=False,confirm=asdict(confirmation))
+        if on_confirmation:
+            on_confirmation(asdict(confirmation))
         nodes=self.snapshot()
         if parse_confirmation(nodes)!=confirmation:
             raise ThsError('确认弹窗已变化，已停止')

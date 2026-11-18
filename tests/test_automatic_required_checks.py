@@ -7,6 +7,7 @@ from datetime import timedelta
 from unittest import TestCase
 from unittest.mock import patch
 from core.live_trading import LiveTrading
+from executor.ths import ThsConnectionInterrupted
 from tests import test_trading_quantity_modes as fixtures
 
 
@@ -56,6 +57,44 @@ class RequiredChecksTests(TestCase):
             self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0)")
             self.service.drain(reports=False)
             self.assertEqual(self.run_row()['status'],'accepted');holdings.assert_called_once();submit.assert_called_once()
+
+    def test_broker_reconnect_before_submission_retries_only_after_full_revalidation(self):
+        self.live();self.observe('broker-reconnect')
+        with patch('core.live_trading.brokers.holdings',side_effect=[ThsConnectionInterrupted('券商连接中断'),self.snapshot_now()]) as holdings,patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+            self.service.drain(reports=False)
+            first=self.run_row();payload=json.loads(first['payload'])
+            self.assertEqual(first['status'],'pending');self.assertEqual(payload['transient_retries']['broker_connection'],1)
+            self.assertEqual(payload['delivery_guarantee']['state'],'awaiting_recovery')
+            self.assertIn('完成本笔委托',payload['message']);self.assertEqual(self.store.query('SELECT * FROM broker_requests'),[]);submit.assert_not_called()
+            self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0)")
+            self.service.drain(reports=False)
+            self.assertEqual(self.run_row()['status'],'accepted');self.assertEqual(holdings.call_count,2);submit.assert_called_once()
+
+    def test_broker_reconnect_obligation_is_not_cancelled_by_a_newer_signal(self):
+        self.live();self.observe('must-deliver')
+        with patch('core.live_trading.brokers.holdings',side_effect=ThsConnectionInterrupted('券商连接中断')),patch('core.live_trading.brokers.submit_order') as submit:
+            self.service.drain(reports=False)
+            submit.assert_not_called()
+        original=self.run_row();self.now+=timedelta(seconds=1)
+        self.app.quotes['sh603938']['timestamp']=self.now.isoformat();self.observe('newer')
+        self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0) WHERE id=?",(original['id'],))
+        with patch('core.live_trading.brokers.holdings',side_effect=lambda *_a,**_k:self.snapshot_now()),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+            self.service.drain(reports=False)
+        rows={row['id']:row for row in self.store.query('SELECT * FROM trading_runs')}
+        self.assertEqual(rows[original['id']]['status'],'accepted')
+        self.assertEqual(submit.call_count,2)
+
+    def test_broker_reconnect_obligation_survives_restart_before_submission(self):
+        self.live();self.observe('restart-delivery')
+        with patch('core.live_trading.brokers.holdings',side_effect=ThsConnectionInterrupted('券商连接中断')),patch('core.live_trading.brokers.submit_order') as submit:
+            self.service.drain(reports=False);submit.assert_not_called()
+        run=self.run_row();self.assertEqual(run['status'],'pending')
+        restarted=LiveTrading(self.app)
+        self.store.execute("UPDATE trading_runs SET payload=json_set(payload,'$.retry_after',0) WHERE id=?",(run['id'],))
+        with patch('core.live_trading.brokers.holdings',return_value=self.snapshot_now()),patch('core.live_trading.brokers.submit_order',return_value=dict(status='accepted')) as submit:
+            restarted.drain(reports=False)
+        self.assertEqual(self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))[0]['status'],'accepted')
+        submit.assert_called_once()
 
     def test_newer_signal_cancels_old_queued_intent_before_device_io(self):
         self.arm();self.observe('old');self.now+=timedelta(seconds=1);self.observe('new')

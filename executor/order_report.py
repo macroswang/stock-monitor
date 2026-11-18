@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 from dataclasses import replace
+from datetime import datetime
 from decimal import Decimal,InvalidOperation
 from .adb import find_by_id,wait_until
 from .ocr import recognize,helper_binary
@@ -107,15 +108,17 @@ def row_records(nodes,day,today):
 def signature(row):return tuple(row.get(k) for k in ('code','side','date','time','price','quantity','filled','state'))
 
 
-def zhangle_filled_orders(adb,account,day,now):
-    """Read every native row without opening order details or cancellation UI."""
+def zhangle_today_rows(adb,account,day,now):
+    """Read every native order row without opening details or cancellation UI."""
     if not account:raise ValueError('缺少已核验的资金账户')
     if day!=now.date().isoformat():raise ValueError('华泰当日成交委托只能同步当前交易日')
     book=OrderBook(adb);nodes=book.select('today_orders');previous=None
     def read(current):
         Zhangle.verify_trade_account(current,account)
         rows=[row for row,_node in row_records(current,day,True)]
-        if rows!=[row for row,_node in row_records(adb.nodes(),day,True)]:
+        second=adb.nodes()
+        Zhangle.verify_trade_account(second,account)
+        if rows!=[row for row,_node in row_records(second,day,True)]:
             raise ValueError('委托列表读取期间变化，稍后重新同步')
         return rows
     def swipe(current,top):
@@ -130,7 +133,7 @@ def zhangle_filled_orders(adb,account,day,now):
         previous=rows
         if not rows:
             if not is_empty(nodes):raise ValueError('委托列表为空但没有明确空记录提示，不更新成交缓存')
-            return dict(kind='filled_orders',day=day,complete=True,rows=[],source='zhangle_native_today_orders')
+            return []
         nodes=swipe(nodes,True)
     else:raise ValueError('未能确认委托列表顶部，不更新成交缓存')
     collected=[];previous=None
@@ -140,8 +143,12 @@ def zhangle_filled_orders(adb,account,day,now):
         overlap=max((n for n in range(1,min(len(collected),len(rows))+1) if collected[-n:]==rows[:n]),default=0)
         collected.extend(rows[overlap:]);previous=rows;nodes=swipe(nodes,False)
     else:raise ValueError('委托列表超过读取上限，不更新成交缓存')
+    return collected
+
+
+def zhangle_filled_orders(adb,account,day,now):
     filled=[]
-    for row in collected:
+    for row in zhangle_today_rows(adb,account,day,now):
         status=state(row.get('state',''));quantity=integer(row.get('quantity'));done=integer(row.get('filled'))
         if done<=0:continue
         if (done>quantity or (status=='filled' and done!=quantity) or
@@ -149,6 +156,36 @@ def zhangle_filled_orders(adb,account,day,now):
             raise ValueError('成交数量与委托状态不一致，不更新成交缓存')
         filled.append(dict(row,status=status,quantity=quantity,filled=done))
     return dict(kind='filled_orders',day=day,complete=True,rows=filled,source='zhangle_native_today_orders')
+
+
+def discover_zhangle_order(adb,account,day,expected,submitted_at,now):
+    from .ths_orders import order_key
+    submitted=datetime.fromisoformat(submitted_at)
+    if submitted.tzinfo is None or submitted.date().isoformat()!=day or submitted>now:
+        raise ValueError('缺少有效的原始提交时间')
+    matches=[]
+    for row in zhangle_today_rows(adb,account,day,now):
+        if row['date']!=day or row['code']!=expected['code'] or row['side']!=expected['side']:
+            continue
+        broker_at=datetime.fromisoformat(day+'T'+row['time']).replace(tzinfo=submitted.tzinfo)
+        if not -2<=(broker_at-submitted).total_seconds()<=15:
+            continue
+        if integer(row['quantity'])!=expected['quantity'] or decimal(row['price'])!=decimal(expected['price']):
+            continue
+        matches.append(row)
+    if len(matches)!=1:
+        raise ValueError('涨乐通当日委托未找到唯一匹配，继续待核实')
+    row=matches[0]
+    status=state(row['state'])
+    # A queued report is already a broker-side order. Some builds omit its fill count.
+    filled=0 if row.get('filled') is None and status in ('accepted','rejected') else integer(row['filled'])
+    evidence=dict(found=True,kind='native_order',source='zhangle_native_today_order',date_source='broker_today_query',
+                  name=row['name'],code=row['code'],date=day,time=row['time'],order_id='',side=row['side'],
+                  price=str(decimal(row['price'])),quantity=integer(row['quantity']),filled=filled,status=status,
+                  receipt_recovery=dict(submitted_at=submitted_at,method='native_order_list'))
+    evidence['native_order_key']=order_key(evidence)
+    evidence['evidence_hash']=hashlib.sha256(json.dumps(evidence,sort_keys=True).encode()).hexdigest()
+    return evidence
 
 
 def inspect_detail(adb,node,native,order_id,day,account):

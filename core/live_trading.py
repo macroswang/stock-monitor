@@ -21,6 +21,7 @@ from executor.market_price import OPPONENT_POLICY,validate_selection
 from .trading_quantity import BUY_CASH_RESERVE_RATE, BUY_CASH_RESERVE_FIXED, buy_cash_required
 from .trading_costs import paired_profit
 from executor.runtime import DeviceBusy, OperationInterrupted, budget
+from executor.ths import ThsConnectionInterrupted
 
 
 DEFAULT_RULE = dict(buy_enabled=False,sell_enabled=False,buy_mode='lots',sell_mode='lots',
@@ -38,6 +39,10 @@ DEVICE_OPERATION_SECONDS=90
 
 class QuoteNotReady(ValueError):
     pass
+
+
+class RetryableOrderError(ValueError):
+    """A pre-submit condition the app can refresh or repair automatically."""
 
 
 def signal_identity(signal):
@@ -69,6 +74,7 @@ class LiveTrading:
         self.app, self.store = app, app.store
         self.lock = threading.RLock()
         self.started_at = now_cn().isoformat()
+        self.execution_epoch = self.store.config().get('trading_execution_epoch', '')
         self.frames = {}
         self.verified_sync = {}
         self.control_revision = 0
@@ -88,15 +94,7 @@ class LiveTrading:
             CREATE INDEX IF NOT EXISTS trading_cycles_code ON trading_cycles(account_id,code,created_at DESC);
             CREATE UNIQUE INDEX IF NOT EXISTS trading_cycles_one_active ON trading_cycles(account_id,code) WHERE state IN ('sell_pending','waiting_buy','buy_pending','needs_review');
             ''')
-            # The gateway commits BOTH journals to sending before touching a
-            # submit button. Prepared + processing proves no submit boundary
-            # was crossed; it must not leave an account permanently blocked.
-            for row in self.store.db.execute("SELECT b.request_id FROM broker_requests b JOIN trading_runs t ON b.request_id='auto_'||t.id AND b.account_id=t.account_id WHERE b.status='prepared' AND t.status IN ('pending','processing')").fetchall():
-                result=dict(status='failed',submitted=False,request_id=row['request_id'],message='上次委托准备已中断，未进入提交阶段；不重放旧信号')
-                self.store.db.execute("UPDATE broker_requests SET status='failed',result=?,updated_at=? WHERE request_id=?",(json.dumps(result),self.started_at,row['request_id']))
-            # Interrupted work is never automatically replayed after a process restart.
-            self.store.db.execute("UPDATE trading_runs SET status='unknown' WHERE status='sending'")
-            self.store.db.execute("UPDATE trading_runs SET status='skipped' WHERE status IN ('pending','processing')")
+            self._restore_interrupted_runs()
             # Quantity semantics changed: preserve prior whole-lot intentions and
             # switches, remove obsolete quotas, then require a fresh activation.
             changed=False
@@ -121,6 +119,51 @@ class LiveTrading:
                 self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_signal_notice',?)",(json.dumps('底/顶信号已升级为观量 v2+Q1（Q1补位，每日顶/底各≤3）；买卖开关已保留，自动执行已暂停，请确认规则后重新启用。'),))
             self.store.db.execute("INSERT OR REPLACE INTO config VALUES('trading_price_policy',?)",(json.dumps(PRICE_POLICY),))
             self.store.db.commit()
+
+    def _restore_interrupted_runs(self):
+        db = self.store.db
+        rows = db.execute("""SELECT t.*, b.request_id, b.account_id AS request_account, b.status AS request_status, b.result
+            FROM trading_runs t LEFT JOIN broker_requests b ON b.request_id='auto_'||t.id
+            WHERE t.status IN ('pending','processing','sending')""").fetchall()
+        for row in rows:
+            payload = json.loads(row['payload'])
+            if row['request_id'] and row['request_account'] != row['account_id']:
+                payload['message'] = '执行记录与券商请求账户不一致，等待核实'
+                db.execute("UPDATE trading_runs SET status='unknown',payload=?,updated_at=? WHERE id=?",
+                           (json.dumps(payload), self.started_at, row['id']))
+                continue
+            request_status = row['request_status']
+            result = json.loads(row['result'] or '{}')
+            if request_status == 'prepared' and row['status'] != 'sending':
+                # The gateway journals both sides before any possible submission.
+                result = dict(status='failed', submitted=False, request_id=row['request_id'],
+                              submit_boundary_crossed=False, safe_retry_pre_submit=True)
+                request_status = 'failed'
+                db.execute("UPDATE broker_requests SET status='failed',result=?,updated_at=? WHERE request_id=?",
+                           (json.dumps(result), self.started_at, row['request_id']))
+            if request_status == 'sending':
+                request_status = 'unknown'
+                db.execute("UPDATE broker_requests SET status='unknown',updated_at=? WHERE request_id=?",
+                           (self.started_at, row['request_id']))
+
+            safe_failure = (request_status == 'failed' and result.get('safe_retry_pre_submit') is True
+                            and result.get('submit_boundary_crossed') is False)
+            eligible = (row['day'] == self.started_at[:10] and payload.get('mode') == 'live'
+                        and payload.get('execution_epoch', '') == self.execution_epoch
+                        and payload.get('admission', {}).get('allowed') is True)
+            if row['status'] != 'sending' and eligible and (request_status is None or safe_failure):
+                status = 'pending'
+                payload['delivery_guarantee'] = dict(state='awaiting_recovery', reason='pre_submit_restart')
+                payload['message'] = '上次运行尚未提交券商，等待恢复本笔委托'
+            elif request_status in ('accepted','partial','filled','rejected','cancelled','unknown','not_sent'):
+                status = request_status
+            elif row['status'] == 'sending':
+                status = 'unknown'
+            else:
+                status = 'skipped'
+                payload['message'] = '启动时原委托已不符合执行条件'
+            db.execute('UPDATE trading_runs SET status=?,payload=?,updated_at=? WHERE id=?',
+                       (status, json.dumps(payload), self.started_at, row['id']))
 
     def account(self, ident):
         rows = self.store.query('SELECT * FROM broker_accounts WHERE id=? AND enabled=1', (ident,))
@@ -162,7 +205,10 @@ class LiveTrading:
                 self.store.setconfig('trading_paused', args['paused'])
                 if not args['paused']:self.store.setconfig('trading_signal_notice','')
                 self.started_at = now_cn().isoformat()
-            if 'mode' in args or 'paused' in args:self.control_revision+=1
+            if 'mode' in args or 'paused' in args:
+                self.execution_epoch = uuid.uuid4().hex
+                self.store.setconfig('trading_execution_epoch', self.execution_epoch)
+                self.control_revision+=1
             return self.view()
 
     def pause_account(self, ident, paused):
@@ -463,6 +509,7 @@ class LiveTrading:
             if not rows:
                 raise ValueError('该执行记录不存在')
             run=rows[0];payload=json.loads(run['payload']);quantity=payload.get('plan',{}).get('quantity',0)
+            from .broker_reconciliation import known_id
             cycle=self.active_cycle(run['account_id'],run['code'])
             paired=bool(cycle and ident in (cycle['first_run_id'],cycle['second_run_id']))
             previous=payload.get('verification',{})
@@ -471,6 +518,9 @@ class LiveTrading:
                         order_id==previous.get('order_id') and filled==previous.get('filled') and average is not None)
             if run['status'] not in ('unknown','accepted','partial') and not enrich:
                 raise ValueError('该执行记录不需要核实，或仍在提交中')
+            if status == 'not_sent' and (run['status'] != 'unknown' or known_id(payload.get('result') or {})
+                                         or known_id({'verification': previous})):
+                raise ValueError('已有券商受理或成交证据，不能标记为未发出')
             if type(filled) is not int or not 0<=filled<=quantity or (status=='filled' and filled!=quantity) or (status in ('not_sent','rejected') and filled!=0):
                 raise ValueError('实际成交股数与核实状态不符')
             if (status=='partial' and not 0<filled<quantity) or (status=='cancelled' and filled>=quantity) or filled<payload.get('verification',{}).get('filled',0):
@@ -493,9 +543,10 @@ class LiveTrading:
                 if request['status'] not in ('accepted','unknown','partial','sending','prepared') and not (enrich and request['status']=='filled'):
                     raise ValueError('券商请求已更新，请刷新核对')
                 result=json.loads(request['result'] or '{}')
-                from .broker_reconciliation import known_id
                 old_id=known_id(result)
-                if old_id and status!='not_sent' and old_id!=order_id:raise ValueError('委托编号与原记录不一致，不能更换')
+                if status == 'not_sent' and (request['status'] != 'unknown' or old_id):
+                    raise ValueError('已有券商受理或委托编号，不能标记为未发出')
+                if old_id and old_id!=order_id:raise ValueError('委托编号与原记录不一致，不能更换')
                 result.setdefault('acknowledgement',json.loads(request['result'] or '{}'))
                 result.update(status=status,submitted=status!='not_sent',verification=payload['verification'],manual_note=note)
                 # Preserve the original acknowledgement and immutable lookup identity.
@@ -598,7 +649,7 @@ class LiveTrading:
             raise ValueError('设置的数量不足最小申报数量，已跳过')
         price = number((quote or {}).get('price', p.get('price')))
         if price is None or price <= 0:
-            raise ValueError('缺少有效价格，请刷新行情或同步持仓')
+            raise RetryableOrderError('缺少有效价格，等待刷新行情或同步持仓')
         # Round a non-aggressive limit to cents. No chase/reprice on an unfilled order.
         limit = Decimal(str(price)).quantize(Decimal('.01'), rounding=ROUND_DOWN)
         value = limit*qty
@@ -668,7 +719,7 @@ class LiveTrading:
                         reason = '当日该方向已达3个信号上限（含Q1补位），本条不再下单'
                     key = now.date().isoformat()+'|'+m['key']
                     ident = hashlib.sha256(f"{row['account_id']}|{code}|{side}|{key}".encode()).hexdigest()
-                    payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, reference_price=m['price'])
+                    payload = dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL, quote=quote, mode=self.settings()['mode'], rule_revision=row['revision'], armed_at=row['armed_at'], run_epoch=self.started_at, execution_epoch=self.execution_epoch, reference_price=m['price'])
                     payload['admission']=dict(allowed=not bool(reason),continuous=continuous,observed_at=now.isoformat(),baseline_at=baseline_at,signal_age_ms=milliseconds(age),reason=reason)
                     if reason:payload['message']=reason
                     self.store.execute('INSERT OR IGNORE INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)', (ident,row['account_id'],code,side,key,now.date().isoformat(),'skipped' if reason else 'pending',json.dumps(payload),now.isoformat(),now.isoformat()))
@@ -676,7 +727,7 @@ class LiveTrading:
     def paired_run_payload(self,row,m,quote,now,event_at,continuous,reason,baseline_at,cycle_id,leg):
         payload=dict(signal=m,signal_at=event_at.isoformat(),signal_source=SIGNAL,quote=quote,
                      mode=self.settings()['mode'],rule_revision=row['revision'],armed_at=row['armed_at'],
-                     run_epoch=self.started_at,reference_price=m['price'],
+                     run_epoch=self.started_at,execution_epoch=self.execution_epoch,reference_price=m['price'],
                      paired_t=dict(cycle_id=cycle_id,leg=leg,direction='sell_buy'))
         payload['admission']=dict(allowed=not bool(reason),continuous=continuous,observed_at=now.isoformat(),
                                   baseline_at=baseline_at,signal_age_ms=milliseconds((now-event_at).total_seconds()),reason=reason)
@@ -787,6 +838,15 @@ class LiveTrading:
         if payload.get('paired_t') and status not in ('pending','processing','sending'):
             self.sync_cycles(run['account_id'],run['code'])
 
+    def defer_pre_submit(self,run,payload,reason,kind='technical'):
+        retries=payload.setdefault('transient_retries',{})
+        attempts=retries.get(kind,0)+1;retries[kind]=attempts
+        payload['retry_after']=time.time()+min(3*attempts,15)
+        payload['delivery_guarantee']=dict(state='awaiting_recovery',reason=kind,
+                                           detected_at=now_cn().isoformat(),submit_boundary_crossed=False)
+        payload['message']=f'{reason}；尚未提交券商，系统将自动恢复并继续完成本笔委托（第{attempts}次）'
+        self.finish(run,'pending',payload)
+
     def sync_cycles(self, ident=None, code=None):
         # Reconciliation and monitoring can arrive on different threads.
         with self.lock:
@@ -883,14 +943,16 @@ class LiveTrading:
         now=now_cn()
         if run['day']!=now.date().isoformat() or now.strftime('%H:%M:%S')>'15:00:00':
             raise ValueError('交易日或交易时段已结束，未补发旧委托')
+        guaranteed=payload.get('delivery_guarantee',{}).get('state')=='awaiting_recovery'
         frame=self.frames.get(run['code'])
         if frame and frame['day']==run['day'] and not frame.get('ready',True):
             raise QuoteNotReady('分钟数据尚未更新，等待实时信号核验')
-        if frame and frame['day']==run['day'] and frame.get('latest')!=signal_identity(payload['signal']):
+        if not guaranteed and frame and frame['day']==run['day'] and frame.get('latest')!=signal_identity(payload['signal']):
             raise ValueError('信号已变化，原委托已取消')
-        newer=self.store.query("SELECT id FROM trading_runs WHERE account_id=? AND code=? AND day=? AND COALESCE(json_extract(payload,'$.admission.allowed'),1)=1 ORDER BY created_at DESC,rowid DESC LIMIT 1",
-                               (run['account_id'],run['code'],run['day']))
-        if newer and newer[0]['id']!=run['id']:raise ValueError('已有更新信号，原委托已取消')
+        if not guaranteed:
+            newer=self.store.query("SELECT id FROM trading_runs WHERE account_id=? AND code=? AND day=? AND COALESCE(json_extract(payload,'$.admission.allowed'),1)=1 ORDER BY created_at DESC,rowid DESC LIMIT 1",
+                                   (run['account_id'],run['code'],run['day']))
+            if newer and newer[0]['id']!=run['id']:raise ValueError('已有更新信号，原委托已取消')
 
     def execution_age(self,run,now):
         return stamp_age(json.loads(run['payload']).get('signal_at',run['created_at']),now)
@@ -900,8 +962,13 @@ class LiveTrading:
         payload.setdefault('timings',{})['queue_ms']=milliseconds(stamp_age(run['created_at'],now_cn()))
         try:
             self.check_current(run,payload)
-            if self.settings()['paused'] or self.settings()['mode'] != payload['mode'] or payload.get('run_epoch') != self.started_at:
+            recovery=payload.get('delivery_guarantee',{}).get('state')=='awaiting_recovery'
+            epoch_changed = payload.get('execution_epoch', '') != self.execution_epoch
+            if self.settings()['paused'] or self.settings()['mode'] != payload['mode'] or epoch_changed or (payload.get('run_epoch') != self.started_at and not recovery):
                 raise ValueError('自动交易已暂停或模式已改变')
+            if recovery:
+                payload.pop('plan', None)
+                payload.pop('price_selection', None)
             paused = self.store.query('SELECT paused FROM trading_accounts WHERE account_id=?', (run['account_id'],))
             if paused and paused[0]['paused']:
                 raise ValueError('该证券账户已暂停')
@@ -942,7 +1009,7 @@ class LiveTrading:
                 ((not paired and rule['buy_mode']=='lots') or (paired and paired.get('leg')=='buy')) and
                 not self.target_unresolved(run['account_id'],run['code']))
             if synced['status'] != 'complete' and not position_free_buy:
-                raise ValueError('持仓同步不完整或代码待确认，暂停执行')
+                raise RetryableOrderError('持仓同步不完整或代码待确认，等待重新核验')
             # Sync may disable a rule after a confirmed clearance.
             current = self.rule(run['account_id'],run['code'])
             current_enabled=self.paired_allowed(current) if paired else current[run['side']+'_enabled'] and current.get('strategy_mode')=='independent'
@@ -972,8 +1039,10 @@ class LiveTrading:
                 if run['side']=='buy':
                     available = number(json.loads(state['payload']).get('funds',{}).get('available'))
                     reserved = sum(buy_cash_required(json.loads(r['payload']).get('plan',{}).get('value',0)) for r in previous if r['side']=='buy' and r['status']=='trial')
-                    if available is None or buy_cash_required(plan['value']) > available-reserved:
-                        raise ValueError('账户可用资金不足或无法读取')
+                    if available is None:
+                        raise RetryableOrderError('账户可用资金暂时无法读取')
+                    if buy_cash_required(plan['value']) > available-reserved:
+                        raise ValueError('账户可用资金不足')
                 elif payload['mode']=='trial':
                     sold = sum(json.loads(r['payload']).get('plan',{}).get('quantity',0) for r in same if r['side']=='sell' and r['status']=='trial')
                     held = self.store.query('SELECT payload FROM trading_positions WHERE account_id=? AND code=?',(run['account_id'],run['code']))[0]
@@ -994,7 +1063,7 @@ class LiveTrading:
                     watch = self.store.query('SELECT enabled FROM watch WHERE code=?',(run['code'],))
                     quote = self.app.quotes.get(run['code'],payload['quote'])
                     current_enabled=self.paired_allowed(current) if paired else current[run['side']+'_enabled'] and current.get('strategy_mode')=='independent'
-                    if self.settings()['paused'] or self.settings()['mode'] != 'live' or payload.get('run_epoch') != self.started_at or (paused and paused[0]['paused']) or current['revision'] != rule['revision'] or current['armed_at'] != payload.get('armed_at') or not current_enabled:
+                    if self.settings()['paused'] or self.settings()['mode'] != 'live' or payload.get('execution_epoch', '') != self.execution_epoch or (payload.get('run_epoch') != self.started_at and not recovery) or (paused and paused[0]['paused']) or current['revision'] != rule['revision'] or current['armed_at'] != payload.get('armed_at') or not current_enabled:
                         raise ValueError('确认前规则或暂停状态已改变，已阻止提交')
                     if not watch or not watch[0]['enabled'] or not self.store.config().get('monitor',False):
                         raise ValueError('自选监控已停止，已阻止提交')
@@ -1031,22 +1100,36 @@ class LiveTrading:
             self.verified_sync.pop(run['account_id'],None)
             payload['result'] = result
             payload['message'] = result.get('message') or (result.get('result') or {}).get('message') or {'accepted':'券商已受理','rejected':'券商已拒绝','unknown':'未收到明确回执；本请求不自动重发'}.get(result['status'],'委托结果已记录')
+            if result.get('safe_retry_pre_submit') is True and result.get('submit_boundary_crossed') is False:
+                self.defer_pre_submit(run,payload,payload['message'],'broker_pre_submit')
+                return
             self.finish(run,result['status'],payload)
-        except (DeviceBusy,QuoteNotReady,TimeoutError) as exc:
-            payload['message'] = str(exc)+'；等待后重新核验最新信号，不重复发送委托'
+        except (DeviceBusy,QuoteNotReady,TimeoutError,ThsConnectionInterrupted) as exc:
             state=self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))
-            status='unknown' if state and state[0]['status']=='sending' else 'pending'
-            if isinstance(exc,QuoteNotReady):payload['retry_after']=time.time()+3
-            self.finish(run,status,payload)
+            if state and state[0]['status']=='sending':
+                payload['message']=str(exc)+'；提交边界后的结果不明确，先对账确认，禁止重复委托'
+                self.finish(run,'unknown',payload)
+            else:
+                kind=('broker_connection' if isinstance(exc,ThsConnectionInterrupted) else
+                      'quote' if isinstance(exc,QuoteNotReady) else
+                      'device_busy' if isinstance(exc,DeviceBusy) else 'timeout')
+                self.defer_pre_submit(run,payload,str(exc),kind)
         except Exception as exc:
-            payload['message'] = str(exc)
             state = self.store.query('SELECT status FROM trading_runs WHERE id=?',(run['id'],))
-            self.finish(run,'unknown' if state and state[0]['status']=='sending' else 'skipped',payload)
+            if state and state[0]['status']=='sending':
+                payload['message']=str(exc)+'；提交结果不明确，先对账确认，禁止重复委托'
+                self.finish(run,'unknown',payload)
+            elif isinstance(exc,RetryableOrderError) or not isinstance(exc,ValueError):
+                self.defer_pre_submit(run,payload,str(exc),'technical')
+            else:
+                payload['message'] = str(exc)
+                self.finish(run,'skipped',payload)
 
     def drain(self, reports=True):
         # Single worker, no device or broker IO on the monitoring/UI threads.
-        for run in self.store.query("SELECT * FROM trading_runs WHERE status='pending' ORDER BY created_at LIMIT 20"):
-            if json.loads(run['payload']).get('retry_after',0)>time.time():continue
+        for run in self.store.query("""SELECT * FROM trading_runs WHERE status='pending'
+                AND COALESCE(json_extract(payload,'$.retry_after'),0)<=?
+                ORDER BY created_at,rowid LIMIT 20""", (time.time(),)):
             changed = self.store.execute("UPDATE trading_runs SET status='processing' WHERE id=? AND status='pending'",(run['id'],))
             if changed:
                 self.process(run)
@@ -1054,6 +1137,7 @@ class LiveTrading:
         if reports:self.poll_reports()
 
     def poll_reports(self):
-        with budget(120,cancelled=lambda:bool(self.store.query("SELECT 1 FROM trading_runs WHERE status='pending' LIMIT 1"))):
+        with budget(120,cancelled=lambda:bool(self.store.query("""SELECT 1 FROM trading_runs
+                WHERE status='pending' AND COALESCE(json_extract(payload,'$.retry_after'),0)<=? LIMIT 1""", (time.time(),)))):
             self.reconciler.poll()
         self.sync_cycles()

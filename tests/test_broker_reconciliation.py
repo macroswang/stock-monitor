@@ -18,7 +18,7 @@ class ReconciliationTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.store=Store(Path(self.tmp.name)/'test.sqlite3');self.addCleanup(self.store.db.close)
         self.now=datetime(2026,11,2,11,0,tzinfo=CN)
-        clock=patch('core.broker_reconciliation.now_cn',return_value=self.now);clock.start();self.addCleanup(clock.stop)
+        clock=patch('core.broker_reconciliation.now_cn',side_effect=lambda:self.now);clock.start();self.addCleanup(clock.stop)
         self.service=LiveTrading(SimpleNamespace(store=self.store))
         self.rec=self.service.reconciler
         self.stamp=(self.now-timedelta(minutes=1)).isoformat()
@@ -52,6 +52,28 @@ class ReconciliationTests(unittest.TestCase):
         self.store.execute("UPDATE broker_requests SET request_id='manual-order-123456'")
         self.rec.poll()
         self.reader.assert_not_called()
+
+    def test_zhangle_reconnect_polls_until_a_unique_order_is_found_without_requeue(self):
+        from executor.order_report import discover_zhangle_order
+
+        self.store.execute("UPDATE trading_runs SET status='unknown'")
+        self.store.execute("UPDATE broker_requests SET status='unknown',result='{}'")
+        confirm=dict(code='000981',name='山子高科',side='sell',quantity=600,price='2.13')
+        self.store.execute("""UPDATE broker_requests SET payload=json_set(payload,
+            '$.native_confirmation',json(?),'$.submission_started_at',?)""",
+            (json.dumps(confirm),self.stamp))
+        native=dict(confirm,date='2026-11-02',time='10:59:03',state='已报',filled=0)
+        def discover(_store,account,day,expected,submitted_at,**_):
+            return dict(discover_zhangle_order(None,account,day,expected,submitted_at,self.now),
+                        account_id=account,account_verified=True,observed_at=self.now.isoformat())
+        with patch('core.broker_reconciliation.brokers.discover_order_report',side_effect=discover), \
+             patch('executor.order_report.zhangle_today_rows',side_effect=[[],[native,native],[native]]), \
+             patch('core.brokers.submit_order') as submit:
+            for status in ('unknown','unknown','accepted'):
+                self.rec.poll()
+                self.assertEqual(tuple(row['status'] for row in self.rows()),(status,status),self.rows()[0]['result'])
+                self.now+=timedelta(seconds=16)
+            submit.assert_not_called()
 
     def test_exact_report_commits_both_records_and_preserves_ack(self):
         result=self.reconcile();self.assertTrue(result['ok'])

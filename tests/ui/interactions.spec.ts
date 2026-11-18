@@ -63,7 +63,7 @@ test('manual broker-fill sync remains available during live automatic trading',a
  await sync.click();
  await expect.poll(()=>page.evaluate(()=>(window as any).manualFillSyncCalls)).toEqual([{day:'2026-10-16'}]);
  await expect(sync).toBeEnabled();
- await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText('已缓存 0 条');
+ await expect(page.getByRole('status',{name:'操作提示'})).toContainText('已缓存 0 条');
 });
 
 test('market guidance uses isolated real RPC data and pauses after a backend failure',async({page})=>{
@@ -164,6 +164,7 @@ test('same-stock click preserves graph; rapid selection never shows the previous
 });
 
 test('add, duplicate, invalid code, pause, remove and last-stock removal',async({page})=>{
+ test.setTimeout(45_000);
  await page.getByLabel('股票代码').fill('600519');await page.getByRole('button',{name:'＋',exact:true}).click();
  await expect(page.locator('.stock')).toHaveCount(13);await expect(page.locator('.detail h2')).toContainText('贵州茅台');
  await page.getByLabel('股票代码').fill('600519');await page.getByRole('button',{name:'＋',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(13);
@@ -171,7 +172,7 @@ test('add, duplicate, invalid code, pause, remove and last-stock removal',async(
  await page.getByRole('button',{name:'恢复',exact:true}).click();await expect(page.getByRole('button',{name:'暂停',exact:true})).toBeVisible();
  await page.getByLabel('股票代码').fill('699999');await page.getByRole('button',{name:'＋',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('股票不存在');await expect(page.locator('.stock')).toHaveCount(13);
- await page.getByRole('button',{name:'移除',exact:true}).click();await expect(page.getByRole('dialog',{name:'移除自选股票'})).toBeVisible();await page.getByRole('button',{name:'取消',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(13);await page.getByRole('button',{name:'移除',exact:true}).click();await page.getByRole('button',{name:'确认移除',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(12);await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText('已移除自选，历史数据保留');
+ await page.getByRole('button',{name:'移除',exact:true}).click();await expect(page.getByRole('dialog',{name:'移除自选股票'})).toBeVisible();await page.getByRole('button',{name:'取消',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(13);await page.getByRole('button',{name:'移除',exact:true}).click();await page.getByRole('button',{name:'确认移除',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(12);const message=page.getByRole('status',{name:'操作提示'});await expect(message).toContainText('已移除自选，历史数据保留');await expect(message).toHaveAttribute('data-auto-dismiss','3000');await expect(message).toHaveCSS('animation-duration','3s');await expect(page.getByRole('dialog',{name:'操作提示'})).toHaveCount(0);await expect(page.getByRole('button',{name:'知道了'})).toHaveCount(0);await expect.poll(async()=>{const box=await message.boundingBox();const viewport=page.viewportSize();return box&&viewport?{top:Math.round(box.y),center:Math.round(box.x+box.width/2-viewport.width/2)}:null;}).toEqual({top:18,center:0});
  for(const w of (await rpc('snapshot')).watch)await rpc('remove',{code:w.code});
  await expect(page.getByText('自选池为空，请输入股票代码添加。')).toBeVisible();await expect(page.locator('.detail')).toHaveCount(0);
  await page.getByLabel('股票代码').fill('600519');await page.getByRole('button',{name:'＋',exact:true}).click();await expect(page.locator('.stock')).toHaveCount(1);
@@ -864,7 +865,7 @@ test('right-click opens buy/sell ticket over intraday without leaving chart and 
  await expect(page.locator('.workspace h1')).toHaveText('自选监控');await expect(page.locator('.detail')).toBeVisible();await expect(page.getByRole('button',{name:'买入',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'卖出',exact:true}).click();await expect(page.getByRole('button',{name:'确认卖出',exact:true})).toBeVisible();await page.getByLabel('模拟交易股数').fill('100');await page.getByLabel('模拟委托限价').fill('10.1');
  await page.screenshot({path:'docs/paper-chart-context-ticket.png'});
- await page.getByRole('button',{name:/^确认(买入|卖出)$/,exact:true}).click();await expect(ticket).toHaveCount(0);await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText('委托已受理：卖出');await expect(page.locator('.workspace h1')).toHaveText('自选监控');
+ await page.getByRole('button',{name:/^确认(买入|卖出)$/,exact:true}).click();await expect(ticket).toHaveCount(0);await expect(page.getByRole('status',{name:'操作提示'})).toContainText('委托已受理：卖出');await expect(page.locator('.workspace h1')).toHaveText('自选监控');
  const s=await rpc('paper_snapshot',{account:a.id});expect(s.order_count).toBe(1);expect(s.fill_count).toBe(0);expect(s.orders[0]).toMatchObject({side:'sell',price:1010,shares:100,stamp:day+' 09:32',status:'open'});
  // Volume area uses the minute's actual price, not the volume coordinate.
  await at('09:32',500,1);await simulationTicket(page);await expect(ticket).toBeVisible();await expect(page.getByLabel('模拟委托限价')).toHaveValue('10.1');await page.keyboard.press('Escape');await expect(ticket).toHaveCount(0);
@@ -1026,7 +1027,7 @@ test('right boundary fills the next batch for an old daily view without jumping 
 
 test('short actual daily history stays short without fabricating candles or retry loops',async({page})=>{
  const code='sh600519',feed=dailyHistoryFeed().filter(r=>r.date>='2026-10-16');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect(page.getByRole('dialog',{name:'操作提示'})).toContainText(`仅取得${feed.length}根日K`);await expect.poll(()=>dailyWindowState(page)).toMatchObject({count:feed.length,visible:feed.length,rendered:feed.length});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
+ await expect(page.getByRole('status',{name:'操作提示'})).toContainText(`仅取得${feed.length}根日K`);await expect.poll(()=>dailyWindowState(page)).toMatchObject({count:feed.length,visible:feed.length,rendered:feed.length});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
 });
 test('switching stocks while daily backfill is running cannot replace the newly selected chart',async({page})=>{
  const code='sh600519';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:dailyHistoryFeed(),delay:.4});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.locator('.daily-load-state')).toBeVisible();await expect.poll(()=>dailyLoadRequests.some(r=>r.code===code)).toBe(true);

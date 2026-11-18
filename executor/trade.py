@@ -55,6 +55,10 @@ class TradeError(RuntimeError):
     """Raised when the trade form is not in the expected state."""
 
 
+class TradeConfirmationCancelled(TradeError):
+    """The matching confirmation was cancelled before the final submit tap."""
+
+
 class TradePreparationError(TradeError):
     """A pre-submit failure with an allowlisted, credential-free page trace."""
     def __init__(self, message, diagnostics):
@@ -505,6 +509,7 @@ class TradePage:
         wait_for_receipt: bool = True,
         price_policy=None,
         on_price=None,
+        on_confirmation=None,
     ) -> dict:
         """Fill, submit, verify the confirmation dialog and confirm it.
 
@@ -592,6 +597,10 @@ class TradePage:
             self._cancel_dialog()
             return {"submitted": False, "status": "preview", "confirm": confirm.as_dict(),"preparation":list(self.preparation)}
 
+        if on_confirmation:
+            on_confirmation(dict(code=confirm.code, name=confirm.name, side=side,
+                                 quantity=int(confirm.quantity), price=confirm.price))
+
         # 确认内容和按钮取自同一份新快照，不能校验一份弹窗后盲点下一份。
         _, final_nodes = self.snapshot()
         latest = parse_confirm(final_nodes)
@@ -604,8 +613,10 @@ class TradePage:
             raise TradeError("真实委托必须通过观量持久化请求入口提交")
         try:
             before_confirm()
-        except Exception:
-            self._cancel_dialog()
+        except Exception as exc:
+            self._cancel_dialog(expected=confirm if price_policy else None)
+            if price_policy:
+                raise TradeConfirmationCancelled(str(exc)) from exc
             raise
         try:
             self.adb.tap_node(ok)
@@ -624,11 +635,20 @@ class TradePage:
             "preparation": list(self.preparation),
         }
 
-    def _cancel_dialog(self) -> None:
+    def _cancel_dialog(self, expected=None) -> None:
         _, nodes = self.snapshot()
+        if expected is not None and parse_confirm(nodes) != expected:
+            raise TradeError("无法核验原委托确认弹窗，请检查券商状态")
         button = find_by_id(nodes, DIALOG_CANCEL_ID)
         if button is None or not button.enabled or button.text != "取消":
             raise TradeError("找不到可确认的取消按钮；未点击确定，请手动关闭弹窗")
         self.adb.tap_node(button)
-        if not wait_until(lambda: parse_confirm(self.snapshot()[1]) is None, timeout=5, interval=.2):
+        def dismissed():
+            current = self.snapshot()[1]
+            if expected is None:
+                return parse_confirm(current) is None
+            form = read_form(current)
+            return (parse_confirm(current) is None and form.code == expected.code
+                    and form.side in _SIDE_LABEL and expected.title == '委托' + _SIDE_LABEL[form.side])
+        if not wait_until(dismissed, timeout=5, interval=.2):
             raise TradeError("未确认弹窗已关闭，请手动检查")
