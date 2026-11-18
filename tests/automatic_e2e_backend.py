@@ -118,7 +118,7 @@ class Adapter(BrokerAdapter):
     def holdings(self,**_kwargs):return dict(complete=True,positions=self.owner.positions(),funds=dict(available='100000'))
     def submit_order(self,side,code,quantity,price=None,**kwargs):
         if not self.owner.gate.wait(10):raise AssertionError('Simulated device wait expired')
-        device=self.adb;device.depth_mid=price;device.phase='form';device.code='';device.price='';device.quantity='';device.side=side
+        device=self.adb;device.depth_mid=getattr(self.owner,'depth_mid',price);device.phase='form';device.code='';device.price='';device.quantity='';device.side=side
         page=TradePage(device) if self.owner.broker=='zhangle' else ThsOrderPage(device,expected_account=self.owner.number)
         return page.submit(side,code,quantity,price,**kwargs)
     def order_report(self,order_id,day,expected):

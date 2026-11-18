@@ -48,9 +48,15 @@ async function axes(page:Page){
 
 test('full App snapshot/cache arrival order never shrinks known tick extrema or moves historical pixels',async({page},info)=>{
  await page.clock.install({time:new Date(stamp('14:59:00'))});const f=fixture();let reads=0;const writes:string[]=[];
+ let releaseDaily!:()=>void;
+ const dailyGate=new Promise<void>(resolve=>{releaseDaily=resolve;});
  await page.exposeFunction('rangeRpc',async(method:string,args:any)=>{
   if(method==='snapshot'){reads++;return {...f.snapshot,data_revisions:{code,history:[1],chart:[reads],market:[1]}};}
-  if(method==='chart')return args.kind==='minute'?f.minutes[code]:f.daily[code];
+  if(method==='chart'){
+   if(args.kind==='minute')return f.minutes[code];
+   await dailyGate;
+   return f.daily[code];
+  }
   if(method==='history')return f.history[code];
   if(method==='market'||method==='index_minute')return {quotes:[],minute:null};
   if(method==='trading_chart')return {code,day,accounts:[],points:[]};
@@ -65,7 +71,11 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
   const w=window as any;w.isTauri=true;w.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,unregisterCallback:()=>{},invoke:(command:string,args:any)=>command==='rpc'?w.rangeRpc(args.method,args.args):Promise.resolve(command==='plugin:app|version'?'test':false)};w.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}};
  });
  if(process.env.RANGE_REFERENCE_BASELINE==='1')await page.route('**/src/intradayRangeReference.ts*',r=>r.fulfill({contentType:'application/javascript',body:'export class IntradayRangeReferenceCache {resolve(quote,cached){return quote||cached;}}'}));
- await page.goto('/');await expect.poll(async()=>(await axes(page))?.extent).toEqual([26.21,29.39]);const initial=(await axes(page))!;
+ try{
+  await page.goto('/');
+  await expect.poll(async()=>(await axes(page))?.extent).toEqual([26.21,29.39]);
+ }finally{releaseDaily();}
+ const initial=(await axes(page))!;
  const observed=[];
  for(const [quoteTime,cacheTime] of [['14:58:10','14:58:05'],['14:58:10','14:58:15'],['14:58:16','14:58:15'],['14:58:16','14:58:20']] as const){
   f.snapshot.watch[0].quote.timestamp=stamp(quoteTime);f.snapshot.now=stamp(quoteTime);f.minutes[code][0].data.cached_at=stamp(cacheTime);

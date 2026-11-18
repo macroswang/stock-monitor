@@ -145,6 +145,21 @@ test('startup and reload select the first current watch stock instead of the for
 
 test('same-stock click preserves graph; rapid selection never shows the previous stock cache',async({page})=>{
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ const expected=await rpc('chart',{code:'sh688680',kind:'minute'});
+ const expectedPrice=+expected[0].data.bars.find((b:any)=>b.time==='09:31').close;
+ await page.locator('.chart').evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());
+  const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);
+  const proto=Object.getPrototypeOf(e.getInstanceByDom(el)),original=proto.setOption;
+  (window as any).stockPaints=[];
+  proto.setOption=function(...args:any[]){
+   const result=original.apply(this,args),option=this.getOption();
+   const heading=this.getDom().closest('.detail')?.querySelector('h2')?.textContent;
+   const prices=option.series?.find((s:any)=>s.name==='价格')?.data;
+   if(heading?.includes('SH688680')&&prices)(window as any).stockPaints.push(prices[option.xAxis[0].data.indexOf('09:31')]);
+   return result;
+  };
+ });
  await page.locator('.stock').filter({hasText:'宏昌电子'}).click();
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  await page.locator('.stock').filter({hasText:'海优新材'}).click();
@@ -153,7 +168,6 @@ test('same-stock click preserves graph; rapid selection never shows the previous
  await expect(page.locator('.detail h2')).toContainText('海优新材');
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
  // Inspect only the chart instance created by this page to verify actual displayed data identity.
- const expected=await rpc('chart',{code:'sh688680',kind:'minute'});
  expect(expected[0].data.bars.find((b:any)=>b.time==='09:31').close).not.toBe('16.20');
  const chart=page.locator('.chart');
  await expect.poll(()=>chart.evaluate(async el=>{const source=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(source.match(/from "([^"]*echarts\.js[^"]*)"/)![1]);const option=e.getInstanceByDom(el).getOption();return option.series[0].data[option.xAxis[0].data.indexOf('09:31')];})).toBe(+expected[0].data.bars.find((b:any)=>b.time==='09:31').close);
@@ -161,6 +175,9 @@ test('same-stock click preserves graph; rapid selection never shows the previous
  const box=(await chart.boundingBox())!;await page.mouse.move(box.x+point[0],box.y+point[1]);
  await expect(chart).toContainText(Number(expected[0].data.bars.find((b:any)=>b.time==='09:31').close).toLocaleString('zh-CN',{maximumFractionDigits:2}));
  await expect(page.getByLabel('交易日期')).toHaveValue('2026-10-16');
+ const paints=await page.evaluate(()=>(window as any).stockPaints);
+ expect(paints.length).toBeGreaterThan(0);
+ expect(paints.filter((price:any)=>price!==null&&price!==undefined&&price!==expectedPrice)).toEqual([]);
 });
 
 test('add, duplicate, invalid code, pause, remove and last-stock removal',async({page})=>{

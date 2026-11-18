@@ -70,21 +70,23 @@ def validate_selection(selection,code,side,now=None):
     return format(price_number(selection.get('price')),'.2f')
 
 
-def prepare_opponent(broker,side,code,quantity,snapshot,read_form,fill):
-    """Refresh only BEFORE the first submit tap, bounded to three price edits."""
-    for _ in range(3):
-        nodes=snapshot();form=read_form(nodes)
-        if not form or (form.side,form.code,form.quantity)!=(side,code,str(quantity)):
-            raise MarketPriceError('读取盘口时委托股票、方向或数量已变化')
-        chosen=depth_price(nodes,broker,side)
+def prepare_opponent(broker,side,code,quantity,snapshot,read_form,fill,*,nodes=None):
+    """Select one verified opponent price and check that the form retains it."""
+    nodes=snapshot() if nodes is None else nodes
+    form=read_form(nodes)
+    expected=(side,code,str(quantity))
+    if not form or (form.side,form.code,form.quantity)!=expected:
+        raise MarketPriceError('读取盘口时委托股票、方向或数量已变化')
+    chosen=depth_price(nodes,broker,side)
+    observed_at=datetime.now(timezone.utc).isoformat()
+    if not form.price or price_number(form.price)!=price_number(chosen):
+        fill(0,chosen,nodes=nodes)
+        nodes=snapshot()
+        form=read_form(nodes)
+        if not form or (form.side,form.code,form.quantity)!=expected:
+            raise MarketPriceError('填价后委托表单已变化')
         if not form.price or price_number(form.price)!=price_number(chosen):
-            fill(0,chosen,nodes=nodes)
-            nodes=snapshot();form=read_form(nodes)
-        if not form or (form.side,form.code,form.quantity)!=(side,code,str(quantity)):
-            raise MarketPriceError('盘口改价后委托表单已变化')
-        if not form.price or price_number(form.price)!=price_number(chosen):continue
-        if depth_price(nodes,broker,side)!=chosen:continue
-        evidence=dict(policy=OPPONENT_POLICY,code=code,side=side,book_side='ask1' if side=='buy' else 'bid1',price=chosen,
-                      source=broker+'_native_depth',observed_at=datetime.now(timezone.utc).isoformat())
-        return form,nodes,evidence
-    raise MarketPriceError('盘口连续变化，未发送委托；不会在提交后追价或重发')
+            raise MarketPriceError('表单价格与已选对手价不一致，未发送委托')
+    evidence=dict(policy=OPPONENT_POLICY,code=code,side=side,book_side='ask1' if side=='buy' else 'bid1',price=chosen,
+                  source=broker+'_native_depth',observed_at=observed_at)
+    return form,nodes,evidence

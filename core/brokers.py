@@ -477,9 +477,9 @@ def submit_order(
         selected=dict(evidence,price=actual)
     def before_confirm():
         nonlocal dispatched
-        if price_policy:
-            if selected is None:raise BrokerError('尚未绑定券商买一或卖一，禁止提交')
-            if not dispatched:validate_selection(selected,code,side)
+        # Freshness is verified at binding. Confirmation uses that locked limit.
+        if price_policy and selected is None:
+            raise BrokerError('尚未绑定券商买一或卖一，禁止提交')
         if authorize is not None:
             authorize()
         with store.lock,store.db:

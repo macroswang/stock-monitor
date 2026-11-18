@@ -60,13 +60,16 @@ class NativeDepthTests(unittest.TestCase):
   fill=Mock()
   with self.assertRaises(MarketPriceError):prepare_opponent('ths','buy','603938',100,lambda:form()+[depth()],read_form,fill)
   fill.assert_not_called()
- def test_fast_moving_book_has_bounded_pre_submit_edits(self):
+ def test_fast_moving_book_keeps_first_verified_opponent_price(self):
   state=form()+[depth()];edits=[]
   def fill(index,value,nodes=None):
    edits.append((index,value));state[4]=replace(state[4],text=value)
    state[-1]=depth(' '.join(format(Decimal(token)+Decimal('.01'),'.2f') for token in state[-1].description.split()))
-  with self.assertRaisesRegex(MarketPriceError,'连续变化'):prepare_opponent('ths','buy','000981',100,lambda:list(state),read_form,fill)
-  self.assertEqual(len(edits),3);self.assertTrue(all(i==0 for i,_ in edits))
+  snapshot=Mock(side_effect=lambda:list(state))
+  prepared,_,evidence=prepare_opponent('ths','buy','000981',100,snapshot,read_form,fill)
+  self.assertEqual(edits,[(0,'2.01')]);self.assertEqual(snapshot.call_count,2)
+  self.assertEqual(prepared.price,'2.01');self.assertEqual(evidence['price'],'2.01')
+  self.assertEqual(depth_price(state,'ths','buy'),'2.02')
  def test_evidence_rejects_wrong_side_stock_stale_future_and_non_cent_prices(self):
   good=selection()
   for changes in [{'code':'603938'},{'book_side':'bid1'},{'observed_at':(datetime.now(timezone.utc)-timedelta(seconds=10)).isoformat()},{'observed_at':(datetime.now(timezone.utc)+timedelta(seconds=10)).isoformat()},{'price':'2.013'},{'price':'NaN'},{'observed_at':'2026-11-17T10:00:00'}]:
@@ -92,7 +95,10 @@ class PriceJournalTests(unittest.TestCase):
  def test_resolved_price_is_durable_before_the_first_submit_boundary(self):
   def submit(**kw):
    kw['on_price'](selection());p=json.loads(self.store.query('SELECT payload FROM broker_requests')[0]['payload']);self.assertEqual(p['price'],'2.01');self.assertEqual(p['intent']['price'],'2.00')
-   kw['before_confirm']();kw['before_confirm']();return dict(status='accepted',submitted=True,confirm=dict(code='000981',side='buy',quantity=100,price='2.01'))
+   with patch('executor.market_price.datetime',wraps=datetime) as clock:
+    clock.now.return_value=datetime.now(timezone.utc)+timedelta(seconds=6)
+    kw['before_confirm']();kw['before_confirm']()
+   return dict(status='accepted',submitted=True,confirm=dict(code='000981',side='buy',quantity=100,price='2.01'))
   self.client.submit_order.side_effect=submit
   result=self.submit();self.assertEqual(result['status'],'accepted');self.assertEqual(self.submit(),result);self.client.submit_order.assert_called_once();self.hook.assert_called_once();self.assertEqual(self.authorize.call_count,2)
  def test_unknown_after_binding_never_reloads_the_book_or_resubmits(self):
@@ -183,16 +189,24 @@ class NativeOpponentSubmitTests(unittest.TestCase):
    p=patch(name,side_effect=callback);p.start();self.addCleanup(p.stop)
  def broker(self,kind):
   from tests.automatic_e2e_backend import NativeBroker,Adapter
-  owner=NativeBroker(kind,'1234561001',[datetime.now(timezone.utc)],1000);owner.depth_spread='.01'
+  owner=NativeBroker(kind,'1234561001',[datetime.now(timezone.utc)],1000);owner.depth_spread='.01';owner.depth_mid='2.24'
   return owner,Adapter(owner)
  def submit(self,adapter,side,hook,guard):
-  return adapter.submit_order(side,'000981',100,'2.24',max_value=None,price_policy=OPPONENT_POLICY,on_price=hook,before_confirm=guard)
+  return adapter.submit_order(side,'000981',100,'2.10',max_value=None,price_policy=OPPONENT_POLICY,on_price=hook,before_confirm=guard)
  def test_both_native_brokers_buy_ask1_and_sell_bid1_before_exact_confirmation(self):
   for kind in ('zhangle','ths'):
    for side,price in [('buy','2.25'),('sell','2.23')]:
     with self.subTest(kind=kind,side=side):
      owner,adapter=self.broker(kind);hook=Mock();guard=Mock()
-     result=self.submit(adapter,side,hook,guard)
+     type_input=owner.device.input_text
+     def move_book(value):
+      type_input(value)
+      if value==price:
+       owner.device.depth_mid='2.35'
+     with patch.object(owner.device,'input_text',side_effect=move_book) as typed:
+      result=self.submit(adapter,side,hook,guard)
+     self.assertNotIn('2.10',[call.args[0] for call in typed.call_args_list])
+     self.assertEqual(owner.device.depth_mid,'2.35')
      self.assertEqual(result['status'],'accepted');self.assertEqual(result['confirm']['price'],price);self.assertEqual(owner.orders[0]['price'],price);self.assertEqual(owner.orders[0]['quantity'],100)
      hook.assert_called_once();self.assertEqual(hook.call_args.args[0]['price'],price);self.assertEqual(guard.call_count,1 if kind=='ths' else 2)
  def test_missing_depth_stops_both_native_brokers_before_first_order_tap(self):

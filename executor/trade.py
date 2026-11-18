@@ -532,7 +532,7 @@ class TradePage:
                 raise ValueError()
         except (InvalidOperation, ValueError):
             raise TradeError("价格及可选金额上限必须为有效正数") from None
-        form = self.preview(side=side, code=code, quantity=quantity, price=price)
+        form = self.preview(side=side, code=code, quantity=quantity, price=None if price_policy is not None else price)
         if form.side != side or form.code != code:
             raise TradeError(
                 f"表单与预期不一致：side={form.side} code={form.code}，已放弃提交"
@@ -542,7 +542,7 @@ class TradePage:
         if price_policy is not None:
             from .market_price import OPPONENT_POLICY,prepare_opponent
             if price_policy!=OPPONENT_POLICY or on_price is None:raise TradeError('缺少已核验的自动对手价入口')
-            form,nodes,evidence=prepare_opponent('zhangle',side,code,quantity,lambda:self.snapshot()[1],read_form,self._fill)
+            form,nodes,evidence=prepare_opponent('zhangle',side,code,quantity,lambda:self.snapshot()[1],read_form,self._fill,nodes=nodes)
             limit=Decimal(form.price)
             on_price(evidence)
         current = read_form(nodes)

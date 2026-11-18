@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
-from core.live_trading import LiveTrading
+from core.live_trading import LiveTrading, signal_identity
 from core.provider import CN
 from core.store import Store
 from core.trading_price import PRICE_POLICY, price_guard
@@ -94,6 +94,25 @@ class IncidentExecutionTests(unittest.TestCase):
         with patch('core.live_trading.brokers.holdings',return_value=self.snapshot()) as holdings:self.service.drain(reports=False)
         self.assertEqual(self.run_payload()[0]['status'],'accepted');holdings.assert_called_once_with(self.store,'a',target_code=self.code)
         self.assertEqual(self.submit.call_args.args[1:6],('a','buy','603938',200,'28.89'))
+
+    def test_minute_rollover_after_holdings_waits_without_restarting_the_broker_flow(self):
+        self.observe()
+        _,payload=self.run_payload()
+        def holdings(*args,**kwargs):
+            self.service.frames[self.code]=dict(day=self.now.date().isoformat(),ready=False,
+                latest=signal_identity(payload['signal']))
+            return self.snapshot()
+        def minute_arrived(timeout):
+            self.submit.assert_not_called()
+            self.assertFalse(self.service.frames[self.code]['ready'])
+            self.assertGreater(timeout,0)
+            self.service.frames[self.code]['ready']=True
+            return True
+        with patch('core.live_trading.brokers.holdings',side_effect=holdings) as sync,\
+             patch.object(self.service.frame_changed,'wait',side_effect=minute_arrived) as wait:
+            self.service.drain(reports=False)
+        self.assertEqual(self.run_payload()[0]['status'],'accepted')
+        sync.assert_called_once();wait.assert_called_once();self.submit.assert_called_once()
 
     def test_adverse_price_still_reaches_verified_account(self):
         self.app.quotes[self.code]=dict(price='28.89',timestamp=self.now.isoformat());self.observe()

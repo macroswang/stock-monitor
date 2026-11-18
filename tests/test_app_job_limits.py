@@ -35,3 +35,33 @@ class JobLimitTests(unittest.TestCase):
    thread=threading.Thread(target=self.app.loop);thread.start()
    try:self.assertTrue(fast_twice.wait(1.5));self.assertFalse(gate.is_set())
    finally:self.app.stop.set();gate.set();thread.join(2)
+ def test_slow_stock_pool_does_not_hold_back_watched_minutes(self):
+  from unittest.mock import patch
+  self.app.store.execute('DELETE FROM watch')
+  self.app.store.execute("INSERT INTO watch(code,name) VALUES('sh603938','三孚股份')")
+  self.app.store.execute("INSERT INTO pool(code,name,added_day,source,state) VALUES('sh603938','三孚股份','2026-11-18','test','观察')")
+  self.app.store.setconfig('monitor',True);self.app.POLL_SECONDS=.01
+  pool_started=threading.Event();release_pool=threading.Event();second_poll=threading.Event()
+  def slow_batch(codes):
+   pool_started.set()
+   release_pool.wait(2)
+   return {}
+  self.app.pool._batch=slow_batch
+  self.app.pool.refresh_fund_flows=lambda codes:{}
+  calls=[]
+  def poll_stock(code):
+   calls.append(code)
+   if len(calls)==2:second_poll.set()
+  self.app.poll_one=poll_stock
+  with patch('core.app.trading',return_value=True):
+   pool=threading.Thread(target=self.app.pool_loop)
+   watch=threading.Thread(target=self.app.loop)
+   pool.start()
+   try:
+    self.assertTrue(pool_started.wait(1))
+    watch.start()
+    self.assertTrue(second_poll.wait(1.5))
+    self.assertFalse(release_pool.is_set())
+   finally:
+    self.app.stop.set();release_pool.set();pool.join(2)
+    if watch.ident is not None:watch.join(2)

@@ -229,14 +229,14 @@ class ThsOrderPage:
             if cap is not None and (not cap.is_finite() or cap<=0):raise ValueError()
             if cap is None and price is None:raise ValueError()
         except (InvalidOperation,ValueError):raise ValueError('单笔金额上限必须为有效正数') from None
-        form=self.preview(side,code,quantity,price)
+        form=self.preview(side,code,quantity,None if price_policy is not None else price)
         if not self.confirmation_required(self._last_form_nodes):
             raise ThsError('券商开启了免二次确认，已阻止委托；请先在券商内关闭该设置')
         nodes=self._last_form_nodes if self._last_form_nodes is not None else self.snapshot()
         if price_policy is not None:
             from .market_price import OPPONENT_POLICY,prepare_opponent
             if price_policy!=OPPONENT_POLICY or on_price is None:raise ThsError('缺少已核验的自动对手价入口')
-            form,nodes,evidence=prepare_opponent('ths',side,code,quantity,self.snapshot,read_form,self.fill)
+            form,nodes,evidence=prepare_opponent('ths',side,code,quantity,self.snapshot,read_form,self.fill,nodes=nodes)
             on_price(evidence)
         current=read_form(nodes)
         if current!=form:raise ThsError('检查设置后委托表单已变化，未提交')

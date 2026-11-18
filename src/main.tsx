@@ -137,13 +137,19 @@ function App(){
  const [snapshot,setSnapshot]=useState<Snapshot>();const [code,setCode]=useState('');const [view,setView]=useState('minute');const [panel,setPanel]=useState(()=>new URLSearchParams(window.location.search).get('panel')==='breadth'?'breadth':new URLSearchParams(window.location.search).get('panel')==='trading'?'trading':'market');
  // 已访问页面保持挂载，切换时保留图表与表单状态；尚未访问的页面不提前启动。
  const visitedPanels=useRef(new Set<string>());visitedPanels.current.add(panel);
- const [cache,setCache]=useState<Cached[]>([]);const [dayChoice,setDayChoice]=useState('');const [daily,setDaily]=useState<Daily[]>([]);
+ const [minuteData,setMinuteData]=useState<{code:string;rows:Cached[]}>();
+ const [dailyData,setDailyData]=useState<{code:string;rows:Daily[]}>();
+ const cache=minuteData?.code===code?minuteData.rows:[];
+ const daily=dailyData?.code===code?dailyData.rows:[];
+ const minuteLoaded=minuteData?.code===code;
+ const [dayChoice,setDayChoice]=useState('');
  const [linkedMinuteOpen,setLinkedMinuteOpen]=useState(()=>{try{return localStorage.getItem('stock-monitor-linked-minute-open')!=='false';}catch{return true;}});
  const toggleLinkedMinute=()=>setLinkedMinuteOpen(old=>{const next=!old;try{localStorage.setItem('stock-monitor-linked-minute-open',String(next));}catch{}return next;});
  const [input,setInput]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [secret,setSecret]=useState('');
  useEffect(()=>{if(!message)return;const timer=window.setTimeout(()=>setMessage(''),3000);return()=>window.clearTimeout(timer);},[message]);
  const [start,setStart]=useState('2026-10-01');const [end,setEnd]=useState(new Date().toLocaleDateString('sv-SE'));const [kind,setKind]=useState('minute');const [replayEvents,setReplayEvents]=useState<Event[]>([]);
- const [history,setHistory]=useState<HistoryView>();const [range,setRange]=useState({start:shiftDay(today(),-DAILY_BATCH_DAYS),end:today()});
+ const [historyData,setHistory]=useState<HistoryView>();const history=historyData?.code===code?historyData:undefined;
+ const [range,setRange]=useState({start:shiftDay(today(),-DAILY_BATCH_DAYS),end:today()});
  const navigationBusy=useRef(false);const [navigating,setNavigating]=useState(false);
  const watchCodes=useRef<string[]>([]);
  const klineApplied=useRef('');
@@ -156,12 +162,14 @@ function App(){
  const [minuteHint,setMinuteHint]=useState('');
  const [connectionError,setConnectionError]=useState('');
  const currentCode=useRef(code);currentCode.current=code;
- const loadSequence=useRef(0);const snapshotSequence=useRef(0);
+ const minuteSequence=useRef(0);const dailySequence=useRef(0);const snapshotSequence=useRef(0);
  const day=dayChoice||(isCandleView(view)?history?.days.at(-1)?.date:(cache.at(-1)?.day||today()))||'';
  const currentDay=useRef(day);currentDay.current=day;
  const visible=usePageVisible(),marketActive=visible&&panel==='market';
  const revisions=snapshot?.data_revisions?.code===code?snapshot.data_revisions:undefined;
- const historyRevision=JSON.stringify(revisions?.history??snapshot?.now),chartRevision=JSON.stringify(revisions?.chart??snapshot?.now),marketRevision=JSON.stringify(revisions?.market??snapshot?.now);
+ const historyRevision=JSON.stringify(revisions?.history??snapshot?.now),marketRevision=JSON.stringify(revisions?.market??snapshot?.now);
+ const minuteRevision=revisions?.chart[0]??snapshot?.now;
+ const dailyRevision=JSON.stringify(revisions?.chart.slice(1)??snapshot?.now);
  const minuteActive=marketActive&&(view==='minute'||linkedMinuteOpen);
  useEffect(()=>{if(!visible||!(minuteActive||panel==='breadth'))return;let active=true;api<MarketData>('market',{day}).then(r=>{if(active)setMarket(r);}).catch(()=>{if(active)setMarket({quotes:[],minute:null,error:'指数暂时不可用'});});return()=>{active=false;};},[day,marketRevision,minuteActive,panel,visible]);
  const paperStart=isCandleView(view)?range.start:day,paperEnd=isCandleView(view)?range.end:day;
@@ -204,14 +212,21 @@ function App(){
  useEffect(()=>{if(!preview)isEnabled().then(setAutostart).catch(()=>{});},[]);
  useDisplayPolling(true,refresh,3000);
  useDisplayPolling(marketActive,async()=>{try{const next=await api<{id:string;revision:number}|null>('paper_account_state',{account:paperAccount?.id});setPaperAccount(old=>old?.id===next?.id&&old?.revision===next?.revision?old:next);}catch{/* Preserve marks during a transient connection failure. */}},3000,paperAccount?.id||'');
- const load=async(target=code)=>{
-  if(!target||currentCode.current!==target)return;
-  const seq=++loadSequence.current;
-  const [m,d]=await Promise.all([api<Cached[]>('chart',{code:target,kind:'minute'}),api<Cached[]>('chart',{code:target,kind:'daily'})]);
-  if(currentCode.current!==target||seq!==loadSequence.current)return;
-  setCache(m);setDaily(d.map(r=>r.data as Daily));
+ const loadMinute=async()=>{
+  if(!code||currentCode.current!==code)return;
+  const seq=++minuteSequence.current;
+  // A newer revision must not reuse an in-flight read of the previous cache.
+  const rows=await api<Cached[]>('chart',{code,kind:'minute',revision:minuteRevision});
+  if(currentCode.current===code&&seq===minuteSequence.current)setMinuteData({code,rows});
  };
- const loadHistory=async()=>{if(!code)return;const key=code+'|'+range.start+'|'+range.end,seq=++historySequence.current;const data=await api<HistoryView>('history',{code,...range});if(historyKey.current===key&&seq===historySequence.current){setHistory(data);setSourceInfo(data.source);}};
+ const loadDaily=async()=>{
+  if(!code||currentCode.current!==code)return;
+  const seq=++dailySequence.current;
+  const rows=await api<Cached[]>('chart',{code,kind:'daily',revision:dailyRevision});
+  if(currentCode.current===code&&seq===dailySequence.current)setDailyData({code,rows:rows.map(r=>r.data as Daily)});
+ };
+ const load=()=>Promise.all([loadMinute(),loadDaily()]);
+ const loadHistory=async()=>{if(!code)return;const key=code+'|'+range.start+'|'+range.end,seq=++historySequence.current;const data=await api<HistoryView>('history',{code,...range,revision:historyRevision});if(historyKey.current===key&&seq===historySequence.current){setHistory(data);setSourceInfo(data.source);}};
  useEffect(()=>{setHistory(old=>old?.code===code?old:undefined);if(marketActive)loadHistory().catch(e=>setMessage(String(e)));},[code,range,marketActive]);
  useEffect(()=>{
   const weekly=view==='weekly',targetCount=candleDemand[view]||DAILY_WINDOW;
@@ -253,19 +268,20 @@ function App(){
   if(view==='daily'){klineApplied.current=code;return;}
   if(klineApplied.current!==code){klineApplied.current=code;setView('daily');}
  },[panel,code,klineRequest,view]);
- useEffect(()=>{setCache([]);setDaily([]);setReplayEvents([]);load().catch(e=>{if(currentCode.current===code)setMessage(String(e));});return()=>{loadSequence.current++;};},[code]);
- useEffect(()=>{if(!preview&&snapshot&&marketActive){load().catch(()=>{});}},[chartRevision,marketActive]);
+ useEffect(()=>{setReplayEvents([]);load().catch(e=>{if(currentCode.current===code)setMessage(String(e));});return()=>{minuteSequence.current++;dailySequence.current++;};},[code]);
+ useEffect(()=>{if(!preview&&snapshot&&minuteActive)loadMinute().catch(()=>{});},[code,minuteRevision,minuteActive]);
+ useEffect(()=>{if(!preview&&snapshot&&marketActive)loadDaily().catch(()=>{});},[code,dailyRevision,marketActive]);
  async function waitJob<T>(method:string,args:Record<string,unknown>):Promise<T>{
   const task=await api<{job:string}>(method,args);
   for(;;){const state=await api<{status:string;error?:string;result?:T}>('job',{job:task.job});if(state.status==='failed')throw Error(state.error);if(state.status==='done')return state.result!;await new Promise(resolve=>setTimeout(resolve,500));}
  }
  useEffect(()=>{
-  setMinuteHint('');if(!marketActive||preview||!code||view!=='minute'||!day||cache.some(r=>r.day===day))return;
+  setMinuteHint('');if(!marketActive||preview||!code||!minuteLoaded||view!=='minute'||!day||cache.some(r=>r.day===day))return;
   const key=code+'|'+day;if(ensuredMinute.current.has(key))return;ensuredMinute.current.add(key);let active=true;
   setMinuteHint('正在优先检查本地缓存并按需补取…');
-  waitJob<{message?:string}>('minute_ensure',{code,day}).then(async r=>{if(!active)return;setMinuteHint(r.message||'已检查可用分时');await load();await loadHistory();}).catch(e=>{if(active)setMinuteHint(String(e));});
+  waitJob<{message?:string}>('minute_ensure',{code,day}).then(async r=>{if(!active)return;setMinuteHint(r.message||'已检查可用分时');await loadMinute();await loadHistory();}).catch(e=>{if(active)setMinuteHint(String(e));});
   return()=>{active=false;};
- },[code,day,view,cache.length,marketActive]);
+ },[code,day,view,cache.length,minuteLoaded,marketActive]);
  async function action(fn:()=>Promise<unknown>,success?:string){if(busy)return;setBusy(true);setMessage('');try{await fn();if(success)setMessage(success);await refresh();}catch(e){setMessage(String(e));}finally{setBusy(false);}}
  async function removeWatch(target:Watch){
   if(busy)return;

@@ -1413,6 +1413,33 @@ test('股票池表头左对齐，图上出现底信号后行内显示圆标并�
   await group.screenshot({path:test.info().outputPath('pool-bottom-badge.png')});
 });
 
+test('股票池慢分页不会重叠刷新或在切走后继续请求',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-11T14:00:00+08:00')});
+  const pool=await boot(page);
+  await expect(pool).toHaveAttribute('aria-busy','false');
+  await page.evaluate(()=>{
+    const w=window as any,original=w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke=async(command:string,params:any)=>{
+      const result=await original(command,params);
+      if(command!=='rpc'||params.method!=='pool'||params.args.offset!==0||w.releasePoolPage)return result;
+      await new Promise<void>(resolve=>{w.releasePoolPage=resolve;});
+      return {...result,has_more:true};
+    };
+  });
+  const offsets=async()=>(await rpcCalls(page)).filter(call=>call.method==='pool').map(call=>call.args.offset);
+  await page.clock.runFor(6500);
+  await expect.poll(()=>page.evaluate(()=>Boolean((window as any).releasePoolPage))).toBe(true);
+  await page.clock.runFor(6500);
+  expect(await offsets()).toEqual([0,0]);
+  await page.getByRole('button',{name:'自选监控',exact:true}).click();
+  await page.evaluate(()=>(window as any).releasePoolPage());
+  await page.clock.runFor(6500);
+  expect(await offsets()).toEqual([0,0]);
+  await page.getByRole('button',{name:'股票池',exact:true}).click();
+  await expect.poll(offsets).toEqual([0,0,0]);
+  await expect(pool).toHaveAttribute('aria-busy','false');
+});
+
 test('股票池展开分时持续取新数据，切走和收起后停止刷新',async({page})=>{
   await page.clock.install({time:new Date('2026-11-12T14:00:00+08:00')});
   await boot(page,{today:'2026-11-12'});

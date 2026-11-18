@@ -35,6 +35,7 @@ ACTIVE_CYCLE_STATES=('sell_pending','waiting_buy','buy_pending','needs_review')
 # Bound each native operation so one broker cannot hang the app. Queue waiting
 # is not measured against the chart's minute label; latest-signal checks own it.
 DEVICE_OPERATION_SECONDS=90
+MINUTE_FRAME_WAIT_SECONDS=10
 
 
 class QuoteNotReady(ValueError):
@@ -73,6 +74,7 @@ class LiveTrading:
     def __init__(self, app):
         self.app, self.store = app, app.store
         self.lock = threading.RLock()
+        self.frame_changed = threading.Condition(self.lock)
         self.started_at = now_cn().isoformat()
         self.execution_epoch = self.store.config().get('trading_execution_epoch', '')
         self.frames = {}
@@ -678,6 +680,7 @@ class LiveTrading:
             live_minute=str(quote.get('timestamp') or now.isoformat())[11:16]
             self.frames[code]=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations},
                                    latest=signal_identity(latest) if latest else None,ready=tail==live_minute,observed_at=now.isoformat())
+            if tail==live_minute:self.frame_changed.notify_all()
             for m in fresh:
                 historical=(not same_day and m['time']<=self.started_at[11:16]) or m['time']<prior_tail or m['time']!=tail or m['time']!=live_minute or m is not latest
                 self.observe(code,[m],quote,now,continuous,admission_reason='历史信号或启动采样基线，未补单' if historical else '',
@@ -957,6 +960,18 @@ class LiveTrading:
     def execution_age(self,run,now):
         return stamp_age(json.loads(run['payload']).get('signal_at',run['created_at']),now)
 
+    def wait_for_current_frame(self,run,payload):
+        # Keep the verified holdings through a short minute rollover. Wait before
+        # opening the order form or taking a broker price with a 5-second limit.
+        def ready():
+            try:self.check_current(run,payload)
+            except QuoteNotReady:return False
+            return True
+
+        with self.frame_changed:
+            if not self.frame_changed.wait_for(ready,timeout=MINUTE_FRAME_WAIT_SECONDS):
+                self.check_current(run,payload)
+
     def _process(self, run):
         payload = json.loads(run['payload'])
         payload.setdefault('timings',{})['queue_ms']=milliseconds(stamp_age(run['created_at'],now_cn()))
@@ -1015,6 +1030,8 @@ class LiveTrading:
             current_enabled=self.paired_allowed(current) if paired else current[run['side']+'_enabled'] and current.get('strategy_mode')=='independent'
             if current['revision'] != rule['revision'] or not current_enabled:
                 raise ValueError('持仓状态已改变，请检查交易规则')
+            if payload['mode']=='live':
+                self.wait_for_current_frame(run,payload)
             with self.lock:
                 paused = self.store.query('SELECT paused FROM trading_accounts WHERE account_id=?',(run['account_id'],))
                 if self.settings()['paused'] or (paused and paused[0]['paused']) or self.rule(run['account_id'],run['code'])['revision']!=rule['revision']:

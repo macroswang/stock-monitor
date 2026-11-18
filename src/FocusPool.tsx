@@ -66,50 +66,56 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   const [addOpen,setAddOpen]=useState(false);
   const [input,setInput]=useState('');
   const sequence=useRef(0);
+  const reading=useRef(false);
+  const activeRef=useRef(active);
+  activeRef.current=active;
   const refreshedAt=useRef(0);
   const tradingRef=useRef(false);
   const signalsRunning=useRef(false);
-  const readSignals=useCallback(async()=>{
+  const readSignals=useCallback(async(seq:number)=>{
     const mode=localStorage.getItem('stock-monitor-turning-mode-v1')||'zhangle';
     const result=await request<{signals?:Record<string,BottomSignal>;running?:boolean}>('pool_signals',{mode});
-    if(result?.signals){
+    if(activeRef.current&&seq===sequence.current&&result?.signals){
       signalsRunning.current=Boolean(result.running);
       setBottomSignals(current=>JSON.stringify(current)===JSON.stringify(result.signals)?current:result.signals!);
     }
   },[request]);
-  const dataRef=useRef<PoolData|null>(null);
-  dataRef.current=data;
-  const fetchPool=useCallback(async()=>{
+  const fetchPool=useCallback(async(isCurrent:()=>boolean)=>{
     const first=await request<PoolData>('pool',{limit:LIMIT,offset:0,include_archived:false});
     const entries=[...first.entries];
     let page=first;
-    while(page.has_more){
+    while(isCurrent()&&page.has_more){
       page=await request<PoolData>('pool',{limit:LIMIT,offset:entries.length,include_archived:false});
       if(!page.entries.length)throw Error('股票池分页读取未完成，请重试');
       entries.push(...page.entries);
     }
+    if(!isCurrent())return;
     return {...first,entries:[...new Map(entries.map(entry=>[entry.code,entry])).values()],has_more:false};
   },[request]);
 
   const read=useCallback(async(mode:'reset'|'refresh')=>{
-    if(mode==='refresh'){
-      if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
-      // 休市降频：行情不变时 30 秒刷新一次，减少重复请求。
-      if(!tradingRef.current&&Date.now()-refreshedAt.current<POLL_IDLE){if(signalsRunning.current)await readSignals();return;}
-    }
+    if(!activeRef.current)return;
+    if(mode==='refresh'&&(reading.current||document.visibilityState==='hidden'))return;
     const seq=++sequence.current;
+    const isCurrent=()=>activeRef.current&&seq===sequence.current;
+    reading.current=true;
     if(mode==='reset')setLoading(true);
     try{
-      const next=await fetchPool();
-      if(seq!==sequence.current)return;
+      // A slow page must finish before the next timer-driven refresh can start.
+      if(mode==='refresh'&&!tradingRef.current&&Date.now()-refreshedAt.current<POLL_IDLE){
+        if(signalsRunning.current)await readSignals(seq);
+        return;
+      }
+      const next=await fetchPool(isCurrent);
+      if(!next||!isCurrent())return;
       refreshedAt.current=Date.now();
       tradingRef.current=Boolean(next.trading);
       setData(next);setError(next.error||'');
-      await readSignals();
+      await readSignals(seq);
     }catch(cause){
-      if(seq===sequence.current)setError(readError(cause));
+      if(isCurrent())setError(readError(cause));
     }finally{
-      if(seq===sequence.current)setLoading(false);
+      if(isCurrent()){reading.current=false;setLoading(false);}
     }
   },[fetchPool,readSignals]);
 
@@ -118,7 +124,12 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     void read('reset');
     const timer=preview?undefined:setInterval(()=>void read('refresh'),POLL_LIVE);
     const sync=()=>{void read('reset');};window.addEventListener('turning-display-change',sync);
-    return ()=>{if(timer!==undefined)clearInterval(timer);window.removeEventListener('turning-display-change',sync);};
+    return ()=>{
+      sequence.current++;
+      reading.current=false;
+      if(timer!==undefined)clearInterval(timer);
+      window.removeEventListener('turning-display-change',sync);
+    };
   },[active,preview,read]);
 
   const entries=useMemo<Entry[]>(()=>data?.entries??[],[data]);
@@ -165,12 +176,6 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
   const quoteClock=clockText(data?.quotes_time||data?.updated_at);
   const marketState=!data?'读取中':data.trading?'实时':(data.quotes_time?'快照':'—');
 
-  const refetch=async()=>{
-    try{
-      const next=await fetchPool();
-      setData(next);setError(next.error||'');
-    }catch(cause){setError(readError(cause));}
-  };
   const requireDesktop=()=>{
     if(readOnly){setMessage('浏览器只读预览：请在桌面客户端操作。');return false;}
     return true;
@@ -194,7 +199,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     try{
       await request('pool_remove',{code:entry.code});
       if(openCode===entry.code)setOpenCode('');
-      await refetch();
+      await read('reset');
     }catch(cause){setError(cause instanceof Error?cause.message:'删除失败');}
     finally{setBusy(false);}
   };
@@ -203,7 +208,7 @@ export default function FocusPool({request,preview,active,onOpenDaily,onTrade,wa
     if(!code)return;
     if(!requireDesktop())return;
     setBusy(true);setError('');
-    try{await request('pool_add',{code});setInput('');await refetch();}
+    try{await request('pool_add',{code});setInput('');await read('reset');}
     catch(cause){setError(cause instanceof Error?cause.message:'添加失败');}
     finally{setBusy(false);}
   };

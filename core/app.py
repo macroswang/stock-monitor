@@ -130,6 +130,7 @@ class App:
             threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
             threading.Thread(target=self.sector_flow_loop,daemon=True).start()
             threading.Thread(target=self.loop,daemon=True).start()
+            threading.Thread(target=self.pool_loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
             threading.Thread(target=self.archive_loop,daemon=True).start()
@@ -334,10 +335,16 @@ class App:
                     if len(pending)>=4:break
                     if code in inflight or due.get(code,0)>time.monotonic():continue
                     pending[pool.submit(self.poll_one,code)]=code;initial.discard(code)
-                try:self.pool.poll()
-                except Exception as e:print('pool: '+type(e).__name__,file=sys.stderr,flush=True)
                 self.stop.wait(.25)
         finally:pool.shutdown(wait=False,cancel_futures=True)
+
+    def pool_loop(self):
+        # Pool-wide quote batches and fund-flow fallbacks can be slow. Keep
+        # them off the scheduler for watched stocks and their live minutes.
+        while not self.stop.is_set():
+            try:self.pool.poll()
+            except Exception as e:print('pool: '+type(e).__name__,file=sys.stderr,flush=True)
+            self.stop.wait(1)
 
     def market_loop(self):
         initial=True
