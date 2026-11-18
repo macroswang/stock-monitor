@@ -461,3 +461,37 @@ def chart(store,code,day):
         if point.get('archived_unfilled') and (point.get('filled')!=0 or point.get('status') not in ('accepted','cancelled','rejected')):
             point.pop('archived_unfilled',None)
     return dict(code=code,day=day,accounts=accounts,points=points)
+
+
+def daily_chart(store,code,start,end):
+    """Summarize verified fills on days with evidence, using the intraday deduplication."""
+    start=date.fromisoformat(start).isoformat();end=date.fromisoformat(end).isoformat()
+    latest=min(end,now_cn().date().isoformat())
+    days=store.query("""SELECT day FROM trading_runs WHERE code=? AND day BETWEEN ? AND ?
+        AND status IN ('partial','filled','cancelled')
+        UNION SELECT day FROM cache WHERE kind=? AND day BETWEEN ? AND ? AND code LIKE 'broker-account:%'
+        ORDER BY day""",(code,start,latest,CACHE_KIND,start,latest))
+    marks=[]
+    for row in days:
+        day=row['day']
+        totals={'buy':0,'sell':0};priced={'buy':0,'sell':0};cash={'buy':0,'sell':0}
+        for point in chart(store,code,day)['points']:
+            side=point['side']
+            if side not in totals or point.get('archived_unfilled') or point['status'] not in ('partial','filled','cancelled'):
+                continue
+            if point['source']!='broker_cache' and not (point['mode']=='live' and point['attempted']):
+                continue
+            try:filled=shares(point.get('filled'))
+            except ValueError:continue
+            if not filled:continue
+            totals[side]+=filled
+            try:average=amount(point.get('fill_price'))
+            except ValueError:continue
+            if average>0:
+                priced[side]+=filled;cash[side]+=average*filled
+        buy,sell=totals['buy'],totals['sell']
+        if buy or sell:
+            marks.append(dict(day=day,value='T' if buy and sell else 'B' if buy else 'S',buyShares=buy,sellShares=sell,
+                buyAverage=float(cash['buy']/buy) if buy and buy==priced['buy'] else None,
+                sellAverage=float(cash['sell']/sell) if sell and sell==priced['sell'] else None))
+    return dict(code=code,start=start,end=end,marks=marks)

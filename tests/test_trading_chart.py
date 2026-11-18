@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock,patch
 from core.store import Store
 from core.live_trading import LiveTrading
-from core.trading_chart import chart,sync_filled_orders,CACHE_KIND
+from core.trading_chart import chart,daily_chart,sync_filled_orders,CACHE_KIND
 
 class TradingChartTests(unittest.TestCase):
  def setUp(self):
@@ -32,6 +32,20 @@ class TradingChartTests(unittest.TestCase):
   self.seed();p=chart(self.store,'sz000981','2026-11-03')['points'][0]
   self.assertEqual(p['order_price'],'2.16');self.assertEqual(p['reference_price'],2.17)
   self.assertIsNone(p['fill_price']);self.assertIsNone(p['filled']);self.assertEqual(p['order_id'],'contract-one')
+ def test_daily_marks_aggregate_verified_fills_without_promoting_orders(self):
+  first,mixed,sell_only='2026-11-03','2026-11-04','2026-11-05'
+  self.seed('buy',day=first,status='partial',verification=dict(origin='broker_auto',status='partial',filled=200,average='2.14'))
+  self.seed('cancelled-partial',day=mixed,status='cancelled',verification=dict(origin='broker_auto',status='cancelled',filled=100,average='2.16'))
+  self.seed('trial',day=mixed,status='filled',mode='trial',verification=dict(origin='broker_auto',status='filled',filled=500,average='2.16'))
+  self.seed('only-accepted',day='2026-11-06')
+  for day in (mixed,sell_only):
+   self.store.cache('broker-account:a',CACHE_KIND,day,dict(account_id='a',account_verified=True,complete=True,day=day,
+     observed_at=day+'T15:05:00+08:00',rows=[dict(code='000981',side='sell',date=day,time='14:20:00',order_id='actual-sell',filled=300,average='2.20')]))
+  result=daily_chart(self.store,'sz000981',first,'2026-11-06')
+  self.assertEqual([(m['day'],m['value'],m['buyShares'],m['sellShares']) for m in result['marks']],
+                   [(first,'B',200,0),(mixed,'T',100,300),(sell_only,'S',0,300)])
+  self.assertEqual((result['marks'][1]['buyAverage'],result['marks'][1]['sellAverage']),(2.16,2.20))
+  self.assertEqual(daily_chart(self.store,'sz000815',first,'2026-11-06')['marks'],[])
  def test_manual_submission_is_visible_then_replaced_only_by_a_new_verified_fill_sync(self):
   day='2026-11-03';stamp=day+'T10:00:01+08:00'
   request=dict(account_id='a',code='000981',side='buy',price='2.20',quantity=100,dry_run=False)

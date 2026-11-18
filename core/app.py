@@ -900,6 +900,9 @@ class App:
         if method=='trading_chart':
             from .trading_chart import chart
             return chart(self.store,symbol(args['code']),datetime.fromisoformat(args['day']).date().isoformat())
+        if method=='trading_chart_daily':
+            from .trading_chart import daily_chart
+            return daily_chart(self.store,symbol(args['code']),args['start'],args['end'])
         if method=='trading_chart_sync':
             from .trading_chart import sync_filled_orders
             return self.broker_job(lambda:sync_filled_orders(self.store,datetime.fromisoformat(args['day']).date().isoformat()))

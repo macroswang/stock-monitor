@@ -28,6 +28,9 @@ export function autoTradeRecords(data:AutoTradeChart|undefined,shapes:ReadonlyAr
   return [{point:p,time,price,orderPrice,fillPrice}];
  });
 }
+export type AutoDailyMark={day:string;value:'B'|'S'|'T';buyShares:number;sellShares:number;buyAverage:number|null;sellAverage:number|null};
+export type AutoDailyChart={code:string;start:string;end:string;marks:AutoDailyMark[]};
+
 /** B/S marks every live automatic submission plus verified broker-side fills; status stays in details. */
 export function autoTradeMarks(data:AutoTradeChart|undefined,shapes:ReadonlyArray<{key:string;kind:string;time:string;price:number}>,day:string){
  const lanes=new Map<string,number>();

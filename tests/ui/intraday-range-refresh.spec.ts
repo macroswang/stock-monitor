@@ -52,6 +52,9 @@ async function axes(page:Page){
 
 test('full App snapshot/cache arrival order never shrinks known tick extrema or moves historical pixels',async({page},info)=>{
  await page.clock.install({time:new Date(stamp('14:59:00'))});const f=fixture();let reads=0;const writes:string[]=[];
+ const buyDay='2026-11-12',sellDay='2026-11-13',emptyDay='2026-11-16';
+ const candle=f.history[code].daily[0];
+ f.history[code].daily=[...[buyDay,sellDay,emptyDay].map(date=>({...candle,date})),candle];
  let quoteReads=0,quoteRead:{now:string;quotes:Record<string,unknown>}|undefined,holdSnapshot:Promise<void>|undefined;
  let releaseDaily!:()=>void;
  const dailyGate=new Promise<void>(resolve=>{releaseDaily=resolve;});
@@ -70,6 +73,12 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
   if(method==='history')return f.history[code];
   if(method==='market'||method==='index_minute')return {quotes:[],minute:null};
   if(method==='trading_chart')return {code,day,accounts:[],points:[]};
+  if(method==='trading_chart_daily')return {...args,marks:[
+   {day:buyDay,value:'B',buyShares:300,buyAverage:28,sellShares:0,sellAverage:null},
+   {day:sellDay,value:'S',buyShares:0,buyAverage:null,sellShares:200,sellAverage:28.1},
+   {day,value:'T',buyShares:200,buyAverage:28.2,sellShares:400,sellAverage:28.5},
+  ]};
+  if(method==='daily_load')return {job:'isolated-daily'};
   if(method==='volume_flow')return {code,day,status:'unavailable',minutes:[]};
   if(method==='stock_profile')return {code,data:null,themes:[],theme_status:'unavailable',running:false,error:''};
   if(method==='paper_account_state'||method==='pool_signals')return null;
@@ -169,4 +178,28 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
  await page.clock.runFor(600);
  await expect(page.locator('.stock.selected .stock-right strong')).toHaveText('28.61');
  await expect.poll(async()=>(await axes(page))?.livePoint).toBe(28.61);
+
+ await page.getByRole('button',{name:'日K',exact:true}).click();
+ const dailyChart=page.getByLabel('日K线及成交量',{exact:true});
+ await expect.poll(()=>dailyChart.evaluate(async el=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from ["']([^"'\n]*echarts\.js[^"'\n]*)["']/)![1]);
+  const series=e.getInstanceByDom(el)?.getOption().series||[];
+  return {marks:series[0]?.markPoint?.data.filter((m:any)=>m.autoTradeDaily).map((m:any)=>[m.coord[0],m.value,m.symbol,m.symbolOffset[1]]),
+   lines:series.find((s:any)=>s.name==='实盘成交标记连线')?.data.length};
+ })).toEqual({marks:[[buyDay,'B','circle',18],[sellDay,'S','circle',-18],[day,'T','circle',-18]],lines:3});
+ const hoverDaily=async(date:string)=>{
+  const point=await dailyChart.evaluate(async(el,date)=>{
+   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from ["']([^"'\n]*echarts\.js[^"'\n]*)["']/)![1]);
+   const [x,y]=e.getInstanceByDom(el).convertToPixel({xAxisIndex:0,yAxisIndex:0},[date,28]);const r=el.getBoundingClientRect();
+   return {x:r.x+x,y:r.y+y};
+  },date);
+  await page.mouse.move(point.x,point.y);
+ };
+ await hoverDaily(buyDay);
+ const dailyTooltip=dailyChart.locator('.daily-tooltip');
+ await expect(dailyTooltip).toContainText('实盘成交 B');
+ await expect(dailyTooltip).toContainText('买入300股 · 均价28.00元');
+ await hoverDaily(emptyDay);
+ await expect(dailyTooltip).toContainText(emptyDay);
+ await expect(dailyTooltip).not.toContainText('实盘成交');
 });
