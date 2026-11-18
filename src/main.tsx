@@ -8,6 +8,7 @@ import {enable,disable,isEnabled} from '@tauri-apps/plugin-autostart';
 import {isPermissionGranted,requestPermission} from '@tauri-apps/plugin-notification';
 import './style.css';
 import Chart from './Chart';
+import IntradayReplay from './IntradayReplay';
 import type {AutoDailyChart,AutoTradeChart} from './autoTradeMarks';
 import {benchmarkForStock} from './minuteMacd';
 import {isCandleView,weeklyBars,candleDate} from './candleData';
@@ -162,7 +163,7 @@ function App(){
  const toggleLinkedMinute=()=>setLinkedMinuteOpen(old=>{const next=!old;try{localStorage.setItem('stock-monitor-linked-minute-open',String(next));}catch{}return next;});
  const [input,setInput]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [secret,setSecret]=useState('');
  useEffect(()=>{if(!message)return;const timer=window.setTimeout(()=>setMessage(''),3000);return()=>window.clearTimeout(timer);},[message]);
- const [start,setStart]=useState('2026-10-01');const [end,setEnd]=useState(new Date().toLocaleDateString('sv-SE'));const [kind,setKind]=useState('minute');const [replayEvents,setReplayEvents]=useState<Event[]>([]);
+ const [start,setStart]=useState('2026-10-01');const [end,setEnd]=useState(new Date().toLocaleDateString('sv-SE'));const [kind,setKind]=useState('minute');const [replay,setReplay]=useState<{code:string;day:string}|null>(null);
  const [historyData,setHistory]=useState<HistoryView>();const history=historyData?.code===code?historyData:undefined;
  const [range,setRange]=useState({start:shiftDay(today(),-DAILY_BATCH_DAYS),end:today()});
  const navigationBusy=useRef(false);const [navigating,setNavigating]=useState(false);
@@ -180,13 +181,20 @@ function App(){
  const minuteSequence=useRef(0);const dailySequence=useRef(0);const snapshotSequence=useRef(0);
  const latestWatchQuoteRead=useRef<WatchQuoteRead|undefined>(undefined);
  const day=dayChoice||(isCandleView(view)?history?.days.at(-1)?.date:(cache.at(-1)?.day||today()))||'';
+ const replayWeekday=Date.parse(day+'T12:00:00+08:00');
+ const weekday=new Date(replayWeekday).getUTCDay();
+ const replayNow=beijingMinute(),replayToday=replayNow.slice(0,10);
+ const replayDayClosed=day<replayToday||(day===replayToday&&replayNow.slice(11)>='15:00'&&snapshot?.market_open===false);
+ const canReplay=!!code&&weekday>=1&&weekday<=5&&replayDayClosed;
+ const activeReplay=view==='minute'&&replay?.code===code&&replay.day===day;
+ useEffect(()=>setReplay(null),[code,day,view]);
  const currentDay=useRef(day);currentDay.current=day;
  const visible=usePageVisible(),marketActive=visible&&panel==='market';
  const revisions=snapshot?.data_revisions?.code===code?snapshot.data_revisions:undefined;
  const historyRevision=JSON.stringify(revisions?.history??snapshot?.now),marketRevision=JSON.stringify(revisions?.market??snapshot?.now);
  const minuteRevision=revisions?.chart[0]??snapshot?.now;
  const dailyRevision=JSON.stringify(revisions?.chart.slice(1)??snapshot?.now);
- const minuteActive=marketActive&&(view==='minute'||linkedMinuteOpen);
+ const minuteActive=marketActive&&!activeReplay&&(view==='minute'||linkedMinuteOpen);
  useEffect(()=>{if(!visible||!(minuteActive||panel==='breadth'))return;let active=true;api<MarketData>('market',{day}).then(r=>{if(active)setMarket(r);}).catch(()=>{if(active)setMarket({quotes:[],minute:null,error:'指数暂时不可用'});});return()=>{active=false;};},[day,marketRevision,minuteActive,panel,visible]);
  const paperStart=isCandleView(view)?range.start:day,paperEnd=isCandleView(view)?range.end:day;
  const paperScope=[view,day,paperAccount?.id,paperAccount?.revision,code,paperStart,paperEnd].join('|');
@@ -310,7 +318,7 @@ function App(){
   if(view==='daily'){klineApplied.current=code;return;}
   if(klineApplied.current!==code){klineApplied.current=code;setView('daily');}
  },[panel,code,klineRequest,view]);
- useEffect(()=>{setReplayEvents([]);load().catch(e=>{if(currentCode.current===code)setMessage(String(e));});return()=>{minuteSequence.current++;dailySequence.current++;};},[code]);
+ useEffect(()=>{load().catch(e=>{if(currentCode.current===code)setMessage(String(e));});return()=>{minuteSequence.current++;dailySequence.current++;};},[code]);
  useEffect(()=>{if(!preview&&snapshot&&minuteActive)loadMinute().catch(()=>{});},[code,minuteRevision,minuteActive]);
  useEffect(()=>{if(!preview&&snapshot&&marketActive)loadDaily().catch(()=>{});},[code,dailyRevision,marketActive]);
  async function waitJob<T>(method:string,args:Record<string,unknown>):Promise<T>{
@@ -340,8 +348,12 @@ function App(){
  const selected=snapshot?.watch.find(w=>w.code===code);const mdata=cache.find(c=>c.day===day)?.data as {bars?:Bar[];cached_at?:string}|undefined;
  const minute=(mdata?.bars||[]).filter(b=>(b.time>='09:31'&&b.time<='11:30')||(b.time>='13:01'&&b.time<='15:00'));
  const shapeOpening=(mdata?.bars||[]).filter(b=>b.time==='09:30');
- const events=[...(snapshot?.events||[]),...replayEvents,...(history?.events||[])].filter((e,i,a)=>a.findIndex(x=>x.key===e.key)===i);
- const onReplay=()=>action(async()=>{const r=await api<{matches:Record<string,unknown>[];candidates:unknown[]}>('replay',{code,day});setReplayEvents(r.matches.map(e=>({...e,symbol:code.slice(2),trading_date:day,mode:'replay'} as unknown as Event)));setMessage(`历史回放完成：${r.candidates.length} 个候选，${r.matches.length} 次触发。未发送通知。`);});
+ const events=[...(snapshot?.events||[]),...(history?.events||[])].filter((e,i,a)=>a.findIndex(x=>x.key===e.key)===i);
+ const onReplay=()=>{
+  if(!canReplay)return;
+  setDayChoice(day);
+  setReplay({code,day});
+ };
  const watchList=snapshot?.watch||[],watchIndex=watchList.findIndex(stock=>stock.code===code);
  const moveWatchStock=(direction:-1|1)=>{
   if(!watchList.length)return;
@@ -356,7 +368,7 @@ function App(){
   setAutoChart({scope:targetCode+'|'+targetDay,data});setMessage(result.message);
  });
  const name=selected?.name||snapshot?.instruments?.[code]||events.find(e=>e.code===code)?.name||(klineRequest?.code===code?klineRequest.name:'')||'选择股票';
- const selectDay=(date:string)=>{setDayChoice(date);setReplayEvents([]);if(date<range.start||date>range.end){const next={start:shiftDay(date,-DAILY_BATCH_DAYS),end:date};setRange(next);}};
+ const selectDay=(date:string)=>{setDayChoice(date);if(date<range.start||date>range.end){const next={start:shiftDay(date,-DAILY_BATCH_DAYS),end:date};setRange(next);}};
  const openBuy=(event:BuySignal)=>{setCode(event.code);selectDay(event.date);setView('minute');setPanel('market');};
  const buyMarks=(buyReport?.signals||[]).filter(e=>e.code===code&&e.date===day);
  const openEvent=(event:Event)=>{if(event.symbol==='TEST')return;setCode(event.code||((event.symbol[0]==='6'?'sh':'sz')+event.symbol));selectDay(event.trading_date);setView('minute');setPanel('market');};
@@ -384,7 +396,7 @@ function App(){
    const combined=await api<HistoryView>('history',{code:stock,...expanded});
    if(currentCode.current!==stock||historyKey.current!==scope||currentDay.current!==day)return;
    const allRows=view==='weekly'?weeklyBars(combined.daily):combined.daily;const selectedIndex=allRows.findIndex(r=>r.date===candleDate(allRows,day,view==='weekly'));const chosen=allRows[selectedIndex+direction]?.date||(direction<0?data.daily.at(-1)!.date:data.daily[0].date);
-   historySequence.current++;setRange(expanded);setHistory(combined);setDayChoice(chosen);setReplayEvents([]);
+   historySequence.current++;setRange(expanded);setHistory(combined);setDayChoice(chosen);
   }catch(e){if(currentCode.current===stock&&historyKey.current===scope)setMessage(String(e));}finally{navigationBusy.current=false;setNavigating(false);}
  };
 
@@ -403,10 +415,12 @@ function App(){
    onTrade={({code,name,side})=>{setPaperPoint({code,name,stamp:beijingMinute(),origin:'股票池',side});setPanel('paper');}}/></div>}
  {visitedPanels.current.has('market')&&<RetainedPane shown={panel==='market'}>
  {snapshot?.watch.length===0?<div className="card empty">自选池为空，请输入股票代码添加。<form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:input});setCode(added.code);setInput('');});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:stock.code});setCode(added.code);setInput('');});}}/><button disabled={busy||!input}>＋</button></form></div>:<section className="market-grid"><WatchlistCard><div className="card-heading"><h2>我的自选</h2><span>{snapshot?.watch.length||0} 只</span></div><form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:input});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:stock.code});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}/><button disabled={busy||!input}>＋</button></form><div className="stocks">{snapshot?.watch.map(w=><div key={w.code} className={'stock '+(code===w.code?'selected':'')} onClick={()=>{setCode(w.code);setDayChoice('');}}><div className="watch-stock-identity"><div className="watch-stock-title"><strong title={w.name}>{w.name}</strong><small>{w.code.toUpperCase()}</small></div>{w.broker_sources?.length?<button className="trading-source" title={w.broker_sources.map(a=>`${a.broker_name} ${a.account_masked}${a.active?' · 持仓中':' · 已清仓'}`).join('；')} aria-label={`${w.name} 账户同步来源`} onClick={e=>{e.stopPropagation();setPanel('trading');}}>账户同步{w.broker_sources.length>1?` · ${w.broker_sources.length}账户`:''}</button>:<button className="trading-source" aria-label={`${w.name} 自动下单`} disabled={busy||preview} onClick={e=>{e.stopPropagation();setAutoOrderStock({code:w.code,name:w.name});setPanel('trading');}}>自动下单</button>}</div><WatchQuoteDetails quote={w.quote}/><div className="stock-right"><strong className={+(w.quote?.change||0)>=0?'up':'down'}>{w.quote?.price||'—'}</strong><small>{w.enabled?'监控开启':'已暂停'}</small></div></div>)}</div></WatchlistCard>
- <div className={'card detail'+(view==='minute'?' minute-detail':'')}><div className="detail-top"><div className="detail-identity"><h2>{name} <small>{code.toUpperCase()}</small></h2><p>{selected?.health} {selected?.cache_health} {selected?.quote&&`· 行情时间 ${selected.quote.timestamp.slice(0,19).replace('T',' ')}`}</p></div><div className="detail-actions"><button disabled={busy||!selected} onClick={()=>action(async()=>{await waitJob('refresh',{code});await load();},'行情刷新完成，请核对行情时间及状态')}>刷新行情</button><button disabled={busy||!selected} onClick={()=>action(()=>api('toggle',{code,enabled:!selected?.enabled}))}>{selected?.enabled?'暂停':'恢复'}</button><button disabled={busy||!selected} onClick={()=>setRemoveTarget(selected||null)}>移除</button></div></div>
- <div className="chart-toolbar stock-reference-toolbar"><ChartViewTabs value={view} onChange={setView}/><StockReference request={api} code={code} name={name} day={day} daily={history?.code===code?history.daily:[]} active={visible&&panel==='market'}/>{isCandleView(view)&&(dailyLoading||navigating)&&<span className="daily-load-state" role="status">{dailyLoading||`正在加载更多${view==='weekly'?'周':'日'}K…`}</span>}{view==='minute'&&<div className="chart-date-actions"><select aria-label="交易日期" value={day} onChange={e=>selectDay(e.target.value)}>{day&&!cache.some(c=>c.day===day)&&<option value={day}>{day}（无缓存）</option>}{cache.map(c=><option key={c.day}>{c.day}</option>)}</select><button disabled={busy||!day} onClick={onReplay}>历史回放</button><button disabled={busy||preview||day!==today()} title={preview?'请在桌面客户端同步券商成交':day!==today()?'只能同步今天的券商成交':busy?'正在处理，请稍候':'由你手动同步券商当日成交并保存到观量本地缓存'} onClick={syncBrokerFills}>同步券商成交</button></div>}</div>
+ <div className={'card detail'+(view==='minute'?' minute-detail':'')}><div className="detail-top"><div className="detail-identity"><h2>{name} <small>{code.toUpperCase()}</small></h2><p>{activeReplay?`历史回放 · ${day}`:<>{selected?.health} {selected?.cache_health} {selected?.quote&&`· 行情时间 ${selected.quote.timestamp.slice(0,19).replace('T',' ')}`}</>}</p></div><div className="detail-actions">{view==='minute'&&<button disabled={busy||preview||day!==today()} title={preview?'请在桌面客户端同步券商成交':day!==today()?'只能同步今天的券商成交':busy?'正在处理，请稍候':'由你手动同步券商当日成交并保存到观量本地缓存'} onClick={syncBrokerFills}>同步券商成交</button>}<button disabled={busy||!selected} onClick={()=>action(async()=>{await waitJob('refresh',{code});await load();},'行情刷新完成，请核对行情时间及状态')}>刷新行情</button><button disabled={busy||!selected} onClick={()=>action(()=>api('toggle',{code,enabled:!selected?.enabled}))}>{selected?.enabled?'暂停':'恢复'}</button><button disabled={busy||!selected} onClick={()=>setRemoveTarget(selected||null)}>移除</button></div></div>
+ <div className="chart-toolbar stock-reference-toolbar"><ChartViewTabs value={view} onChange={setView}/><StockReference request={api} code={code} name={name} day={day} daily={history?.code===code?history.daily:[]} active={visible&&panel==='market'}/>{isCandleView(view)&&(dailyLoading||navigating)&&<span className="daily-load-state" role="status">{dailyLoading||`正在加载更多${view==='weekly'?'周':'日'}K…`}</span>}{view==='minute'&&<div className="chart-date-actions"><select aria-label="交易日期" value={day} onChange={e=>selectDay(e.target.value)}>{day&&!cache.some(c=>c.day===day)&&<option value={day}>{day}（无缓存）</option>}{cache.map(c=><option key={c.day}>{c.day}</option>)}</select>{activeReplay
+   ?<button onClick={()=>{setReplay(null);setDayChoice('');}}>返回最新分时</button>
+   :<button disabled={busy||!canReplay} title={!canReplay?'当天收盘后可回放，盘中请选择以前的交易日':undefined} onClick={onReplay}>历史回放</button>}</div>}</div>
  {isCandleView(view)&&<div className="chart-caption">{sourceName((history?.daily[0]||daily[0])?.source)} · {range.start} 至 {range.end} · {view==='weekly'?weeklyBars(history?.daily||[]).length:(history?.daily||[]).length} 根{view==='weekly'?'周':'日'}K · 未复权 · 成交量（万股）</div>}
- {view==='minute'&&!minute.length?<div className="watch-chart-empty"><div className="history-empty" role="status">{minuteHint||'该日没有本地分时缓存。'}<p>腾讯可用分时缓存：{cache[0]?.day||'暂无'} 至 {cache.at(-1)?.day||'暂无'}。日K历史范围比分钟接口更长，较早日期不一定有分时；可先切到日K查看走势。数据管理中可查看最近20个交易日的完整性。</p>{!!cache.length&&<button onClick={()=>selectDay(cache.at(-1)!.day)}>查看最近可用分时</button>}<button onClick={()=>setView('daily')}>查看日K</button></div>{stockSwitcher}</div>:<Chart drawingRequest={api} stockSwitcher={stockSwitcher} fixedTurningMode="zhangle" stockCode={code} stockName={name} macdBenchmark={macdBenchmark} autoTrading={selectedAutoChart} autoDailyMarks={selectedAutoDaily} limitUp={limitUp} limitDown={limitDown} currentPrice={currentPrice} rangeReference={rangeReference} volumeFlow={selectedFlow} paperFills={paperPoints} paperOrders={paperOrderPoints} onPaperTrade={p=>{setPaperPoint({code,name,stamp:day+' '+p.time,origin:p.kind,side:p.side,price:p.price});if(!p.inChart)setPanel('paper');}} key={'chart-costs-v4-'+code} benchmark={benchmark} previousClose={stockBase} minute={minute} minuteCachedAt={mdata?.cached_at} shapeOpening={shapeOpening} buySignals={buyMarks} daily={history?.daily||[]} ma250={history?.ma250} e2={history?.e2} view={view} events={isCandleView(view)?(history?.events||[]):dayEvents} selectedDay={day} onSelectDay={selectDay} onOpenDay={openDay} onMove={moveDay} onHistoryNeed={count=>setCandleDemand(old=>count>(old[view]||DAILY_WINDOW)?{...old,[view]:count}:old)}/>}
+ {activeReplay?<IntradayReplay key={code+'|'+day} request={api} code={code} name={name} day={day} active={marketActive} events={dayEvents} stockSwitcher={stockSwitcher} onExit={()=>setReplay(null)}/>:view==='minute'&&!minute.length?<div className="watch-chart-empty"><div className="history-empty" role="status">{minuteHint||'该日没有本地分时缓存。'}<p>腾讯可用分时缓存：{cache[0]?.day||'暂无'} 至 {cache.at(-1)?.day||'暂无'}。日K历史范围比分钟接口更长，较早日期不一定有分时；可先切到日K查看走势。数据管理中可查看最近20个交易日的完整性。</p>{!!cache.length&&<button onClick={()=>selectDay(cache.at(-1)!.day)}>查看最近可用分时</button>}<button onClick={()=>setView('daily')}>查看日K</button></div>{stockSwitcher}</div>:<Chart drawingRequest={api} stockSwitcher={stockSwitcher} fixedTurningMode="zhangle" stockCode={code} stockName={name} macdBenchmark={macdBenchmark} autoTrading={selectedAutoChart} autoDailyMarks={selectedAutoDaily} limitUp={limitUp} limitDown={limitDown} currentPrice={currentPrice} rangeReference={rangeReference} volumeFlow={selectedFlow} paperFills={paperPoints} paperOrders={paperOrderPoints} onPaperTrade={p=>{setPaperPoint({code,name,stamp:day+' '+p.time,origin:p.kind,side:p.side,price:p.price});if(!p.inChart)setPanel('paper');}} key={'chart-costs-v4-'+code} benchmark={benchmark} previousClose={stockBase} minute={minute} minuteCachedAt={mdata?.cached_at} shapeOpening={shapeOpening} buySignals={buyMarks} daily={history?.daily||[]} ma250={history?.ma250} e2={history?.e2} view={view} events={isCandleView(view)?(history?.events||[]):dayEvents} selectedDay={day} onSelectDay={selectDay} onOpenDay={openDay} onMove={moveDay} onHistoryNeed={count=>setCandleDemand(old=>count>(old[view]||DAILY_WINDOW)?{...old,[view]:count}:old)}/>}
  {isCandleView(view)&&<section className="linked-minute" aria-label="K线关联分时"><h3><button className="linked-minute-toggle" aria-expanded={linkedMinuteOpen} aria-controls="linked-minute-content" aria-label={linkedMinuteOpen?'收起当日分时':'展开当日分时'} onClick={toggleLinkedMinute}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>{day||'请选择交易日'} · 当日分时与分钟量</span><span className="linked-minute-state">{linkedMinuteOpen?'收起':'展开'}</span></button></h3><div id="linked-minute-content" hidden={!linkedMinuteOpen}>{linkedMinuteOpen&&(minute.length?<Chart fixedTurningMode="zhangle" stockCode={code} stockName={name} macdBenchmark={macdBenchmark} autoTrading={selectedAutoChart} limitUp={limitUp} limitDown={limitDown} currentPrice={currentPrice} rangeReference={rangeReference} volumeFlow={selectedFlow} paperFills={paperMinutePoints} paperOrders={paperMinuteOrders} onPaperTrade={p=>{setPaperPoint({code,name,stamp:day+' '+p.time,origin:p.kind,side:p.side,price:p.price});if(!p.inChart)setPanel('paper');}} key={code+day+'linked-costs-v4'} view="minute" selectedDay={day} buySignals={buyMarks} benchmark={benchmark} previousClose={stockBase} minute={minute} minuteCachedAt={mdata?.cached_at} shapeOpening={shapeOpening} events={dayEvents} compact/>:<div className="history-empty">该日没有分时缓存。腾讯与新浪免费分钟接口均只提供近期数据；更早日期可能超出覆盖。可双击进入分时页查看覆盖说明，或尝试下载当天数据。</div>)}</div></section>}
  </div></section>}</RetainedPane>}
  {visitedPanels.current.has('breadth')&&<RetainedPane shown={panel==='breadth'}><MarketBreadth request={api} market={market} preview={preview} mode={breadthBasis} setMode={setBreadthBasis} watch={snapshot?.watch||[]} active={visible&&panel==='breadth'} onOpenStock={target=>{setCode(target);setDayChoice('');setView('minute');setPanel('market');}}/></RetainedPane>}
