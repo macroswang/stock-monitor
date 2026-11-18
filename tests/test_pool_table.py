@@ -571,6 +571,18 @@ class PoolTableTests(unittest.TestCase):
             total=2, today=1, first_at='2026-11-11T13:00:00+08:00',
             last_at='2026-11-12T08:11:00+08:00'))
 
+    def test_view_same_day_before_and_after_close_counts_one_research_day(self):
+        for stamp in ('2026-11-18T14:30:59+08:00', '2026-11-18T16:00:12+08:00'):
+            self.sync(self.issue(day='2026-11-18', published=stamp,
+                                 picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))
+        entry, _ = self.view_entry(moment=datetime(2026, 11, 18, 16, 30, tzinfo=CN))
+        self.assertEqual(entry['episodes'], dict(
+            total=1, today=1, first_at='2026-11-18T14:30:59+08:00',
+            last_at='2026-11-18T16:00:12+08:00'))
+        self.assertEqual(entry['selection'], dict(
+            first_at='2026-11-18T14:30:59+08:00', first_day='2026-11-18',
+            last_at='2026-11-19T09:25:00+08:00', last_day='2026-11-19', days=1, today=1))
+
     def test_view_selection_weekend_maps_to_next_session(self):
         self.sync(self.issue(day='2026-11-14', published='2026-11-14T10:00:00+08:00',
                              picks=[pick('sh600001', '甲股份')], directions=[], radar=[]))

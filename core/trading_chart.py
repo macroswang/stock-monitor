@@ -200,6 +200,24 @@ def _possible_owner(point,row,day):
     except (ValueError,TypeError,KeyError):return False
 
 
+def _same_tight_fill(point,row,day):
+    """Same id-less fill within 0.5s; never merge a same-minute distinct order."""
+    if (point.get('order_id') or point.get('mode')!='live' or not point.get('attempted') or
+        point.get('status') not in ('partial','filled') or point.get('side')!=row.get('side') or
+        not point.get('ordered_at') or not re.fullmatch(r'\d{2}:\d{2}:\d{2}',str(row.get('time','')))):return False
+    try:
+        filled=shares(point.get('filled'));row_filled=shares(row.get('filled'))
+        fill=amount(point.get('fill_price'));average=amount(row.get('average'))
+        if filled<=0 or filled!=row_filled or fill<=0 or fill!=average:return False
+        quantity=shares(point.get('quantity'))
+        if row.get('quantity') is not None and quantity!=shares(row['quantity']):return False
+        stamp=datetime.fromisoformat(day+'T'+row['time']).replace(tzinfo=CN)
+        ordered=datetime.fromisoformat(point['ordered_at'])
+        return ordered.tzinfo is not None and abs((stamp-ordered).total_seconds())<=0.5
+    except (ValueError,TypeError,KeyError):
+        return False
+
+
 def _cache_rows(payload,code,day,target_name):
     """Validate once and deduplicate only identical cumulative contract rows."""
     rows=[];contracts={};conflicts=set()
@@ -261,6 +279,14 @@ def _cached_fills(store,code,day,automatic,native_keys,native_evidence,owners):
             for index,row in enumerate(rows):
                 if (row['side'],str(row.get('order_id') or '')) in known:continue
                 possible=[p for p in account_owners if _possible_owner(p,row,day)]
+                # A sub-second fill match is strong display evidence for the same
+                # order even when the broker omitted its order id. Keep it far
+                # tighter than the ambiguous same-minute case (2s+).
+                tight=[p for p in possible if _same_tight_fill(p,row,day)]
+                if len(tight)==1:
+                    reverse[tight[0]['id']]=reverse.get(tight[0]['id'],0)+1
+                    inferred[index]=tight[0]
+                    continue
                 matches=[p for p in possible if p['id'] in account_point_ids and
                     (_native_cached_match(p,row,native_keys.get(p['id']),day) or
                      _delayed_native_cached_match(p,row,native_evidence.get(p['id']),day,payload))]
@@ -268,9 +294,17 @@ def _cached_fills(store,code,day,automatic,native_keys,native_evidence,owners):
                 if len(possible)==1 and len(matches)==1:
                     inferred[index]=matches[0]
         occurrences={}
+        tight_matched=set()
         for index,row in enumerate(rows):
             order_id=str(row.get('order_id') or '');side=row['side'];clock=row['time']
             if (side,order_id) in visible_known:continue
+            # Broker and local records can both omit an order id; a sub-second
+            # identical fill is the same display execution, not a second order.
+            tight=[p for p in account_owners if p['id'] not in tight_matched and _same_tight_fill(p,row,day)]
+            if len(tight)==1:
+                _enrich_native_point(tight[0],row,None,payload)
+                tight_matched.add(tight[0]['id'])
+                continue
             point=inferred.get(index)
             if point is not None and reverse[point['id']]==1:
                 _enrich_native_point(point,row,native_evidence.get(point['id']),payload)

@@ -189,6 +189,17 @@ class TradingChartTests(unittest.TestCase):
    payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[dict(code='000981',side=side,date='2026-11-03',time='13:37:59',price='2.16',filled=2300,average='2.16')])
    self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
    self.assertEqual(len(chart(self.store,'sz000981','2026-11-03')['points']),2)
+ def test_sub_second_idless_auto_fill_merges_without_native_key(self):
+  self.seed(verification=dict(origin='broker_auto',status='filled',filled=2300,average='2.15'),status='filled')
+  self.store.execute("UPDATE broker_requests SET result='{}'")
+  payload=dict(account_id='a',account_verified=True,complete=True,day='2026-11-03',observed_at='2026-11-03T15:05:00+08:00',rows=[
+   dict(code='000981',side='buy',date='2026-11-03',time='13:37:57',order_id='actual123',price='2.16',filled=2300,average='2.15')])
+  self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
+  points=chart(self.store,'sz000981','2026-11-03')['points']
+  self.assertEqual(len(points),1)
+  self.assertEqual(points[0]['source'],'automatic')
+  self.assertEqual(points[0]['order_id'],'actual123')
+
  def test_competing_unverified_submission_blocks_inferred_contract_even_with_different_filled_quantity(self):
   self.delayed_native_sell(status='partial',filled=100)
   self.seed('two',status='unknown')

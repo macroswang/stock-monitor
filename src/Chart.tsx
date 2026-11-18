@@ -358,7 +358,10 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   // display mode may switch to stable, but order matching must follow the trading rule.
  // Auto-trade annotations follow the backend trading stream: v2.4 + Q1 fill (shape-v2-q1).
  const autoTradeShapes=isDay?[]:turningCombinedSignals(turningFinal(shapeBars,TURNING_FINAL_MODES.zhangle),q1Turns),shapes=isDay||!showShapes?[]:finalTurns;
-  const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time)&&reached(m.time));
+  const automatic=isDay?[]:autoTradeMarks(autoTrading,autoTradeShapes,selectedDay||'').filter(m=>labels.includes(m.time)&&reached(m.time)).map(m=>{
+   const close=Number(byTime.get(m.time)?.close);
+   return {...m,anchor:Number.isFinite(close)&&close>0?close:m.price};
+  });
   const quality=isDay||!showQuality?[]:q1Turns;
   const observations=turningDisplayPoints(shapes,quality,showShapes,showQuality).filter(point=>reached(point.time));
   const volume=isDay?daily.map(b=>+b.volume/10000):aligned.map(b=>b?b.volume/100:null);
@@ -394,7 +397,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
    }
   }:null;
   // Only reached stock prices and annotations set the display range; index data cannot expand it.
-  const priceValues=[...automatic.map(m=>m.price),...tradePoints.filter(m=>reached(m.time)).map(m=>m.price),...displayMinute.flatMap(b=>[+b.close,Number(b.high),Number(b.low)]),...rangePrices,...averages,...(quotePrice===undefined?[]:[quotePrice])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
+  const priceValues=[...automatic.map(m=>m.anchor),...tradePoints.filter(m=>reached(m.time)).map(m=>m.price),...displayMinute.flatMap(b=>[+b.close,Number(b.high),Number(b.low)]),...rangePrices,...averages,...(quotePrice===undefined?[]:[quotePrice])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
   const priceScale=showPercent?intradayPriceScale(previousClose,priceValues):{};
   const limitLines=[{kind:'涨停',value:priceLimits.up,color:'#ef6568',position:'insideEndBottom'},{kind:'跌停',value:priceLimits.down,color:'#36b898',position:'insideEndTop'}].filter(row=>row.value!==undefined&&row.value>=Number(priceScale.min)&&row.value<=Number(priceScale.max)).map(row=>({name:row.kind,yAxis:row.value,lineStyle:{color:row.color,type:'dashed',width:1},label:{show:true,position:row.position,color:row.color,fontSize:10,formatter:`${row.kind} ${row.value!.toFixed(2)}（${pricePercent(row.value!,Number(previousClose))}）`}}));
   const axisRich={rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}};
@@ -557,9 +560,9 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
      labelLayout:{hideOverlap:true}}]:[]),
     ...(!isDay&&automatic.length?[
      {name:'自动委托连线',type:'custom',silent:true,z:8,clip:false,tooltip:{show:false},dimensions:['time','price','offset'],encode:{x:0,y:1},
-      data:automatic.map(m=>({value:[m.time,m.price,m.offset],itemStyle:{color:m.color}})),renderItem:(_p:unknown,api:echarts.CustomSeriesRenderItemAPI)=>{const [x,y]=api.coord!([api.value(0),api.value(1)]);return {type:'line',shape:{x1:x,y1:y,x2:x,y2:y+Number(api.value(2))},style:{stroke:String(api.visual('color')),lineWidth:.8,lineDash:[2,2]},silent:true};}},
+      data:automatic.map(m=>({value:[m.time,m.anchor,m.offset],itemStyle:{color:m.color}})),renderItem:(_p:unknown,api:echarts.CustomSeriesRenderItemAPI)=>{const [x,y]=api.coord!([api.value(0),api.value(1)]);return {type:'line',shape:{x1:x,y1:y,x2:x,y2:y+Number(api.value(2))},style:{stroke:String(api.visual('color')),lineWidth:.8,lineDash:[2,2]},silent:true};}},
      {name:'自动委托',type:'scatter',z:10,clip:false,symbol:'roundRect',symbolSize:13,
-      data:automatic.map(m=>({value:[m.time,m.price],autoTrade:m.point,symbolOffset:[0,m.offset],itemStyle:{color:m.color,opacity:m.opacity,borderColor:'#edf4ff',borderWidth:.6},label:{show:true,formatter:m.label,position:'inside',align:'center',verticalAlign:'middle',offset:tradeLabelOffset(m.label),color:'#fff',fontFamily:'Arial, sans-serif',fontSize:8,fontWeight:'bold',lineHeight:13,padding:0}})),
+      data:automatic.map(m=>({value:[m.time,m.anchor],autoTrade:m.point,symbolOffset:[0,m.offset],itemStyle:{color:m.color,opacity:m.opacity,borderColor:'#edf4ff',borderWidth:.6},label:{show:true,formatter:m.label,position:'inside',align:'center',verticalAlign:'middle',offset:tradeLabelOffset(m.label),color:'#fff',fontFamily:'Arial, sans-serif',fontSize:8,fontWeight:'bold',lineHeight:13,padding:0}})),
       tooltip:{trigger:'item',formatter:(params:unknown)=>{const p=(params as {data:{autoTrade:typeof automatic[number]['point']}}).data.autoTrade,root=document.createElement('div');root.className='auto-trade-tooltip';for(const line of autoTradeDetails(p)){const row=document.createElement('div');row.textContent=line;root.append(row);}return root;}}}
     ]:[]),
     ...(hasMacd?[{name:'指数成交量',type:'bar',xAxisIndex:3,yAxisIndex:macdYAxis+1,barWidth:'85%',barMaxWidth:9,data:indexVolume,itemStyle:{color:(p:{dataIndex:number})=>indexVolumeColors[p.dataIndex]}}]:[]),

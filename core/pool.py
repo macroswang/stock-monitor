@@ -1306,35 +1306,38 @@ class Pool:
 
     # ---------- 入选事件 / 标签 / 回测 ----------
     def _episode_counts(self, codes, trading_today):
-        """One query for episode counts based on effective selection days (no N+1).
+        """One query for episode counts based on research/quote days (no N+1).
 
-        total = distinct effective selection days (several issues on one trading day count once);
-        today = 1 when trading_today is one of those effective days; first_at/last_at stay the raw
-        published_at, while first_selection/last_selection are the mapped selection timestamps.
+        total = distinct quote_date days. Several issues on one trading day count once, including
+        the 15:00/15:30/16:00 post-close updates; otherwise those updates would create a phantom
+        next-day selection. today = 1 when the mapped effective selection day is trading_today;
+        first_at/last_at stay the raw published_at, while first_selection/last_selection are the
+        mapped selection timestamps used by alert/date filters.
         """
         unique = [code for code in dict.fromkeys(codes) if code]
         if not unique:
             return {}
         marks = ','.join('?' * len(unique))
         rows = self.store.query(
-            f'SELECT code,published_at FROM pool_episode WHERE code IN ({marks})', tuple(unique))
+            f'SELECT code,published_at,quote_date FROM pool_episode WHERE code IN ({marks})', tuple(unique))
         counts = {}
         for row in rows:
             code = row['code']
             raw = row.get('published_at')
             stamp = _selection_stamp(raw) or raw
-            day = str(stamp or '')[:10]
+            selection_day = str(stamp or '')[:10]
+            research_day = str(row.get('quote_date') or raw or stamp or '')[:10]
             item = counts.get(code)
             if item is None:
-                counts[code] = dict(total=1, today=1 if day == trading_today else 0,
+                counts[code] = dict(total=1, today=1 if selection_day == trading_today else 0,
                                     first_at=raw, last_at=raw,
                                     first_selection=stamp, last_selection=stamp,
-                                    selection_days={day})
+                                    selection_days={research_day})
                 continue
-            if day not in item['selection_days']:
-                item['selection_days'].add(day)
+            if research_day not in item['selection_days']:
+                item['selection_days'].add(research_day)
                 item['total'] += 1
-            if day == trading_today:
+            if selection_day == trading_today:
                 item['today'] = 1
             if raw and (item['first_at'] is None or raw < item['first_at']):
                 item['first_at'] = raw
