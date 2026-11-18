@@ -1,10 +1,11 @@
 """Desktop-owned process, JSON-lines IPC on stdin/stdout; no listening network port."""
 import concurrent.futures,json,os,sys,threading,time
 from datetime import date,timedelta,datetime
+from decimal import Decimal,InvalidOperation
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.error import HTTPError
-from .provider import Tencent,symbol,now_cn,CN
+from .provider import Tencent,eastmoney_watch_quotes,symbol,now_cn,CN
 from .rules import Session
 from .store import Store
 from . import notify
@@ -72,14 +73,17 @@ def observed_elapsed(start,end):
 
 class App:
     POLL_SECONDS=8
-    DISPLAY_QUOTE_SECONDS=5
+    DISPLAY_QUOTE_SECONDS=6
     DISPLAY_QUOTE_MAX_AGE=15
     DISPLAY_QUOTE_LIMIT_COOLDOWN=15*60
+    DISPLAY_QUOTE_BATCH_SIZE=50
     def __init__(self,data_dir,start_worker=True):
         self.dir=Path(data_dir); self.store=Store(self.dir/'monitor.sqlite3')
         self.provider=Tencent(); self.lock=threading.RLock(); self.stop=threading.Event()
         self.health={}; self.sessions={}; self.quotes={}; self.last_poll=None; self.jobs={}
         self.display_quotes={}
+        self.display_quote_batch=0
+        self.display_quote_resume=self.store.config().get('display_quote_resume') or {}
         self.jobs_lock=threading.Lock(); self.job_slots=threading.BoundedSemaphore(8)
         self.job_times={}
         self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None; self.ma250_checked={}
@@ -216,16 +220,7 @@ class App:
                 try:
                     if not self.refresh_display_quotes():
                         delay*=2
-                except HTTPError as error:
-                    if error.code in (403,429):
-                        rejected_at=now_cn()
-                        cooldown=self.display_quote_cooldown(error,rejected_at)
-                        print(f'[watch-quotes] {rejected_at.isoformat()} 腾讯 HTTP {error.code}，批量报价冷却 {cooldown:g} 秒',
-                              file=sys.stderr,flush=True)
-                        self.stop.wait(cooldown)
-                        continue
-                    delay*=2
-                except (OSError, UnicodeError):
+                except (OSError, ValueError):
                     delay*=2
             self.stop.wait(max(.25,delay-(time.monotonic()-started)))
 
@@ -233,34 +228,71 @@ class App:
         with self.lock:
             if not self.store.config().get('monitor'):
                 return True
-            epochs={row['code']:self.epochs.get(row['code'],0)
-                    for row in self.store.query('SELECT code FROM watch WHERE enabled=1')}
-        if not epochs:
+            codes=[row['code'] for row in self.store.query('SELECT code FROM watch WHERE enabled=1 ORDER BY code')]
+            if not codes:
+                return True
+            size=self.DISPLAY_QUOTE_BATCH_SIZE
+            self.display_quote_batch%=((len(codes)+size-1)//size)
+            start=self.display_quote_batch*size
+            self.display_quote_batch+=1
+            epochs={code:self.epochs.get(code,0) for code in codes[start:start+size]}
+        if self.stop.is_set():
             return True
 
-        # Display batches stay independent of both the stock pool and the worker
-        # that feeds formal signals. Keep requests sequential and bounded in size.
-        codes=list(epochs)
-        accepted=False
-        for start in range(0,len(codes),50):
-            batch=codes[start:start+50]
-            quotes=self.provider.watch_quotes(batch)
+        for source,fetch in (('tencent',self.provider.watch_quotes),('eastmoney',eastmoney_watch_quotes)):
+            now=now_cn()
+            if now.timestamp()<self.display_quote_resume.get(source,0):
+                continue
+            batch=list(epochs)
+            if source=='tencent':
+                with self.lock:
+                    batch=[code for code in batch if not self.display_quote_fresh(self.quotes.get(code),now,3)]
+                if not batch:
+                    return True
+            try:
+                quotes=fetch(batch)
+            except HTTPError as error:
+                if error.code not in (403,429):
+                    raise
+                rejected_at=now_cn()
+                cooldown=self.display_quote_cooldown(error,rejected_at)
+                self.display_quote_resume[source]=rejected_at.timestamp()+cooldown
+                self.store.setconfig('display_quote_resume',self.display_quote_resume)
+                print(f'[watch-quotes] {rejected_at.isoformat()} {source} HTTP {error.code}，冷却 {cooldown:g} 秒',
+                      file=sys.stderr,flush=True)
+                continue
             now=now_cn()
             with self.lock:
                 if self.stop.is_set() or not trading(now) or not self.store.config().get('monitor'):
-                    break
+                    return True
+                accepted=False
                 for code in batch:
                     quote=quotes.get(code)
-                    if not quote or self.epochs.get(code,0)!=epochs[code] or quote['date']!=now.date().isoformat():
+                    if self.epochs.get(code,0)!=epochs[code] or not self.display_quote_fresh(quote,now,self.DISPLAY_QUOTE_MAX_AGE):
                         continue
-                    age=(now-datetime.fromisoformat(quote['timestamp'])).total_seconds()
-                    if not 0<=age<=self.DISPLAY_QUOTE_MAX_AGE:
-                        continue
+                    if source=='eastmoney':
+                        if not trading(datetime.fromisoformat(quote['timestamp'])) or not self.backup_previous_close_matches(code,quote):
+                            continue
                     prior=self.display_quotes.get(code)
                     if not prior or quote['timestamp']>prior['timestamp']:
                         self.display_quotes[code]=quote
                     accepted=True
-        return accepted
+                return accepted
+        return False
+
+    @staticmethod
+    def display_quote_fresh(quote,now,max_age):
+        return (quote and quote['date']==now.date().isoformat()
+                and 0<=(now-datetime.fromisoformat(quote['timestamp'])).total_seconds()<=max_age)
+
+    def backup_previous_close_matches(self,code,quote):
+        original=self.quotes.get(code) or self.cached_quotes.get(code)
+        if not original or original.get('date')!=quote['date'] or not original.get('previous_close'):
+            return True
+        try:
+            return Decimal(quote['previous_close'])==Decimal(original['previous_close'])
+        except (InvalidOperation, ValueError):
+            return False
 
     def watch_display_quote(self,code,now):
         official=self.quotes.get(code) or self.cached_quotes.get(code)

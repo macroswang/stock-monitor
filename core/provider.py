@@ -20,6 +20,37 @@ def get(url, encoding='utf-8', *, timeout=10):
     req=Request(url,headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/'})
     with urlopen(req,timeout=timeout) as r: return r.read().decode(encoding)
 
+def eastmoney_watch_quotes(codes):
+    """Batch snapshots for watchlist display only."""
+    markets={f'{1 if code.startswith("sh") else 0}.{code[2:]}':code for code in map(symbol,codes)}
+    if not markets:
+        return {}
+    query=urlencode(dict(secids=','.join(markets),fields='f2,f12,f13,f14,f15,f16,f17,f18,f124',fltt=2))
+    with urlopen('https://push2.eastmoney.com/api/qt/ulist.np/get?'+query,timeout=3) as response:
+        payload=json.load(response)
+    data=payload.get('data') if isinstance(payload,dict) else None
+    rows=data.get('diff') if isinstance(data,dict) else None
+    if not isinstance(rows,(list,dict)):
+        return {}
+    quotes={}
+    for row in rows.values() if isinstance(rows,dict) else rows:
+        if not isinstance(row,dict) or type(row.get('f124')) is not int:
+            continue
+        code=markets.get(f'{row.get("f13")}.{row.get("f12")}')
+        if not code:
+            continue
+        try:
+            stamp=datetime.fromtimestamp(row['f124'],CN)
+            price,high,low,opened,previous=(Decimal(str(row[field])) for field in ('f2','f15','f16','f17','f18'))
+        except (KeyError,ValueError,ArithmeticError,OSError):
+            continue
+        if not all(n.is_finite() and n>0 for n in (price,high,low,opened,previous)) or not low<=price<=high:
+            continue
+        quotes[code]=dict(code=code,name=row.get('f14'),timestamp=stamp.isoformat(),date=stamp.date().isoformat(),
+                          price=str(price),previous_close=str(previous),change=str((price/previous-1)*100),
+                          open=str(opened),high=str(high),low=str(low),source='eastmoney')
+    return quotes
+
 class Tencent:
     def quote(self, code):
         code=symbol(code)

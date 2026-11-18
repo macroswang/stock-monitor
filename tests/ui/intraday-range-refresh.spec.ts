@@ -158,11 +158,12 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
   f.snapshot.now=stamp('14:59:06');
   const beforeSnapshot=reads;await page.clock.runFor(3500);
   await expect.poll(()=>reads).toBeGreaterThan(beforeSnapshot);
-  const recent={...oldQuote,price:'28.61',timestamp:stamp('14:58:46')};
+  const recent={...oldQuote,price:'28.61',timestamp:stamp('14:58:46'),source:'eastmoney'};
   quoteRead={now:stamp('14:59:07'),quotes:{[code]:recent}};
   const beforeQuote=quoteReads;await page.clock.runFor(1100);
   await expect.poll(()=>quoteReads).toBeGreaterThan(beforeQuote);
   await expect(page.locator('.stock.selected .stock-right strong')).toHaveText('28.61');
+  await expect(page.locator('.stock.selected .watch-quote-details')).toHaveAttribute('title',/^东方财富备用/);
   await expect.poll(async()=>(await axes(page))?.livePoint).toBe(28.61);
  }finally{releaseSnapshot();}
  await page.clock.runFor(600);

@@ -1,10 +1,11 @@
-import tempfile,threading,unittest
+import json,tempfile,threading,unittest
 from datetime import datetime,timedelta
 from email.utils import format_datetime
+from io import BytesIO
 from unittest.mock import Mock,patch
 from urllib.error import HTTPError
 from core.app import App
-from core.provider import Tencent
+from core.provider import Tencent,eastmoney_watch_quotes
 
 
 class WatchQuoteCacheTest(unittest.TestCase):
@@ -99,18 +100,63 @@ class WatchQuoteCacheTest(unittest.TestCase):
   with patch('core.provider.get',return_value=valid):
    self.assertEqual(result,{'sh603002':Tencent().quote('sh603002')})
 
- def test_batch_loop_waits_for_rejection_but_keeps_short_backoff_for_timeout(self):
+ def test_batch_cooldown_honors_retry_after_and_timeout_keeps_short_backoff(self):
   now=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
   retry_at=format_datetime(now+timedelta(minutes=25))
   def error(code,header=None):
    return HTTPError('',code,'',{'Retry-After':header} if header else {},None)
-  for failure,wait in ((error(403),900),(error(429,'1200'),1200),(error(429,retry_at),1500),
-                       (error(429,'bad'),900),(error(500),10),(TimeoutError(),10)):
-   with self.subTest(failure=failure),patch('core.app.now_cn',return_value=now), \
-        patch('core.app.time.monotonic',return_value=100),patch('core.app.sys.stderr'):
-    self.app.stop=Mock()
-    self.app.stop.is_set.side_effect=[False,False,True]
-    with patch.object(self.app,'refresh_display_quotes',side_effect=[failure,True]) as refresh:
-     self.app.display_quote_loop()
-    self.assertEqual(refresh.call_count,2)
-    self.assertEqual([call.args[0] for call in self.app.stop.wait.call_args_list],[wait,5])
+  for failure,wait in ((error(403),900),(error(429,'1200'),1200),(error(429,retry_at),1500),(error(429,'bad'),900)):
+   self.assertEqual(self.app.display_quote_cooldown(failure,now),wait)
+  with patch('core.app.now_cn',return_value=now),patch('core.app.time.monotonic',return_value=100):
+   self.app.stop=Mock()
+   self.app.stop.is_set.side_effect=[False,False,True]
+   with patch.object(self.app,'refresh_display_quotes',side_effect=[TimeoutError(),True]):
+    self.app.display_quote_loop()
+   self.assertEqual([call.args[0] for call in self.app.stop.wait.call_args_list],[12,6])
+
+ def test_batch_reuses_fresh_quote_and_switches_provider_until_cooldown_expires(self):
+  code='sh603002';now=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
+  self.app.store.execute('DELETE FROM watch WHERE code<>?',(code,))
+  self.app.store.setconfig('monitor',True)
+  def quote(source,seconds=0,previous='10'):
+   return dict(code=code,price='10.60',previous_close=previous,source=source,
+               timestamp=(now+timedelta(seconds=seconds)).isoformat(),date=now.date().isoformat())
+  self.app.provider=Mock()
+  self.app.quotes[code]=quote('tencent',-2)
+  with patch('core.app.now_cn',side_effect=lambda:now),patch('core.app.sys.stderr'), \
+       patch('core.app.eastmoney_watch_quotes') as backup:
+   self.assertTrue(self.app.refresh_display_quotes())
+   self.app.provider.watch_quotes.assert_not_called();backup.assert_not_called()
+   now+=timedelta(seconds=6)
+   self.app.provider.watch_quotes.side_effect=HTTPError('',429,'',{'Retry-After':'1200'},None)
+   backup.return_value={code:quote('eastmoney')}
+   self.assertTrue(self.app.refresh_display_quotes())
+   self.assertEqual(self.displayed()['source'],'eastmoney')
+   self.assertEqual(self.app.quotes[code]['source'],'tencent')
+   backup.assert_called_once_with([code])
+   self.assertEqual(self.app.store.config()['display_quote_resume']['tencent'],now.timestamp()+1200)
+   now+=timedelta(seconds=6)
+   backup.return_value={code:quote('eastmoney',previous='9')}
+   self.assertFalse(self.app.refresh_display_quotes())
+   self.app.provider.watch_quotes.assert_called_once_with([code])
+   self.assertEqual(self.displayed()['previous_close'],'10')
+   now+=timedelta(seconds=1194)
+   self.app.provider.watch_quotes.side_effect=None
+   self.app.provider.watch_quotes.return_value={code:quote('tencent')}
+   self.assertTrue(self.app.refresh_display_quotes())
+   self.assertEqual(backup.call_count,2)
+   self.assertEqual(self.displayed()['source'],'tencent')
+
+ def test_eastmoney_batch_validates_market_price_and_source_time(self):
+  stamp=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
+  valid=dict(f2=10.6,f12='603002',f13=1,f14='宏昌电子',f15=10.8,f16=9.9,f17=10.1,f18=10,f124=int(stamp.timestamp()))
+  wrong_market=dict(valid,f13=0)
+  malformed=dict(valid,f12='000981',f13=0,f124='--')
+  wrong_price=dict(valid,f12='000815',f13=0,f2=12)
+  body=json.dumps({'data':{'diff':[valid,wrong_market,malformed,wrong_price]}}).encode()
+  with patch('core.provider.urlopen',return_value=BytesIO(body)) as fetch:
+   quotes=eastmoney_watch_quotes(['sh603002','sz000981','sz000815'])
+  fetch.assert_called_once()
+  self.assertEqual(list(quotes),['sh603002'])
+  self.assertEqual(quotes['sh603002']['timestamp'],stamp.isoformat())
+  self.assertEqual(quotes['sh603002']['source'],'eastmoney')
