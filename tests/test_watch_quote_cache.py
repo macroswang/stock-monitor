@@ -1,6 +1,10 @@
-import tempfile,unittest
-from unittest.mock import Mock
+import tempfile,threading,unittest
+from datetime import datetime,timedelta
+from email.utils import format_datetime
+from unittest.mock import Mock,patch
+from urllib.error import HTTPError
 from core.app import App
+from core.provider import Tencent
 
 
 class WatchQuoteCacheTest(unittest.TestCase):
@@ -34,3 +38,79 @@ class WatchQuoteCacheTest(unittest.TestCase):
   self.assertEqual([q[k] for k in ('price','previous_close','high','low')],['10.50','10','10.80','9.80'])
   self.assertEqual(float(q['change']),5)
   self.assertFalse(self.app.quotes);self.app.provider.quote.assert_not_called()
+
+ def test_batch_updates_snapshot_while_formal_minutes_are_blocked(self):
+  code='sh603002';now=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
+  formal=dict(code=code,date=now.date().isoformat(),timestamp=(now-timedelta(seconds=7)).isoformat(),price='10.50')
+  fast=dict(formal,timestamp=now.isoformat(),price='10.65')
+  self.app.store.setconfig('monitor',True)
+  self.app.provider=Mock();self.app.provider.quote.return_value=formal
+  waiting=threading.Event();release=threading.Event()
+  def slow_minutes(_code):
+   waiting.set();release.wait(3)
+   raise OSError('minute feed unavailable')
+  self.app.provider.minutes.side_effect=slow_minutes
+  self.app.provider.watch_quotes.return_value={code:fast}
+  with patch('core.app.now_cn',return_value=now):
+   worker=threading.Thread(target=self.app.poll_one,args=(code,));worker.start()
+   try:
+    self.assertTrue(waiting.wait(2))
+    self.assertTrue(self.app.refresh_display_quotes())
+    self.app.provider.watch_quotes.assert_called_once()
+    self.assertEqual(self.displayed(),fast)
+    self.assertEqual(self.app.call('watch_quotes',{})['quotes'][code],fast)
+    self.app.provider.watch_quotes.assert_called_once()
+    self.assertEqual(self.app.quotes[code],formal)
+    self.assertEqual(self.app.store.getcache(code,'watch_quote')[0]['data']['price'],'10.50')
+   finally:
+    release.set();worker.join(3)
+  self.assertFalse(worker.is_alive())
+
+ def test_batch_drops_future_stale_and_invalidated_entries(self):
+  keep,removed,future,stale=[row['code'] for row in self.app.store.query('SELECT code FROM watch ORDER BY rowid LIMIT 4')]
+  now=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
+  def quote(code,seconds):
+   stamp=now+timedelta(seconds=seconds)
+   return dict(code=code,date=stamp.date().isoformat(),timestamp=stamp.isoformat(),price='7.50')
+  def batch(_codes):
+   self.app.call('remove',{'code':removed})
+   return {code:quote(code,seconds) for code,seconds in ((keep,-1),(removed,-1),(future,1),(stale,-16))}
+  self.app.store.setconfig('monitor',True)
+  self.app.provider=Mock();self.app.provider.watch_quotes.side_effect=batch
+  with patch('core.app.now_cn',return_value=now):
+   self.assertTrue(self.app.refresh_display_quotes())
+  self.assertEqual(self.app.display_quotes,{keep:quote(keep,-1)})
+  self.assertTrue(self.app.watch_display_quote(keep,now+timedelta(seconds=15))['cached'])
+  self.assertIsNone(self.app.watch_display_quote(keep,now+timedelta(days=1)))
+  self.app.quotes[keep]=quote(keep,0)
+  self.assertEqual(self.app.watch_display_quote(keep,now),quote(keep,0))
+  self.app.quotes[keep]=quote(keep,1)
+  self.assertEqual(self.app.watch_display_quote(keep,now),quote(keep,-1))
+
+ def test_batch_accepts_valid_rows_with_partial_or_wrong_symbol_reply(self):
+  def row(code,reported):
+   fields=['0']*49;fields[2]=reported;fields[3]='10';fields[30]='20261118140000';fields[47]='11'
+   return 'v_'+code+'="'+'~'.join(fields)+'";'
+  valid=row('sh603002','603002')
+  mixed=valid+row('sz000981','000815')+row('sh600392','600392')+'v_sh688680="broken";'
+  with patch('core.provider.get',return_value=mixed) as get:
+   result=Tencent().watch_quotes(['sz000981','sh603002','sh688680'])
+   get.assert_called_once_with('https://qt.gtimg.cn/q=sh603002,sh688680,sz000981','gb18030',timeout=3)
+  with patch('core.provider.get',return_value=valid):
+   self.assertEqual(result,{'sh603002':Tencent().quote('sh603002')})
+
+ def test_batch_loop_waits_for_rejection_but_keeps_short_backoff_for_timeout(self):
+  now=datetime.fromisoformat('2026-11-18T14:00:00+08:00')
+  retry_at=format_datetime(now+timedelta(minutes=25))
+  def error(code,header=None):
+   return HTTPError('',code,'',{'Retry-After':header} if header else {},None)
+  for failure,wait in ((error(403),900),(error(429,'1200'),1200),(error(429,retry_at),1500),
+                       (error(429,'bad'),900),(error(500),10),(TimeoutError(),10)):
+   with self.subTest(failure=failure),patch('core.app.now_cn',return_value=now), \
+        patch('core.app.time.monotonic',return_value=100),patch('core.app.sys.stderr'):
+    self.app.stop=Mock()
+    self.app.stop.is_set.side_effect=[False,False,True]
+    with patch.object(self.app,'refresh_display_quotes',side_effect=[failure,True]) as refresh:
+     self.app.display_quote_loop()
+    self.assertEqual(refresh.call_count,2)
+    self.assertEqual([call.args[0] for call in self.app.stop.wait.call_args_list],[wait,5])

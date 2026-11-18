@@ -1,4 +1,5 @@
 export const PRICE_UP='#ef6568',PRICE_DOWN='#36b898',PRICE_FLAT='#8c9db6';
+export type IntradayQuote={price:number;time:string;timestamp?:string;live?:boolean;percent?:number|null};
 export type IntradayRangeReference={code:string;day:string;timestamp:string;previousClose:number;high?:number;low?:number};
 export type CachedRangeMetadata={date?:string;trading_date?:string;symbol?:string;previous_close?:string|number;day_high?:string|number;day_low?:string|number;limit_reference_time?:string};
 /** Compare instants in the exchange timezone, rather than the written date prefix. */

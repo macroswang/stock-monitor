@@ -26,7 +26,7 @@ import WatchlistCard from './WatchlistCard';
 import WatchStockSwitcher from './WatchStockSwitcher';
 import StockSearch from './StockSearch';
 import StockReference from './StockReference';
-import WatchQuoteDetails from './watchQuote';
+import WatchQuoteDetails,{quoteStats} from './watchQuote';
 import type {WatchQuote} from './watchQuote';
 import {cachedPriceRangeReference,minuteTimeCutoff,tradingDayTimestamp,type CachedRangeMetadata} from './pricePresentation';
 import {IntradayRangeReferenceCache} from './intradayRangeReference';
@@ -41,6 +41,20 @@ import {EventsPanel,shiftDay,today} from './Panels';
 import type {Bar,Daily,Event,HistoryView,SourceInfo,MarketData} from './models';
 import {sourceName} from './format';
 type Watch={broker_sources?:{account_id:string;broker_name:string;account_masked:string;active:boolean}[];code:string;name:string;enabled:number;health:string;cache_health?:string;quote?:WatchQuote&{code?:string};candidates:{candidate_time:string;state:string}[]};
+type WatchQuoteRead={now:string;quotes:Record<string,Watch['quote']|null>};
+
+function withWatchQuotes(snapshot:Snapshot,read:WatchQuoteRead){
+ if(read.now<=snapshot.now||!snapshot.market_open||!snapshot.config.monitor)return snapshot;
+ let changed=false;
+ const watch=snapshot.watch.map(stock=>{
+  if(!Object.hasOwn(read.quotes,stock.code))return stock;
+  const quote=read.quotes[stock.code]??undefined;
+  if((quote?.code&&quote.code!==stock.code)||JSON.stringify(stock.quote??undefined)===JSON.stringify(quote))return stock;
+  changed=true;
+  return {...stock,quote};
+ });
+ return changed?{...snapshot,watch}:snapshot;
+}
 type Snapshot={data_revisions?:{code:string;history:unknown[];chart:number[];market:number[]};watch:Watch[];events:Event[];instruments?:Record<string,string>;unread_messages?:number;config:{monitor?:boolean;phone_enabled?:boolean;sound?:boolean;ma250_alert?:boolean;provider?:string;trading_paused?:boolean;trading_mode?:string};market_regime?:{date:string|null;close:number|null;ma250:number|null;above:boolean|null;bars:number;error:string};market_open:boolean;now:string;data_dir:string;rule:string};
 type Cached={day:string;data:{bars:Bar[];volume_unit?:string;source?:unknown}|Daily};
 const preview=!isTauri();
@@ -163,6 +177,7 @@ function App(){
  const [connectionError,setConnectionError]=useState('');
  const currentCode=useRef(code);currentCode.current=code;
  const minuteSequence=useRef(0);const dailySequence=useRef(0);const snapshotSequence=useRef(0);
+ const latestWatchQuoteRead=useRef<WatchQuoteRead|undefined>(undefined);
  const day=dayChoice||(isCandleView(view)?history?.days.at(-1)?.date:(cache.at(-1)?.day||today()))||'';
  const currentDay=useRef(day);currentDay.current=day;
  const visible=usePageVisible(),marketActive=visible&&panel==='market';
@@ -203,14 +218,22 @@ function App(){
  const minuteReference=cache.find(c=>c.day===day)?.data as ({limit_up?:string;limit_down?:string;cached_at?:string}&CachedRangeMetadata)|undefined;
  const limitUp=Number(matchingQuote?.limit_up||minuteReference?.limit_up)||undefined;
  const limitDown=Number(matchingQuote?.limit_down||minuteReference?.limit_down)||undefined;
- const currentPrice=matchingQuote?{price:Number(matchingQuote.price),time:new Date(quoteStamp!+8*3600000).toISOString().slice(11,19),timestamp:matchingQuote.timestamp}:undefined;
+ const currentPrice=matchingQuote?{price:Number(matchingQuote.price),time:new Date(quoteStamp!+8*3600000).toISOString().slice(11,19),timestamp:matchingQuote.timestamp,
+  live:!!snapshot?.market_open&&day===today()&&!matchingQuote.cached,percent:quoteStats(matchingQuote).percent}:undefined;
  const rangeCache=useRef(new IntradayRangeReferenceCache());
  const rangeReference=rangeCache.current.resolve(
   matchingQuote?{code:matchingQuote.code??code,day,timestamp:matchingQuote.timestamp,previousClose:Number(matchingQuote.previous_close),high:Number(matchingQuote.high),low:Number(matchingQuote.low)}:undefined,
   cachedPriceRangeReference(minuteReference,code,day),code,day,stockBase,minuteTimeCutoff(day,Date.now(),minuteReference?.cached_at));
- const refresh=async()=>{const seq=++snapshotSequence.current;try{const data=await api<Snapshot>('snapshot',{code:currentCode.current});if(seq===snapshotSequence.current){setSnapshot(data);setConnectionError('');}}catch(e){if(seq===snapshotSequence.current)setConnectionError(String(e));}};
+ const refresh=async()=>{const seq=++snapshotSequence.current;try{const data=await api<Snapshot>('snapshot',{code:currentCode.current});if(seq===snapshotSequence.current){const latest=latestWatchQuoteRead.current;setSnapshot(latest?withWatchQuotes(data,latest):data);setConnectionError('');}}catch(e){if(seq===snapshotSequence.current)setConnectionError(String(e));}};
+ const refreshWatchQuotes=async()=>{
+  const read=await api<WatchQuoteRead>('watch_quotes');
+  if(latestWatchQuoteRead.current&&read.now<=latestWatchQuoteRead.current.now)return;
+  latestWatchQuoteRead.current=read;
+  setSnapshot(old=>old?withWatchQuotes(old,read):old);
+ };
  useEffect(()=>{if(!preview)isEnabled().then(setAutostart).catch(()=>{});},[]);
  useDisplayPolling(true,refresh,3000);
+ useDisplayPolling(!preview&&marketActive&&!!snapshot?.market_open&&!!snapshot.config.monitor&&snapshot.watch.length>0,refreshWatchQuotes,1000);
  useDisplayPolling(marketActive,async()=>{try{const next=await api<{id:string;revision:number}|null>('paper_account_state',{account:paperAccount?.id});setPaperAccount(old=>old?.id===next?.id&&old?.revision===next?.revision?old:next);}catch{/* Preserve marks during a transient connection failure. */}},3000,paperAccount?.id||'');
  const loadMinute=async()=>{
   if(!code||currentCode.current!==code)return;

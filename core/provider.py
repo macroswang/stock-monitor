@@ -16,16 +16,37 @@ def symbol(value):
     if not re.fullmatch(r'(sh6\d{5}|sz[03]\d{5})',value): raise ValueError('请输入沪深A股六位代码，如 603002 或 sz000815')
     return value
 
-def get(url, encoding='utf-8'):
+def get(url, encoding='utf-8', *, timeout=10):
     req=Request(url,headers={'User-Agent':'Mozilla/5.0','Referer':'https://gu.qq.com/'})
-    with urlopen(req,timeout=10) as r: return r.read().decode(encoding)
+    with urlopen(req,timeout=timeout) as r: return r.read().decode(encoding)
 
 class Tencent:
     def quote(self, code):
         code=symbol(code)
         text=get('https://qt.gtimg.cn/q='+code,'gb18030')
         if '="' not in text: raise ValueError('股票不存在或暂时没有行情')
-        fields=text.split('="',1)[1].rsplit('"',1)[0].split('~')
+        return self._parse_quote(code,text.split('="',1)[1].rsplit('"',1)[0])
+
+    def watch_quotes(self, codes):
+        requested={symbol(code) for code in codes}
+        if not requested:
+            return {}
+        text=get('https://qt.gtimg.cn/q='+','.join(sorted(requested)),'gb18030',timeout=3)
+        quotes={}
+        for record in text.split(';'):
+            name, separator, body=record.strip().partition('="')
+            code=name.removeprefix('v_')
+            if not separator or not name.startswith('v_') or code not in requested:
+                continue
+            try:
+                quotes[code]=self._parse_quote(code,body.rstrip('"'))
+            except (ValueError, ArithmeticError):
+                continue
+        return quotes
+
+    @staticmethod
+    def _parse_quote(code, body):
+        fields=body.split('~')
         if len(fields)<49: raise ValueError('行情返回字段不足')
         if fields[2]!=code[2:]: raise ValueError('返回股票代码不一致，拒绝使用行情')
         stamp=datetime.strptime(fields[30],'%Y%m%d%H%M%S').replace(tzinfo=CN)

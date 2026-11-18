@@ -44,7 +44,7 @@ import TCostSettings from './TCostSettings';
 import {appendTradeTooltip} from './tradeTooltip';
 import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,macdNumber,readMacdParameters,macdParametersKey,type MacdParameters} from './minuteMacd';
 import MacdSettings from './MacdSettings';
-import {minuteTimeCutoff,reachedPriceRange,type IntradayRangeReference} from './pricePresentation';
+import {minuteTimeCutoff,reachedPriceRange,tradingDayTimestamp,type IntradayQuote,type IntradayRangeReference} from './pricePresentation';
 const volumeTick=(n:number)=>Math.abs(n)>=1e8?(n/1e8).toFixed(1)+'亿':Math.abs(n)>=1e4?(n/1e4).toFixed(1)+'万':n.toFixed(0);
 // The index cards moved to the header release a 36px row plus 16px margins.
 const STOCK_VOLUME_EXPANSION=52;
@@ -93,7 +93,7 @@ const renderPaperConnector:echarts.CustomSeriesRenderItem=(_params,api)=>{
 };
 export type BottomSignal={day:string;time:string;price:number};
 
-export default function Chart({drawingRequest,stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,rangeReference,minuteCachedAt,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{drawingRequest?:Request;stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:{price:number;time:string;timestamp?:string};rangeReference?:IntradayRangeReference;volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minuteCachedAt?:string;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
+export default function Chart({drawingRequest,stockCode='',stockName='',macdBenchmark,autoTrading,minute=[],shapeOpening,daily:sourceDaily=[],view,events=[],selectedDay,onSelectDay,onOpenDay,onMove,onHistoryNeed,compact=false,fixedTurningMode,previousClose,buySignals=[],onPaperTrade,paperFills=[],paperOrders,volumeFlow,limitUp,limitDown,currentPrice,rangeReference,minuteCachedAt,ma250,e2,annualLineFocus=false,onBottomSignal,stockSwitcher}:{drawingRequest?:Request;stockSwitcher?:ReactNode;fixedTurningMode?:TurningChartMode;onBottomSignal?:(signal:BottomSignal|null)=>void;stockCode?:string;stockName?:string;macdBenchmark?:IndexMinute|null;autoTrading?:AutoTradeChart;limitUp?:number;limitDown?:number;currentPrice?:IntradayQuote;rangeReference?:IntradayRangeReference;volumeFlow?:VolumeFlow;paperFills?:PaperFillPoint[];paperOrders?:PaperOrderPoint[];onPaperTrade?:(point:{time:string;price:number;kind:string;side:'buy'|'sell';inChart?:boolean})=>void;buySignals?:{key:string;time:string;price:number}[];benchmark?:IndexMinute|null;previousClose?:number;minuteCachedAt?:string;minute?:Bar[];shapeOpening?:Bar[];daily?:Daily[];view:string;events?:Event[];selectedDay?:string;onSelectDay?:(day:string)=>void;onOpenDay?:(day:string)=>void;onMove?:(direction:number)=>void;onHistoryNeed?:(count:number)=>void;compact?:boolean;ma250?:Ma250Pullback|null;e2?:E2Research|null;annualLineFocus?:boolean}){
  // Opening quotes seed R1 only; plotted prices, volumes, MACD and Q1 keep their original input.
  const shapeBars=shapeOpening?[...shapeOpening,...minute]:minute;
  const daily=useMemo(()=>view==='weekly'?weeklyBars(sourceDaily):sourceDaily,[sourceDaily,view]);
@@ -179,6 +179,9 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const displayClock=Date.now(),displayCutoff=selectedDay?minuteTimeCutoff(selectedDay,displayClock,minuteCachedAt):displayClock;
  const displayedMinute=minute.filter(b=>displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${b.time}:00+08:00`)<=displayCutoff));
  const displayedPrice=currentPrice&&displayCutoff!==null&&(!selectedDay||Date.parse(currentPrice.timestamp||`${selectedDay}T${currentPrice.time}+08:00`)<=displayCutoff)?currentPrice:undefined;
+ const liveStamp=selectedDay&&currentPrice?.timestamp?tradingDayTimestamp(currentPrice.timestamp,selectedDay):null;
+ const liveQuote=!isCandleView(view)&&currentPrice?.live&&liveStamp!==null&&liveStamp<=displayClock&&Number.isFinite(currentPrice.price)&&currentPrice.price>0?currentPrice:undefined;
+ const quotePrice=(liveQuote||displayedPrice)?.price;
  const rangePrices=reachedPriceRange(rangeReference,stockCode,selectedDay,previousClose,displayCutoff);
  // Cache timestamps still gate every reached point, but an updated collection
  // time alone must not invalidate an otherwise identical picture.
@@ -186,7 +189,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const indexRenderKey=macdBenchmark?[macdBenchmark.code,macdBenchmark.date,macdBenchmark.previous_close,
   macdBenchmark.bars.filter(b=>indexRenderCutoff!==null&&Date.parse(`${macdBenchmark.date}T${b.time}:00+08:00`)<=indexRenderCutoff)
    .map(b=>[b.time,b.close,b.volume_lots])]:null;
- const quotePrices=[...displayedMinute.map(b=>+b.close),...(displayedPrice?[displayedPrice.price]:[])];
+ const quotePrices=[...displayedMinute.map(b=>+b.close),...(quotePrice===undefined?[]:[quotePrice])];
  const priceLimits=resolvedPriceLimits(previousClose,quotePrices,{up:limitUp,down:limitDown});
  const [tradeHint,setTradeHint]=useState<{scope:string;text:string}|null>(null);
  const contextTrade=(event:React.MouseEvent<HTMLDivElement>)=>{
@@ -211,7 +214,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const latestTooltip=useRef<((params:unknown)=>HTMLElement)|null>(null);
  const stableTooltip=useRef((params:unknown)=>latestTooltip.current?.(params));
  const leavePointer=()=>{pointer.current=null;pointerLeft.current=true;instance.current?.dispatchAction({type:'hideTip'});};
- const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,indexRenderKey,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,displayedPrice?.price,rangePrices,plotHeight,ma,candleSizes]);
+ const contentKey=JSON.stringify([shapeOpening?.map(b=>[b.time,b.close,b.complete]),displayedMinute.map(b=>[b.time,b.close,b.volume,b.complete,b.average,b.high,b.low]),daily.map(b=>[b.date,b.open,b.close,b.low,b.high,b.volume,b.provisional]),view,events.map(e=>[e.key,e.trading_date,e.candidate_time,e.confirmation_label,e.event_label,e.mode]),selectedDay,indexRenderKey,stockCode,hasMacd,macdParameters,previousClose,buySignals,chosen,showOpening,showTriggered,showShapes,showQuality,turningMode,autoTrading,showDailyPatterns,dayPatterns.map(p=>p.key),showMa250,ma250Signals,ma250Breakouts,showE2,e2Signals,paperFills,paperOrders,volumeFlow,limitUp,limitDown,quotePrice,liveQuote,rangePrices,plotHeight,ma,candleSizes]);
  const open=useRef(onOpenDay);open.current=onOpenDay;const plot=useRef({daily,view,minute,stockCode});plot.current={daily,view,minute,stockCode};
  const ref=useRef<HTMLDivElement>(null);const instance=useRef<echarts.ECharts|null>(null);const labelsKey=useRef('');const select=useRef(onSelectDay);select.current=onSelectDay;
  // Only the main watch chart consumes the free viewport. Expanded linked
@@ -318,6 +321,13 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   const clock=Date.now(),displayMinute=isDay?minute:displayedMinute;
   const reached=(time:string)=>isDay||displayCutoff!==null&&(!selectedDay||Date.parse(`${selectedDay}T${time}:00+08:00`)<=displayCutoff);
   const byTime=new Map(displayMinute.map(b=>[b.time,b]));const aligned=labels.map(t=>byTime.get(t));
+  const lastMinuteIndex=isDay?-1:labels.indexOf(displayMinute.at(-1)?.time||'');
+  const quoteMinute=liveQuote?.time.slice(0,5);
+  const quoteIndex=quoteMinute?labels.indexOf(quoteMinute==='13:00'?'11:30':quoteMinute):-1;
+  const livePointIndex=quoteIndex>=lastMinuteIndex?quoteIndex:-1;
+  // Only project a live quote onto its own minute; the completed bars still
+  // feed time, volume, indicators and signals independently.
+  const plottedPrices=aligned.map((bar,i)=>liveQuote&&i===livePointIndex&&quoteMinute===labels[i]?liveQuote.price:bar?+bar.close:null);
   const gaps=view==='daily'?dailyGaps(daily):[];
   const visibleGaps=gaps.filter(g=>!g.filledOn).slice(-1);
   const patternSeries=isDay&&showDailyPatterns?dailyPatternOverlay(dayPatterns,()=>chart.getWidth()):[];
@@ -384,7 +394,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
    }
   }:null;
   // Only reached stock prices and annotations set the display range; index data cannot expand it.
-  const priceValues=[...automatic.map(m=>m.price),...tradePoints.filter(m=>reached(m.time)).map(m=>m.price),...displayMinute.flatMap(b=>[+b.close,Number(b.high),Number(b.low)]),...rangePrices,...averages,...(displayedPrice?[displayedPrice.price]:[])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
+  const priceValues=[...automatic.map(m=>m.price),...tradePoints.filter(m=>reached(m.time)).map(m=>m.price),...displayMinute.flatMap(b=>[+b.close,Number(b.high),Number(b.low)]),...rangePrices,...averages,...(quotePrice===undefined?[]:[quotePrice])].filter((n):n is number=>n!==null&&Number.isFinite(n)&&n>0);
   const priceScale=showPercent?intradayPriceScale(previousClose,priceValues):{};
   const limitLines=[{kind:'涨停',value:priceLimits.up,color:'#ef6568',position:'insideEndBottom'},{kind:'跌停',value:priceLimits.down,color:'#36b898',position:'insideEndTop'}].filter(row=>row.value!==undefined&&row.value>=Number(priceScale.min)&&row.value<=Number(priceScale.max)).map(row=>({name:row.kind,yAxis:row.value,lineStyle:{color:row.color,type:'dashed',width:1},label:{show:true,position:row.position,color:row.color,fontSize:10,formatter:`${row.kind} ${row.value!.toFixed(2)}（${pricePercent(row.value!,Number(previousClose))}）`}}));
   const axisRich={rise:{color:'#ed7d81',fontSize:11},fall:{color:'#51c7aa',fontSize:11},flat:{color:'#c8d5eb',fontSize:11}};
@@ -452,19 +462,33 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
      return [x,y];
     },
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;if(idx>=0)refreshMacd.current?.(idx);const root=document.createElement('div');root.className='quote-tooltip docked-tooltip '+(isDay?'daily-tooltip':'minute-tooltip');
-     if(observations.some(m=>m.time===aligned[idx]?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
+     const quote=idx>=0&&idx===livePointIndex?liveQuote:undefined,bar=quote?undefined:aligned[idx];
+     if(observations.some(m=>m.time===bar?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
      const rows:string[]=[];if(isDay){const b=daily[idx];if(b){
       const changeText=candleChangeText(daily,idx);
       rows.push(view==='weekly'?`周K · ${'startDate' in b?b.startDate:b.date}—${b.date}${b.provisional?'（含盘中数据）':''}`:b.provisional?b.date+' · 盘中日K（未收盘）':b.date,`涨跌幅：${changeText}`,`开盘：${price(b.open)} 元`,`收盘：${price(b.close)} 元`,`最高：${price(b.high)} 元`,`最低：${price(b.low)} 元`,`成交量：${wanShares(b.volume)} 万股`);for(const gap of gaps.filter(g=>g.date===b.date))rows.push(`${gap.provisional?'盘中':''}${gap.direction==='up'?'向上':'向下'}跳空：${price(gap.originalLow)}—${price(gap.originalHigh)} 元`,gap.filledOn?`已回补：${gap.filledOn}`:`未回补：${price(gap.low)}—${price(gap.high)} 元`);const n=events.filter(e=>view==='weekly'?e.trading_date>=(('startDate' in b?b.startDate:b.date) as string)&&e.trading_date<=b.date:e.trading_date===b.date).length;if(n)rows.push(`触发：${n} 次`);for(const n of ma.visible?ma.enabled:[]){const v=maValues.get(n)![idx];rows.push(`MA${n}：${v===null?'—':v.toFixed(2)+' 元'}`);}for(const signal of ma250Signals.filter(s=>s.date===b.date)){rows.push(`年线回踩${signal.strong?'（强）':''}：收 ${price(signal.close)} 元 / MA250 ${price(signal.ma250)} 元（${signal.distance_pct>=0?'+':''}${signal.distance_pct.toFixed(1)}%）`);rows.push(`回踩：${signal.touch_date} 低点 ${price(signal.touch_low)} 元（较年线 ${(-signal.touch_depth_pct).toFixed(1)}%）`);rows.push(`自高点回撤 ${signal.pullback_pct.toFixed(1)}% · 参考止损 ${price(signal.stop)} 元`);if(signal.atr20_pct!==undefined&&signal.atr20_pct!==null)rows.push(`波动：ATR20 ${signal.atr20_pct.toFixed(1)}%`);rows.push(signal.strong?'强信号：指数在年线上、回踩未破年线、未破前低、距年线≤7%':'强信号未满足：'+((signal.strong_reasons||[]).map(reason=>ma250Reason[reason]||reason).join('、')||'指数数据缺失'));}for(const item of ma250Breakouts.filter(item=>item.date===b.date)){rows.push('突破年线'+(item.quality?'（确认）':'（观察）')+'：收 '+price(item.close)+' 元 / MA250 '+price(item.ma250)+' 元（+'+item.margin_pct.toFixed(1)+'%）');rows.push('年线斜率60日 '+(item.slope60_pct===null?'—':(item.slope60_pct>=0?'+':'')+item.slope60_pct.toFixed(1)+'%')+' · 量比 '+(item.volume_ratio===null?'—':item.volume_ratio.toFixed(2))+' · 此前在年线下 '+item.days_below+' 日');}for(const item of e2Signals.filter(item=>item.date===b.date)){rows.push('E2确认 · 研究参考',`源强信号：${item.source_date} · 第${item.confirmation_day}个交易日确认`,`收盘 ${price(item.close)} 元 > 源信号高点 ${price(item.source_high)} 元`,`收盘仍在年线1%以上及MA5以上，沪深300在年线上`,`仅研究参考，不进入正式提醒或自动交易；后续入场需另行判断`);}rows.push(view==='weekly'?'截至该日 · 双击查看该日分时':'双击查看当天分时');}}
-     else{const b=aligned[idx];const hoverPct=b&&Number.isFinite(previousClose)&&Number(previousClose)>0?(+b.close/Number(previousClose)-1)*100:null;const roundedPct=hoverPct!==null&&Math.abs(hoverPct)<.005?0:hoverPct;if(!b)rows.push(labels[idx]||'', '暂无该分钟成交数据');if(b)rows.push(b.time,`价格：${price(b.close)} 元`,`涨跌幅：${roundedPct===null?'暂无昨收':(roundedPct>0?'+':'')+roundedPct.toFixed(2)+'%'}`,`均价：${b.average&&Number.isFinite(+b.average)?price(b.average)+' 元':'暂无成交额数据'}`,`分钟量：${wan(b.volume/100)} 手`,...(!b.complete?['当前分钟（未结束）']:[]));if(b&&chosen){const change=(+b.close/chosen.price-1)*100;rows.push(`基准${chosen.kind||'触发'}：${chosen.time} · ${price(chosen.price)} 元`,`相对${chosen.kind||'触发'}涨跌幅：${change>0?'+':''}${(Math.abs(change)<.005?0:change).toFixed(2)}%`);
-     }}
+     else{
+      const hoverPrice=quote?.price??(bar?+bar.close:undefined);
+      const pct=quote?quote.percent??null:bar&&Number(previousClose)>0?(+bar.close/Number(previousClose)-1)*100:null;
+      const roundedPct=pct!==null&&Math.abs(pct)<.005?0:pct;
+      rows.push(quote?.time||bar?.time||labels[idx]||'');
+      if(quote)rows.push(`最新价：${price(quote.price)} 元`);
+      if(quote||bar)rows.push(`涨跌幅：${roundedPct===null?'暂无昨收':(roundedPct>0?'+':'')+roundedPct.toFixed(2)+'%'}`);
+      if(bar)rows.push(`${bar.complete?'分钟收盘':'分钟价'}：${price(bar.close)} 元`,`均价：${bar.average&&Number.isFinite(+bar.average)?price(bar.average)+' 元':'暂无成交额数据'}`,`分钟量：${wan(bar.volume/100)} 手`,...(!bar.complete?['当前分钟（未结束）']:[]));
+      if(!bar&&!quote)rows.push('暂无该分钟成交数据');
+      if(hoverPrice!==undefined&&chosen){
+       const change=(hoverPrice/chosen.price-1)*100;
+       rows.push(`基准${chosen.kind||'触发'}：${chosen.time} · ${price(chosen.price)} 元`,`相对${chosen.kind||'触发'}涨跌幅：${change>0?'+':''}${(Math.abs(change)<.005?0:change).toFixed(2)}%`);
+      }
+     }
      if(isDay&&showDailyPatterns&&daily[idx])for(const p of dayPatterns.filter(p=>p.lines.some(l=>l.from.index<=idx&&l.to.index>=idx)).slice(-3)){
       rows.push(`${p.name}：${dailyPatternStatus(p)}`,`轮廓起点：${p.start.date}；首次识别：${p.detectedOn}`,...(p.breakoutOn?[`收盘突破：${p.breakoutOn}`]:[]),...(p.kind==='spring'?[`收回前低：${p.detectedOn}`]:[]),...(p.necklineOn?[`颈线突破：${p.necklineOn}`]:[]),...(p.failedOn?[`${p.failureReason==='support'?'收盘再失守前低':'跌破破底低点'}：${p.failedOn}`]:[]));
      }
-     if(!isDay&&aligned[idx]){if(priceLimits.up)rows.push(`涨停：${priceLimits.up.toFixed(2)} 元（${pricePercent(priceLimits.up,Number(previousClose))}）`);if(priceLimits.down)rows.push(`跌停：${priceLimits.down.toFixed(2)} 元（${pricePercent(priceLimits.down,Number(previousClose))}）`);const split=splits[idx]!;const total=aligned[idx]!.volume;
+     if(!isDay&&(bar||quote)){if(priceLimits.up)rows.push(`涨停：${priceLimits.up.toFixed(2)} 元（${pricePercent(priceLimits.up,Number(previousClose))}）`);if(priceLimits.down)rows.push(`跌停：${priceLimits.down.toFixed(2)} 元（${pricePercent(priceLimits.down,Number(previousClose))}）`);}
+     if(!isDay&&bar){const split=splits[idx]!;
       if(split.verified){const suffix=split.approximate?'（约）':'';rows.push(`买盘量${suffix}：${wan(split.rawBuy/100)} 手（${split.sourceTotal?(split.rawBuy/split.sourceTotal*100).toFixed(1):'0.0'}%）`,`卖盘量${suffix}：${wan(split.rawSell/100)} 手（${split.sourceTotal?(split.rawSell/split.sourceTotal*100).toFixed(1):'0.0'}%）`);if(split.approximate)rows.push(`买卖量为约值，分笔合计较总量${split.difference>0?'多':'少'}${wan(Math.abs(split.difference)/100)}手`);}
      }
-     for(const point of observations.filter(m=>m.time===aligned[idx]?.time)){
+     for(const point of observations.filter(m=>m.time===bar?.time)){
       const observation=(point.shape||point.q1)!;
       // Q1 顶/底均按对应“顶/底信号”呈现；仅在来源不同时补一行“来源：Q1 质量点”。
       const label=point.kind==='bottom'?'底信号':'顶信号';
@@ -487,7 +511,10 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
       if(/^相对(触发|底|顶|位置)涨跌幅/.test(text)){row.className='trigger-change';row.style.color=text.includes('：-')?'#69d9ac':text.includes('：+')?'#ef8585':'#e7edf7';comparison.append(row);}else{if(text.startsWith('上证：'))row.classList.add('quote-index');root.append(row);}
      }
      if(comparison.childElementCount)root.append(comparison);
-     refreshTrade.current=null;if(!isDay&&chosen&&aligned[idx])refreshTrade.current=appendTradeTooltip(root,chosen.price,+aligned[idx].close,()=>costsRef.current,aligned[idx].time<chosen.time,aligned[idx].time===chosen.time);return root;}
+     refreshTrade.current=null;
+     const hoverTime=quote?.time.slice(0,5)||bar?.time;
+     if(!isDay&&chosen&&hoverTime)refreshTrade.current=appendTradeTooltip(root,chosen.price,quote?.price??Number(bar?.close),()=>costsRef.current,hoverTime<chosen.time,hoverTime===chosen.time);
+     return root;}
    },axisPointer:{link:[{xAxisIndex:'all'}]},grid:(hasMacd?minutePanels.grids:[{top:30,height:'55%'},{top:'72%',height:'17%'}]).map(grid=>({left:65,right:showPercent?72:35,...grid})),
    xAxis:[{type:'category',data:labels,boundaryGap:isDay,...timeGrid,axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}},axisPointer:{label:{show:!hasMacd}},axisLabel:{show:!hasMacd,hideOverlap:true,...(!isDay?{interval:timeTick,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t}:{})}},{type:'category',gridIndex:1,data:labels,boundaryGap:isDay,...timeGrid,axisLabel:{show:false},axisPointer:{label:{show:false}},axisLine:{lineStyle:{color:isDay?'#2a374c':'#69343f'}}},...(hasMacd?[2,3,4].map(gridIndex=>({type:'category',gridIndex,data:labels,boundaryGap:false,...timeGrid,axisLabel:{show:gridIndex===4,hideOverlap:true,interval:timeTick,fontSize:10,margin:5,formatter:(t:string)=>t==='11:30'?'11:30/13:00':t},axisPointer:{label:{show:gridIndex===4}},axisLine:{lineStyle:{color:'#3b485b'}}})):[])],
    yAxis:[{scale:true,...priceScale,splitNumber:isDay?5:4,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{formatter:showPercent?priceLabel:(n:number)=>n.toFixed(2),...(showPercent?{rich:axisRich}: {})}},{scale:true,gridIndex:1,...(!isDay?{min:0,max:'dataMax'}:{}),splitNumber:2,splitLine:{lineStyle:{color:isDay?'#202c40':'#69343f',opacity:isDay?1:.65,width:1}},axisLabel:{fontSize:hasMacd?10:12,formatter:(n:number)=>isDay?wan(n):volumeTick(n)}},...(showPercent?[{type:'value',gridIndex:0,position:'right',scale:true,...priceScale,splitLine:{show:false},axisLine:{show:false},axisTick:{show:false},axisPointer:{show:false},axisLabel:{margin:10,formatter:percentLabel,rich:axisRich}}]:[]),...(hasMacd?[
@@ -497,8 +524,11 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
    ]:[])],
    dataZoom:[{type:'inside',xAxisIndex:axisIndices,...zoom,...(isDay?{filterMode:'weakFilter',zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:axisIndices,...zoom,bottom:1,height:hasMacd?10:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{filterMode:'weakFilter',zoomLock:true,handleSize:0,brushSelect:false}: {})}],
    series:[isDay?{name:view==='weekly'?'周K':'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#91a2bb',position:'insideTopRight',align:'right',padding:[2,4]},data:[...visibleGaps.map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:g.direction==='up'?'rgba(239,101,104,.035)':'rgba(54,184,152,.035)',borderColor:g.direction==='up'?'rgba(239,101,104,.24)':'rgba(54,184,152,.24)',borderWidth:.7,borderType:'solid'}},{xAxis:daily.at(-1)!.date,yAxis:g.high}]),...ma250Signals.map(s=>[{name:'年线回踩',xAxis:s.touch_date,label:{show:false},itemStyle:{color:'rgba(242,176,74,.05)',borderColor:'rgba(242,176,74,.22)',borderWidth:.7,borderType:'dashed'}},{xAxis:s.date}])]},markPoint:{data:tradeMarks},markLine:{data:[]}}:
-    {name:'价格',type:'line',data:aligned.map(b=>b?+b.close:null),connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:.8},markLine:{silent:true,symbol:'none',data:[...previousLine,...limitLines]},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...tradeMarks,...observationMarks,...volumeMarkers,...buySignals.filter(e=>labels.includes(e.time)&&reached(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
-    ...(!isDay?[{value:priceLimits.up,name:'涨停走势',color:'#ef6568'},{value:priceLimits.down,name:'跌停走势',color:'#36b898'}].filter(row=>row.value!==undefined).map(row=>({name:row.name,type:'line',data:aligned.map(b=>b&&Math.abs(+b.close-row.value!)<.000001?+b.close:null),connectNulls:false,showSymbol:true,symbol:'circle',symbolSize:3,z:7,silent:true,lineStyle:{color:row.color,width:2.8},itemStyle:{color:row.color}})):[]),
+    {name:'价格',type:'line',data:plottedPrices,connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:.8},markLine:{silent:true,symbol:'none',data:[...previousLine,...limitLines]},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...tradeMarks,...observationMarks,...volumeMarkers,...buySignals.filter(e=>labels.includes(e.time)&&reached(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
+    ...(!isDay?[{value:priceLimits.up,name:'涨停走势',color:'#ef6568'},{value:priceLimits.down,name:'跌停走势',color:'#36b898'}].filter(row=>row.value!==undefined).map(row=>({name:row.name,type:'line',data:plottedPrices.map(value=>value!==null&&Math.abs(value-row.value!)<.000001?value:null),connectNulls:false,showSymbol:true,symbol:'circle',symbolSize:3,z:7,silent:true,lineStyle:{color:row.color,width:2.8},itemStyle:{color:row.color}})):[]),
+    ...(!isDay?[{name:'最新价',type:'scatter',z:7,symbolSize:6,itemStyle:{color:'#dceaff',borderColor:'#78aaff',borderWidth:1.5},
+      label:{show:false},
+      data:labels.map((_,i)=>liveQuote&&i===livePointIndex?liveQuote.price:null)}]:[]),
     ...(!isDay?[{name:'均价',type:'line',data:averages,showSymbol:false,connectNulls:false,lineStyle:{color:'#e9b949',width:1},itemStyle:{color:'#e9b949'}}]:[]),
     ...(isDay?[{name:'成交量（万股）',type:'bar',xAxisIndex:1,yAxisIndex:1,data:volume.map((v,i)=>({value:v,itemStyle:{color:colors[i]}}))}]:[
      {name:'买盘量',type:'bar',stack:'minute-volume',xAxisIndex:1,yAxisIndex:1,barWidth:'85%',barMaxWidth:9,itemStyle:{color:'#ef6568'},data:splits.map(b=>b?b.buy/100:null)},
@@ -548,16 +578,17 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
   };
   const dependencies={xAxis:gridStep,yAxis:previousClose,'minute:总成交量（回退）':colors,'minute:指数成交量':indexVolumeColors};
   if(!isDay){latestTooltip.current=option.tooltip.formatter;option.tooltip.formatter=stableTooltip.current as typeof option.tooltip.formatter;}
-  const apply=()=>{
-   if(mergeMinute&&minutePatch.current){
-    const patch=minutePatch.current.next(option,dependencies);
-    if(Object.keys(patch.option).length)chart.setOption(patch.option,{notMerge:false,...(patch.replaceSeries?{replaceMerge:['series']}: {})});
-   }else{
-    chart.setOption(option,{notMerge:true});
-    minutePatch.current=!isDay?new MinuteOptionPatch(option,dependencies):null;
-   }
-  };
-  if(minuteSurface.current)minuteSurface.current.update(apply);else apply();
+  const patch=mergeMinute&&minutePatch.current?minutePatch.current.next(option,dependencies):null;
+  if(!patch||Object.keys(patch.option).length){
+   const apply=()=>{
+    if(patch)chart.setOption(patch.option,{notMerge:false,...(patch.replaceSeries?{replaceMerge:['series']}: {})});
+    else{
+     chart.setOption(option,{notMerge:true});
+     minutePatch.current=!isDay?new MinuteOptionPatch(option,dependencies):null;
+    }
+   };
+   if(minuteSurface.current)minuteSurface.current.update(apply);else apply();
+  }
   renderedStructure.current=structure;
   // Refresh data under the cursor without jumping back to the selected day.
   // Explicit day/view navigation still takes priority over the previous hover.

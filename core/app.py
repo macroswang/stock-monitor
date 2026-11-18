@@ -1,7 +1,9 @@
 """Desktop-owned process, JSON-lines IPC on stdin/stdout; no listening network port."""
 import concurrent.futures,json,os,sys,threading,time
 from datetime import date,timedelta,datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
+from urllib.error import HTTPError
 from .provider import Tencent,symbol,now_cn,CN
 from .rules import Session
 from .store import Store
@@ -70,10 +72,14 @@ def observed_elapsed(start,end):
 
 class App:
     POLL_SECONDS=8
+    DISPLAY_QUOTE_SECONDS=5
+    DISPLAY_QUOTE_MAX_AGE=15
+    DISPLAY_QUOTE_LIMIT_COOLDOWN=15*60
     def __init__(self,data_dir,start_worker=True):
         self.dir=Path(data_dir); self.store=Store(self.dir/'monitor.sqlite3')
         self.provider=Tencent(); self.lock=threading.RLock(); self.stop=threading.Event()
         self.health={}; self.sessions={}; self.quotes={}; self.last_poll=None; self.jobs={}
+        self.display_quotes={}
         self.jobs_lock=threading.Lock(); self.job_slots=threading.BoundedSemaphore(8)
         self.job_times={}
         self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None; self.ma250_checked={}
@@ -130,6 +136,7 @@ class App:
             threading.Thread(target=self.outlook_scheduler.run,daemon=True).start()
             threading.Thread(target=self.sector_flow_loop,daemon=True).start()
             threading.Thread(target=self.loop,daemon=True).start()
+            threading.Thread(target=self.display_quote_loop,daemon=True).start()
             threading.Thread(target=self.pool_loop,daemon=True).start()
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
@@ -184,6 +191,88 @@ class App:
                 # A session boundary or invalid cache must not terminate market monitoring.
                 print('paper sync: '+str(e),file=sys.stderr,flush=True)
             self.stop.wait(3)
+
+    def display_quote_cooldown(self,error,now):
+        minimum=self.DISPLAY_QUOTE_LIMIT_COOLDOWN
+        retry_after=error.headers.get('Retry-After','').strip() if error.headers else ''
+        if not retry_after:
+            return minimum
+        try:
+            if retry_after.isascii() and retry_after.isdigit():
+                delay=int(retry_after)
+            else:
+                retry_at=parsedate_to_datetime(retry_after)
+                delay=(retry_at-now).total_seconds() if retry_at.tzinfo else 0
+        except (ValueError, OverflowError):
+            return minimum
+        return min(threading.TIMEOUT_MAX,max(minimum,delay))
+
+    def display_quote_loop(self):
+        while not self.stop.is_set():
+            started=time.monotonic()
+            now=now_cn()
+            delay=self.DISPLAY_QUOTE_SECONDS
+            if trading(now) and trading_day(now.date()) is not False:
+                try:
+                    if not self.refresh_display_quotes():
+                        delay*=2
+                except HTTPError as error:
+                    if error.code in (403,429):
+                        rejected_at=now_cn()
+                        cooldown=self.display_quote_cooldown(error,rejected_at)
+                        print(f'[watch-quotes] {rejected_at.isoformat()} 腾讯 HTTP {error.code}，批量报价冷却 {cooldown:g} 秒',
+                              file=sys.stderr,flush=True)
+                        self.stop.wait(cooldown)
+                        continue
+                    delay*=2
+                except (OSError, UnicodeError):
+                    delay*=2
+            self.stop.wait(max(.25,delay-(time.monotonic()-started)))
+
+    def refresh_display_quotes(self):
+        with self.lock:
+            if not self.store.config().get('monitor'):
+                return True
+            epochs={row['code']:self.epochs.get(row['code'],0)
+                    for row in self.store.query('SELECT code FROM watch WHERE enabled=1')}
+        if not epochs:
+            return True
+
+        # Display batches stay independent of both the stock pool and the worker
+        # that feeds formal signals. Keep requests sequential and bounded in size.
+        codes=list(epochs)
+        accepted=False
+        for start in range(0,len(codes),50):
+            batch=codes[start:start+50]
+            quotes=self.provider.watch_quotes(batch)
+            now=now_cn()
+            with self.lock:
+                if self.stop.is_set() or not trading(now) or not self.store.config().get('monitor'):
+                    break
+                for code in batch:
+                    quote=quotes.get(code)
+                    if not quote or self.epochs.get(code,0)!=epochs[code] or quote['date']!=now.date().isoformat():
+                        continue
+                    age=(now-datetime.fromisoformat(quote['timestamp'])).total_seconds()
+                    if not 0<=age<=self.DISPLAY_QUOTE_MAX_AGE:
+                        continue
+                    prior=self.display_quotes.get(code)
+                    if not prior or quote['timestamp']>prior['timestamp']:
+                        self.display_quotes[code]=quote
+                    accepted=True
+        return accepted
+
+    def watch_display_quote(self,code,now):
+        official=self.quotes.get(code) or self.cached_quotes.get(code)
+        fast=self.display_quotes.get(code)
+        if not fast or fast['date']!=now.date().isoformat():
+            return official
+        age=(now-datetime.fromisoformat(fast['timestamp'])).total_seconds()
+        if age<0:
+            return official
+        if official and fast['timestamp']<=official['timestamp']<=now.isoformat():
+            return official
+        return dict(fast,cached=True) if age>self.DISPLAY_QUOTE_MAX_AGE else fast
 
     def cached_watch_quote(self,code):
         saved=self.store.getcache(code,'watch_quote')
@@ -699,19 +788,25 @@ class App:
         if method=='pool_mark':return self.pool.mark(args['code'],args['state'])
         if method=='pool_sync':return self.start_job(lambda:(self.pool.bootstrap(),self.pool.view())[1])
         if method=='pool_backtest':return self.pool.pool_backtest()
+        if method=='watch_quotes':
+            with self.lock:
+                now=now_cn()
+                return dict(now=now.isoformat(),quotes={row['code']:self.watch_display_quote(row['code'],now)
+                          for row in self.store.query('SELECT code FROM watch')})
         if method=='snapshot':
             with self.lock:
+                now=now_cn()
                 watch=self.store.query('SELECT * FROM watch ORDER BY rowid')
                 config=self.store.config()
                 broker_sources=self.live_trading.sources()
                 for w in watch:
-                    w.update(quote=self.quotes.get(w['code']) or self.cached_quotes.get(w['code']),health=('已暂停' if not w['enabled'] or not config.get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
+                    w.update(quote=self.watch_display_quote(w['code'],now),health=('已暂停' if not w['enabled'] or not config.get('monitor') else self.health.get(w['code'],'等待行情刷新')),cache_health=self.cache_health.get(w['code']),
                         candidates=self.sessions.get(w['code'],{}).get('candidates',[]))
                     w['broker_sources']=broker_sources.get(w['code'],[])
                 events=self.event_rows()
                 return dict(watch=watch,events=events,instruments={r['code']:r['name'] for r in self.store.query('SELECT * FROM instruments')},
                     unread_messages=self.store.query('SELECT count(*) AS n FROM messages WHERE read_at IS NULL')[0]['n'],
-                    config=config,now=now_cn().isoformat(),market_open=trading(now_cn()),data_revisions=self.client_revisions(args.get('code')),
+                    config=config,now=now.isoformat(),market_open=trading(now),data_revisions=self.client_revisions(args.get('code')),
                     last_poll=self.last_poll,data_dir=str(self.dir),version=VERSION,rule='running_max_inclusive_v1',
                     pool_count=self.pool.count(),market_regime=self.market_regime.view())
         if method=='stock_search':
@@ -742,6 +837,7 @@ class App:
             with self.lock:
                 if method=='remove':
                     self.store.execute('DELETE FROM watch WHERE code=?',(code,));self.quotes.pop(code,None)
+                    self.display_quotes.pop(code,None)
                 else:
                     if not isinstance(args['enabled'],bool): raise ValueError('监控状态必须为开或关')
                     self.store.execute('UPDATE watch SET enabled=? WHERE code=?',(int(args['enabled']),code))
