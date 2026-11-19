@@ -95,6 +95,26 @@ class TradingChartTests(unittest.TestCase):
    dict(code='000981',side='buy',date='2026-11-03',time='13:38:00',order_id='contract-one',filled=2300,average='2.15')])
   self.store.cache('broker-account:a',CACHE_KIND,'2026-11-03',payload)
   points=chart(self.store,'sz000981','2026-11-03')['points'];self.assertEqual(len(points),1);self.assertEqual(points[0]['source'],'automatic')
+ def test_exact_contract_adds_verified_fills_to_accepted_order_and_daily_mark(self):
+  day='2026-11-03';code='sz000981'
+  self.seed(status='accepted')
+  self.assertEqual(daily_chart(self.store,code,day,day)['marks'],[])
+  row=dict(code='000981',side='buy',date=day,time='13:38:00',order_id='contract-one',
+           quantity=2300,price='2.16',filled=600,average='2.15',status='partial')
+  payload=dict(account_id='a',account_verified=True,complete=True,day=day,observed_at=day+'T15:05:00+08:00',rows=[row])
+  for fill,status in ((600,'partial'),(2300,'filled')):
+   row.update(filled=fill,status=status)
+   self.store.cache('broker-account:a',CACHE_KIND,day,payload)
+   before=self.store.db.total_changes
+   points=chart(self.store,code,day)['points']
+   self.assertEqual([(p['id'],p['status'],p['filled'],p['execution_status']) for p in points],[('one',status,fill,'accepted')])
+   marks=daily_chart(self.store,code,day,day)['marks']
+   self.assertEqual([(mark['value'],mark['buyShares'],mark['buyAverage']) for mark in marks],[('B',fill,2.15)])
+   self.assertEqual(self.store.db.total_changes,before)
+   self.assertEqual(self.store.query('SELECT status FROM trading_runs')[0]['status'],'accepted')
+  row.update(quantity=2400)
+  self.store.cache('broker-account:a',CACHE_KIND,day,payload)
+  self.assertEqual(daily_chart(self.store,code,day,day)['marks'],[])
  def native_sell(self):
   from executor.ths_orders import order_key
   self.store.execute("UPDATE broker_accounts SET broker='ths' WHERE id='a'")

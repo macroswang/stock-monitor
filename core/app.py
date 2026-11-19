@@ -87,6 +87,8 @@ class App:
         self.jobs_lock=threading.Lock(); self.job_slots=threading.BoundedSemaphore(8)
         self.job_times={}
         self.epochs={}; self.daily_checked={}; self.cache_health={}; self.market_checked=None; self.ma250_checked={}
+        self.watch_poll_lock = threading.Lock()
+        self.watch_polls = {}
         if not self.store.config().get('initialized'):
             rows=[]
             for code,name in SEEDS:
@@ -409,7 +411,16 @@ class App:
 
     def poll_one(self,code):
         if self.stop.is_set(): return
-        epoch=self.epochs.get(code,0)
+        # Manual refresh and background monitoring share the active sample.
+        with self.watch_poll_lock:
+            epoch = self.epochs.get(code,0)
+            key = (code,epoch)
+            running = self.watch_polls.get(key)
+            if running is None:
+                self.watch_polls[key] = threading.Event()
+        if running is not None:
+            running.wait()
+            return
         stage='报价'
         try:
             quote=self.provider.quote(code)
@@ -437,6 +448,9 @@ class App:
             with self.lock:
                 if self.epochs.get(code,0)==epoch:
                     self.health[code]=stage+'获取失败：'+type(e).__name__+'；保留上次有效报价'; self.sessions.pop(code,None)
+        finally:
+            with self.watch_poll_lock:
+                self.watch_polls.pop(key).set()
 
     def loop(self):
         import time

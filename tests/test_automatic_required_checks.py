@@ -158,6 +158,39 @@ class RequiredChecksTests(TestCase):
         self.assertEqual(self.run_row()['status'],'pending')
         self.assertTrue(json.loads(self.run_row()['payload'])['admission']['allowed'])
 
+    def test_current_signal_waits_for_matching_quote_and_expires_on_rollover_or_revision(self):
+        self.arm()
+        code='sh603938'
+        signal_minute=self.now.replace(second=0,microsecond=0)
+        bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
+        bars=[bar,dict(bar,time='10:01')]
+        event=dict(kind='bottom',time='10:01',candidateTime='09:59',key='waiting-for-quote',price=30)
+        for case in ('aligned','expired','invalidated'):
+            with self.subTest(case=case):
+                self.service.frames.clear()
+                self.store.execute('DELETE FROM trading_runs')
+                self.now=signal_minute-timedelta(seconds=5)
+                quote=dict(code=code,price='30',timestamp=self.now.isoformat())
+                with patch('core.turning_combined.signals',return_value=[]):
+                    self.service.ingest(code,[bar],quote,self.now,True)
+                self.now=signal_minute+timedelta(seconds=4)
+                with patch('core.turning_combined.signals',return_value=[event]):
+                    self.service.ingest(code,bars,quote,self.now,True)
+                self.assertEqual(self.store.query('SELECT status FROM trading_runs'),[])
+                self.now=signal_minute+timedelta(seconds=61 if case=='expired' else 12)
+                quote['timestamp']=self.now.isoformat()
+                next_bars=[bar,dict(bars[-1],close='29.98')] if case=='invalidated' else bars
+                with patch('core.turning_combined.signals',return_value=[] if case=='invalidated' else [event]):
+                    self.service.ingest(code,next_bars,quote,self.now,True)
+                # Duplicate samples and a formerly invalidated signal cannot enqueue again.
+                with patch('core.turning_combined.signals',return_value=[event]):
+                    self.service.ingest(code,bars,quote,self.now,True)
+                rows=self.store.query('SELECT status,payload FROM trading_runs')
+                expected={'aligned':['pending'],'expired':['skipped'],'invalidated':[]}
+                self.assertEqual([row['status'] for row in rows],expected[case])
+                if case=='expired':
+                    self.assertIn('信号已过期',json.loads(rows[0]['payload'])['message'])
+
     def test_recovered_historical_signal_is_not_admitted_on_new_tail(self):
         self.arm();bar=dict(time='10:00',close='30',volume=10000,average='30.5',complete=True)
         with patch('core.turning_combined.signals',return_value=[]):self.service.ingest('sh603938',[bar],self.app.quotes['sh603938'],self.now,False)

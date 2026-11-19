@@ -670,21 +670,42 @@ class LiveTrading:
             previous=self.frames.get(code)
             same_day=previous is not None and previous['day']==day
             seen=previous['seen'] if same_day else set()
-            fresh=[m for m in observations if m['key'] not in seen]
+            waiting=previous.get('awaiting_quote') if same_day else None
             tail=max((b['time'] for b in bars),default='')
             prior_tail=max((b[0] for b in previous['signature']),default='') if same_day else ''
             if same_day and (tail<prior_tail or len(signature)<len(previous['signature'])):
                 previous['ready']=False
+                previous.pop('awaiting_quote',None)
                 return
             latest=max(observations,key=lambda m:m['time'],default=None)
             live_minute=str(quote.get('timestamp') or now.isoformat())[11:16]
-            self.frames[code]=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations},
-                                   latest=signal_identity(latest) if latest else None,ready=tail==live_minute,observed_at=now.isoformat())
+            frame=dict(day=day,signature=signature,seen=seen|{m['key'] for m in observations},
+                       latest=signal_identity(latest) if latest else None,ready=tail==live_minute,observed_at=now.isoformat())
+            self.frames[code]=frame
             if tail==live_minute:self.frame_changed.notify_all()
-            for m in fresh:
-                historical=(not same_day and m['time']<=self.started_at[11:16]) or m['time']<prior_tail or m['time']!=tail or m['time']!=live_minute or m is not latest
-                self.observe(code,[m],quote,now,continuous,admission_reason='历史信号或启动采样基线，未补单' if historical else '',
-                             baseline_at=previous.get('observed_at') if same_day else None)
+            for m in observations:
+                resuming=waiting is not None and waiting['key']==m['key']
+                if m['key'] in seen and not resuming:
+                    continue
+                historical=((not same_day and m['time']<=self.started_at[11:16])
+                            or m['time']<prior_tail or m['time']!=tail or m is not latest)
+                baseline_at=previous['observed_at'] if same_day else None
+                reason='历史信号或启动采样基线，未补单' if historical or m['time']!=live_minute else ''
+                # A confirmed current-minute signal may wait for the next regular quote.
+                if resuming or (not historical and live_minute<tail):
+                    if resuming:
+                        baseline_at=waiting['baseline_at']
+                    checked_at=now_cn()
+                    if historical or tail!=now.strftime('%H:%M') or checked_at.strftime('%Y-%m-%dT%H:%M')!=day+'T'+tail:
+                        reason='等待报价期间信号已过期，未补单'
+                    elif not continuous or admission_reason or (resuming and signature!=previous['signature']):
+                        reason=admission_reason or '采样中断或分钟数据修订，未补单'
+                    elif not 0<=stamp_age(quote.get('timestamp'),checked_at)<=30 or quote['timestamp'][:10]!=day:
+                        reason='报价过期或日期不符，未补单'
+                    elif live_minute<tail:
+                        frame['awaiting_quote']=dict(key=m['key'],baseline_at=baseline_at)
+                        continue
+                self.observe(code,[m],quote,now,continuous,admission_reason=reason,baseline_at=baseline_at)
 
     def observe(self, code, observations, quote, now, continuous, admission_reason='',baseline_at=None):
         # Called only by live quote ingestion, never by chart rendering or replay.

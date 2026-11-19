@@ -482,7 +482,7 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
      return [x,y];
     },
     formatter:(params:unknown)=>{const first=(Array.isArray(params)?params[0]:params) as {dataIndex?:number}|undefined;const idx=first?.dataIndex??-1;if(idx>=0)refreshMacd.current?.(idx);const root=document.createElement('div');root.className='quote-tooltip docked-tooltip '+(isDay?'daily-tooltip':'minute-tooltip');
-     const quote=idx>=0&&idx===livePointIndex?liveQuote:undefined,bar=quote?undefined:aligned[idx];
+     const quote=idx>=0&&idx===livePointIndex?liveQuote:undefined,bar=aligned[idx];
      if(observations.some(m=>m.time===bar?.time)){root.style.maxWidth='min(580px, calc(100vw - 80px))';root.style.whiteSpace='normal';}
      const rows:string[]=[];if(isDay){const b=daily[idx];if(b){
       const changeText=candleChangeText(daily,idx);
@@ -492,9 +492,9 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
       const pct=quote?quote.percent??null:bar&&Number(previousClose)>0?(+bar.close/Number(previousClose)-1)*100:null;
       const roundedPct=pct!==null&&Math.abs(pct)<.005?0:pct;
       rows.push(quote?.time||bar?.time||labels[idx]||'');
-      if(quote)rows.push(`最新价：${price(quote.price)} 元`);
       if(quote||bar)rows.push(`涨跌幅：${roundedPct===null?'暂无昨收':(roundedPct>0?'+':'')+roundedPct.toFixed(2)+'%'}`);
-      if(bar){const opening=replayTime&&bar.time==='09:30';rows.push(`${opening?'开盘价':bar.complete?'分钟收盘':'分钟价'}：${price(bar.close)} 元`,`均价：${bar.average&&Number.isFinite(+bar.average)?price(bar.average)+' 元':'暂无成交额数据'}`,`${opening?'开盘量':'分钟量'}：${wan(bar.volume/100)} 手`,...(!bar.complete&&!opening?['当前分钟（未结束）']:[]));}
+      if(quote)rows.push(`最新价：${price(quote.price)} 元`);
+      if(bar){const opening=replayTime&&bar.time==='09:30';if(!quote)rows.push(`${opening?'开盘价':bar.complete?'分钟收盘':'分钟价'}：${price(bar.close)} 元`);rows.push(`均价：${bar.average&&Number.isFinite(+bar.average)?price(bar.average)+' 元':'暂无成交额数据'}`,`${opening?'开盘量':'分钟量'}：${wan(bar.volume/100)} 手`,...(!bar.complete&&!opening?['当前分钟（未结束）']:[]));}
      if(!bar&&!quote)rows.push(replayTime&&labels[idx]>replayTime?'尚未播放到该分钟':'暂无该分钟成交数据');
       if(hoverPrice!==undefined&&chosen){
        const change=(hoverPrice/chosen.price-1)*100;

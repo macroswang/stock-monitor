@@ -15,6 +15,39 @@ class WatchQuoteCacheTest(unittest.TestCase):
   self.app.store.db.close();self.tmp.cleanup()
  def displayed(self):
   return next(w['quote'] for w in self.app.call('snapshot',{})['watch'] if w['code']=='sh603002')
+ def test_manual_and_background_refresh_share_the_active_sample(self):
+  code='sh603002';now=datetime.fromisoformat('2026-11-18T09:32:01.250+08:00')
+  day=now.date().isoformat();quote=dict(code=code,date=day,timestamp=now.isoformat(),price='10',limit_up='11')
+  requested,waiting,release=threading.Event(),threading.Event(),threading.Event()
+  def minutes(_code):
+   requested.set()
+   release.wait(3)
+   return []
+  with patch('core.app.now_cn',return_value=now), \
+       patch.object(self.app.provider,'quote',return_value=quote) as fetch_quote, \
+       patch.object(self.app.provider,'minutes',side_effect=minutes) as fetch_minutes:
+   background=threading.Thread(target=self.app.poll_one,args=(code,));background.start()
+   manual=threading.Thread(target=self.app.poll_one,args=(code,))
+   try:
+    self.assertTrue(requested.wait(2))
+    active=self.app.watch_polls[(code,0)]
+    original_wait=active.wait
+    def join_sample():
+     waiting.set()
+     return original_wait(3)
+    with patch.object(active,'wait',side_effect=join_sample):
+     manual.start()
+     self.assertTrue(waiting.wait(2))
+     fetch_quote.assert_called_once_with(code)
+     fetch_minutes.assert_called_once_with(code)
+   finally:
+    release.set()
+    background.join(3)
+    if manual.ident is not None:manual.join(3)
+   self.assertFalse(background.is_alive() or manual.is_alive())
+   self.assertEqual(self.app.watch_polls,{})
+   self.app.poll_one(code)
+   self.assertEqual((fetch_quote.call_count,fetch_minutes.call_count),(2,2))
  def test_quote_survives_minute_failure_restart_and_offline_fetch(self):
   quote=dict(code='sh603002',name='宏昌电子',date='2026-11-12',timestamp='2026-11-12T15:00:00+08:00',
              price='10.50',previous_close='10',open='10',high='10.80',low='9.80',volume='100',limit_up='11')

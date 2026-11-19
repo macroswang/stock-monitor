@@ -58,6 +58,8 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
  let quoteReads=0,quoteRead:{now:string;quotes:Record<string,unknown>}|undefined,holdSnapshot:Promise<void>|undefined;
  let releaseDaily!:()=>void;
  const dailyGate=new Promise<void>(resolve=>{releaseDaily=resolve;});
+ let fillSynced=false;
+ const fillSyncDays:string[]=[];
  await page.exposeFunction('rangeRpc',async(method:string,args:any)=>{
   if(method==='snapshot'){
    const result=structuredClone({...f.snapshot,data_revisions:{code,history:[1],chart:[++reads],market:[1]}});
@@ -76,13 +78,15 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
   if(method==='trading_chart_daily')return {...args,marks:[
    {day:buyDay,value:'B',buyShares:300,buyAverage:28,sellShares:0,sellAverage:null},
    {day:sellDay,value:'S',buyShares:0,buyAverage:null,sellShares:200,sellAverage:28.1},
-   {day,value:'T',buyShares:200,buyAverage:28.2,sellShares:400,sellAverage:28.5},
+   ...(fillSynced?[{day,value:'T',buyShares:200,buyAverage:28.2,sellShares:400,sellAverage:28.5}]:[]),
   ]};
+  if(method==='trading_chart_sync'){fillSyncDays.push(args.day);return {job:'isolated-fill-sync'};}
   if(method==='daily_load')return {job:'isolated-daily'};
-  if(method==='volume_flow')return {code,day,status:'unavailable',minutes:[]};
+  if(method==='volume_flow')return {code,day,status:'ready',minutes:[{time:'14:58',total:7300,buy:2500,sell:4000,neutral:800,unknown:0,verified:true,source_total:7300,difference:0}]};
   if(method==='stock_profile')return {code,data:null,themes:[],theme_status:'unavailable',running:false,error:''};
   if(method==='paper_account_state'||method==='pool_signals')return null;
   if(method==='minute_ensure')return {job:'isolated-cache-check'};
+  if(method==='job'&&args.job==='isolated-fill-sync'){fillSynced=true;return {status:'done',result:{message:'已缓存 2 条券商当日成交委托'}};}
   if(method==='job')return {status:'done',result:{}};
   writes.push(method);throw Error('Unexpected RPC '+method);
  });
@@ -137,7 +141,11 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
  await expect(tooltip).toContainText('14:58:36');
  await expect(tooltip).toContainText('最新价：28.57 元');
  await expect(tooltip).toContainText('涨跌幅：+2.77%');
- await expect(tooltip).not.toContainText(/28\.63|分钟收盘|分钟量|均价/);
+ await expect(tooltip).toContainText('均价：28.23 元');
+ await expect(tooltip).toContainText('分钟量：73.00 手');
+ await expect(tooltip).toContainText('买盘量：25.00 手（34.2%）');
+ await expect(tooltip).toContainText('卖盘量：40.00 手（54.8%）');
+ await expect(tooltip).not.toContainText(/28\.63|分钟收盘/);
  await hover('11:10',29.3);
  await expect(tooltip).toContainText('分钟收盘：29.30 元');
  await expect(tooltip).not.toContainText('最新价');
@@ -181,12 +189,16 @@ test('full App snapshot/cache arrival order never shrinks known tick extrema or 
 
  await page.getByRole('button',{name:'日K',exact:true}).click();
  const dailyChart=page.getByLabel('日K线及成交量',{exact:true});
- await expect.poll(()=>dailyChart.evaluate(async el=>{
+ const dailyMarks=()=>dailyChart.evaluate(async el=>{
   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from ["']([^"'\n]*echarts\.js[^"'\n]*)["']/)![1]);
   const series=e.getInstanceByDom(el)?.getOption().series||[];
   return {marks:series[0]?.markPoint?.data.filter((m:any)=>m.autoTradeDaily).map((m:any)=>[m.coord[0],m.value,m.symbol,m.symbolOffset[1]]),
    lines:series.find((s:any)=>s.name==='实盘成交标记连线')?.data.length};
- })).toEqual({marks:[[buyDay,'B','circle',18],[sellDay,'S','circle',-18],[day,'T','circle',-18]],lines:3});
+ });
+ await expect.poll(dailyMarks).toEqual({marks:[[buyDay,'B','circle',18],[sellDay,'S','circle',-18]],lines:2});
+ await page.getByRole('button',{name:'同步券商成交',exact:true}).click();
+ await expect.poll(dailyMarks).toEqual({marks:[[buyDay,'B','circle',18],[sellDay,'S','circle',-18],[day,'T','circle',-18]],lines:3});
+ expect(fillSyncDays).toEqual([day]);
  const hoverDaily=async(date:string)=>{
   const point=await dailyChart.evaluate(async(el,date)=>{
    const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from ["']([^"'\n]*echarts\.js[^"'\n]*)["']/)![1]);

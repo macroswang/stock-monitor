@@ -258,6 +258,37 @@ def _enrich_native_point(point,row,evidence,payload):
         if point['status']!=previous:point['execution_status']=previous
 
 
+def _merge_contract_fill(point,row,payload):
+    """Enrich the visible order from a verified cumulative fill for its exact contract."""
+    if (point.get('mode')!='live' or not point.get('attempted') or
+        point['status'] not in ('sending','accepted','unknown','partial','filled','cancelled')):
+        return
+    try:
+        quantity=shares(point['quantity'])
+        filled=shares(row['filled'])
+        prior=shares(point.get('filled') or 0)
+        average=amount(row.get('average') or 0)
+        limit=amount(point['order_price'])
+        ordered=datetime.fromisoformat(point['ordered_at']).replace(microsecond=0)
+        stamp=datetime.fromisoformat(point['day']+'T'+row['time']).replace(tzinfo=CN)
+        if (ordered.tzinfo is None or stamp<ordered or not 0<filled<=quantity or filled<prior or
+            (point['status'] in ('filled','cancelled') and filled>prior and prior>0) or
+            (row.get('quantity') is not None and shares(row['quantity'])!=quantity) or
+            (row.get('price') is not None and amount(row['price'])!=limit) or
+            (average>0 and (average>limit if point['side']=='buy' else average<limit))):
+            return
+        if filled==prior and point.get('fill_price'):
+            return
+    except (ValueError,TypeError,KeyError):
+        return
+    previous=point['status']
+    status='filled' if filled==quantity else 'cancelled' if previous=='cancelled' or row.get('status')=='cancelled' else 'partial'
+    point.update(filled=filled,fill_price=str(average) if average>0 else None,status=status,
+                 filled_at=stamp.isoformat(),cache_observed_at=payload['observed_at'])
+    if status!=previous:
+        point['execution_status']=previous
+
+
 def _cached_fills(store,code,day,automatic,native_keys,native_evidence,owners):
     named=store.query('SELECT name FROM instruments WHERE code=?',(code,))
     target_name=named[0]['name'] if len(named)==1 else ''
@@ -271,7 +302,10 @@ def _cached_fills(store,code,day,automatic,native_keys,native_evidence,owners):
         account_point_ids={p['id'] for p in account_points}
         account_owners=[p for p in owners if p['account_id']==account['id']]
         known={(p['side'],str(p['order_id'])) for p in account_owners if p.get('order_id')}
-        visible_known={(p['side'],str(p['order_id'])) for p in account_points if p.get('order_id')}
+        visible_contracts={}
+        for point in account_points:
+            if point.get('order_id'):
+                visible_contracts.setdefault((point['side'],str(point['order_id'])),[]).append(point)
         inferred={};reverse={}
         if account['broker']=='ths' and payload.get('source')=='ths_native_contract_group':
             # Freeze the complete matching graph before enriching any point.
@@ -297,7 +331,11 @@ def _cached_fills(store,code,day,automatic,native_keys,native_evidence,owners):
         tight_matched=set()
         for index,row in enumerate(rows):
             order_id=str(row.get('order_id') or '');side=row['side'];clock=row['time']
-            if (side,order_id) in visible_known:continue
+            matches=visible_contracts.get((side,order_id),[])
+            if matches:
+                if len(matches)==1:
+                    _merge_contract_fill(matches[0],row,payload)
+                continue
             # Broker and local records can both omit an order id; a sub-second
             # identical fill is the same display execution, not a second order.
             tight=[p for p in account_owners if p['id'] not in tight_matched and _same_tight_fill(p,row,day)]
