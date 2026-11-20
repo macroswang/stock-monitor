@@ -104,6 +104,8 @@ class App:
         self.minute_cache=MinuteCache(self)
         self.archive=Archive(self)
         self.market=Market(self)
+        from .index_chart import IndexChart
+        self.index_chart=IndexChart(self)
         self.breadth=Breadth(self.store)
         self.csi300=CSI300(self.store)
         self.option_pcr=OptionPCR(self.store)
@@ -767,6 +769,8 @@ class App:
         if method=='ma250_scan_start':return self.start_job(lambda:self.ma250_scan.view(args))
         if method=='index_minute':
             return self.market.index_view(args.get('code'),args.get('day'))
+        if method=='index_chart_history':
+            return self.start_job(lambda:self.index_chart.load(args))
         if method=='market_overview':
             head=self.market.view(None)
             index=next((q for q in head.get('quotes',[]) if q.get('code')=='sh000001'),None)

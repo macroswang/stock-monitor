@@ -1,8 +1,20 @@
 import {test,expect,Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
-import {benchmarkForStock,minuteMacd,minuteSlots,macdRange,parseMacdParameters,macdParametersKey} from '../../src/minuteMacd';
+import {benchmarkForStock,minuteMacd,candleMacd,minuteSlots,macdRange,parseMacdParameters,macdParametersKey} from '../../src/minuteMacd';
 
 const at=(time:string)=>minuteSlots.indexOf(time);
+test('candle MACD has known EMA values, preserves historical prefixes and resets invalid observations',()=>{
+ const rows=[10,11,12,9,8].map((close,i)=>({date:`2026-11-${String(i+2).padStart(2,'0')}`,close}));
+ const points=candleMacd(rows);
+ expect(points[0]).toEqual({dif:0,dea:0,histogram:0});
+ expect(points[1]!.dif).toBeCloseTo(.079772079772,10);expect(points[1]!.dea).toBeCloseTo(.0159544159544,10);expect(points[1]!.histogram).toBeCloseTo(.127635327635,10);
+ expect(points[2]!.dif).toBeCloseTo(.221134568713,10);
+ expect(candleMacd([...rows,{date:'2026-11-09',close:10000}]).slice(0,rows.length)).toEqual(points);
+ expect(candleMacd(rows.map(row=>({...row,close:20}))).every(point=>point?.histogram===0&&point.dif===0&&point.dea===0)).toBe(true);
+ const custom=candleMacd(rows,{fast:2,slow:4,signal:3});expect(custom[1]!.dif).toBeCloseTo(4/15,12);expect(custom[1]!.dea).toBeCloseTo(2/15,12);
+ const broken=candleMacd(rows.map((row,i)=>i===2?{...row,close:NaN}:row));expect(broken[2]).toBeNull();expect(broken[3]).toEqual({dif:0,dea:0,histogram:0});
+ expect(()=>candleMacd(rows,{fast:4,slow:2,signal:3})).toThrow(RangeError);
+});
 test('market mapping distinguishes Shanghai, Shenzhen and ChiNext without guessing',()=>{
  for(const code of ['sh603938','sh688680','600519'])expect(benchmarkForStock(code)?.code).toBe('sh000001');
  for(const code of ['sz000981','sz002001','001001'])expect(benchmarkForStock(code)?.code).toBe('sz399001');

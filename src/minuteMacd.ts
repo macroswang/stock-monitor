@@ -43,6 +43,20 @@ export function minuteMacd(bars:ReadonlyArray<{time:string;close:string|number}>
  });
 }
 
+/** Daily/weekly MACD uses the full observed candle history, never just the zoom window. */
+export function candleMacd(bars:ReadonlyArray<{date:string;close:string|number}>,parameters:MacdParameters=defaultMacdParameters):Array<MacdPoint|null>{
+ const periods=parseMacdParameters(parameters);if(!periods)throw new RangeError('MACD周期必须为1–250的整数，且短周期小于长周期');
+ let fast:number|null=null,slow=0,dea=0,previous='';
+ return bars.map(bar=>{
+  const price=Number(bar.close),ordered=bar.date>previous;previous=bar.date;
+  if(!ordered||!Number.isFinite(price)||price<=0){fast=null;slow=0;dea=0;return null;}
+  if(fast===null){fast=price;slow=price;dea=0;}
+  else{fast+=(price-fast)*2/(periods.fast+1);slow+=(price-slow)*2/(periods.slow+1);}
+  const dif=fast-slow;dea+=(dif-dea)*2/(periods.signal+1);
+  return {dif,dea,histogram:2*(dif-dea)};
+ });
+}
+
 export function macdNumber(value:number){
  if(!Number.isFinite(value))return '—';
  if(Math.abs(value)<1e-10)return '0.0000';

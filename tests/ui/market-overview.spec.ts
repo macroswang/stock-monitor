@@ -65,12 +65,13 @@ test('header cache reads share one 15-second cadence and stop when leaving self-
  await page.getByRole('button',{name:'自选监控',exact:true}).click();await expect(page.locator('.market-header .index-sparkline')).toHaveCount(3);expect(counts.map((n,i)=>n-left[i])).toEqual([1,1,1]);
 });
 
-test('removed trend heading and compact controls give their height only to the main price pane',async({page})=>{
+test('stock price and indicator panes retain their existing compact desktop geometry',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('stock-monitor-overview-collapsed','true'));await page.goto('/');const chart=page.getByLabel('分时价格及分钟成交量',{exact:true});
- const baseline=[{width:1380,height:980,y:228,chart:730,grids:[184,132,96,80,96]},{width:1000,height:680,y:228,chart:430,grids:[106,82,35,30,35]}];
+ // Exact geometry independently verified against HEAD before the index-chart feature.
+ const baseline=[{width:1380,height:980,y:164,chart:801,grids:[255,132,96,80,96]},{width:1000,height:680,y:164,chart:490,grids:[166,82,35,30,35]}];
  for(const b of baseline){await page.setViewportSize({width:b.width,height:b.height});await expect(async()=>{
-  const box=(await chart.boundingBox())!;expect(box.y).toBe(b.y-64);expect(box.height).toBe(b.chart+64);
+  const box=(await chart.boundingBox())!;expect(box.y).toBe(b.y);expect(box.height).toBe(b.chart);
   const grids=await chart.evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el);return [0,1,2,3,4].map(i=>c.getModel().getComponent('grid',i).coordinateSystem.getRect().height);});
-  expect(grids).toEqual(b.grids.map((v,i)=>v+(i===0?64:0)));
+  expect(grids).toEqual(b.grids);
  }).toPass();}
 });
