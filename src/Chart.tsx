@@ -5,6 +5,7 @@ import InfoNote from './InfoNote';
 import {autoTradeMarks,autoTradeDetails,type AutoDailyMark,type AutoTradeChart} from './autoTradeMarks';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import * as echarts from 'echarts';
+import './candlestickWicks';
 import type {Bar,Daily,Event,IndexMinute,Ma250Pullback,E2Research,VolumeFlow} from './models';
 import {price,wan,wanShares} from './format';
 import {topVolumeMarks} from './volumeMarks';
