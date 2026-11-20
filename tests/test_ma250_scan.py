@@ -42,6 +42,17 @@ class Ma250ScanTest(unittest.TestCase):
         self.assertGreater(len(breakouts), 0)
         self.assertTrue(all(row['quality'] in (True, False) for row in breakouts))
 
+    def test_signal_dates_descend_across_quality_tiers_and_pages(self):
+        result = self.app.call('ma250_scan', dict(universe='watch', recent=1000, page_size=300))
+        rows = result['rows']
+        self.assertGreater(len({row['date'] for row in rows}), 1)
+        self.assertEqual([row['date'] for row in rows], sorted((row['date'] for row in rows), reverse=True))
+        paged = []
+        for page in range(1, len(rows) + 1):
+            part = self.app.call('ma250_scan', dict(universe='watch', recent=1000, page_size=1, page=page))
+            paged.extend(part['rows'])
+        self.assertEqual(paged, rows)
+
     def test_scan_respects_universe_and_is_memoized_for_the_same_filters(self):
         first = self.app.call('ma250_scan', dict(universe='watch_pool', recent=5))
         second = self.app.call('ma250_scan', dict(universe='watch_pool', recent=5))

@@ -810,6 +810,13 @@ test('daily and intraday executed B S markers are half-size with red blue dashed
  centered(r);
  expect(r.lines).toHaveLength(3);expect(r.lines.map((l:any)=>l.color).sort()).toEqual(['#4c9fff','#b48bff','#ed6d79']);
  expect(r.marks[0].price).toBe(2.35);expect(r.marks[1].price).toBe(2.46); // Drawing anchors never replace execution prices.
+ const originalMarks=r.marks;
+ for(const key of ['ArrowUp','ArrowDown']){await daily.focus();await daily.press(key);await expect.poll(async()=>(await read(daily)).marks).toEqual(originalMarks);}
+ await rpc('__audit_daily',{code,day:'2025-12-01',data:{date:'2025-12-01',open:'2.4',close:'2.45',low:'2.3',high:'2.5',volume:'300000',volume_unit:'shares',source:'marker-style-test'}});
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({first:'2025-12-01'});
+ expect((await read(daily)).marks).toEqual(originalMarks);
+ await page.locator('.stock').filter({hasText:'宏昌电子'}).click();await expect.poll(async()=>(await read(daily)).marks).toEqual([]);
+ await page.locator('.stock').filter({hasText:'山子高科'}).click();await expect.poll(async()=>(await read(daily)).marks).toEqual(originalMarks);
  const snapshot=await rpc('paper_snapshot',{account});expect(snapshot.fill_count).toBe(4);
  await page.mouse.move(0,0);await page.addStyleTag({content:'.interactive-price-tooltip{visibility:hidden!important}'});await daily.screenshot({path:'docs/paper-small-bst-daily.png'});
  const area=(await daily.boundingBox())!,scroll=await page.evaluate(()=>({x:scrollX,y:scrollY})),left=Math.min(...r.symbols.map((s:any)=>s.x))-14,top=Math.min(...r.symbols.map((s:any)=>s.y))-14;
@@ -1022,22 +1029,21 @@ function dailyHistoryFeed(start='2023-01-01'){
 async function dailyWindowState(page:Page){
  return page.getByLabel('日K线及成交量').evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^\"]*echarts\.js[^\"]*)"/)![1]);const c=e.getInstanceByDom(el),o=c?.getOption();if(!o?.xAxis?.[0]?.data?.length)return null;const labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {count:labels.length,visible:hi-lo+1,rendered:c.getModel().getSeriesByIndex(0).getData().count(),first:labels[0],last:labels.at(-1),visibleFirst:labels[lo],visibleLast:labels[hi],selected:document.querySelector('.linked-minute h3')?.textContent?.match(/\d{4}-\d{2}-\d{2}/)?.[0],zoomLock:z.zoomLock};});
 }
-test('daily entry backfills a short cache to 250 candles; left boundary loads history once and preserves focus',async({page})=>{
+test('daily entry shows 120 candles while backfilling annual warm-up; left boundary loads history once and preserves focus',async({page})=>{
  const code='sh600519',feed=dailyHistoryFeed();await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,last:'2026-10-26',selected:'2026-10-26',zoomLock:true});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,rendered:120,last:'2026-10-26',selected:'2026-10-26',zoomLock:true});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(2);
  const initial=(await dailyWindowState(page))!;expect(initial.count).toBeGreaterThan(250);const earlier=feed.filter(r=>r.date<initial.first).at(-1)!.date;
  await selectDailyDate(page,initial.first);const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowLeft');for(let i=0;i<6;i++)await chart.press('ArrowLeft');
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:earlier});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);expect((await dailyWindowState(page))!.count).toBeGreaterThan(initial.count);await expect(chart).toBeFocused();
- await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,selected:initial.first});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
- await page.screenshot({path:'docs/daily-250-keyboard-backfill.png'});
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,rendered:120,selected:earlier});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);expect((await dailyWindowState(page))!.count).toBeGreaterThan(initial.count);await expect(chart).toBeFocused();
+ await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,selected:initial.first});expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(3);
  const edge=(await dailyWindowState(page))!.first;await selectDailyDate(page,edge);await chart.focus();await chart.press('ArrowLeft');await expect(page.locator('.daily-load-state')).toBeVisible();await selectDailyDate(page,initial.first);
- await expect(page.locator('.daily-load-state')).toHaveCount(0);await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:initial.first});
+ await expect(page.locator('.daily-load-state')).toHaveCount(0);await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,rendered:120,selected:initial.first});
 });
 test('right boundary fills the next batch for an old daily view without jumping to today',async({page})=>{
  const code='sh600519',feed=dailyHistoryFeed(),old='2024-10-25';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.2});await rpc('__audit_cache',{code,day:old,data:{date:old,source:'tencent',bars:[{time:'09:31',close:'10',volume:10000,complete:true}]}});
  await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByLabel('交易日期').selectOption(old);await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,last:old,selected:old});const before=dailyLoadRequests.filter(r=>r.code===code).length;
- const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250,rendered:250,selected:'2024-10-28'});
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,rendered:120,last:old,selected:old});const before=dailyLoadRequests.filter(r=>r.code===code).length;
+ const chart=page.getByLabel('日K线及成交量');await chart.focus();await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120,rendered:120,selected:'2024-10-28'});
  expect(dailyLoadRequests.filter(r=>r.code===code)).toHaveLength(before+1);expect((await dailyWindowState(page))!.last<'2026-10-26').toBe(true);await expect(chart).toBeFocused();
  await chart.press('ArrowRight');await expect.poll(()=>dailyWindowState(page)).toMatchObject({selected:'2024-10-29'});
 });
@@ -1050,7 +1056,7 @@ test('switching stocks while daily backfill is running cannot replace the newly 
  const code='sh600519';await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:dailyHistoryFeed(),delay:.4});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.locator('.daily-load-state')).toBeVisible();await expect.poll(()=>dailyLoadRequests.some(r=>r.code===code)).toBe(true);
  await page.locator('.stock').filter({hasText:'宏昌电子'}).click();await expect(page.locator('.detail h2')).toContainText('宏昌电子');await expect.poll(async()=>(await rpc('chart',{code,kind:'daily'})).length).toBeGreaterThan(90);
  const available=(await rpc('chart',{code:'sh603002',kind:'daily'})).length;
- await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:Math.min(250,available),rendered:Math.min(250,available),last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
+ await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:Math.min(120,available),rendered:Math.min(120,available),last:'2026-10-16'});await expect(page.locator('.detail h2')).toContainText('宏昌电子');
 });
 
 test('模拟委托可保存计划并在复盘中记录实际过程',async({page})=>{
@@ -1168,12 +1174,12 @@ async function candleState(page:Page,label='日K线及成交量'){
  return page.getByLabel(label,{exact:true}).evaluate(async el=>{const s=await fetch('/src/Chart.tsx').then(r=>r.text());const e=await import(s.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);const c=e.getInstanceByDom(el),o=c.getOption(),labels=o.xAxis[0].data,z=o.dataZoom[0],lo=Math.round((labels.length-1)*z.start/100),hi=Math.round((labels.length-1)*z.end/100);return {labels,visible:hi-lo+1,first:labels[lo],last:labels[hi],candles:o.series[0].data,volume:o.series.find((s:any)=>s.name==='成交量（万股）').data,mas:o.series.filter((s:any)=>/^MA\d+$/.test(s.name)).map((s:any)=>({name:s.name,data:s.data})),axes:o.xAxis.map((a:any)=>a.data),zoomAxes:z.xAxisIndex};});
 }
 async function seedCandleHistory(page:Page,start?:string){
- const code='sh600519',feed=dailyHistoryFeed(start);await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:250});return {code,feed};
+ const code='sh600519',feed=dailyHistoryFeed(start);await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.1});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(()=>dailyWindowState(page)).toMatchObject({visible:120});return {code,feed};
 }
 test('daily up down keyboard zoom links price and volume, preserves the date anchor and survives refresh',async({page})=>{
  const {code}=await seedCandleHistory(page),chart=page.getByLabel('日K线及成交量',{exact:true}),initial=await candleState(page);
- await expect(chart).toBeFocused();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page)).visible).toBe(180);expect((await candleState(page)).last).toBe(initial.last);
- await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(250);await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(400);
+ await expect(chart).toBeFocused();await chart.press('ArrowUp');await expect.poll(async()=>(await candleState(page)).visible).toBe(90);expect((await candleState(page)).last).toBe(initial.last);
+ for(const count of [120,180,250,400]){await chart.press('ArrowDown');await expect.poll(async()=>(await candleState(page)).visible).toBe(count);}
  const state=await candleState(page);expect(state.axes[0]).toEqual(state.axes[1]);expect(state.zoomAxes).toEqual([0,1]);expect(state.last).toBe(initial.last);
  await rpc('__audit_daily',{code,day:initial.last,data:{date:initial.last,open:'10',close:'11',low:'9',high:'12',volume:'1234567',volume_unit:'shares',source:'test'}});
  await expect.poll(async()=>(await candleState(page)).volume.at(-1).value).toBeCloseTo(123.4567,4);expect((await candleState(page)).visible).toBe(400);await expect(chart).toBeFocused();
@@ -1194,8 +1200,10 @@ test('persisted MA250 backfills warm-up history and is stable on both daily and 
  await page.evaluate(()=>localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify({periods:[250],enabled:[250],visible:true})));
  const code='sh600519',feed=dailyHistoryFeed('2015-01-01');await rpc('add',{code});await rpc('__audit_daily_feed',{code,rows:feed,delay:.05});await page.reload();await page.locator('.stock').filter({hasText:'贵州茅台'}).click();
  await page.getByRole('button',{name:'日K',exact:true}).click();
- await expect.poll(async()=>{const state=await candleState(page),ma=state.mas.find((s:any)=>s.name==='MA250');return {count:state.labels.length,visible:state.visible,value:ma?.data[state.labels.indexOf(state.first)]};}).toMatchObject({count:expect.any(Number),visible:250,value:expect.any(Number)});
- let state=await candleState(page);expect(state.labels.length).toBeGreaterThanOrEqual(499);const dailyValue=state.mas[0].data[state.labels.indexOf(state.first)];
+ await expect.poll(async()=>{const state=await candleState(page),ma=state.mas.find((s:any)=>s.name==='MA250');return {count:state.labels.length,visible:state.visible,value:ma?.data[state.labels.indexOf(state.first)]};}).toMatchObject({count:expect.any(Number),visible:120,value:expect.any(Number)});
+ let state=await candleState(page);expect(state.labels.length).toBeGreaterThanOrEqual(369);const dailyValue=state.mas[0].data[state.labels.indexOf(state.first)];
+ const averages=movingAverage(feed,250),dailyExpected=new Map(feed.map((row,i)=>[row.date,averages[i]]));
+ expect(state.mas[0].data.slice(-120)).toEqual(state.labels.slice(-120).map((date:string)=>dailyExpected.get(date)));
  await rpc('__audit_daily',{code,day:state.last,data:{date:state.last,open:'32',close:'32.1',low:'31.9',high:'32.2',volume:'123456',volume_unit:'shares',source:'test'}});
  await expect.poll(async()=>{const next=await candleState(page);return next.mas[0].data[next.labels.indexOf(next.first)];}).toBe(dailyValue);
  await page.getByRole('button',{name:'周K',exact:true}).click();const label='周K线及成交量';
@@ -1207,7 +1215,7 @@ test('custom moving averages persist and can be hidden without changing candles 
  await seedCandleHistory(page);const control=page.getByRole('group',{name:'K线显示设置'});
  await control.getByRole('checkbox',{name:'MA10',exact:true}).uncheck();expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA20','MA30']);
  await control.getByRole('checkbox',{name:'均线',exact:true}).uncheck();expect((await candleState(page)).mas).toEqual([]);expect((await candleState(page)).candles.length).toBeGreaterThan(250);
- await control.locator('summary').click();const input=control.getByRole('textbox',{name:'均线周期'});await input.fill('5, 12, 24, 60');await input.press('ArrowDown');expect((await candleState(page)).visible).toBe(250);await control.getByRole('button',{name:'应用',exact:true}).click();
+ await control.locator('summary').click();const input=control.getByRole('textbox',{name:'均线周期'});await input.fill('5, 12, 24, 60');await input.press('ArrowDown');expect((await candleState(page)).visible).toBe(120);await control.getByRole('button',{name:'应用',exact:true}).click();
  expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);
  await page.reload();await page.getByRole('button',{name:'日K',exact:true}).click();await expect.poll(async()=>(await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);
  await control.locator('summary').click();await input.fill('5,0,10');await control.getByRole('button',{name:'应用',exact:true}).click();await expect(control.getByRole('alert')).toContainText('1–250');expect((await candleState(page)).mas.map((s:any)=>s.name)).toEqual(['MA5','MA12','MA24','MA60']);await page.setViewportSize({width:1000,height:760});const box=(await control.locator('form').boundingBox())!;expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(1000);

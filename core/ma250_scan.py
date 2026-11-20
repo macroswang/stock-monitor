@@ -90,10 +90,10 @@ class Ma250Scan:
                 for item in research['signals']:
                     if item['date'] not in allowed:continue
                     rows.append(dict(item,code=code,name=name,strong=False,strong_reasons=[],quality=False))
-            # Stable priority, newest first within each quality tier.
+            # Newest signal date first across all quality tiers, before paging.
             rows.sort(key=lambda r:r['code'])
-            rows.sort(key=lambda r:r['date'],reverse=True)
             rows.sort(key=lambda r:(not r['strong'],not r.get('quality')))
+            rows.sort(key=lambda r:r['date'],reverse=True)
             cached=dict(rows=rows,coverage=coverage,latest=latest,research_unavailable=research_unavailable,data_issues=data_issues)
             with self.lock:
                 self.memo={key:cached}  # bounded; annual service retains stock-level work

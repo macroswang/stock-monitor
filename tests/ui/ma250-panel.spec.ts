@@ -7,6 +7,11 @@ test('annual-line menu shows 5-day signals and expands charts in the row',async(
  await page.goto('/');
  await page.getByRole('button',{name:'年线信号'}).click();
  await expect(page.getByRole('heading',{name:'年线信号台'})).toBeVisible();
+ await expect(page.getByRole('columnheader',{name:'信号日 ↓'})).toHaveAttribute('aria-sort','descending');
+ await expect(page.locator('.ma250-date')).toHaveCount(scan.rows.length);
+ const dates=await page.locator('.ma250-date').allTextContents();
+ expect(dates).toEqual(scan.rows.map((row:any)=>row.date).sort().reverse());
+ await expect(page.getByText(/^年线60日变化/).first()).toHaveAttribute('title',/60个交易日前MA250/);
  await expect(page.getByText('2026-10-12 至 2026-10-16').first()).toBeVisible();
  const row=page.getByRole('row',{name:/宏昌电子/}).first();
  await expect(row).toBeVisible();

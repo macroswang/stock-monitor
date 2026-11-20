@@ -100,7 +100,8 @@ async function api<T>(method:string,args:Record<string,unknown>={}):Promise<T>{
    const r=await fetch('/ma250-scan-preview.json');
    const data=r.ok?await r.json():{generated_at:'',universe:args.universe||'watch_pool',recent:5,trading_days:[],scanned:0,codes:0,latest_day:null,market:{date:null,close:null,ma250:null,above:null,bars:0,error:'预览无扫描数据'},rows:[],total:0};
    const query=String(args.query||'').toLowerCase();
-   const rows=data.rows.filter((row:any)=>(!args.kind||args.kind==='all'||row.kind===args.kind)&&(!args.strong_only||row.kind==='pullback'&&row.strong)&&(!query||row.name.toLowerCase().includes(query)||row.code.toLowerCase().includes(query)));
+   const rows=data.rows.filter((row:any)=>(!args.kind||args.kind==='all'||row.kind===args.kind)&&(!args.strong_only||row.kind==='pullback'&&row.strong)&&(!query||row.name.toLowerCase().includes(query)||row.code.toLowerCase().includes(query)))
+    .sort((a:any,b:any)=>b.date.localeCompare(a.date));
    const size=Number(args.page_size||100),pages=Math.max(1,Math.ceil(rows.length/size)),page=Math.min(pages,Number(args.page||1));
    return {...data,universe:args.universe||'watch_pool',filtered_total:rows.length,strong_count:data.rows.filter((row:any)=>row.strong).length,breakout_count:data.rows.filter((row:any)=>row.kind==='breakout').length,e2_count:data.rows.filter((row:any)=>row.kind==='e2').length,page,pages,rows:rows.slice((page-1)*size,page*size)} as T;
   }
