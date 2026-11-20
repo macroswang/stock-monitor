@@ -2,6 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {candleMacd,minuteMacd,minuteSlots,defaultMacdParameters} from '../../src/minuteMacd';
 import {weeklyBars} from '../../src/candleData';
+import {indexLeadingPoints} from '../../src/indexLeading';
 const codes=['sh000001','sz399001','sz399006'],names=['上证指数','深证成指','创业板指'];
 const files=['market-overview-preview.json','szse-preview.json','chinext-preview.json'];
 const feeds=files.map((file,i)=>{const data=JSON.parse(readFileSync('public/'+file,'utf8'));return {...data,quotes:data.quotes.filter((q:any)=>q.code===codes[i]),minute:{...data.minute,code:codes[i]}};});
@@ -24,6 +25,42 @@ async function chartState(page:Page){
   return {visible:hi-lo+1,labels,first:o.series[0].data[0],last:o.series[0].data.at(-1),marks:o.series[0].markPoint.data,names:o.series.map((s:any)=>s.name),mas:o.series.filter((s:any)=>/^MA\d+$/.test(s.name)).map((s:any)=>s.data.at(-1)),macd:o.series.filter((s:any)=>/^指数 (MACD|DIF|DEA)$/.test(s.name)).map((s:any)=>({name:s.name,data:s.data,x:s.xAxisIndex,y:s.yAxisIndex})),zoom:o.dataZoom[0].xAxisIndex,grids:o.grid.length};
  });
 }
+test('blue and yellow index lines have plain reminders, aligned minutes and no effect on stock charts or MACD',async({page},info)=>{
+ await boot(page);
+ const paired=feeds.map(feed=>({...feed,leading:{code:feed.minute.code,date:feed.minute.date,previous_close:feed.minute.previous_close,source:'eastmoney',timestamp:feed.collected_at,cached_at:feed.collected_at,
+  bars:feed.minute.bars.map((bar:any,i:number)=>({time:bar.time,close:bar.close,value:String(Number(bar.close)*(.98+i*.00001))}))}}));
+ for(const [i,file] of files.entries()){await page.unroute('**/'+file);await page.route('**/'+file,route=>route.fulfill({json:paired[i]}));}
+ await page.clock.fastForward(15001);
+ const now=new Date('2026-11-15T10:01:00+08:00').getTime();
+ for(const [i,feed] of paired.entries()){
+  await page.getByRole('button',{name:'查看'+names[i]+'行情',exact:true}).click();await page.getByRole('button',{name:'分时',exact:true}).click();
+  const read=()=>page.locator('.index-detail .chart').evaluate(async el=>{
+   const source=await fetch('/src/Chart.tsx').then(r=>r.text()),e=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]),c=e.getInstanceByDom(el),o=c.getOption();
+   const line=o.series.find((s:any)=>s.name==='黄线');
+   c.dispatchAction({type:'showTip',seriesIndex:o.series.findIndex((s:any)=>s.name==='蓝线'),dataIndex:2});
+   return {data:line?.data,color:line?.lineStyle.color,blue:o.series.find((s:any)=>s.name==='蓝线')?.lineStyle.color,min:o.yAxis[0].min,legend:o.legend[0].data,connect:line?.connectNulls};
+  });
+  const expected=indexLeadingPoints(feed,codes[i],now);
+  await expect.poll(async()=>(await read()).data?.filter((v:any)=>v!==null)).toEqual(expected.map(point=>point.value));
+  const state=await read();expect(state.legend).toEqual(['蓝线','黄线']);expect(state.color).toBe('#e9b949');expect(state.blue).toBe('#8cbcff');expect(state.connect).toBe(false);
+  expect(state.min).toBeLessThanOrEqual(Math.min(...expected.map(point=>point.value)));
+  await expect(page.getByLabel('指数分时线说明')).toContainText('黄线在蓝线上方：通常中小盘股相对强');
+  await expect(page.getByLabel('指数分时线说明')).toContainText('黄线在蓝线下方：通常权重股相对强');
+  await expect(page.locator('.index-detail .minute-tooltip')).toContainText('黄线：');
+  expect((await chartState(page)).macd.find((s:any)=>s.name==='指数 DIF')!.data).toEqual(minuteMacd(feed.minute.bars).map(point=>point?.dif??null));
+  const changed=(patch:object)=>({...feed,leading:{...feed.leading,...patch}});
+  for(const patch of [{code:codes[(i+1)%3]},{date:'2026-11-12'},{previous_close:'1'},{timestamp:'2026-11-16T09:30:00+08:00'},{cached_at:'2026-11-12T15:00:00+08:00'}])expect(indexLeadingPoints(changed(patch),codes[i],now)).toEqual([]);
+  expect(indexLeadingPoints(changed({cached_at:'2026-11-15T09:00:00+08:00'}),codes[i],now)).toEqual(expected);
+  const until=feed.minute.date+'T10:01:30+08:00';
+  expect(indexLeadingPoints(changed({timestamp:until}),codes[i],now).every(point=>point.time<='10:01')).toBe(true);
+  expect(indexLeadingPoints(changed({bars:[{...feed.leading.bars[0],close:'1'}]}),codes[i],now)).toEqual([]);
+ }
+ await page.screenshot({path:info.outputPath('index-two-lines.png'),fullPage:true});
+ await page.getByRole('button',{name:'日K',exact:true}).click();await expect(page.getByLabel('指数分时线说明')).toHaveCount(0);
+ await page.getByRole('button',{name:'返回个股',exact:true}).click();
+ await expect(page.getByRole('button',{name:'同步券商成交',exact:true})).toBeVisible();
+ await expect(page.getByLabel('指数分时线说明')).toHaveCount(0);
+});
 test('three header indices share the right chart, all views and zoom, and return to the same stock without trading controls',async({page},info)=>{
  await boot(page);const stock=await page.locator('.stock.selected .watch-stock-title strong').innerText();
  for(const [i,name] of names.entries()){

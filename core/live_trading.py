@@ -290,6 +290,41 @@ class LiveTrading:
                 self.control_revision+=1
             return self.rule(ident,code)
 
+    def remove_target(self, ident, code, revision):
+        """Remove one watchlist-only automatic target without touching holdings/history."""
+        code=symbol(code)
+        with self.lock,self.store.lock,self.store.db:
+            self.account(ident)
+            rows=[dict(row) for row in self.store.db.execute(
+                'SELECT revision FROM trading_rules WHERE account_id=? AND code=?',(ident,code)).fetchall()]
+            if not rows:
+                raise ValueError('该自动交易股票已删除，请刷新')
+            if type(revision) is not int or revision!=rows[0]['revision']:
+                raise ValueError('规则已被更新，请刷新后再删除')
+            if self.store.db.execute(
+                    'SELECT 1 FROM trading_positions WHERE account_id=? AND code=?',(ident,code)).fetchone():
+                raise ValueError('券商持仓不能删除；请关闭自动买卖，持仓会继续按券商同步结果显示')
+            if self.store.db.execute(
+                    "SELECT 1 FROM trading_cycles WHERE account_id=? AND code=? AND state IN ('sell_pending','waiting_buy','buy_pending','needs_review')",
+                    (ident,code)).fetchone():
+                raise ValueError('该股票有尚未结束的成对T，不能删除')
+            if self.store.db.execute(
+                    "SELECT 1 FROM trading_runs WHERE account_id=? AND code=? AND status IN ('processing','sending')",
+                    (ident,code)).fetchone():
+                raise ValueError('该股票有正在提交的自动委托，请等待结果后再删除')
+            stamp=now_cn().isoformat()
+            for run in self.store.db.execute(
+                    "SELECT id,payload FROM trading_runs WHERE account_id=? AND code=? AND status='pending'",
+                    (ident,code)).fetchall():
+                payload=json.loads(run['payload'])
+                payload['message']='自动交易股票已删除，尚未提交的计划已取消'
+                self.store.db.execute(
+                    "UPDATE trading_runs SET status='skipped',payload=?,updated_at=? WHERE id=? AND status='pending'",
+                    (json.dumps(payload),stamp,run['id']))
+            self.store.db.execute('DELETE FROM trading_rules WHERE account_id=? AND code=?',(ident,code))
+            self.control_revision+=1
+            return dict(removed=True,account_id=ident,code=code)
+
     def save_rule(self, ident, code, changes, revision):
         code = symbol(code)
         with self.lock:

@@ -81,6 +81,13 @@ test('a watchlist-only stock can be assigned to one account without inventing a 
  await expect(page.getByRole('status')).toContainText('三孚股份');await expect(page.getByRole('status')).toContainText('100股');
  await page.getByRole('combobox',{name:'管理证券账户'}).selectOption('test-b');
  await expect(page.getByRole('region',{name:/同花顺（银河证券） · 987/}).getByRole('button',{name:'三孚股份',exact:true})).toHaveCount(0);
+ await page.getByRole('combobox',{name:'管理证券账户'}).selectOption('test-a');
+ await row.getByRole('button',{name:'删除',exact:true}).click();
+ const remove=page.getByRole('dialog',{name:'删除自动交易股票'});
+ await expect(remove).toContainText('自选股、历史执行记录和券商数据都会保留');
+ await remove.getByRole('button',{name:'确认删除'}).click();
+ await expect(accountA.getByRole('button',{name:'三孚股份',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('status')).toContainText('已从该账户的自动交易股票中删除');
 });
 
 test('watchlist sources and automatic order entries are exclusive in the same left-hand position',async({page})=>{

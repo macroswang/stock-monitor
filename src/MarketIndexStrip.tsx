@@ -18,7 +18,7 @@ export default function MarketIndexStrip({request,onSelect,selected,onData}:{req
   if(!visible)return;let alive=true,reading=false;
   const load=async()=>{if(reading)return;reading=true;
    await Promise.all(indexes.map(async([code])=>{try{
-    const value=await requestWithTimeout(request<MarketData>('index_minute',{code}));
+    const value=await requestWithTimeout(request<MarketData>('index_minute',{code,include_leading:true}));
     if(!value||!Array.isArray(value.quotes)||value.minute&&(!Array.isArray(value.minute.bars)||typeof value.minute!=='object'))throw new Error('指数缓存格式异常');
     if(alive)setData(old=>({...old,[code]:{...value,quotes:value.quotes.filter(q=>q&&typeof q==='object')}}));
    }catch{if(alive)setData(old=>({...old,[code]:{...(old[code]||empty),error:'行情连接暂时中断，显示上次数据'}}));}}));

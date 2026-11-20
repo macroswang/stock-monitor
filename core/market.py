@@ -3,6 +3,7 @@ import json,threading,concurrent.futures
 from decimal import Decimal,InvalidOperation
 from datetime import datetime
 from .provider import get,now_cn,CN
+from .index_leading import leading_minutes
 
 CODES=('sh000001','sz399001','sz399006')
 NAMES={'sh000001':'上证指数','sz399001':'深证成指','sz399006':'创业板指'}
@@ -63,21 +64,25 @@ def minutes(code='sh000001'):
  return result
 
 class Market:
- def __init__(self,app):self.app=app;self.error='';self.index_errors={};self.lock=threading.Lock()
+ def __init__(self,app):self.app=app;self.error='';self.index_errors={};self.leading_errors={};self.lock=threading.Lock()
  def poll(self):
   with self.lock:
-   errors=[];self.index_errors={}
+   errors=[];self.index_errors={};self.leading_errors={}
    # Shared feed: fetch each index once, off the UI/stock-monitoring threads.
    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-    pending={pool.submit(quotes):None,**{pool.submit(minutes,code):code for code in CODES}}
+    pending={pool.submit(quotes):('quote',None),**{pool.submit(minutes,code):('minute',code) for code in CODES},
+             **{pool.submit(leading_minutes,code):('leading',code) for code in CODES}}
     for future in concurrent.futures.as_completed(pending):
-     code=pending[future]
+     kind,code=pending[future]
      try:
+      if kind=='leading':
+       item=future.result();self.app.store.cache(code,'market_leading',item['date'],item);continue
       for item in future.result():
        if code:self.app.store.cache(code,'market_minute',item['date'],dict(item,code=code,name=NAMES[code]))
        else:self.app.store.cache(item['code'],'market_quote',item['timestamp'][:10],item)
      except Exception:
-      if code:self.index_errors[code]=NAMES[code]+'分时暂时不可用'
+      if kind=='leading':self.leading_errors[code]='领先线连接暂时中断'
+      elif code:self.index_errors[code]=NAMES[code]+'分时暂时不可用'
       else:errors.append('指数报价暂时不可用')
    if 'sh000001' in self.index_errors:errors.append(self.index_errors['sh000001'])
    self.error='；'.join(errors)
@@ -86,7 +91,7 @@ class Market:
   if not rows:return None
   quote=json.loads(rows[0]['payload'])
   return quote if quote.get('code')==code and str(quote.get('timestamp',''))[:10]==rows[0]['day'] else None
- def index_view(self,code,day=None):
+ def index_view(self,code,day=None,*,include_leading=False):
   if code not in CODES:raise ValueError('不支持的指数')
   if day is not None:day=datetime.fromisoformat(day).date().isoformat()
   # The header needs one quote, never a decoded scan of every cached trading day.
@@ -103,7 +108,12 @@ class Market:
   payload=rows[0]['data'] if rows else None
   # Never overwrite an explicitly conflicting cached identity with the requested one.
   minute=dict(payload,code=code,name=NAMES[code]) if payload and payload.get('date')==day and payload.get('code',code)==code else None
-  return dict(quotes=[quote] if quote else [],minute=minute,error=self.index_errors.get(code,''))
+  result=dict(quotes=[quote] if quote else [],minute=minute,error=self.index_errors.get(code,''))
+  if not include_leading:return result
+  leading_rows=self.app.store.getcache(code,'market_leading',day) if day else []
+  leading=leading_rows[0]['data'] if leading_rows else None
+  if leading and (leading.get('code')!=code or leading.get('date')!=day):leading=None
+  return dict(result,leading=leading,leading_error=self.leading_errors.get(code,''))
  def view(self,day):
   items=[]
   for code in CODES:

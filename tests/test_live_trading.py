@@ -75,6 +75,47 @@ class TradingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'自选股'):
             self.service.add_target('a','sh603938')
 
+    def test_watchlist_target_can_be_removed_without_touching_watch_or_history(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        rule=self.service.add_target('a','sz000981')
+        rule=self.service.save_rule('a','sz000981',dict(buy_enabled=True),rule['revision'])
+        self.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',
+            ('pending-a','a','sz000981','buy','signal-a','2026-11-02','pending',json.dumps({'message':'等待提交'}),self.now.isoformat(),self.now.isoformat()))
+        result=self.service.remove_target('a','sz000981',rule['revision'])
+        self.assertTrue(result['removed'])
+        self.assertEqual(self.store.query('SELECT * FROM trading_rules'),[])
+        self.assertEqual(self.service.view()['positions'],[])
+        self.assertEqual(self.store.query('SELECT name FROM watch WHERE code=?',('sz000981',))[0]['name'],'山子高科')
+        run=self.store.query('SELECT status,payload FROM trading_runs WHERE id=?',('pending-a',))[0]
+        self.assertEqual(run['status'],'skipped')
+        self.assertIn('已删除',json.loads(run['payload'])['message'])
+
+    def test_target_removal_guards_and_account_isolation(self):
+        self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
+        a=self.service.add_target('a','sz000981')
+        b=self.service.add_target('b','sz000981')
+        self.service.save_rule('b','sz000981',dict(buy_enabled=True),b['revision'])
+        for status in ('processing','sending','unknown','accepted'):
+            self.store.execute('INSERT INTO trading_runs VALUES(?,?,?,?,?,?,?,?,?,?)',
+                (status,'a','sz000981','buy',status,'2026-11-02',status,'{}',self.now.isoformat(),self.now.isoformat()))
+        before=self.store.query('SELECT * FROM trading_rules')
+        with self.assertRaisesRegex(ValueError,'规则已被更新'):
+            self.service.remove_target('a','sz000981',a['revision']+1)
+        with self.assertRaisesRegex(ValueError,'正在提交'):
+            self.service.remove_target('a','sz000981',a['revision'])
+        self.assertEqual(before,self.store.query('SELECT * FROM trading_rules'))
+        self.store.execute("UPDATE trading_runs SET status='not_sent' WHERE status IN ('processing','sending')")
+        history=self.store.query('SELECT * FROM trading_runs')
+        self.service.remove_target('a','sz000981',a['revision'])
+        self.assertEqual(history,self.store.query('SELECT * FROM trading_runs'))
+        self.assertTrue(self.service.rule('b','sz000981')['buy_enabled'])
+        self.service.add_target('a','sz000981')
+        self.seed('a')
+        with self.assertRaisesRegex(ValueError,'券商持仓不能删除'):
+            self.service.remove_target('a','sz000981',self.service.rule('a','sz000981')['revision'])
+        self.assertEqual(len(self.store.query('SELECT * FROM trading_positions')),1)
+        self.submit.assert_not_called()
+
     def test_new_watchlist_target_keeps_original_bottom_fixed_lot_buy_path(self):
         self.store.execute('INSERT INTO watch(code,name) VALUES(?,?)',('sz000981','山子高科'))
         old=self.service.add_target('a','sz000981')

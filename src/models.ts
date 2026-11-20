@@ -13,6 +13,7 @@ export type Message={id:string;category:string;title:string;body:string;event_ke
 
 export type IndexQuote={code:string;name:string;price:string;previous_close:string;change:string;percent:string;timestamp:string;source:string};
 export type IndexMinute={code?:string;name?:string;date:string;previous_close:string;bars:{time:string;close:string;volume_lots?:number}[];cached_at?:string;source?:string};
-export type MarketData={quotes:IndexQuote[];minute:IndexMinute|null;error?:string;collected_at?:string};
+export type IndexLeading={code:string;date:string;previous_close:string;timestamp:string;cached_at:string;source:string;bars:{time:string;close:string;value:string}[]};
+export type MarketData={quotes:IndexQuote[];minute:IndexMinute|null;leading?:IndexLeading|null;leading_error?:string;error?:string;collected_at?:string};
 
 export type VolumeFlow={code:string;day:string;status:string;source?:string;message:string;updated_at?:string;verified_minutes?:number;approximate_minutes?:number;secondary_minutes?:number;total_only?:boolean;live_fresh?:boolean|null;minutes:{time:string;total:number;buy:number;sell:number;neutral:number;unknown:number;verified:boolean;source?:string|null;source_total?:number;difference?:number;approximate?:boolean}[]};

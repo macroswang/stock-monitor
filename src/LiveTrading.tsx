@@ -78,6 +78,7 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
  const [edit,setEdit]=useState<{position:Position;rule:TradingRule;account:Account}|null>(null);
  const [mapping,setMapping]=useState<{account:Account;name:string;code:string}|null>(null);
  const [target,setTarget]=useState<{account_id:string;code:string;name?:string;configure?:boolean}|null>(null);
+ const [remove,setRemove]=useState<{position:Position;account:Account}|null>(null);
  const [liveConfirm,setLiveConfirm]=useState(false);
  const running=useRef(false),sequence=useRef(0),mounted=useRef(true);
  useEffect(()=>{
@@ -86,12 +87,12 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
   setTarget({account_id:'',code:setupStock.code,name:setupStock.name,configure:true});
  },[setupStock]);
  useEffect(()=>{
-  if(!edit&&!mapping&&!target&&!liveConfirm)return;
+  if(!edit&&!mapping&&!target&&!remove&&!liveConfirm)return;
   setError('');
   const prior=document.activeElement as HTMLElement|null;
   const frame=requestAnimationFrame(()=>document.querySelector<HTMLElement>('[role="dialog"] input,[role="dialog"] select,[role="dialog"] button')?.focus());
   const onKey=(e:KeyboardEvent)=>{
-   if(e.key==='Escape'&&!running.current){setEdit(null);setMapping(null);setTarget(null);setLiveConfirm(false);}
+   if(e.key==='Escape'&&!running.current){setEdit(null);setMapping(null);setTarget(null);setRemove(null);setLiveConfirm(false);}
    if(e.key==='Tab'){
     const items=Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"] button:not(:disabled),[role="dialog"] input:not(:disabled),[role="dialog"] select:not(:disabled)'));
     const first=items[0],last=items.at(-1);
@@ -100,7 +101,7 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
   };
   document.addEventListener('keydown',onKey);
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('keydown',onKey);prior?.focus();};
- },[!!edit,!!mapping,!!target,liveConfirm]);
+ },[!!edit,!!mapping,!!target,!!remove,liveConfirm]);
  const load=async()=>{const seq=++sequence.current;const d=await api<View>('trading_view');if(mounted.current&&seq===sequence.current)setData(d);};
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;sequence.current++;};},[]);
  useDisplayPolling(active,async()=>{if(running.current)return;try{await load();}catch(e){if(mounted.current)setError(String(e));}},5000);
@@ -148,6 +149,14 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
    setTarget(null);
   },request.configure?'':'自选股已关联到所选账户；规则默认关闭，请在列表中配置并开启。');
  };
+ const removeTarget=async()=>{
+  if(!remove)return;
+  const request=remove;
+  await run(async()=>{
+   await api('trading_target_remove',{account_id:request.position.account_id,code:request.position.code,revision:request.position.rule.revision});
+   setRemove(null);
+  },`${request.position.name}已从该账户的自动交易股票中删除；自选股和历史执行记录保留。`);
+ };
  const filtered=data?.positions.filter(p=>(!selected||p.account_id===selected)&&(!enabledOnly||p.rule.buy_enabled||p.rule.sell_enabled||p.rule.paired_enabled)&&(!filter||`${p.name} ${p.code}`.toLowerCase().includes(filter.toLowerCase())))||[];
  const visibleAccounts=data?.accounts.filter(a=>!selected||a.id===selected)||[];
  const runs=data?.runs.filter(r=>!selected||r.account_id===selected)||[];
@@ -171,7 +180,7 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
      {a.unresolved?.length>0&&<div className="trading-unresolved"><strong>以下持仓需要确认股票代码</strong><p>券商列表没有提供代码。确认后仅为本账户保存对应关系，下次同步会复用。</p>{a.unresolved.map((p,i)=><div key={i}><span>{p.name} · 持仓 {money(p.quantity)} 股</span><button disabled={busy||!a.token} onClick={()=>setMapping({account:a,name:p.name,code:''})}>确认代码</button></div>)}</div>}
      <div className="table-scroll"><table className="trading-position-table"><thead><tr>{['股票','持仓 / 可卖','自动买入','自动卖出','规则与操作'].map(s=><th key={s}>{s}</th>)}</tr></thead><tbody>{filtered.filter(p=>p.account_id===a.id).map(p=>{
       const paired=p.rule.strategy_mode==='paired_t',cycle=data?.cycles?.find(c=>c.account_id===p.account_id&&c.code===p.code&&['sell_pending','waiting_buy','buy_pending','needs_review'].includes(c.state));
-      return <tr key={p.code} className={p.position_verified&&!p.active?'trading-inactive':''}><td><button className="trading-stock-link" onClick={()=>onOpenStock?.(p.code)}>{p.name}</button><small>{p.code.toUpperCase()} · {p.position_verified?(p.active?'券商持仓':'已清仓'):'自选股配置'}{paired?' · 成对T':''}</small></td><td><strong>{p.position_verified?`${money(p.quantity)} / ${money(p.sellable)}`:'待持仓同步'}</strong><small>成本 {money(p.cost)} · 现价 {money(p.price)}</small></td><td>{paired?<><strong>仅成对回补</strong><small>{cycle?.state==='waiting_buy'?'首腿已成交，等待满足门槛的底信号':cycle?'本轮处理中':'顶信号先卖出后才允许买回'}<br/>不会独立买入</small></>:<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 自动买入`} type="checkbox" checked={p.rule.buy_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>toggle(p,'buy',e.target.checked)}/>{p.rule.buy_enabled?'已开启':'已关闭'}</label><small>{quantityDescription('buy',p.rule)}<br/>预计 {money(plannedQuantity(p.code,p.quantity,p.sellable,'buy',p.rule))} 股 · 约 {p.price?money(plannedQuantity(p.code,p.quantity,p.sellable,'buy',p.rule)*p.price):'—'} 元</small></>}</td><td>{paired?<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 成对T`} type="checkbox" checked={p.rule.paired_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>togglePaired(p,e.target.checked)}/>{p.rule.paired_enabled?'已开启':'已关闭'}</label><small>每轮 {p.rule.t_lots} 手 · 净收益至少 {money(p.rule.minimum_net_profit)} 元<br/>{cycle?`当前：${{sell_pending:'首腿待核实',waiting_buy:'等待回补',buy_pending:'回补待核实',needs_review:'需人工处理'}[cycle.state]||cycle.state}`:'完成后可继续下一轮'}</small></>:<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 自动卖出`} type="checkbox" checked={p.rule.sell_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>toggle(p,'sell',e.target.checked)}/>{p.rule.sell_enabled?'已开启':'已关闭'}</label><small>{quantityDescription('sell',p.rule)}<br/>预计 {money(p.active?plannedQuantity(p.code,p.quantity,p.sellable,'sell',p.rule):0)} 股 · 约 {p.price?money((p.active?plannedQuantity(p.code,p.quantity,p.sellable,'sell',p.rule):0)*p.price):'—'} 元</small></>}</td><td><div className="trading-row-actions"><button disabled={busy} onClick={()=>setEdit({position:p,rule:{...p.rule},account:a})}>配置规则</button><button disabled={busy} onClick={()=>preview(p,'buy')}>试算买入</button><button disabled={busy} onClick={()=>preview(p,'sell')}>试算卖出</button></div></td></tr>;
+      return <tr key={p.code} className={p.position_verified&&!p.active?'trading-inactive':''}><td><button className="trading-stock-link" onClick={()=>onOpenStock?.(p.code)}>{p.name}</button><small>{p.code.toUpperCase()} · {p.position_verified?(p.active?'券商持仓':'已清仓'):'自选股配置'}{paired?' · 成对T':''}</small></td><td><strong>{p.position_verified?`${money(p.quantity)} / ${money(p.sellable)}`:'待持仓同步'}</strong><small>成本 {money(p.cost)} · 现价 {money(p.price)}</small></td><td>{paired?<><strong>仅成对回补</strong><small>{cycle?.state==='waiting_buy'?'首腿已成交，等待满足门槛的底信号':cycle?'本轮处理中':'顶信号先卖出后才允许买回'}<br/>不会独立买入</small></>:<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 自动买入`} type="checkbox" checked={p.rule.buy_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>toggle(p,'buy',e.target.checked)}/>{p.rule.buy_enabled?'已开启':'已关闭'}</label><small>{quantityDescription('buy',p.rule)}<br/>预计 {money(plannedQuantity(p.code,p.quantity,p.sellable,'buy',p.rule))} 股 · 约 {p.price?money(plannedQuantity(p.code,p.quantity,p.sellable,'buy',p.rule)*p.price):'—'} 元</small></>}</td><td>{paired?<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 成对T`} type="checkbox" checked={p.rule.paired_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>togglePaired(p,e.target.checked)}/>{p.rule.paired_enabled?'已开启':'已关闭'}</label><small>每轮 {p.rule.t_lots} 手 · 净收益至少 {money(p.rule.minimum_net_profit)} 元<br/>{cycle?`当前：${{sell_pending:'首腿待核实',waiting_buy:'等待回补',buy_pending:'回补待核实',needs_review:'需人工处理'}[cycle.state]||cycle.state}`:'完成后可继续下一轮'}</small></>:<><label className="trading-switch"><input aria-label={`${a.account_masked} ${p.name} 自动卖出`} type="checkbox" checked={p.rule.sell_enabled} disabled={busy||(data?.settings.mode==='live'&&!a.supports_order)} onChange={e=>toggle(p,'sell',e.target.checked)}/>{p.rule.sell_enabled?'已开启':'已关闭'}</label><small>{quantityDescription('sell',p.rule)}<br/>预计 {money(p.active?plannedQuantity(p.code,p.quantity,p.sellable,'sell',p.rule):0)} 股 · 约 {p.price?money((p.active?plannedQuantity(p.code,p.quantity,p.sellable,'sell',p.rule):0)*p.price):'—'} 元</small></>}</td><td><div className="trading-row-actions"><button disabled={busy} onClick={()=>setEdit({position:p,rule:{...p.rule},account:a})}>配置规则</button><button disabled={busy} onClick={()=>preview(p,'buy')}>试算买入</button><button disabled={busy} onClick={()=>preview(p,'sell')}>试算卖出</button>{!p.position_verified&&<button className="trading-remove-target" disabled={busy} onClick={()=>setRemove({position:p,account:a})}>删除</button>}</div></td></tr>;
      })}</tbody></table></div>
      {!filtered.some(p=>p.account_id===a.id)&&<p className="trading-empty-row">{a.sync_status==='never'?'尚未同步持仓，也可以先添加自选股。':'没有符合条件的账户股票。'}</p>}
      {data?.cycles?.filter(c=>c.account_id===a.id&&['sell_pending','waiting_buy','buy_pending','needs_review'].includes(c.state)).map(c=><CycleRecovery key={c.id} cycle={c} runs={data.runs} busy={busy} onVerify={(r,evidence)=>void run(()=>api('trading_resolve',{id:r.id,...evidence}),'核实结果已保存，周期状态已更新。')} onClose={note=>void run(()=>api('trading_cycle_close',{id:c.id,note,confirm:true}),'已记录人工结案，可按单股开关接收之后的新信号。')}/>)}
@@ -195,6 +204,7 @@ export default function LiveTrading({active=true,api,onRestartCore,onOpenStock,s
    <div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setTarget(null)}>取消</button><button className="primary" disabled={busy||!target.code||!target.account_id}>{target.configure?'配置规则':'添加'}</button></div>
   </form></div>}
   {mapping&&<div className="modal-overlay"><form className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-map-title" onSubmit={e=>{e.preventDefault();void run(async()=>{await job('trading_map',{account_id:mapping.account.id,token:mapping.account.token,name:mapping.name,code:mapping.code});setMapping(null);},'股票代码已核对并关联到所选账户。');}}><h2 id="trading-map-title">确认 {mapping.name} 的股票代码</h2><p>{accountName(mapping.account.id)}</p><p>请输入券商中的6位股票代码。观量会核对代码对应名称，相符后仅关联到此账户。</p><input aria-label="持仓股票代码" required pattern="[0-9]{6}" placeholder="6位股票代码" value={mapping.code} onChange={e=>setMapping({...mapping,code:e.target.value.replace(/\D/g,'').slice(0,6)})}/>{error&&<p role="alert" className="trading-inline-warning">{error}</p>}<div className="trading-dialog-actions"><button type="button" disabled={busy} onClick={()=>setMapping(null)}>取消</button><button className="primary" disabled={busy}>核对并关联</button></div></form></div>}
+  {remove&&<div className="modal-overlay"><section className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-remove-title"><h2 id="trading-remove-title">删除自动交易股票</h2><p><strong>{remove.position.name} · {remove.position.code.toUpperCase()}</strong></p><p>{accountName(remove.position.account_id)}</p><p>删除后，该账户不再接收这只股票的新自动交易信号。自选股、历史执行记录和券商数据都会保留。</p>{error&&<p role="alert" className="trading-inline-warning">{error}</p>}<div className="trading-dialog-actions"><button disabled={busy} onClick={()=>setRemove(null)}>取消</button><button className="trading-remove-target" disabled={busy} onClick={()=>void removeTarget()}>确认删除</button></div></section></div>}
   {liveConfirm&&<div className="modal-overlay"><section className="card trading-dialog trading-dialog-small" role="dialog" aria-modal="true" aria-labelledby="trading-live-title"><h2 id="trading-live-title">切换到实盘执行</h2><p>之后启动执行时，已开启的单股规则会向对应证券账户发送真实委托。</p><p>切换后保持暂停。请核对每个账户的买卖开关和下单数量，再启动实盘。</p><div className="trading-dialog-actions"><button disabled={busy} onClick={()=>setLiveConfirm(false)}>保留试运行</button><button disabled={busy} onClick={()=>run(async()=>{await api('trading_config',{mode:'live',confirm_live:true});setLiveConfirm(false);},'已切换实盘模式，目前仍暂停。')}>确认切换，保持暂停</button></div></section></div>}
  </div>;
 }

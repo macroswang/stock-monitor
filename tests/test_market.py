@@ -3,7 +3,12 @@ from unittest.mock import patch
 from core.market import quotes,minutes,Market
 from core.app import App
 
-class MarketTest(unittest.TestCase):
+class IsolatedMarketTest(unittest.TestCase):
+ def setUp(self):
+  leading=patch('core.market.leading_minutes',side_effect=ValueError('isolated display feed'))
+  leading.start();self.addCleanup(leading.stop)
+
+class MarketTest(IsolatedMarketTest):
  def test_index_quotes_do_not_need_stock_limit_up(self):
   f=['']*49
   for i,v in {1:'上证指数',2:'000001',3:'3718.61',4:'3716.28',30:'20261019131518',31:'2.33',32:'0.06'}.items():f[i]=v
@@ -46,7 +51,7 @@ class MarketTest(unittest.TestCase):
   bars=self.parse_volume(['0930 3600 100','0931 3601 NaN','0932 3602 80','0933 3603 90'])
   self.assertEqual([b.get('volume_lots') for b in bars],[100,None,None,None])
 
-class MacdIndexFeedTests(unittest.TestCase):
+class MacdIndexFeedTests(IsolatedMarketTest):
  def test_all_three_feeds_are_shared_and_failure_is_isolated(self):
   from collections import Counter
   from core.market import CODES
