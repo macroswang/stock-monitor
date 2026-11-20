@@ -18,7 +18,7 @@ import ModeJournal from './ModeJournal';
 import FocusPool from './FocusPool';
 import {ChartViewTabs} from './StockChartPanel';
 import Ma250Panel from './Ma250Panel';
-import {DAILY_WINDOW,DAILY_BATCH_DAYS} from './dailyWindow';
+import {DAILY_WINDOW,WEEKLY_WINDOW,DAILY_BATCH_DAYS} from './dailyWindow';
 import PaperTrading from './PaperTrading';
 import type {VolumeFlow} from './models';
 import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
@@ -170,7 +170,7 @@ function App(){
  const watchCodes=useRef<string[]>([]);
  const klineApplied=useRef('');
  const [klineRequest,setKlineRequest]=useState<{code:string;name:string}>();
- const [candleDemand,setCandleDemand]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:DAILY_WINDOW});
+ const [candleDemand,setCandleDemand]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:WEEKLY_WINDOW});
  const [dailyLoading,setDailyLoading]=useState('');const ensuredDaily=useRef(new Set<string>());const dailyEdges=useRef(new Map<string,number>());
  const [sourceInfo,setSourceInfo]=useState<SourceInfo>();
  const historyKey=useRef('');historyKey.current=code+'|'+range.start+'|'+range.end;const historySequence=useRef(0);

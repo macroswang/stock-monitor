@@ -1,13 +1,14 @@
 import {test,expect} from '@playwright/test';
-import {DAILY_WINDOW,dailyViewport,zoomCandleWindow} from '../../src/dailyWindow';
+import {DAILY_WINDOW,WEEKLY_WINDOW,dailyViewport,zoomCandleWindow} from '../../src/dailyWindow';
 const dates=Array.from({length:300},(_,i)=>new Date(Date.UTC(2025,0,i+1)).toISOString().slice(0,10));
-test('initial view displays 250 candles, equivalent to three down-arrow steps, and grows a short cache',()=>{
- expect(DAILY_WINDOW).toBe(250);
- let zoom={lo:210,hi:299};for(let i=0;i<3;i++)zoom=zoomCandleWindow(dates.length,zoom.lo,zoom.hi,1,299);
- expect(zoom.hi-zoom.lo+1).toBe(250);
- expect(dailyViewport(dates,[],dates.at(-1),'')).toEqual({lo:50,hi:299});
+test('daily view starts two up-arrow steps closer than 250 candles and grows a short cache',()=>{
+ let zoom={lo:50,hi:299};for(let i=0;i<2;i++)zoom=zoomCandleWindow(dates.length,zoom.lo,zoom.hi,-1,299);
+ expect(DAILY_WINDOW).toBe(120);
+ expect(zoom.hi-zoom.lo+1).toBe(DAILY_WINDOW);
+ expect(WEEKLY_WINDOW).toBe(250);
+ expect(dailyViewport(dates,[],dates.at(-1),'')).toEqual({lo:180,hi:299});
  const first=dates.slice(-59);expect(dailyViewport(first,[],first.at(-1),'')).toEqual({lo:0,hi:58});
- const v=dailyViewport(dates,[first[0],first.at(-1)!],dates.at(-1),first.at(-1)!);expect(v.hi-v.lo+1).toBe(250);expect(v.hi).toBe(299);
+ const v=dailyViewport(dates,[first[0],first.at(-1)!],dates.at(-1),first.at(-1)!);expect(v.hi-v.lo+1).toBe(120);expect(v.hi).toBe(299);
 });
 test('prepending history keeps the same visible dates; moving one day shifts only as needed',()=>{
  const old=dates.slice(100),prior=[old[0],old[89]];const kept=dailyViewport(dates,prior,old[0],dates.at(-1)!,90);

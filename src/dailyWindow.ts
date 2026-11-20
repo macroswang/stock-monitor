@@ -1,5 +1,6 @@
-// Equivalent to three zoom-out steps from the previous 90-candle default.
-export const DAILY_WINDOW=250;
+// Two zoom-in steps from 250 candles: 250 -> 180 -> 120.
+export const DAILY_WINDOW=120;
+export const WEEKLY_WINDOW=250;
 export const DAILY_BATCH_DAYS=365;
 
 /** Preserve the viewed dates as history is prepended; grow short initial data to the requested window. */

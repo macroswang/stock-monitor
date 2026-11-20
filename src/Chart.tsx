@@ -34,7 +34,7 @@ import {candleChangeText} from './candleTooltip';
 import {dailyPatterns,dailyPatternStatus} from './dailyPatterns';
 import {dailyPatternOverlay,dailyPatternColors} from './dailyPatternOverlay';
 import {selectDailyPatterns} from './dailyPatternSelection';
-import {DAILY_WINDOW,dailyViewport,zoomCandleWindow} from './dailyWindow';
+import {DAILY_WINDOW,WEEKLY_WINDOW,dailyViewport,zoomCandleWindow} from './dailyWindow';
 import CandleControls from './CandleControls';
 import {isCandleView,weeklyBars,candleDate,movingAverage,readMovingAverages,candleHistoryNeed,MA_COLORS,type MovingAverages} from './candleData';
 import {defaultTCosts,tProfit} from './tCosts';
@@ -112,7 +112,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  useEffect(()=>{const sync=()=>setMacdParameters(readMacdParameters());window.addEventListener('storage',sync);window.addEventListener('macd-parameters-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('macd-parameters-change',sync);};},[]);
  const updateMacd=(next:MacdParameters)=>{setMacdParameters(next);try{localStorage.setItem(macdParametersKey,JSON.stringify(next));window.dispatchEvent(new window.Event('macd-parameters-change'));}catch{}};
  const maValues=useMemo(()=>new Map(ma.periods.map(n=>[n,movingAverage(daily,n)])),[daily,ma.periods]);
- const [candleSizes,setCandleSizes]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:DAILY_WINDOW});
+ const [candleSizes,setCandleSizes]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:WEEKLY_WINDOW});
  const candleWindows=useRef(new Map<string,{dates:string[];lastDate:string}>());
  const candleSelections=useRef(new Map<string,string|undefined>());
  const updateMa=(next:MovingAverages)=>{setMa(next);try{localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify(next));}catch{}};
