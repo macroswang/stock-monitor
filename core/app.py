@@ -19,6 +19,7 @@ from .ma250_sessions import eligible_sessions as annual_sessions
 from .version import VERSION
 from .daily_cache import DailyCache
 from .minute_cache import MinuteCache
+from .stock_close import StockClose, checked_group, close_reference, minute_close
 from .archive import Archive
 from .market import Market
 from .breadth import Breadth, CODE as BREADTH_CODE, KIND as BREADTH_KIND, BREADTH_INTERVAL_SECONDS, valid_closed_breadth
@@ -102,6 +103,7 @@ class App:
             self.store.initialize(SEEDS,rows)
         self.daily_cache=DailyCache(self)
         self.minute_cache=MinuteCache(self)
+        self.stock_close=StockClose(self)
         self.archive=Archive(self)
         self.market=Market(self)
         from .index_chart import IndexChart
@@ -149,6 +151,7 @@ class App:
             threading.Thread(target=self.delivery_loop,daemon=True).start()
             threading.Thread(target=self.daily_loop,daemon=True).start()
             threading.Thread(target=self.archive_loop,daemon=True).start()
+            threading.Thread(target=self.stock_close.run,daemon=True).start()
             threading.Thread(target=self.market_loop,daemon=True).start()
             threading.Thread(target=self.breadth_loop,daemon=True).start()
             threading.Thread(target=self.csi300_loop,daemon=True).start()
@@ -333,20 +336,37 @@ class App:
         return quote
 
     def cache_minutes(self,code,group):
-        old=self.store.getcache(code,'minute',group['date'])
-        data=dict(group)
-        if old:
-            prior=old[0]['data']
-            for k in ('symbol','limit_up','limit_down','day_high','trading_date','time_label_semantics','session_closed'):
-                if k in prior: data[k]=prior[k]
-        quote=self.quotes.get(code)
-        if quote and quote.get('date')==group['date']:
-            data.update(symbol=code[2:],trading_date=group['date'],limit_up=quote['limit_up'],
-                limit_basis='腾讯当日涨停价字段',limit_reference_time=quote['timestamp'],previous_close=quote.get('previous_close') or data.get('previous_close'),
-                time_label_semantics='unverified',session_closed=group['date']<now_cn().date().isoformat() or now_cn().strftime('%H:%M')>='15:00')
-            if quote.get('limit_down'):data['limit_down']=quote['limit_down']
-            if quote.get('high'):data['day_high']=quote['high']
-        self.store.cache(code,'minute',group['date'],data)
+        with self.store.lock:
+            old=self.store.getcache(code,'minute',group['date'])
+            data=dict(group)
+            quote=self.quotes.get(code)
+            if old:
+                prior=old[0]['data']
+                if prior.get('close_verified') and not group.get('close_verified'):
+                    day=group['date']
+                    daily=self.stock_close.cached(code,'daily',day)
+                    reference=close_reference(day,daily,quote)
+                    if reference is None:
+                        totals=minute_close(prior,day)
+                        if totals:reference=(totals,prior['close_verified'])
+                    revised=checked_group(group,day,reference)
+                    data=revised if revised and revised.get('close_verified') else dict(prior)
+                    if 'previous_close' not in data and 'previous_close' in prior:
+                        data['previous_close']=prior['previous_close']
+                for k in ('symbol','limit_up','limit_down','limit_basis','limit_reference_time','day_high','day_low',
+                          'trading_date','time_label_semantics','session_closed'):
+                    if k in prior: data[k]=prior[k]
+            if (quote and quote.get('date')==group['date']
+                    and (not data.get('close_verified') or quote['timestamp']>=str(data.get('limit_reference_time') or ''))):
+                data.update(symbol=code[2:],trading_date=group['date'],limit_up=quote['limit_up'],
+                    limit_basis='腾讯当日涨停价字段',limit_reference_time=quote['timestamp'],previous_close=quote.get('previous_close') or data.get('previous_close'),
+                    time_label_semantics='unverified',session_closed=group['date']<now_cn().date().isoformat() or now_cn().strftime('%H:%M')>='15:00')
+                if quote.get('limit_down'):data['limit_down']=quote['limit_down']
+                if quote.get('high'):data['day_high']=quote['high']
+            if data.get('close_verified'):
+                data['session_closed']=True
+                if old and dict(prior,cached_at=None)==dict(data,cached_at=None):return
+            self.store.cache(code,'minute',group['date'],data)
 
     def ingest(self,code,quote,groups,now):
         today=now.date().isoformat()
@@ -486,7 +506,13 @@ class App:
     def market_loop(self):
         initial=True
         while not self.stop.is_set():
-            if initial or trading(now_cn()):self.market.poll();initial=False
+            now=now_cn()
+            # The 15:00 index bar can be a placeholder until the closing auction is published.
+            close_window = (now.weekday()<5 and '15:00'<=now.strftime('%H:%M')<'15:05'
+                            and trading_day(now.date()) is not False)
+            if initial or trading(now) or close_window:
+                self.market.poll()
+                initial=False
             self.stop.wait(30)
 
     def breadth_loop(self):

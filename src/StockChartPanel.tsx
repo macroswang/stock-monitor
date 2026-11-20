@@ -23,8 +23,8 @@ export function ChartViewTabs({value,onChange,asTabs=false,className}:{
   </div>;
 }
 
-type CachedMinute={day:string;data?:{bars?:Bar[];previous_close?:string|number}};
-type MinuteBundle={bars:Bar[];shapeOpening:Bar[];day:string;previousClose:number|undefined};
+type CachedMinute={day:string;data?:{bars?:Bar[];previous_close?:string|number;cached_at?:string}};
+type MinuteBundle={bars:Bar[];shapeOpening:Bar[];day:string;previousClose:number|undefined;cachedAt?:string};
 
 const dateText=(value:Date)=>value.toLocaleDateString('sv-SE');
 const todayText=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date());
@@ -50,7 +50,8 @@ const staleAfterClose=(bundle:MinuteBundle,now:Date):boolean=>{
  if(bundle.day!==todayText()||!bundle.bars.length)return false;
  const clock=beijingClock(now),expected=expectedLastMinute(now);
  if(!expected||clock<'15:01')return false;
- return (bundle.bars.at(-1)?.time||'')<expected;
+ const last=bundle.bars.at(-1);
+ return !last||last.time<expected||last.complete!==true;
 };
 const yearsAgoText=(years:number)=>{const value=new Date();value.setFullYear(value.getFullYear()-years);return dateText(value);};
 const readError=(cause:unknown)=>cause instanceof Error?cause.message:'图表加载失败';
@@ -64,7 +65,7 @@ function pickMinute(list:CachedMinute[]|null|undefined):MinuteBundle{
   const bars=all.filter(bar=>{const time=String(bar.time||'');return (time>='09:31'&&time<='11:30')||(time>='13:01'&&time<='15:00');});
   const shapeOpening=all.filter(bar=>bar.time==='09:30');
   const previous=Number(latest.data?.previous_close);
-  return {bars,shapeOpening,day:latest.day,previousClose:Number.isFinite(previous)&&previous>0?previous:undefined};
+  return {bars,shapeOpening,day:latest.day,previousClose:Number.isFinite(previous)&&previous>0?previous:undefined,cachedAt:latest.data?.cached_at};
 }
 
 export default function StockChartPanel({request,code,name,initialView='minute',initialDate,annualLineFocus=false,live=false,onError,onBottomSignal}:{
@@ -195,8 +196,18 @@ export default function StockChartPanel({request,code,name,initialView='minute',
           if(now<open){next=open;break sessions;}
           if(now<close){
             const current=minuteRef.current;
-            if(current?.day!==day||current.bars.at(-1)?.time!=='15:00')void ensureMinute(true);
+            if(current?.day!==day||current.bars.at(-1)?.time!=='15:00'||current.bars.at(-1)?.complete!==true)void ensureMinute(true);
             next=Math.min(now+6000,close);break sessions;
+          }
+          if(end==='15:00'&&offset===0){
+            const current=minuteRef.current;
+            const afterClose=close+60000,until=close+30*60000;
+            if(now<afterClose){next=afterClose;break sessions;}
+            if(now<until&&current&&staleAfterClose(current,new Date(now))){
+              staleRefreshed.current=true;
+              void ensureMinute(true);
+              next=now+60000;break sessions;
+            }
           }
         }
       }
@@ -239,7 +250,7 @@ export default function StockChartPanel({request,code,name,initialView='minute',
       {/* stockCode 传 MACD 中性前缀：内嵌面板不请求/展示指数 MACD（契约要求不传高级数据），名称仍用真实 name */}
       <Chart drawingRequest={request} stockCode={'pool-'+code} stockName={name} minute={minute?.bars||[]} shapeOpening={minute?.shapeOpening||[]}
         daily={daily||[]} ma250={ma250} e2={e2} annualLineFocus={annualLineFocus} view={chartView} selectedDay={activeDay} onSelectDay={day=>setSelectedDay(day)}
-        compact onBottomSignal={onBottomSignal} previousClose={minute?.previousClose} benchmark={null}/>
+        compact onBottomSignal={onBottomSignal} previousClose={minute?.previousClose} minuteCachedAt={minute?.cachedAt} benchmark={null}/>
     </div>}
   </section>;
 }

@@ -30,6 +30,7 @@ import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
 import {splitMinuteVolume} from './volumeFlow';
 import {resolvedPriceLimits,intradayPriceScale,pricePercent} from './priceLimits';
 import {dailyGaps} from './dailyGaps';
+import {renderChartLowPoint} from './chartLowPoint';
 import {candleChangeText} from './candleTooltip';
 import {dailyPatterns,dailyPatternStatus} from './dailyPatterns';
 import {dailyPatternOverlay,dailyPatternColors} from './dailyPatternOverlay';
@@ -346,6 +347,11 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   // Only project a live quote onto its own minute; the completed bars still
   // feed time, volume, indicators and signals independently.
   const plottedPrices=aligned.map((bar,i)=>liveQuote&&i===livePointIndex&&quoteMinute===labels[i]?liveQuote.price:bar?+bar.close:null);
+  const lows=isDay?daily.map(bar=>Number(bar.low)):plottedPrices.map((value,i)=>{
+   const low=Number(aligned[i]?.low);
+   if(!Number.isFinite(low)||low<=0)return value;
+   return value!==null&&value>0?Math.min(low,value):low;
+  });
   const gaps=view==='daily'?dailyGaps(daily):[];
   const visibleGaps=gaps.filter(g=>!g.filledOn).slice(-1);
   const patternSeries=isDay&&showDailyPatterns?dailyPatternOverlay(dayPatterns,()=>chart.getWidth()):[];
@@ -562,7 +568,7 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
     {type:'value',gridIndex:4,...macdRange(indexMacd),splitNumber:2,axisLabel:{fontSize:10,formatter:macdNumber},splitLine:{lineStyle:{color:'#2c3a50',opacity:.65}},axisPointer:{label:{formatter:(p:{value:number})=>macdNumber(p.value)}}}
    ]:[])],
    dataZoom:[{type:'inside',xAxisIndex:axisIndices,...zoom,...(isDay?{filterMode:'weakFilter',zoomLock:true,zoomOnMouseWheel:false,moveOnMouseWheel:false,moveOnMouseMove:true}:{})},{type:'slider',xAxisIndex:axisIndices,...zoom,bottom:1,height:hasMacd||indexMode?10:18,borderColor:'#28354b',fillerColor:'rgba(82,138,230,.14)',...(isDay?{filterMode:'weakFilter',zoomLock:true,handleSize:0,brushSelect:false}: {})}],
-   series:[isDay?{name:view==='weekly'?'周K':'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#91a2bb',position:'insideTopRight',align:'right',padding:[2,4]},data:[...visibleGaps.map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:g.direction==='up'?'rgba(239,101,104,.035)':'rgba(54,184,152,.035)',borderColor:g.direction==='up'?'rgba(239,101,104,.24)':'rgba(54,184,152,.24)',borderWidth:.7,borderType:'solid'}},{xAxis:daily.at(-1)!.date,yAxis:g.high}]),...ma250Signals.map(s=>[{name:'年线回踩',xAxis:s.touch_date,label:{show:false},itemStyle:{color:'rgba(242,176,74,.05)',borderColor:'rgba(242,176,74,.22)',borderWidth:.7,borderType:'dashed'}},{xAxis:s.date}])]},markPoint:{data:dailyTradeMarks},markLine:{data:[]}}:
+   series:[isDay?{name:view==='weekly'?'周K':'日K',type:'candlestick',data:daily.map(b=>[+b.open,+b.close,+b.low,+b.high]),itemStyle:{color:'#ef6568',color0:'#36b898',borderColor:'#ef6568',borderColor0:'#36b898'},markArea:{silent:true,label:{fontSize:10,color:'#e5edf8',position:'insideTopRight',align:'right',padding:[2,4]},data:[...visibleGaps.map(g=>[{name:`${g.provisional?'盘中':''}${g.direction==='up'?'上':'下'}缺口 ${price(g.low)}—${price(g.high)}`,xAxis:daily[Math.max(0,daily.findIndex(b=>b.date===g.date)-1)].date,yAxis:g.low,itemStyle:{color:'rgba(180,180,180,.45)',borderWidth:0}},{xAxis:daily.at(-1)!.date,yAxis:g.high}]),...ma250Signals.map(s=>[{name:'年线回踩',xAxis:s.touch_date,label:{show:false},itemStyle:{color:'rgba(242,176,74,.05)',borderColor:'rgba(242,176,74,.22)',borderWidth:.7,borderType:'dashed'}},{xAxis:s.date}])]},markPoint:{data:dailyTradeMarks},markLine:{data:[]}}:
     {name:indexMode?'蓝线':'价格',type:'line',data:plottedPrices,connectNulls:false,showSymbol:false,z:5,lineStyle:{color:'#8cbcff',width:.8},...(indexMode?{itemStyle:{color:'#8cbcff'}}:{}),markLine:{silent:true,symbol:'none',data:[...previousLine,...limitLines]},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(83,139,230,.16)'},{offset:1,color:'rgba(83,139,230,0)'}])},markPoint:{symbol:'pin',symbolSize:38,itemStyle:{color:'#e9ad58'},label:{fontSize:10},data:[...tradeMarks,...observationMarks,...volumeMarkers,...buySignals.filter(e=>labels.includes(e.time)&&reached(e.time)).map(e=>({coord:[e.time,e.price],value:'买研',symbol:'triangle',symbolSize:20,itemStyle:{color:'#69d9ac'},label:{position:'bottom',color:'#69d9ac',fontSize:10}}))]}},
     ...(!isDay?[{value:priceLimits.up,name:'涨停走势',color:'#ef6568'},{value:priceLimits.down,name:'跌停走势',color:'#36b898'}].filter(row=>row.value!==undefined).map(row=>({name:row.name,type:'line',data:plottedPrices.map(value=>value!==null&&Math.abs(value-row.value!)<.000001?value:null),connectNulls:false,showSymbol:true,symbol:'circle',symbolSize:3,z:7,silent:true,lineStyle:{color:row.color,width:2.8},itemStyle:{color:row.color}})):[]),
     ...(!isDay?[{name:'最新价',type:'scatter',z:7,symbolSize:6,itemStyle:{color:'#dceaff',borderColor:'#78aaff',borderWidth:1.5},
@@ -608,6 +614,9 @@ const signalLayout=(value:number,direction:number,flippedDistance=45)=>{
      {name:(indexMode||i?'指数':'个股')+' DEA',type:'line',xAxisIndex:i?4:2,yAxisIndex:macdYAxis+(i?2:0),data:points.map(p=>p?.dea??null),showSymbol:false,connectNulls:false,lineStyle:{color:'#57a6ff',width:1.3},itemStyle:{color:'#57a6ff'}}
     ]):[]),
     ...patternSeries,
+    {name:'最低点',type:'custom',silent:true,z:5,clip:true,tooltip:{show:false},progressive:0,
+     dimensions:['time','price'],encode:{x:'time',y:'price',tooltip:[]},renderItem:renderChartLowPoint,
+     data:labels.map((label,i)=>[label,lows[i]])},
     ...(dailyFillAnchors.length?[{name:'实盘成交标记连线',type:'custom',silent:true,z:6,clip:false,tooltip:{show:false},renderItem:renderPaperConnector,
       dimensions:['time','price','direction','offset'],encode:{x:0,y:1},data:dailyFillAnchors.map(m=>[m.day,m.anchor,m.value==='B'?1:m.value==='S'?-1:-2,m.offset])}]:[]),
     ...(tradeAnchors.length?[{name:'模拟成交标记连线',type:'custom',silent:true,z:6,clip:false,tooltip:{show:false},renderItem:renderPaperConnector,

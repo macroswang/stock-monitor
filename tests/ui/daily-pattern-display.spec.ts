@@ -33,7 +33,7 @@ for(const [name,rows,kind] of [['下飘旗',flag,'falling-flag'],['上飘旗',be
   expect(drawn.segments).toEqual(accepted.flatMap(p=>p.lines.filter(l=>l.role!=='neckline'&&l.role!=='outline').map(l=>[l.from.date,l.from.price,l.to.date,l.to.price])));
   if(name==='不同位置自动显示')expect(drawn.keys.length).toBeGreaterThan(1);
   const gap=dailyGaps([...rows]).filter(g=>!g.filledOn).at(-1);expect(drawn.areas).toHaveLength(gap?1:0);
-  if(gap){expect(drawn.areas[0][0].yAxis).toBe(gap.low);expect(drawn.areas[0][1].yAxis).toBe(gap.high);expect(drawn.areas[0][0].itemStyle.color).toContain('.035');}
+  if(gap){expect(drawn.areas[0][0].yAxis).toBe(gap.low);expect(drawn.areas[0][1].yAxis).toBe(gap.high);expect(drawn.areas[0][0].itemStyle.color).toBe('rgba(180,180,180,.45)');}
   expect(drawn.prices).toEqual(rows.map(b=>[+b.open,+b.close,+b.low,+b.high]));expect(drawn.labels.length).toBeGreaterThan(0);for(const label of drawn.labels)expect(label.bottom).toBeLessThan(label.gridTop);
   const box=(await chart.boundingBox())!;await page.mouse.move(box.x+drawn.hover[0],box.y+drawn.hover[1]);await expect(chart.locator('.quote-tooltip')).toContainText('收盘：');expect((await inspect()).pointerLines).toBe(0);
   await page.mouse.move(0,0);await page.addStyleTag({content:'.interactive-price-tooltip{visibility:hidden!important}'});

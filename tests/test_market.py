@@ -1,4 +1,5 @@
 import json,tempfile,unittest
+from datetime import datetime
 from unittest.mock import patch
 from core.market import quotes,minutes,Market
 from core.app import App
@@ -9,6 +10,29 @@ class IsolatedMarketTest(unittest.TestCase):
   leading.start();self.addCleanup(leading.stop)
 
 class MarketTest(IsolatedMarketTest):
+ def test_index_loop_replaces_preclose_placeholder_after_close(self):
+  with tempfile.TemporaryDirectory() as td:
+   app=App(td,False)
+   self.addCleanup(app.store.db.close)
+   times=iter(datetime.fromisoformat('2026-11-20T'+t+'+08:00') for t in ['14:59:47','15:00:17','15:05:17'])
+   stamp=next(times)
+   def feed(code):
+    closed=stamp.minute==0
+    return [dict(date='2026-11-20',previous_close='3577.62',bars=[
+     dict(time='15:00',close='3533.79' if closed else '3531.12',volume_lots=7640181 if closed else 0)])]
+   def wait(_seconds):
+    nonlocal stamp
+    stamp=next(times,None)
+    if stamp is None:app.stop.set()
+    return app.stop.is_set()
+   with patch.object(app.stop,'wait',side_effect=wait), \
+        patch('core.app.now_cn',side_effect=lambda:stamp),patch('core.market.quotes',return_value=[]), \
+        patch('core.market.minutes',side_effect=feed) as fetch:
+    app.market_loop()
+   self.assertEqual(fetch.call_count,6)
+   bar=app.market.index_view('sh000001','2026-11-20')['minute']['bars'][-1]
+   self.assertEqual((bar['time'],bar['close'],bar['volume_lots']),('15:00','3533.79',7640181))
+
  def test_index_quotes_do_not_need_stock_limit_up(self):
   f=['']*49
   for i,v in {1:'上证指数',2:'000001',3:'3718.61',4:'3716.28',30:'20261019131518',31:'2.33',32:'0.06'}.items():f[i]=v

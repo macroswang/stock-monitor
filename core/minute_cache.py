@@ -26,7 +26,7 @@ class MinuteCache:
      if not cached:return dict(status='paused')
      bars=(cached[0].get('data') or {}).get('bars') or []
      last=str((bars[-1] if bars else {}).get('time') or '')
-     if last>='15:00':return dict(status='cached')
+     if last=='15:00' and bars[-1].get('complete') is True:return dict(status='cached')
    if not refresh and self.app.store.getcache(code,'minute',day):return dict(status='cached')
    old=self.app.store.query('SELECT * FROM minute_requests WHERE code=?',(code,))
    rows=self.app.store.getcache(code,'minute')
