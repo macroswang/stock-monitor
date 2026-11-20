@@ -42,5 +42,13 @@ test('指数分时标注蓝线低点并绘制盘后确认的15:00成交量',asyn
  await page.getByRole('button',{name:'查看上证指数行情'}).click();
  const chart=page.locator('.index-detail').getByLabel('分时价格及分钟成交量',{exact:true});
  await expect(chart).toBeVisible();
- expect(await readChart(chart)).toMatchObject({labels:['3531.12'],closingVolume:7640181});
+ expect(await readChart(chart)).toMatchObject({labels:['3531.12'],closingVolume:764.0181});
+ await chart.evaluate(async node=>{
+  const source=await fetch('/src/Chart.tsx').then(r=>r.text());
+  const echarts=await import(source.match(/from "([^"\n]*echarts\.js[^"\n]*)"/)![1]);
+  const instance=echarts.getInstanceByDom(node),option=instance.getOption();
+  instance.dispatchAction({type:'showTip',seriesIndex:0,dataIndex:option.xAxis[0].data.indexOf('15:00')});
+ });
+ await expect(page.locator('.index-detail .minute-tooltip')).toContainText('分钟量：764.02 万手');
+ await expect(page.locator('.index-detail .volume-panel-header')).toContainText('成交量（万手）764.02 万手');
 });
