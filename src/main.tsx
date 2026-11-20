@@ -23,7 +23,7 @@ import PaperTrading from './PaperTrading';
 import type {VolumeFlow} from './models';
 import type {PaperFillPoint,PaperOrderPoint} from './paperMarks';
 import type {PaperPoint} from './PaperTrading';
-import WatchlistCard from './WatchlistCard';
+import WatchlistCard,{useWatchlistOrder,WatchPin} from './WatchlistCard';
 import WatchStockSwitcher from './WatchStockSwitcher';
 import StockSearch from './StockSearch';
 import StockReference from './StockReference';
@@ -159,6 +159,7 @@ function App(){
  // 启动时等待自选列表，随后由列表同步逻辑选择第一只股票。
  const [indexCode,setIndexCode]=useState(''),[indexData,setIndexData]=useState<Record<string,MarketData>>({});
  const [snapshot,setSnapshot]=useState<Snapshot>();const [code,setStockCode]=useState('');
+ const watchOrder=useWatchlistOrder(snapshot?.watch);
  const setCode=(value:React.SetStateAction<string>)=>{setIndexCode('');setStockCode(value);};const [view,setView]=useState('minute');const [panel,setPanel]=useState(()=>new URLSearchParams(window.location.search).get('panel')==='breadth'?'breadth':new URLSearchParams(window.location.search).get('panel')==='trading'?'trading':'market');
  // 已访问页面保持挂载，切换时保留图表与表单状态；尚未访问的页面不提前启动。
  const visitedPanels=useRef(new Set<string>());visitedPanels.current.add(panel);
@@ -351,7 +352,7 @@ function App(){
   // snapshot still follows, while a rejected backend operation restores the
   // exact prior list instead of leaving a phantom deletion on screen.
   setSnapshot(old=>old?{...old,watch:old.watch.filter(stock=>stock.code!==target.code)}:old);
-  try{await api('remove',{code:target.code});setMessage('已移除自选，历史数据保留');await refresh();}
+  try{await api('remove',{code:target.code});watchOrder.setPinned(target.code,false);setMessage('已移除自选，历史数据保留');await refresh();}
   catch(e){setSnapshot(previous);setMessage(String(e));}
   finally{setBusy(false);}
  }
@@ -365,7 +366,7 @@ function App(){
   setDayChoice(day);
   setReplay({code,day});
  };
- const watchList=snapshot?.watch||[],watchIndex=watchList.findIndex(stock=>stock.code===code);
+ const watchList=watchOrder.list,watchIndex=watchList.findIndex(stock=>stock.code===code);
  const moveWatchStock=(direction:-1|1)=>{
   if(!watchList.length)return;
   setCode(current=>{const index=watchList.findIndex(stock=>stock.code===current);return index<0?current:(watchList[index+direction]?.code||current);});
@@ -424,7 +425,12 @@ function App(){
    onOpenDaily={(code,name)=>{setCode(code);setDayChoice('');setView('daily');setKlineRequest({code,name});setPanel('market');}}
    onTrade={({code,name,side})=>{setPaperPoint({code,name,stamp:beijingMinute(),origin:'股票池',side});setPanel('paper');}}/></div>}
  {visitedPanels.current.has('market')&&<RetainedPane shown={panel==='market'}>
- {snapshot?.watch.length===0&&!indexCode?<div className="card empty">自选池为空，请输入股票代码添加。<form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:input});setCode(added.code);setInput('');});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:stock.code});setCode(added.code);setInput('');});}}/><button disabled={busy||!input}>＋</button></form></div>:<section className="market-grid"><WatchlistCard><div className="card-heading"><h2>我的自选</h2><span>{snapshot?.watch.length||0} 只</span></div><form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:input});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:stock.code});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}/><button disabled={busy||!input}>＋</button></form><div className="stocks">{snapshot?.watch.map(w=><div key={w.code} className={'stock '+(!indexCode&&code===w.code?'selected':'')} onClick={()=>{setCode(w.code);setDayChoice('');}}><div className="watch-stock-identity"><div className="watch-stock-title"><strong title={w.name}>{w.name}</strong><small>{w.code.toUpperCase()}</small></div>{w.broker_sources?.length?<button className="trading-source" title={w.broker_sources.map(a=>`${a.broker_name} ${a.account_masked}${a.active?' · 持仓中':' · 已清仓'}`).join('；')} aria-label={`${w.name} 账户同步来源`} onClick={e=>{e.stopPropagation();setPanel('trading');}}>账户同步{w.broker_sources.length>1?` · ${w.broker_sources.length}账户`:''}</button>:<button className="trading-source" aria-label={`${w.name} 自动下单`} disabled={busy||preview} onClick={e=>{e.stopPropagation();setAutoOrderStock({code:w.code,name:w.name});setPanel('trading');}}>自动下单</button>}</div><WatchQuoteDetails quote={w.quote}/><div className="stock-right"><strong className={+(w.quote?.change||0)>=0?'up':'down'}>{w.quote?.price||'—'}</strong><small>{w.enabled?'监控开启':'已暂停'}</small></div></div>)}</div></WatchlistCard>
+ {snapshot?.watch.length===0&&!indexCode?<div className="card empty">自选池为空，请输入股票代码添加。<form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:input});setCode(added.code);setInput('');});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string}>('add_job',{code:stock.code});setCode(added.code);setInput('');});}}/><button disabled={busy||!input}>＋</button></form></div>:<section className="market-grid"><WatchlistCard><div className="card-heading"><h2>我的自选</h2><button type="button" className="watch-sort" title={watchOrder.ascending?'按涨跌幅降序排列':'按涨跌幅升序排列'} onClick={watchOrder.toggleSort}>涨跌幅 {watchOrder.ascending?'↑':'↓'}</button><span>{snapshot?.watch.length||0} 只</span></div><form className="add" onSubmit={e=>{e.preventDefault();action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:input});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}><StockSearch request={api} preview={preview} value={input} onChange={setInput} onSelect={stock=>{setInput(stock.name);action(async()=>{const added=await waitJob<{code:string;cache_warning?:string}>('add_job',{code:stock.code});setCode(added.code);setDayChoice('');setInput('');if(added.cache_warning)setMessage(added.cache_warning);});}}/><button disabled={busy||!input}>＋</button></form><div className="stocks">{watchList.map(w=>{
+  const pinned=watchOrder.pinned.includes(w.code);
+  return <div key={w.code} data-code={w.code} className={'stock '+(pinned?'is-pinned ':'')+(!indexCode&&code===w.code?'selected':'')} onClick={()=>{setCode(w.code);setDayChoice('');}}>
+   <WatchPin name={w.name} pinned={pinned} onToggle={()=>watchOrder.setPinned(w.code,!pinned)}/>
+   <div className="watch-stock-identity"><div className="watch-stock-title"><strong title={w.name}>{w.name}</strong></div>{w.broker_sources?.length?<button className="trading-source" title={w.broker_sources.map(a=>`${a.broker_name} ${a.account_masked}${a.active?' · 持仓中':' · 已清仓'}`).join('；')} aria-label={`${w.name} 账户同步来源`} onClick={e=>{e.stopPropagation();setPanel('trading');}}>账户同步{w.broker_sources.length>1?` · ${w.broker_sources.length}账户`:''}</button>:<button className="trading-source" aria-label={`${w.name} 自动下单`} disabled={busy||preview} onClick={e=>{e.stopPropagation();setAutoOrderStock({code:w.code,name:w.name});setPanel('trading');}}>自动下单</button>}</div><WatchQuoteDetails quote={w.quote}/><div className="stock-right"><strong className={+(w.quote?.change||0)>=0?'up':'down'}>{w.quote?.price||'—'}</strong><small>{w.enabled?'监控开启':'已暂停'}</small></div></div>;
+ })}</div></WatchlistCard>
  {indexCode?<IndexChartPanel key={indexCode} request={api} code={indexCode} market={indexData[indexCode]} view={view} onView={setView} active={marketVisible} onBack={()=>setIndexCode('')} onMarket={data=>setIndexData(old=>({...old,[indexCode]:data}))}/>:<div className={'card detail'+(view==='minute'?' minute-detail':'')}><div className="detail-top"><div className="detail-identity"><h2>{name} <small>{code.toUpperCase()}</small></h2><p>{activeReplay?`历史回放 · ${day}`:<>{selected?.health} {selected?.cache_health} {selected?.quote&&`· 行情时间 ${selected.quote.timestamp.slice(0,19).replace('T',' ')}`}</>}</p></div>
  <div className="detail-actions">
   {(view==='minute'||view==='daily')&&<button disabled={busy||preview||fillSyncDay!==today()} title={preview?'请在桌面客户端同步券商成交':fillSyncDay!==today()?'只能同步今天的券商成交':busy?'正在处理，请稍候':'由你手动同步券商当日成交并保存到观量本地缓存'} onClick={syncBrokerFills}>同步券商成交</button>}

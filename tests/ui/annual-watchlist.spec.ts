@@ -100,22 +100,22 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
   for(const row of await card.locator('.stock').all()){
    const boxes=await row.evaluate(el=>{
     const rect=(selector:string)=>{const node=el.querySelector(selector)!;const r=node.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,font:parseFloat(getComputedStyle(node).fontSize),marginTop:parseFloat(getComputedStyle(node).marginTop),marginBottom:parseFloat(getComputedStyle(node).marginBottom),overflow:node.scrollWidth>node.clientWidth+1};};
-    return {name:rect('.watch-stock-title>strong'),code:rect('.watch-stock-title>small'),source:rect('.trading-source'),metrics:rect('.watch-quote-details'),right:rect('.stock-right'),price:rect('.stock-right>strong'),status:rect('.stock-right>small'),values:[...el.querySelectorAll('.watch-metric strong')].map((_,i)=>rect(`.watch-metric:nth-child(${i+1}) strong`)),labels:[...el.querySelectorAll('.watch-metric>span')].map((_,i)=>rect(`.watch-metric:nth-child(${i+1})>span`)),row:el.getBoundingClientRect().toJSON()};
+    return {name:rect('.watch-stock-title>strong'),pin:rect('.watch-pin'),source:rect('.trading-source'),metrics:rect('.watch-quote-details'),right:rect('.stock-right'),price:rect('.stock-right>strong'),status:rect('.stock-right>small'),values:[...el.querySelectorAll('.watch-metric strong')].map((_,i)=>rect(`.watch-metric:nth-child(${i+1}) strong`)),labels:[...el.querySelectorAll('.watch-metric>span')].map((_,i)=>rect(`.watch-metric:nth-child(${i+1})>span`)),row:el.getBoundingClientRect().toJSON()};
    });
    expect(boxes.name.overflow).toBe(false);
-   expect(boxes.code.x-boxes.name.right).toBeCloseTo(5,1);
-   expect(Math.abs((boxes.code.y+boxes.code.height/2)-(boxes.name.y+boxes.name.height/2))).toBeLessThan(1);
+   await expect(row).not.toContainText(/(?:SH|SZ|BJ)\d{6}/i);
+   expect(boxes.pin.right).toBeLessThanOrEqual(boxes.name.x);
    expect(boxes.source.bottom+3).toBeLessThanOrEqual(boxes.name.y);
    expect(boxes.source.marginTop).toBe(3);expect(boxes.source.marginBottom).toBe(3);
    expect(Math.abs((boxes.price.y+boxes.status.bottom)/2-(boxes.row.y+boxes.row.height/2))).toBeLessThan(1);
-   expect(boxes.metrics.x).toBeGreaterThan(boxes.code.right);
+   expect(boxes.metrics.x).toBeGreaterThan(boxes.name.right);
    expect(boxes.metrics.right).toBeLessThanOrEqual(boxes.right.x+1);
    expect(boxes.row.height).toBe(36);
    expect(boxes.name.font).toBe(11);
-   expect(boxes.code.font).toBe(8);expect(boxes.source.font).toBe(8);
+   expect(boxes.source.font).toBe(8);
    expect(boxes.price.font).toBe(11);expect(boxes.status.font).toBe(6);
    expect(boxes.status.overflow).toBe(false);expect(boxes.price.overflow).toBe(false);
-   expect(boxes.values[0].x).toBeGreaterThan(boxes.code.right);
+   expect(boxes.values[0].x).toBeGreaterThan(boxes.name.right);
    expect(boxes.price.x-boxes.values[2].right).toBeGreaterThanOrEqual(10);
    for(let i=0;i<3;i++){
     expect(boxes.values[i].font).toBe(10);expect(boxes.labels[i].font).toBe(6);
@@ -127,8 +127,8 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
     if(i>0)expect(boxes.values[i].x-boxes.values[i-1].right,JSON.stringify({stock:await row.locator('.watch-stock-title').innerText(),metrics:boxes.metrics,values:boxes.values})).toBeGreaterThanOrEqual(8);
    }
   }
-  await expect(card.getByLabel('涨跌额').first()).toContainText('-1.61');
-  await expect(card.getByLabel('涨跌幅').first()).toContainText('-5.17%');
+  await expect(card.locator('.stock').filter({hasText:'三孚股份'}).getByLabel('涨跌额')).toContainText('-1.61');
+  await expect(card.locator('.stock').filter({hasText:'三孚股份'}).getByLabel('涨跌幅')).toContainText('-5.17%');
   await card.screenshot({path:`outputs/watchlist-dense-${width}.png`});
  }
  await page.locator('.stocks .stock').filter({hasText:'中文在线'}).click();
@@ -136,6 +136,25 @@ test('compact watch rows keep identity, origin, metrics and status in their requ
  expect(errors).toEqual([]);
 });
 
+
+test('置顶顺序独立于涨跌幅排序，刷新后保留，取消置顶回到行情排序',async({page})=>{
+ await setup(page);
+ const card=page.locator('.watchlist'), names=card.locator('.stock .watch-stock-title strong');
+ const ranked=[...stocks].sort((a,b)=>Number(b[2])/Number(b[3])-Number(a[2])/Number(a[3])).map(stock=>stock[1]);
+ await expect(names).toHaveText(ranked);
+ const selected=await page.locator('.detail h2').innerText();
+ const pins=['三孚股份','莱宝高科'], rest=ranked.filter(name=>!pins.includes(name));
+ for(const name of pins)await card.getByRole('button',{name:'置顶'+name,exact:true}).click();
+ await expect(names).toHaveText([...pins,...rest]);
+ await expect(card.locator('.stock.is-pinned')).toHaveCount(2);
+ await expect(page.locator('.detail h2')).toHaveText(selected);
+ await card.getByRole('button',{name:'涨跌幅 ↓'}).click();
+ await expect(names).toHaveText([...pins,...rest.reverse()]);
+ await page.reload();
+ await expect(names).toHaveText([...pins,...rest]);
+ await card.getByRole('button',{name:'取消置顶三孚股份'}).click();
+ await expect(names).toHaveText([pins[1],...ranked.reverse().filter(name=>name!==pins[1])]);
+});
 
 test('watchlist folds horizontally and restores input, selected stock and chart size without trading calls',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await setup(page);
@@ -200,20 +219,22 @@ test('watchlist remains usable when its layout preference cannot be stored',asyn
 
 test('chart-side stock switching follows watch order with a folded list and missing minute data',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await setup(page);
- await expect(page.locator('.detail h2')).toContainText('三孚股份');
+ const names=await page.locator('.stock .watch-stock-title strong').allTextContents();
+ await page.locator('.stock').first().click();
+ await expect(page.locator('.detail h2')).toContainText(names[0]);
  await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
  const nav=page.getByRole('group',{name:'自选股切换',exact:true}),previous=nav.getByRole('button',{name:'上一支自选股'}),next=nav.getByRole('button',{name:'下一支自选股'});
- await expect(nav).toBeVisible();await expect(previous).toBeDisabled();await expect(next).toHaveAttribute('title',/山子高科/);
- await next.click();await expect(page.locator('.detail h2')).toContainText('山子高科');
- await next.dblclick();await expect(page.locator('.detail h2')).toContainText('金瑞矿业');
- await previous.click();await expect(page.locator('.detail h2')).toContainText('莱宝高科');
+ await expect(nav).toBeVisible();await expect(previous).toBeDisabled();await expect(next).toHaveAttribute('title',new RegExp(names[1]));
+ await next.click();await expect(page.locator('.detail h2')).toContainText(names[1]);
+ await next.dblclick();await expect(page.locator('.detail h2')).toContainText(names[3]);
+ await previous.click();await expect(page.locator('.detail h2')).toContainText(names[2]);
  await expect(page.getByRole('button',{name:'分时',exact:true})).toHaveClass(/chosen/);
  await expect(page.getByRole('button',{name:'展开我的自选',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'展开我的自选',exact:true}).click();
- await page.locator('.stock').filter({hasText:'好当家'}).click();
+ await page.locator('.stock').last().click();
  await page.getByRole('button',{name:'折叠我的自选',exact:true}).click();
- await expect(next).toBeDisabled();await expect(previous).toHaveAttribute('title',/雪人集团/);
- await previous.press('Enter');await expect(page.locator('.detail h2')).toContainText('雪人集团');
+ await expect(next).toBeDisabled();await expect(previous).toHaveAttribute('title',new RegExp(names.at(-2)!));
+ await previous.press('Enter');await expect(page.locator('.detail h2')).toContainText(names.at(-2)!);
  const writes=await page.evaluate(()=>(window as any).__watchCalls.filter((c:any)=>c.method==='add_job'||c.method==='set_config'||c.method.startsWith('broker_')||(c.method.startsWith('trading_')&&c.method!=='trading_chart')));
  expect(writes).toEqual([]);expect(errors).toEqual([]);
 });
@@ -226,11 +247,13 @@ test('a single watch stock has both navigation directions disabled',async({page}
 
 test('chart navigation refreshes after watch order changes and removal of the selected stock',async({page})=>{
  await setup(page);const nav=page.getByRole('group',{name:'自选股切换',exact:true}),previous=nav.getByRole('button',{name:'上一支自选股'}),next=nav.getByRole('button',{name:'下一支自选股'});
+ await page.locator('.stock').filter({hasText:'好当家'}).click();
  await expect(previous).toBeDisabled();
- await page.evaluate(()=>(window as any).__watchFixture.reverse());
- await expect(next).toBeDisabled();await expect(previous).toHaveAttribute('title',/山子高科/);
- await previous.click();await expect(page.locator('.detail h2')).toContainText('山子高科');
- await page.evaluate(()=>{const watch=(window as any).__watchFixture;watch.splice(watch.findIndex((s:any)=>s.code==='sz000981'),1);});
+ await page.evaluate(()=>{const stock=(window as any).__watchFixture.find((s:any)=>s.name==='好当家');stock.quote.price='1.00';});
+ await expect(next).toBeDisabled();
  await expect(page.locator('.detail h2')).toContainText('好当家');
- await expect(previous).toBeDisabled();await expect(next).toHaveAttribute('title',/雪人集团/);
+ await previous.click();await expect(page.locator('.detail h2')).toContainText('雪人集团');
+ await page.evaluate(()=>{const watch=(window as any).__watchFixture;watch.splice(watch.findIndex((s:any)=>s.name==='雪人集团'),1);});
+ await expect(page.locator('.detail h2')).toContainText('三孚股份');
+ await expect(next).toHaveAttribute('title',/好当家/);
 });

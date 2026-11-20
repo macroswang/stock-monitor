@@ -49,13 +49,20 @@
 .market-grid{grid-template-columns:296px minmax(0,1fr)}
 .watchlist-content>.card-heading{padding:7px 36px 7px 8px}.watchlist-content>.card-heading h2{font-size:12px;line-height:16px}.watchlist-content>.card-heading>span{font-size:9px}
 .watchlist-content>.add{padding:0 7px 6px;gap:4px}.watchlist-content>.add input{padding:4px 6px;font-size:10px;line-height:14px}.watchlist-content>.add button{padding:3px 7px;font-size:11px;line-height:16px}
-.watchlist .stock{display:grid;grid-template-columns:minmax(0,1fr) 128px 38px;align-items:center;padding:2px 7px;gap:8px;min-height:36px}
+.watchlist .stock{display:grid;grid-template-columns:22px minmax(0,1fr) 128px 38px;align-items:center;padding:2px 7px;gap:5px;min-height:36px}
 .watchlist .stock.selected{padding-left:4px}
 .watchlist .watch-stock-identity{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0}
 .watchlist .watch-stock-title{display:flex;align-items:center;gap:0;min-width:0;max-width:100%;white-space:nowrap}
 .watchlist .watch-stock-title>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:500}
 .watchlist .stock small{margin-top:0;font-size:9px;line-height:12px;letter-spacing:0;white-space:nowrap}
-.watchlist .watch-stock-title>small{flex-shrink:0;margin-left:5px;font-size:8px;line-height:10px}
+.watchlist .watch-sort{margin:0 7px 0 auto;padding:2px 5px;font-size:10px;line-height:14px;border-radius:4px}
+.watchlist .watch-pin{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;width:22px;height:30px;padding:0;border:0;background:transparent;color:#849ab6}
+.watchlist .watch-pin:hover,.watchlist .watch-pin:focus-visible{background:#23354a;color:#d8e7f6}
+.watchlist .stock.is-pinned{background:#252b33}
+.watchlist .stock.is-pinned.selected{background:#21374e}
+.watchlist .is-pinned .watch-pin{color:#f3c780;background:#38332f}
+.watchlist .watch-pin span{font-size:8px;line-height:9px}
+.watchlist .is-pinned+.stock:not(.is-pinned){border-top-color:#536074}
 .watchlist .stock .trading-source{order:-1;margin:3px 0;padding:0 3px;font-size:8px;line-height:10px;border-radius:2px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .watchlist .stock-right{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;align-self:center;margin:0;min-width:0}
 .watchlist .stock-right>strong{font-size:11px;font-weight:600;line-height:13px;font-variant-numeric:tabular-nums;white-space:nowrap}

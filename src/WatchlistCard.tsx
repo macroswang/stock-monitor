@@ -1,6 +1,46 @@
-import {useEffect,useId,useState,type ReactNode} from 'react';
+import {useEffect,useId,useMemo,useState,type ReactNode} from 'react';
+import {quoteStats,type WatchQuote} from './watchQuote';
 
 const COLLAPSED_KEY='stock-monitor-watchlist-collapsed-v1';
+const ORDER_KEY='stock-monitor-watchlist-order-v1';
+type Order={pinned:string[];ascending:boolean};
+
+function readOrder():Order{
+ try{
+  const value=JSON.parse(localStorage.getItem(ORDER_KEY)||'null');
+  if(Array.isArray(value?.pinned))return {pinned:value.pinned.filter((code:unknown)=>typeof code==='string'),ascending:value.ascending===true};
+ }catch{}
+ return {pinned:[],ascending:false};
+}
+
+export function useWatchlistOrder<T extends {code:string;quote?:WatchQuote}>(stocks?:T[]){
+ const [order,setOrder]=useState(readOrder);
+ useEffect(()=>{try{localStorage.setItem(ORDER_KEY,JSON.stringify(order));}catch{}},[order]);
+ const list=useMemo(()=>{
+  const pinnedRanks=new Map(order.pinned.map((code,i)=>[code,i]));
+  const rows=(stocks||[]).map(stock=>({stock,rank:pinnedRanks.get(stock.code),percent:quoteStats(stock.quote).percent}));
+  rows.sort((a,b)=>{
+   if(a.rank!==undefined||b.rank!==undefined)return (a.rank??Infinity)-(b.rank??Infinity);
+   if(a.percent===null||b.percent===null)return Number(a.percent===null)-Number(b.percent===null);
+   return order.ascending?a.percent-b.percent:b.percent-a.percent;
+  });
+  return rows.map(row=>row.stock);
+ },[stocks,order]);
+ const setPinned=(code:string,pinned:boolean)=>setOrder(old=>{
+  if(old.pinned.includes(code)===pinned)return old;
+  return {...old,pinned:pinned?[...old.pinned,code]:old.pinned.filter(item=>item!==code)};
+ });
+ return {list,...order,setPinned,toggleSort:()=>setOrder(old=>({...old,ascending:!old.ascending}))};
+}
+
+export function WatchPin({name,pinned,onToggle}:{name:string;pinned:boolean;onToggle:()=>void}){
+ const label=(pinned?'取消置顶':'置顶')+name;
+ return <button type="button" className="watch-pin" title={label} aria-label={label} aria-pressed={pinned}
+  onClick={event=>{event.stopPropagation();onToggle();}}>
+  <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" fill={pinned?'currentColor':'none'} aria-hidden="true"><path d="M8 3h8l-1 7 4 4v1H5v-1l4-4zM12 15v7"/></svg>
+  {pinned&&<span>置顶</span>}
+ </button>;
+}
 
 export default function WatchlistCard({children}:{children:ReactNode}){
  const [collapsed,setCollapsed]=useState(()=>{try{return localStorage.getItem(COLLAPSED_KEY)==='true';}catch{return false;}});

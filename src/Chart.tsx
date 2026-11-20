@@ -121,7 +121,7 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
  const updateMacd=(next:MacdParameters)=>{setMacdParameters(next);try{localStorage.setItem(macdParametersKey,JSON.stringify(next));window.dispatchEvent(new window.Event('macd-parameters-change'));}catch{}};
  const maValues=useMemo(()=>new Map(ma.periods.map(n=>[n,movingAverage(daily,n)])),[daily,ma.periods]);
  const [candleSizes,setCandleSizes]=useState<Record<string,number>>({daily:DAILY_WINDOW,weekly:WEEKLY_WINDOW});
- const candleWindows=useRef(new Map<string,{dates:string[];lastDate:string}>());
+ const candleWindows=useRef(new Map<string,{dates:string[];lastDate:string;manualSize?:number}>());
  const candleSelections=useRef(new Map<string,string|undefined>());
  const updateMa=(next:MovingAverages)=>{setMa(next);try{localStorage.setItem('stock-monitor-moving-averages-v1',JSON.stringify(next));}catch{}};
  const candleHistoryCount=Math.max(candleHistoryNeed(candleSizes[view]||DAILY_WINDOW,ma),indexMode?(candleSizes[view]||DAILY_WINDOW)+5*(macdParameters.slow+macdParameters.signal):0);
@@ -289,7 +289,6 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
   return()=>{cancelAnimationFrame(frame);observer.disconnect();structure.disconnect();window.removeEventListener('resize',fit);node.style.removeProperty('--watch-chart-height');node.style.removeProperty('--minute-chart-height');};
  },[hasMacd,compact,view]);
  const [drawingToolbar,setDrawingToolbar]=useState<HTMLDivElement|null>(null);
- const windowDates=useRef<string[]>([]);const lastDailyDate=useRef('');
  const zoomCandles=(direction:number)=>{
   const chart=instance.current,rows=daily;if(!chart||!isCandleView(view)||!rows.length)return;
   const z=(chart.getOption().dataZoom as {start:number;end:number}[])[0],n=rows.length-1;
@@ -314,7 +313,22 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
    if(params.componentType==='series'&&params.name&&/^\d{4}-\d{2}-\d{2}$/.test(params.name))select.current?.(params.name);
   });
   chart.on('dblclick',params=>{if(isCandleView(plot.current.view)&&params.componentType==='series'&&params.name)open.current?.(params.name);});
-  chart.on('datazoom',()=>{const z=(chart.getOption()?.dataZoom as {start?:number;end?:number}[])?.[0];const d=plot.current.daily;if(isCandleView(plot.current.view)&&d.length&&z){windowDates.current=[d[Math.round((d.length-1)*(z.start??0)/100)]?.date,d[Math.round((d.length-1)*(z.end??100)/100)]?.date];candleWindows.current.set(plot.current.stockCode+'|'+plot.current.view,{dates:windowDates.current,lastDate:d.at(-1)!.date});if(plot.current.indexMode)minuteZoom.current={start:z.start??0,end:z.end??100};refreshMacd.current?.();}else if(!isCandleView(plot.current.view)){minuteZoom.current={start:z?.start??0,end:z?.end??100};refreshMacd.current?.();}});
+  chart.on('datazoom',()=>{
+   const z=(chart.getOption()?.dataZoom as {start?:number;end?:number}[])?.[0];
+   const {view,stockCode,daily:rows,indexMode}=plot.current;
+   const start=z?.start??0,end=z?.end??100;
+   if(!isCandleView(view)){minuteZoom.current={start,end};refreshMacd.current?.();return;}
+   if(!rows.length||!z)return;
+   const lo=Math.round((rows.length-1)*start/100),hi=Math.round((rows.length-1)*end/100);
+   const key=stockCode+'|'+view,saved=candleWindows.current.get(key);
+   const priorLo=rows.findIndex(row=>row.date===saved?.dates[0]),priorHi=rows.findIndex(row=>row.date===saved?.dates[1]);
+   const size=hi-lo+1;
+   // A pan keeps the requested window size, including when history is still loading.
+   const manualSize=priorLo>=0&&priorHi-priorLo+1===size?saved?.manualSize:size;
+   candleWindows.current.set(key,{dates:[rows[lo].date,rows[hi].date],lastDate:rows.at(-1)!.date,manualSize});
+   if(indexMode)minuteZoom.current={start,end};
+   refreshMacd.current?.();
+  });
   chart.on('updateAxisPointer',event=>{const value=(event as {axesInfo?:{axisDim?:string;value:unknown}[]}).axesInfo?.find(a=>a.axisDim==='x')?.value,rows=plot.current.daily,candles=isCandleView(plot.current.view);const index=typeof value==='number'?value:typeof value==='string'?(candles?rows.findIndex(row=>row.date===value):minuteSlots.indexOf(value)):-1;if(Number.isInteger(index)&&index>=0&&index<(candles?rows.length:minuteSlots.length))refreshMacd.current?.(index);});
   const rememberPointer=(event:{offsetX:number;offsetY:number})=>{pointerLeft.current=false;pointer.current={x:event.offsetX,y:event.offsetY,scope:scopeRef.current};};
   chart.getZr().on('mousemove',rememberPointer);chart.getZr().on('mousedown',rememberPointer);
@@ -447,7 +461,16 @@ export default function Chart({drawingRequest,stockCode='',stockName='',macdBenc
     topVolumeMarks(displayMinute,events,showOpening,showTriggered);
   const key=view+labels.join('|');const old=chart.getOption()?.dataZoom as {start?:number;end?:number}[]|undefined;
   let zoom=key===labelsKey.current?{start:old?.[0]?.start??0,end:old?.[0]?.end??100}:{start:0,end:100};labelsKey.current=key;
-  if(isDay&&labels.length){const candleKey=stockCode+'|'+view,saved=candleWindows.current.get(candleKey),selectionChanged=candleSelections.current.get(candleKey)!==selectedCandle;const {lo,hi}=dailyViewport(labels,saved?.dates||[],!saved||selectionChanged?selectedCandle:undefined,saved?.lastDate||'',candleSizes[view]);candleSelections.current.set(candleKey,selectedCandle);lastDailyDate.current=labels.at(-1)||'';zoom={start:lo/Math.max(1,labels.length-1)*100,end:hi/Math.max(1,labels.length-1)*100};windowDates.current=[labels[lo],labels[hi]];candleWindows.current.set(stockCode+'|'+view,{dates:windowDates.current,lastDate:lastDailyDate.current});}
+  if(isDay&&labels.length){
+   const candleKey=stockCode+'|'+view,saved=candleWindows.current.get(candleKey);
+   const selectionChanged=candleSelections.current.get(candleKey)!==selectedCandle;
+   const {lo,hi}=dailyViewport(labels,saved?.dates||[],!saved||selectionChanged?selectedCandle:undefined,
+    saved?.lastDate||'',saved?.manualSize??candleSizes[view]);
+   candleSelections.current.set(candleKey,selectedCandle);
+   const lastIndex=Math.max(1,labels.length-1);
+   zoom={start:lo/lastIndex*100,end:hi/lastIndex*100};
+   candleWindows.current.set(candleKey,{dates:[labels[lo],labels[hi]],lastDate:labels.at(-1)!,manualSize:saved?.manualSize});
+  }
   const visibleMinutes=Math.max(1,(zoom.end-zoom.start)/100*Math.max(0,labels.length-1)+1);
   const gridStep=visibleMinutes>100?30:visibleMinutes>40?15:5;
   const timeTick=(_index:number,label:string)=>{const [h,m]=label.split(':').map(Number);return label===labels[0]||label===labels.at(-1)||(h*60+m)%gridStep===0;};
